@@ -36,6 +36,27 @@ try {
     Sync-ClaudeMirror -SourceClaudeDir $source -MirrorDir $mirror | Out-Null
     Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $mirror 'skills\alpha\SKILL.md'))) -Because 'a deleted skill file leaves the mirror'
 
+    # --- the deletion pass reaches nested files and spares their siblings ---
+    # This is the block that actually exercises Sync-Directory's second loop.
+    # The two assertions further down remove a whole directory and a top-level
+    # file, which Sync-ClaudeMirror handles in its own elseif branches without
+    # ever calling Sync-Directory - delete the relative-path diff entirely and
+    # they still pass. Only a deletion inside a source directory that still
+    # exists reaches that code, and only a surviving sibling proves it removes
+    # selectively rather than wholesale.
+    New-Item -ItemType Directory -Path (Join-Path $source 'skills\beta\nested') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $source 'skills\beta\SKILL.md') -Value 'beta' -Encoding UTF8
+    Set-Content -LiteralPath (Join-Path $source 'skills\beta\nested\doomed.md') -Value 'doomed' -Encoding UTF8
+    Set-Content -LiteralPath (Join-Path $source 'skills\beta\nested\survivor.md') -Value 'survivor' -Encoding UTF8
+    Sync-ClaudeMirror -SourceClaudeDir $source -MirrorDir $mirror | Out-Null
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $mirror 'skills\beta\nested\doomed.md')) -Because 'a file two levels deep is mirrored'
+
+    Remove-Item -LiteralPath (Join-Path $source 'skills\beta\nested\doomed.md') -Force
+    Sync-ClaudeMirror -SourceClaudeDir $source -MirrorDir $mirror | Out-Null
+    Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $mirror 'skills\beta\nested\doomed.md'))) -Because 'the deletion pass removes a file two levels deep'
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $mirror 'skills\beta\nested\survivor.md')) -Because 'the deletion pass spares a sibling still present at the source'
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $mirror 'skills\beta\SKILL.md')) -Because 'the deletion pass spares a file in the parent directory'
+
     # --- removing a whole whitelisted directory removes it from the mirror ---
     Remove-Item -LiteralPath (Join-Path $source 'agents') -Recurse -Force
     Sync-ClaudeMirror -SourceClaudeDir $source -MirrorDir $mirror | Out-Null
