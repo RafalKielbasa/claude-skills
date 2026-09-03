@@ -10,6 +10,17 @@
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\rafal\\.claude\\hooks\\backup-claude.ps1\"",
+            "timeout": 120
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {
