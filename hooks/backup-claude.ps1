@@ -99,7 +99,7 @@ try {
     Write-Log ('mirrored {0} files from {1} sources' -f $mirroredFiles, @($registry.entries).Count)
 
     # --- stage, gate, commit ---
-    Push-Location $Root
+    Push-Location -LiteralPath $Root
     try {
         function Invoke-Git {
             <#
@@ -160,7 +160,25 @@ try {
             Invoke-Git -GitArgs @('push', 'origin', 'main') -AllowFailure |
                 ForEach-Object { Write-Log ('push: {0}' -f $_) }
             if ($LASTEXITCODE -ne 0) {
-                Write-Log 'push failed; commits stay local and the next run retries'
+                # A plain retry only resolves a transient failure - the
+                # network was down, the remote was briefly unreachable. It
+                # can NEVER resolve a genuine divergence: origin/main
+                # carrying commits this machine does not have, typically
+                # from editing a file directly on GitHub, or from a second
+                # machine sharing this same repository. Distinguish the two
+                # so the log does not promise a self-resolution a divergence
+                # cannot have. This script never merges, rebases, or
+                # force-pushes on its own - CLAUDE.md reserves
+                # history-rewriting git operations for an explicit request,
+                # and an unattended hook is the last place to run one
+                # regardless of how convenient it would be here.
+                $behind = (Invoke-Git -GitArgs @('rev-list', '--count', 'HEAD..origin/main') -AllowFailure |
+                           Select-Object -First 1)
+                if ($LASTEXITCODE -eq 0 -and [int]$behind -gt 0) {
+                    Write-Log ('DIVERGED: origin/main has {0} commit(s) this machine does not have; a plain push cannot resolve this and will keep failing every run. Commits stay local. Resolve by hand: fetch, inspect origin/main..HEAD and HEAD..origin/main, then merge or push --force-with-lease as appropriate.' -f $behind)
+                } else {
+                    Write-Log 'push failed; commits stay local and the next run retries'
+                }
             }
         }
 

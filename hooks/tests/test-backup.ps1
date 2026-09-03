@@ -124,6 +124,32 @@ try {
     Pop-Location
     Assert-True -Condition ($remoteHead.Count -gt 0) -Because 'the pending commit reaches the remote on a no-changes run'
 
+    # --- a genuine divergence is diagnosed distinctly from a transient failure ---
+    # Simulates a commit landing on origin from somewhere else - a second
+    # machine, or an edit made directly on GitHub.com - while this machine
+    # also has an unpushed local commit. A plain `git push` can never
+    # resolve this; the log must say so rather than promising a retry will
+    # succeed, since nothing here ever merges or rebases automatically.
+    $otherClone = Join-Path $sandbox 'other-clone'
+    git clone -q $remote $otherClone
+    Push-Location $otherClone
+    # A fresh bare repo's HEAD stays a symbolic ref to whatever
+    # init.defaultBranch names (commonly "master"), and a plain push of
+    # "main" from elsewhere never updates that symbolic ref - so a clone
+    # here lands on a phantom, ref-less "master" rather than "main" without
+    # an explicit checkout.
+    git checkout -q -b main origin/main
+    git config user.name 'other'; git config user.email 'other@example.com'
+    Set-Content -LiteralPath (Join-Path $otherClone 'from-elsewhere.txt') -Value 'elsewhere' -Encoding UTF8
+    git add -A; git commit -q -m 'from elsewhere'
+    git push -q origin main
+    Pop-Location
+
+    Set-Content -LiteralPath (Join-Path $project '.claude\skills\demo\SKILL.md') -Value 'local change during divergence' -Encoding UTF8
+    $diverged = Invoke-BackupWithPush
+    Assert-Equal -Expected 0 -Actual $diverged.ExitCode -Because 'a diverged push does not fail the run'
+    Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'DIVERGED') -Because 'a genuine divergence is diagnosed distinctly from a transient failure'
+
     # --- a vanished source keeps its mirror and is flagged in the registry ---
     Remove-Item -LiteralPath (Join-Path $project '.claude') -Recurse -Force
     Invoke-Backup -ExtraArgs @('-Rescan') | Out-Null
