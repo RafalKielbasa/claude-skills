@@ -88,7 +88,15 @@ try {
         'backups/sync.log',
         'backups/.sync.lock',
         'docs/loose-note.md',
-        'some-future-claude-dir/state.json'
+        'hooks/powtorki-last-check.txt',
+        'some-future-claude-dir/state.json',
+        'cache/changelog.md',
+        'daemon/roster.json',
+        'debug/trace.log',
+        'downloads/installer.bin',
+        'ide/state.json',
+        'jobs/abc123/state.json',
+        'sessions/1234.json'
     )) {
         Assert-True -Condition (Test-Ignored $blocked) -Because "ignored: $blocked"
     }

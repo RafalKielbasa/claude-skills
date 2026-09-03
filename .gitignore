@@ -57,6 +57,12 @@
 /backups/sync.log
 /backups/.sync.lock
 
+# --- generated state that lives inside an allowlisted directory ---
+# powtorki-check.ps1 rewrites this with today's date on the first session of
+# each day. Allowlisted by /hooks/** and worthless to restore, it would
+# manufacture one backup commit a day out of nothing.
+/hooks/powtorki-last-check.txt
+
 # --- hard blocks: these override every exception above ---
 .credentials.json
 *.key
