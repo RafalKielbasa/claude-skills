@@ -129,6 +129,23 @@ foreach ($rule in $Map) {
     }
 }
 
+# --- persist the remapped paths, or the next backup-claude.ps1 run flags
+#     every restored source as missing, and a later -Rescan registers each
+#     one a second time under a new slug instead of recognising it.
+#     Only path/claudeDir change - slug stays exactly as it was. The mirror
+#     is addressed by the registry's own slug field (Sync-ClaudeMirror does
+#     not recompute one from path), so keeping it unchanged preserves the
+#     mirror's history without a discontinuity, and Update-Registry's
+#     claudeDir-keyed lookup now correctly matches the restored location on
+#     the very next run instead of treating it as new. ---
+if ($Apply -and @($Map).Count -gt 0) {
+    foreach ($entry in @($registry.entries)) {
+        $entry.path = Convert-MappedPath -Path $entry.path -Map $Map
+        $entry.claudeDir = Convert-MappedPath -Path $entry.claudeDir -Map $Map
+    }
+    Write-Registry -Registry $registry -Path $registryPath
+}
+
 if (-not $Apply) {
     Write-Host ''
     Write-Host 'Dry run. Re-run with -Apply to write these changes.' -ForegroundColor Yellow

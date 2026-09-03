@@ -368,7 +368,29 @@ function Test-SecretContent {
     }
 }
 
+function Find-DuplicateSlug {
+    <#
+      Returns groups of two or more registry entries whose slug collides -
+      Sync-ClaudeMirror addresses the mirror by slug, not by claudeDir, so
+      two distinct sources that happen to slugify to the same string
+      silently share one mirror: whichever syncs second deletes what the
+      first just wrote, since Sync-Directory's deletion pass only ever sees
+      its own call's file list. Returns an empty array when there is no
+      collision.
+    #>
+    param([Parameter(Mandatory)]$Registry)
+    $bySlug = [ordered]@{}
+    foreach ($entry in @($Registry.entries)) {
+        $key = $entry.slug.ToLowerInvariant()
+        if (-not $bySlug.Contains($key)) {
+            $bySlug[$key] = New-Object System.Collections.Generic.List[object]
+        }
+        $bySlug[$key].Add($entry)
+    }
+    return , @($bySlug.Values | Where-Object { $_.Count -gt 1 })
+}
+
 Export-ModuleMember -Function Get-ClaudeDirSlug, Find-ClaudeDirs,
                               Read-Registry, Write-Registry, Update-Registry,
                               Get-MirrorFiles, Get-MirrorDirs, Sync-ClaudeMirror,
-                              Test-SecretContent
+                              Test-SecretContent, Find-DuplicateSlug

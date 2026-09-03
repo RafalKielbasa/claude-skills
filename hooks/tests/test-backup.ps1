@@ -158,6 +158,36 @@ try {
     Assert-Equal -Expected 0 -Actual $diverged.ExitCode -Because 'a diverged push does not fail the run'
     Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'DIVERGED: origin/main has 2 commit\(s\)') -Because 'the diagnosis reports the correct, larger side of an asymmetric divergence - not $ahead mistaken for $behind'
 
+    # --- a hand-started, conflicted merge is never finalized by the hook ---
+    Push-Location $repo
+    $before = Get-CommitCount
+    git checkout -q -b conflict-side
+    Set-Content -LiteralPath (Join-Path $repo 'CLAUDE.md') -Value 'side version' -Encoding UTF8
+    git add -A; git commit -q -m 'side change'
+    git checkout -q main
+    Set-Content -LiteralPath (Join-Path $repo 'CLAUDE.md') -Value 'main version' -Encoding UTF8
+    git add -A; git commit -q -m 'main change'
+    git merge conflict-side -q 2>&1 | Out-Null
+    $mergeHeadBefore = Test-Path -LiteralPath (Join-Path $repo '.git\MERGE_HEAD')
+    Pop-Location
+    Assert-True -Condition $mergeHeadBefore -Because 'the fixture really is mid-merge before the hook runs'
+
+    $midMerge = Invoke-Backup
+    Assert-Equal -Expected 0 -Actual $midMerge.ExitCode -Because 'a mid-merge run exits cleanly rather than erroring'
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $repo '.git\MERGE_HEAD')) -Because 'MERGE_HEAD survives - the conflict is not finalized'
+    # +1, not +2: "side change" lands on the conflict-side branch, not on
+    # main - git log on main only ever saw "main change" join its history.
+    # The failed merge attempt never advanced main's ref, so this count is
+    # exactly what proves the hook added nothing on top of it.
+    Assert-Equal -Expected ($before + 1) -Actual (Get-CommitCount) -Because 'no merge commit is created on top of the one real setup commit on main'
+    Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'mid-MERGE_HEAD') -Because 'the skip is logged with the reason'
+
+    Push-Location $repo
+    git merge --abort
+    git checkout -q main
+    git branch -q -D conflict-side
+    Pop-Location
+
     # --- a vanished source keeps its mirror and is flagged in the registry ---
     Remove-Item -LiteralPath (Join-Path $project '.claude') -Recurse -Force
     Invoke-Backup -ExtraArgs @('-Rescan') | Out-Null

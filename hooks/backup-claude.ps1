@@ -86,6 +86,11 @@ try {
         }
     }
 
+    foreach ($group in (Find-DuplicateSlug -Registry $registry)) {
+        $paths = ($group | ForEach-Object { $_.claudeDir }) -join ', '
+        Write-Log ("WARNING: {0} sources share the slug '{1}' and will overwrite each other's mirror: {2}" -f $group.Count, $group[0].slug, $paths)
+    }
+
     # --- mirror ---
     $mirroredFiles = 0
     foreach ($entry in @($registry.entries)) {
@@ -101,6 +106,22 @@ try {
     # --- stage, gate, commit ---
     Push-Location -LiteralPath $Root
     try {
+        # A hand-started merge, cherry-pick, revert, rebase or bisect that hit
+        # a conflict leaves the repository in exactly this state until a human
+        # resolves it. `git add -A` would mark the conflict resolved and
+        # `git commit` would finalize it - with the conflict markers baked
+        # into the committed file - the moment any Claude Code session ends
+        # anywhere on this machine, because this hook is global. A later
+        # restore -Apply would then write those markers into a real .claude
+        # directory. Never touch the index while one of these is in progress;
+        # the next run tries again once the human has resolved it.
+        foreach ($marker in @('MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-merge', 'rebase-apply', 'BISECT_LOG')) {
+            if (Test-Path -LiteralPath (Join-Path $Root ".git\$marker")) {
+                Write-Log ("skip: repository is mid-{0}; not committing over a hand operation" -f $marker)
+                exit 0
+            }
+        }
+
         function Invoke-Git {
             <#
               Windows PowerShell 5.1 does not turn a native program's non-zero

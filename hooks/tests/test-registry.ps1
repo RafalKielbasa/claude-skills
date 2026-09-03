@@ -126,6 +126,40 @@ try {
         -FoundClaudeDir @((Join-Path $sandbox 'proj a\.claude'), (Join-Path $sandbox 'PROJ A\.CLAUDE')) `
         -SelfClaudeDir 'C:\Users\rafal\.claude'
     Assert-Equal -Expected 1 -Actual (@($dupes.entries).Count) -Because 'case-insensitive keying merges a duplicate source'
+
+    # --- a slug collision is detected, not silently accepted ---
+    $colliding = [pscustomobject]@{
+        version = 1; updated = $null
+        entries = @(
+            [pscustomobject]@{ slug = 'D--Same'; path = 'D:\A'; claudeDir = 'D:\A\.claude'; missing = $false; lastSync = $null },
+            [pscustomobject]@{ slug = 'D--Same'; path = 'D:\B'; claudeDir = 'D:\B\.claude'; missing = $false; lastSync = $null },
+            [pscustomobject]@{ slug = 'D--Unique'; path = 'D:\C'; claudeDir = 'D:\C\.claude'; missing = $false; lastSync = $null }
+        )
+    }
+    # Named slugDupes, not dupes - test-registry.ps1 already uses $dupes for
+    # Update-Registry's case-insensitive-merge assertion earlier in this file.
+    $slugDupes = Find-DuplicateSlug -Registry $colliding
+    Assert-Equal -Expected 1 -Actual (@($slugDupes)).Count -Because 'exactly one collision group is found'
+    Assert-Equal -Expected 2 -Actual (@($slugDupes)[0]).Count -Because 'the collision group has both colliding entries'
+
+    $clean = [pscustomobject]@{
+        version = 1; updated = $null
+        entries = @(
+            [pscustomobject]@{ slug = 'D--One'; path = 'D:\A'; claudeDir = 'D:\A\.claude'; missing = $false; lastSync = $null },
+            [pscustomobject]@{ slug = 'D--Two'; path = 'D:\B'; claudeDir = 'D:\B\.claude'; missing = $false; lastSync = $null }
+        )
+    }
+    # Capture to a variable before wrapping in @() - wrapping the function
+    # call itself in @() double-wraps an empty return , @(...) result into a
+    # one-element array containing an empty array, since the call site's own
+    # @() re-triggers pipeline unwrapping on top of the function's already-
+    # correct comma-protection. Wrapping an already-captured variable in
+    # @() afterward is safe; wrapping the call expression directly is not.
+    # Verified empirically: @(Find-DuplicateSlug ...) reported count=1 for a
+    # registry with zero collisions, plain capture then @($var) reported the
+    # correct 0.
+    $noDupes = Find-DuplicateSlug -Registry $clean
+    Assert-Equal -Expected 0 -Actual (@($noDupes)).Count -Because 'no collision is reported when every slug is unique'
 } finally {
     Remove-Item -LiteralPath $sandbox -Recurse -Force -ErrorAction SilentlyContinue
 }

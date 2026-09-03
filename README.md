@@ -48,6 +48,27 @@ nic się nie zmieniło, kończy działanie bez commitu.
    Mapowanie obejmuje też katalogi `projects/<slug>/memory`: ich nazwy pochodzą ze
    ścieżki projektu, więc bez mapowania Claude nie znajdzie swojej pamięci.
 
+3a. Zaktualizuj ścieżki w `settings.json`, jeśli katalog domowy różni się od oryginału
+    (inna nazwa użytkownika, inny komputer):
+
+    ```powershell
+    $settingsPath = "$env:USERPROFILE\.claude\settings.json"
+    $oldPath = 'C:\\Users\\rafal'                                  # jak dosłownie widnieje w pliku JSON
+    $newPath = $env:USERPROFILE.Replace('\', '\\')                 # to samo podwójne escapowanie
+    (Get-Content -LiteralPath $settingsPath -Raw).Replace($oldPath, $newPath) |
+        Set-Content -LiteralPath $settingsPath -Encoding utf8
+    ```
+
+    Jeśli układ dysków też się zmienił (inna litera dysku, inna struktura katalogów),
+    pierwsze `-Rescan` musi dostać własne `-SearchRoot`:
+
+    ```powershell
+    hooks\backup-claude.ps1 -Rescan -SearchRoot 'E:\', "$env:USERPROFILE"
+    ```
+
+    Bez tego `-Rescan` przeszukuje `D:\` i `C:\Users\rafal` - ścieżki tej maszyny, nie
+    nowej.
+
 4. Zainstaluj ponownie pluginy:
 
    ```
@@ -70,6 +91,19 @@ nic się nie zmieniło, kończy działanie bez commitu.
    Oraz wewnątrz sesji Claude Code: `/skills` pokazuje globalne skille, `/hooks`
    pokazuje `SessionEnd`.
 
+   Kluczowa próba: samo uruchomienie hooka i sprawdzenie, że commit dotarł do zdalnego
+   repozytorium - to jedyny sposób, by wykryć zepsutą ścieżkę w `settings.json`, brakującą
+   tożsamość gita (`user.name`/`user.email`) albo brak działającego uwierzytelnienia do
+   GitHuba na nowej maszynie, zanim odkryjesz to tygodniami później jako brak backupów:
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\hooks\backup-claude.ps1"
+   git -C "$env:USERPROFILE\.claude" rev-list --count origin/main..HEAD
+   ```
+
+   Druga komenda ma zwrócić `0` - to znaczy, że wszystko, co lokalnie powstało, dotarło
+   na `origin/main`.
+
 ## Co celowo nie jest tu zapisane
 
 | Brakuje | Dlaczego |
@@ -80,6 +114,7 @@ nic się nie zmieniło, kończy działanie bez commitu.
 | `sessions/`, `daemon/`, `jobs/`, `tasks/`, `session-env/`, `ide/` | stan uruchomieniowy |
 | `plugins/cache/`, `plugins/marketplaces/` | kod stron trzecich, do odtworzenia z manifestu (krok 4) |
 | `*.lock` | pliki blokad |
+| `~/.claude.json` (jeden poziom nad tym katalogiem, obok `.claude`, nie w środku) | poza repozytorium fizycznie — allowlist go nie widzi; zawiera dane serwerów MCP (potencjalnie z kluczami), konto OAuth i stan zaufania per-projekt — zbyt wrażliwe, by backupować automatycznie. Skonfiguruj ponownie ręcznie po odtworzeniu. |
 
 Jeśli szukasz tu czegoś z tej tabeli: nigdy nie było to zapisywane w kopii i nie
 wróci.
@@ -88,10 +123,10 @@ wróci.
 
 | Sytuacja | Komenda |
 |---|---|
-| Ręczna synchronizacja | `hooks\backup-claude.ps1` |
-| Pojawił się nowy katalog `.claude` | `hooks\backup-claude.ps1 -Rescan` |
+| Ręczna synchronizacja | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\hooks\backup-claude.ps1"` |
+| Pojawił się nowy katalog `.claude` | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\hooks\backup-claude.ps1" -Rescan` |
 | Sprawdzenie, co poszło nie tak | `Get-Content backups\sync.log -Tail 30` |
-| Uruchomienie testów | `hooks\tests\run-all.ps1` |
+| Uruchomienie testów | `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\hooks\tests\run-all.ps1"` |
 
 `backups/claude-dirs/` zawiera kopie **jednokierunkowe**. Edycja pliku tam nie
 zmienia źródła i zostanie nadpisana przy kolejnej synchronizacji. Skille edytuj w

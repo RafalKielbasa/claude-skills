@@ -51,6 +51,7 @@
   }
   if ($LASTEXITCODE -ne 0 -and -not $AllowFailure) { ... }
   ```
+- **Never wrap a function call using the `return , @(...)` idiom in an outer `@(...)` at the call site.** Verified empirically: a function ending `return , @($x | Where-Object {...})` correctly returns a true empty array to a plain capture (`$r = Get-Thing`) when the filter matches nothing, and `foreach ($i in (Get-Thing))` correctly iterates zero times — but `$r = @(Get-Thing)`, wrapping the *call expression itself* in `@()`, re-triggers PowerShell's pipeline unwrapping on top of the function's own comma-protection and produces a one-element array whose single element is the empty array, so `.Count` reports `1` instead of `0`. Wrapping an *already-captured* variable in `@()` afterward (`$r = Get-Thing; @($r).Count`) is unaffected and safe — the danger is specifically in wrapping the call site. Capture to a variable first, then wrap the variable if a count check needs it.
 
 ---
 
@@ -1458,6 +1459,40 @@ try {
     Assert-Equal -Expected 0 -Actual $diverged.ExitCode -Because 'a diverged push does not fail the run'
     Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'DIVERGED: origin/main has 2 commit\(s\)') -Because 'the diagnosis reports the correct, larger side of an asymmetric divergence - not $ahead mistaken for $behind'
 
+    # --- a hand-started, conflicted merge is never finalized by the hook ---
+    # A conflict left unresolved is exactly the state a human is in the
+    # middle of fixing. git add -A would mark it resolved and git commit
+    # would finalize it - with the conflict markers baked in - the moment
+    # any session ends anywhere on the machine, since this hook is global.
+    Push-Location $repo
+    $before = Get-CommitCount
+    git checkout -q -b conflict-side
+    Set-Content -LiteralPath (Join-Path $repo 'CLAUDE.md') -Value 'side version' -Encoding UTF8
+    git add -A; git commit -q -m 'side change'
+    git checkout -q main
+    Set-Content -LiteralPath (Join-Path $repo 'CLAUDE.md') -Value 'main version' -Encoding UTF8
+    git add -A; git commit -q -m 'main change'
+    git merge conflict-side -q 2>&1 | Out-Null
+    $mergeHeadBefore = Test-Path -LiteralPath (Join-Path $repo '.git\MERGE_HEAD')
+    Pop-Location
+    Assert-True -Condition $mergeHeadBefore -Because 'the fixture really is mid-merge before the hook runs'
+
+    $midMerge = Invoke-Backup
+    Assert-Equal -Expected 0 -Actual $midMerge.ExitCode -Because 'a mid-merge run exits cleanly rather than erroring'
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $repo '.git\MERGE_HEAD')) -Because 'MERGE_HEAD survives - the conflict is not finalized'
+    # +1, not +2: "side change" lands on the conflict-side branch, not on
+    # main - git log on main only ever saw "main change" join its history.
+    # The failed merge attempt never advanced main's ref, so this count is
+    # exactly what proves the hook added nothing on top of it.
+    Assert-Equal -Expected ($before + 1) -Actual (Get-CommitCount) -Because 'no merge commit is created on top of the one real setup commit on main'
+    Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'mid-MERGE_HEAD') -Because 'the skip is logged with the reason'
+
+    Push-Location $repo
+    git merge --abort
+    git checkout -q main
+    git branch -q -D conflict-side
+    Pop-Location
+
     # --- a vanished source keeps its mirror and is flagged in the registry ---
     Remove-Item -LiteralPath (Join-Path $project '.claude') -Recurse -Force
     Invoke-Backup -ExtraArgs @('-Rescan') | Out-Null
@@ -1587,6 +1622,22 @@ try {
     # --- stage, gate, commit ---
     Push-Location -LiteralPath $Root
     try {
+        # A hand-started merge, cherry-pick, revert, rebase or bisect that hit
+        # a conflict leaves the repository in exactly this state until a human
+        # resolves it. `git add -A` would mark the conflict resolved and
+        # `git commit` would finalize it - with the conflict markers baked
+        # into the committed file - the moment any Claude Code session ends
+        # anywhere on this machine, because this hook is global. A later
+        # restore -Apply would then write those markers into a real .claude
+        # directory. Never touch the index while one of these is in progress;
+        # the next run tries again once the human has resolved it.
+        foreach ($marker in @('MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-merge', 'rebase-apply', 'BISECT_LOG')) {
+            if (Test-Path -LiteralPath (Join-Path $Root ".git\$marker")) {
+                Write-Log ("skip: repository is mid-{0}; not committing over a hand operation" -f $marker)
+                exit 0
+            }
+        }
+
         function Invoke-Git {
             <#
               Windows PowerShell 5.1 does not turn a native program's non-zero
@@ -1888,6 +1939,21 @@ try {
     # the memory-rename loop, not just the per-entry .claude restore.
     Assert-True -Condition (Test-Path -LiteralPath (Join-Path $repo 'projects\D--Demoland-proj\memory\MEMORY.md')) -Because 'D--Demo does not capture D--Demoland-proj in slug space either'
 
+    # --- the registry itself is updated to the new paths ---
+    # Without this, the next backup-claude.ps1 run would flag this source
+    # missing (its claudeDir still says the old path), and a later -Rescan
+    # would register it a second time under a new slug.
+    $registryAfter = Get-Content -LiteralPath (Join-Path $repo 'backups\claude-dirs\registry.json') -Raw | ConvertFrom-Json
+    $restoredEntry = @($registryAfter.entries | Where-Object { $_.slug -eq $slug })[0]
+    Assert-True -Condition ($null -ne $restoredEntry) -Because 'the restored entry is still present in the registry'
+    Assert-Equal -Expected $target -Actual $restoredEntry.path -Because 'the registry path is remapped to the restored location'
+    Assert-Equal -Expected (Join-Path $target '.claude') -Actual $restoredEntry.claudeDir -Because 'the registry claudeDir is remapped to the restored location'
+    Assert-Equal -Expected $slug -Actual $restoredEntry.slug -Because 'the slug itself is left unchanged - the mirror is addressed by slug, not recomputed from path'
+
+    # --- an unmapped sibling's registry entry is untouched by the same -Apply ---
+    $siblingEntry = @($registryAfter.entries | Where-Object { $_.slug -eq 'D--Demoland-proj' })[0]
+    Assert-Equal -Expected 'D:\Demoland\proj' -Actual $siblingEntry.path -Because 'an entry the map does not reach keeps its original path'
+
     # --- an unmapped, nonexistent target is reported, not created ---
     $unmapped = Invoke-Restore -ExtraArgs @('-Apply')
     Assert-Equal -Expected 0 -Actual $unmapped.ExitCode -Because 'an unreachable target does not fail the run'
@@ -2041,6 +2107,23 @@ foreach ($rule in $Map) {
         Write-Host "$verb memory $($dir.Name) -> $newName" -ForegroundColor Cyan
         if ($Apply) { Rename-Item -LiteralPath $dir.FullName -NewName $newName -Force }
     }
+}
+
+# --- persist the remapped paths, or the next backup-claude.ps1 run flags
+#     every restored source as missing, and a later -Rescan registers each
+#     one a second time under a new slug instead of recognising it.
+#     Only path/claudeDir change - slug stays exactly as it was. The mirror
+#     is addressed by the registry's own slug field (Sync-ClaudeMirror does
+#     not recompute one from path), so keeping it unchanged preserves the
+#     mirror's history without a discontinuity, and Update-Registry's
+#     claudeDir-keyed lookup now correctly matches the restored location on
+#     the very next run instead of treating it as new. ---
+if ($Apply -and @($Map).Count -gt 0) {
+    foreach ($entry in @($registry.entries)) {
+        $entry.path = Convert-MappedPath -Path $entry.path -Map $Map
+        $entry.claudeDir = Convert-MappedPath -Path $entry.claudeDir -Map $Map
+    }
+    Write-Registry -Registry $registry -Path $registryPath
 }
 
 if (-not $Apply) {
@@ -2434,3 +2517,333 @@ After Task 8 every one of these must hold. Note what is deliberately *not* asser
 - [ ] `git ls-files` contains `backups/claude-dirs/D--Notatki-notatki/CLAUDE.md` and `backups/claude-dirs/D--Praca-Devstock-Baza-wiedzy/agents/kb-scan.md` — both mirrored locations are actually covered.
 - [ ] `hooks\tests\run-all.ps1` exits 0.
 - [ ] A Claude Code session in `D:\Notatki\notatki` appends an entry to `backups/sync.log`.
+
+---
+
+## Final review fixes
+
+The final whole-branch review, run after all 8 tasks were individually approved, found
+one Critical and several Important issues that only show up when the finished system is
+read as a whole rather than one task's diff at a time. This section documents the fixes
+applied on top of the shipped code, kept separate from the per-task write-ups above
+rather than rewritten back into them.
+
+### Fix A (Critical) — never finalize a hand-started merge, cherry-pick, revert, rebase, or bisect
+
+A conflicted merge left mid-resolution is exactly the state a human is actively fixing.
+`backup-claude.ps1`'s `git add -A` + `git commit` had no guard against this — reproduced
+directly: a fixture repo left `UU shared.md` mid-merge, run through the hook, ended with
+the conflict silently finalized (conflict markers baked into the committed file) and
+pushed, exit code 0. Reachable via the script's own advice: `Push-Pending`'s `DIVERGED`
+message tells the user to resolve by hand; the moment that hits a real conflict, any
+Claude Code session ending anywhere on the machine — this hook is global — finalizes it
+before the user gets back. A later `restore-claude.ps1 -Apply` would then write the
+conflict markers into a real `.claude` directory.
+
+In `hooks/backup-claude.ps1`, immediately inside the `try` block that follows
+`Push-Location -LiteralPath $Root`, before the `Invoke-Git` function definition:
+
+```powershell
+# A hand-started merge, cherry-pick, revert, rebase or bisect that hit
+# a conflict leaves the repository in exactly this state until a human
+# resolves it. `git add -A` would mark the conflict resolved and
+# `git commit` would finalize it - with the conflict markers baked
+# into the committed file - the moment any Claude Code session ends
+# anywhere on this machine, because this hook is global. A later
+# restore -Apply would then write those markers into a real .claude
+# directory. Never touch the index while one of these is in progress;
+# the next run tries again once the human has resolved it.
+foreach ($marker in @('MERGE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-merge', 'rebase-apply', 'BISECT_LOG')) {
+    if (Test-Path -LiteralPath (Join-Path $Root ".git\$marker")) {
+        Write-Log ("skip: repository is mid-{0}; not committing over a hand operation" -f $marker)
+        exit 0
+    }
+}
+```
+
+New test in `hooks/tests/test-backup.ps1`, inserted after the divergence block and before
+the vanished-source block:
+
+```powershell
+    # --- a hand-started, conflicted merge is never finalized by the hook ---
+    Push-Location $repo
+    $before = Get-CommitCount
+    git checkout -q -b conflict-side
+    Set-Content -LiteralPath (Join-Path $repo 'CLAUDE.md') -Value 'side version' -Encoding UTF8
+    git add -A; git commit -q -m 'side change'
+    git checkout -q main
+    Set-Content -LiteralPath (Join-Path $repo 'CLAUDE.md') -Value 'main version' -Encoding UTF8
+    git add -A; git commit -q -m 'main change'
+    git merge conflict-side -q 2>&1 | Out-Null
+    $mergeHeadBefore = Test-Path -LiteralPath (Join-Path $repo '.git\MERGE_HEAD')
+    Pop-Location
+    Assert-True -Condition $mergeHeadBefore -Because 'the fixture really is mid-merge before the hook runs'
+
+    $midMerge = Invoke-Backup
+    Assert-Equal -Expected 0 -Actual $midMerge.ExitCode -Because 'a mid-merge run exits cleanly rather than erroring'
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $repo '.git\MERGE_HEAD')) -Because 'MERGE_HEAD survives - the conflict is not finalized'
+    # +1, not +2: "side change" lands on the conflict-side branch, not on
+    # main - git log on main only ever saw "main change" join its history.
+    # The failed merge attempt never advanced main's ref, so this count is
+    # exactly what proves the hook added nothing on top of it.
+    Assert-Equal -Expected ($before + 1) -Actual (Get-CommitCount) -Because 'no merge commit is created on top of the one real setup commit on main'
+    Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'mid-MERGE_HEAD') -Because 'the skip is logged with the reason'
+
+    Push-Location $repo
+    git merge --abort
+    git checkout -q main
+    git branch -q -D conflict-side
+    Pop-Location
+```
+
+Verified by the controller: fixture reproduction confirmed the live, unfixed script
+finalizes the conflict (`MERGE_HEAD` gone, a merge commit created, its content literally
+`<<<<<<<`/`=======`/`>>>>>>>`); the fixed script left `MERGE_HEAD` intact and made no
+further commit. The new test passes against the fix (30/30) and fails exactly its three
+own assertions — nothing else — when the guard is removed.
+
+### Fix B (Important) — duplicate-slug detection
+
+Two sources whose paths collide after `Get-ClaudeDirSlug` silently share one mirror
+directory: `Update-Registry` keys entries by `claudeDir` (correctly unique), but
+`Sync-ClaudeMirror` is addressed by `slug`. `Sync-Directory`'s deletion pass computes
+`$seen` per call, so when two entries resolve to the same mirror, the second sync call
+deletes everything the first just wrote — deterministically, with no commit churn and no
+log line to notice by. The slug scheme's lossiness itself stays out of scope (a schema
+change), but leaving a collision completely undetected does not.
+
+New function in `hooks/lib/ClaudeBackup.psm1`, added before `Export-ModuleMember` and
+kept separate from `Update-Registry` so that function's existing contract with `Tasks 5`
+and `6` and their tests is untouched:
+
+```powershell
+function Find-DuplicateSlug {
+    <#
+      Returns groups of two or more registry entries whose slug collides -
+      Sync-ClaudeMirror addresses the mirror by slug, not by claudeDir, so
+      two distinct sources that happen to slugify to the same string
+      silently share one mirror: whichever syncs second deletes what the
+      first just wrote, since Sync-Directory's deletion pass only ever sees
+      its own call's file list. Returns an empty array when there is no
+      collision.
+    #>
+    param([Parameter(Mandatory)]$Registry)
+    $bySlug = [ordered]@{}
+    foreach ($entry in @($Registry.entries)) {
+        $key = $entry.slug.ToLowerInvariant()
+        if (-not $bySlug.Contains($key)) {
+            $bySlug[$key] = New-Object System.Collections.Generic.List[object]
+        }
+        $bySlug[$key].Add($entry)
+    }
+    return , @($bySlug.Values | Where-Object { $_.Count -gt 1 })
+}
+```
+
+Add `Find-DuplicateSlug` to the `Export-ModuleMember` list (tenth name, alongside the
+existing nine).
+
+In `hooks/backup-claude.ps1`, immediately after the `$registryChanged` computation and
+before the `# --- mirror ---` comment:
+
+```powershell
+foreach ($group in (Find-DuplicateSlug -Registry $registry)) {
+    $paths = ($group | ForEach-Object { $_.claudeDir }) -join ', '
+    Write-Log ("WARNING: {0} sources share the slug '{1}' and will overwrite each other's mirror: {2}" -f $group.Count, $group[0].slug, $paths)
+}
+```
+
+New test in `hooks/tests/test-registry.ps1`, added near the other `Update-Registry`
+assertions:
+
+```powershell
+    # --- a slug collision is detected, not silently accepted ---
+    $colliding = [pscustomobject]@{
+        version = 1; updated = $null
+        entries = @(
+            [pscustomobject]@{ slug = 'D--Same'; path = 'D:\A'; claudeDir = 'D:\A\.claude'; missing = $false; lastSync = $null },
+            [pscustomobject]@{ slug = 'D--Same'; path = 'D:\B'; claudeDir = 'D:\B\.claude'; missing = $false; lastSync = $null },
+            [pscustomobject]@{ slug = 'D--Unique'; path = 'D:\C'; claudeDir = 'D:\C\.claude'; missing = $false; lastSync = $null }
+        )
+    }
+    # Named slugDupes, not dupes - test-registry.ps1 already uses $dupes for
+    # Update-Registry's case-insensitive-merge assertion earlier in this file.
+    $slugDupes = Find-DuplicateSlug -Registry $colliding
+    Assert-Equal -Expected 1 -Actual (@($slugDupes)).Count -Because 'exactly one collision group is found'
+    Assert-Equal -Expected 2 -Actual (@($slugDupes)[0]).Count -Because 'the collision group has both colliding entries'
+
+    $clean = [pscustomobject]@{
+        version = 1; updated = $null
+        entries = @(
+            [pscustomobject]@{ slug = 'D--One'; path = 'D:\A'; claudeDir = 'D:\A\.claude'; missing = $false; lastSync = $null },
+            [pscustomobject]@{ slug = 'D--Two'; path = 'D:\B'; claudeDir = 'D:\B\.claude'; missing = $false; lastSync = $null }
+        )
+    }
+    # Capture to a variable before wrapping in @() - wrapping the function
+    # call itself in @() double-wraps an empty return , @(...) result into a
+    # one-element array containing an empty array, since the call site's own
+    # @() re-triggers pipeline unwrapping on top of the function's already-
+    # correct comma-protection. Wrapping an already-captured variable in
+    # @() afterward is safe; wrapping the call expression directly is not.
+    # Verified empirically: @(Find-DuplicateSlug ...) reported count=1 for a
+    # registry with zero collisions, plain capture then @($var) reported the
+    # correct 0.
+    $noDupes = Find-DuplicateSlug -Registry $clean
+    Assert-Equal -Expected 0 -Actual (@($noDupes)).Count -Because 'no collision is reported when every slug is unique'
+```
+
+Verified by the controller: both cases produce the exact counts above against the live
+function; a mutation returning an empty result unconditionally fails both new
+assertions and nothing else.
+
+### Fix C (Important) — restore writes the remapped registry back
+
+`restore-claude.ps1` read the registry but never wrote it. After `-Apply -Map`, the
+`.claude` and memory directories were correctly relocated, but the registry still
+described the old paths — the next `backup-claude.ps1` run would flag every restored
+source `missing`, and a later `-Rescan` would register each one a second time under a
+new slug alongside the stale entries, which are never removed by design.
+
+In `hooks/restore-claude.ps1`, immediately before the final `if (-not $Apply) { ... }`
+block:
+
+```powershell
+# --- persist the remapped paths, or the next backup-claude.ps1 run flags
+#     every restored source as missing, and a later -Rescan registers each
+#     one a second time under a new slug instead of recognising it.
+#     Only path/claudeDir change - slug stays exactly as it was. The mirror
+#     is addressed by the registry's own slug field (Sync-ClaudeMirror does
+#     not recompute one from path), so keeping it unchanged preserves the
+#     mirror's history without a discontinuity, and Update-Registry's
+#     claudeDir-keyed lookup now correctly matches the restored location on
+#     the very next run instead of treating it as new. ---
+if ($Apply -and @($Map).Count -gt 0) {
+    foreach ($entry in @($registry.entries)) {
+        $entry.path = Convert-MappedPath -Path $entry.path -Map $Map
+        $entry.claudeDir = Convert-MappedPath -Path $entry.claudeDir -Map $Map
+    }
+    Write-Registry -Registry $registry -Path $registryPath
+}
+```
+
+New assertions in `hooks/tests/test-restore.ps1`, added after the sibling-memory
+assertion and before the unmapped-target block:
+
+```powershell
+    $registryAfter = Get-Content -LiteralPath (Join-Path $repo 'backups\claude-dirs\registry.json') -Raw | ConvertFrom-Json
+    $restoredEntry = @($registryAfter.entries | Where-Object { $_.slug -eq $slug })[0]
+    Assert-True -Condition ($null -ne $restoredEntry) -Because 'the restored entry is still present in the registry'
+    Assert-Equal -Expected $target -Actual $restoredEntry.path -Because 'the registry path is remapped to the restored location'
+    Assert-Equal -Expected (Join-Path $target '.claude') -Actual $restoredEntry.claudeDir -Because 'the registry claudeDir is remapped to the restored location'
+    Assert-Equal -Expected $slug -Actual $restoredEntry.slug -Because 'the slug itself is left unchanged - the mirror is addressed by slug, not recomputed from path'
+
+    $siblingEntry = @($registryAfter.entries | Where-Object { $_.slug -eq 'D--Demoland-proj' })[0]
+    Assert-Equal -Expected 'D:\Demoland\proj' -Actual $siblingEntry.path -Because 'an entry the map does not reach keeps its original path'
+```
+
+Verified by the controller: baseline passes with both new assertions green; a mutation
+removing the write-back block fails exactly the two path/claudeDir assertions and
+nothing else.
+
+### Fix D (Important, documentation only) — `~/.claude.json` is neither backed up nor documented as absent
+
+`C:\Users\rafal\.claude.json` (one level above the repository root — a sibling of the
+`.claude` directory, not inside it) holds `mcpServers` (potentially carrying credentials
+for MCP server connections), `oauthAccount`, `userID`, and a `projects` map with
+per-project `allowedTools`/trust state. It is structurally outside the repository, so the
+allowlist never sees it and no code change is possible; given the credential-adjacent
+content, backing it up automatically would be undesirable even if it were reachable.
+Documentation-only fix: add a row to the spec's "What stays out, and why" table and to
+`README.md`'s "co celowo nie jest tu zapisane" table, both worded to make clear this file
+is outside the repository (not merely excluded by a rule) and must be reconfigured by
+hand after a restore.
+
+The spec's table already carries this row — applied directly by the controller, since it
+is a one-line documentation addition with no code to verify. Only the README's table
+still needs the equivalent row, worded for the same fact in Polish:
+
+```markdown
+| `~/.claude.json` (jeden poziom nad tym katalogiem, obok `.claude`, nie w środku) | poza repozytorium fizycznie — allowlist go nie widzi; zawiera dane serwerów MCP (potencjalnie z kluczami), konto OAuth i stan zaufania per-projekt — zbyt wrażliwe, by backupować automatycznie. Skonfiguruj ponownie ręcznie po odtworzeniu. |
+```
+
+### Fix E (Important) — README strengthened against machine-identity failures on restore
+
+Two hardcoded, machine-specific values survive a restore untouched and the README's own
+verification step cannot detect either failure: `settings.json`'s hook `command` fields
+embed the literal path `C:\Users\rafal\.claude\...`, and `backup-claude.ps1`'s default
+`-SearchRoot` is `@('D:\', 'C:\Users\rafal')`. On a machine with a different username,
+both hooks point at nonexistent files and `-Rescan` silently finds nothing — the
+README's existing check (`run-all.ps1` passes, `/hooks` shows `SessionEnd`) passes while
+the restored system has stopped backing up anything, permanently, with no error anywhere.
+
+Chosen fix: a documented manual step plus a verification that proves the push path
+actually works, rather than templating the hook command paths — a working, general
+templating mechanism for how Claude Code itself spawns hook commands could not be
+verified without a second real machine to restore onto, and this is a single fix wave
+with no second attempt if a subtle cross-platform assumption were wrong.
+
+Add to `README.md`'s restore section, after the existing path-restoration step and
+before the plugin-reinstallation step:
+
+```markdown
+3a. Zaktualizuj ścieżki w `settings.json`, jeśli katalog domowy różni się od oryginału
+    (inna nazwa użytkownika, inny komputer):
+
+    ```powershell
+    $settingsPath = "$env:USERPROFILE\.claude\settings.json"
+    $oldPath = 'C:\\Users\\rafal'                                  # jak dosłownie widnieje w pliku JSON
+    $newPath = $env:USERPROFILE.Replace('\', '\\')                 # to samo podwójne escapowanie
+    (Get-Content -LiteralPath $settingsPath -Raw).Replace($oldPath, $newPath) |
+        Set-Content -LiteralPath $settingsPath -Encoding utf8
+    ```
+
+    Jeśli układ dysków też się zmienił (inna litera dysku, inna struktura katalogów),
+    pierwsze `-Rescan` musi dostać własne `-SearchRoot`:
+
+    ```powershell
+    hooks\backup-claude.ps1 -Rescan -SearchRoot 'E:\', "$env:USERPROFILE"
+    ```
+
+    Bez tego `-Rescan` przeszukuje `D:\` i `C:\Users\rafal` - ścieżki tej maszyny, nie
+    nowej.
+```
+
+And strengthen the existing verification step (Step 5 in the original README) with a
+check that proves the hook's push path actually works, not just that files exist:
+
+```markdown
+   Kluczowa próba: samo uruchomienie hooka i sprawdzenie, że commit dotarł do zdalnego
+   repozytorium - to jedyny sposób, by wykryć zepsutą ścieżkę w `settings.json`, brakującą
+   tożsamość gita (`user.name`/`user.email`) albo brak działającego uwierzytelnienia do
+   GitHuba na nowej maszynie, zanim odkryjesz to tygodniami później jako brak backupów:
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.claude\hooks\backup-claude.ps1"
+   git -C "$env:USERPROFILE\.claude" rev-list --count origin/main..HEAD
+   ```
+
+   Druga komenda ma zwrócić `0` - to znaczy, że wszystko, co lokalnie powstało, dotarło
+   na `origin/main`.
+```
+
+### Fix F (Minor, folded into Fix E) — README day-to-day table uses invocations that fail under the default execution policy
+
+`README.md`'s "Codzienna obsługa" table gave bare script names (`hooks\backup-claude.ps1`,
+`hooks\tests\run-all.ps1`) while the rest of the document correctly uses
+`powershell.exe -NoProfile -ExecutionPolicy Bypass -File "..."`. On a fresh Windows
+machine with the default `Restricted` execution policy — precisely the machine this
+README is written for — the bare forms fail with "running scripts is disabled on this
+system." Fixed to match the rest of the document.
+
+### Parked, not fixed — mechanical enforcement of the secret gate for hand commits
+
+The secret gate scans only the delta (`git diff --cached --name-only`), never the whole
+tree, and nothing mechanically enforces it for a commit made by hand — the invariant
+lives in this plan's text and in every dispatch's instructions, not in a tracked git
+hook. The controller independently re-scanned the current state (all 180 tracked files,
+all 23 commits' trees) and found nothing leaking today, so this is a durability gap, not
+a live leak. A tracked `pre-commit` hook plus `git config core.hooksPath` would convert
+the discipline into a mechanism that survives a restore — but that is new infrastructure
+(git hook installation, a restore-procedure addition), not a fix to something already
+built, in a fix wave with no second, scoped re-review to catch a subtle mistake in it.
+Left for the user to request separately if wanted, rather than added unasked.

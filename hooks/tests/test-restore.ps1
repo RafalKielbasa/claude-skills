@@ -100,6 +100,16 @@ try {
     # the memory-rename loop, not just the per-entry .claude restore.
     Assert-True -Condition (Test-Path -LiteralPath (Join-Path $repo 'projects\D--Demoland-proj\memory\MEMORY.md')) -Because 'D--Demo does not capture D--Demoland-proj in slug space either'
 
+    $registryAfter = Get-Content -LiteralPath (Join-Path $repo 'backups\claude-dirs\registry.json') -Raw | ConvertFrom-Json
+    $restoredEntry = @($registryAfter.entries | Where-Object { $_.slug -eq $slug })[0]
+    Assert-True -Condition ($null -ne $restoredEntry) -Because 'the restored entry is still present in the registry'
+    Assert-Equal -Expected $target -Actual $restoredEntry.path -Because 'the registry path is remapped to the restored location'
+    Assert-Equal -Expected (Join-Path $target '.claude') -Actual $restoredEntry.claudeDir -Because 'the registry claudeDir is remapped to the restored location'
+    Assert-Equal -Expected $slug -Actual $restoredEntry.slug -Because 'the slug itself is left unchanged - the mirror is addressed by slug, not recomputed from path'
+
+    $siblingEntry = @($registryAfter.entries | Where-Object { $_.slug -eq 'D--Demoland-proj' })[0]
+    Assert-Equal -Expected 'D:\Demoland\proj' -Actual $siblingEntry.path -Because 'an entry the map does not reach keeps its original path'
+
     # --- an unmapped, nonexistent target is reported, not created ---
     $unmapped = Invoke-Restore -ExtraArgs @('-Apply')
     Assert-Equal -Expected 0 -Actual $unmapped.ExitCode -Because 'an unreachable target does not fail the run'
