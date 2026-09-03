@@ -211,3 +211,5 @@ idą torem n8n — dlatego prefiks wpisów jest zawsze `offsite:`.
 - `planning/transkrypty/` to skrzynka robocza, nie archiwum — pliki
   wchodzą tylko na ten jeden przebieg trybu „transkrypt" i są usuwane po
   finalizacji notatki (krok 7). Nigdy nie commituj ich zawartości.
+
+<!-- backup-hook-probe -->
