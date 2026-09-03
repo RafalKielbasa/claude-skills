@@ -23,8 +23,24 @@ kodem i nie powinna przechodzić przez składnię języka.
   wewnątrz odtwarzanej treści. Obejście: treść zapisana heredokiem do osobnego
   pliku `.md`, a skrypt tylko ją wczytał i wstawił.
 
+- 2026-09-03, sesja session_01APWRKsZej4SeoF4vvdibEC (druga część): ten sam
+  kształt bez żadnej ścieżki Windows. Zapis specu heredokiem `<<'SPECEOF'` przez
+  narzędzie Bash padł na `unexpected EOF while looking for matching ''`, bo
+  narzędzie owija komendę w pojedyncze cudzysłowy, a treść zawierała angielskie
+  dopełniacze (`skill's own checklist`, `the child's database id`). Naprawą było
+  porzucenie heredoku na rzecz narzędzia zapisującego plik wprost. Ta sama
+  lekcja weszła potem do skilla `github-tickets` jako reguła kroku 3 i jako
+  wymóg podawania promptu codeksowi przez stdin, nie argumentem.
+
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją
 w skrypcie, zamiast wklejać do literału. Skrypt ma wtedy w sobie wyłącznie
 logikę i ścieżki (te jako literały surowe), a tekst nie przechodzi przez
 składnię języka ani przez dwa poziomy cytowania powłoki.
+
+Wyzwalaczem nie jest sama ścieżka Windows, tylko dowolny znak, który jeden
+z poziomów cytowania traktuje jako składnię: odwrotny ukośnik w literale
+nie-surowym, apostrof wewnątrz `bash -c '...'`, backtick w podwójnym cudzysłowie.
+Prozy pisanej dla człowieka nie da się z góry przeczyścić z takich znaków, więc
+nie przepuszczaj jej przez powłokę: użyj narzędzia zapisującego plik wprost,
+a przy wywołaniach CLI podawaj długi tekst plikiem albo na stdin.

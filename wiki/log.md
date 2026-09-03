@@ -43,3 +43,12 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Założono: figma-instancje-nie-przeliczaja-po-podmianie-mistrza (dowód: po wymianie dzieci mistrza `PanelRail` dwie instancje z nadpisaną widocznością wyrenderowały dwie pozycje na `y=56`; naprawił toggle właściwości, pozostałych 11 instancji przeliczyło się samo)
 - Dopisano dowód: skrypt-z-asercja-zamiast-serii-edycji (spis stanu 22 instancji `TopBar` i 7 instancji szyny kursu przed podmianą na komponenty, odtworzenie jako właściwości, weryfikacja odczytem ze wszystkich instancji zamiast zrzutem ekranu)
 - Sygnał: brak (oba nowe wzorce mają dowody z jednej sesji; próg to dowody z więcej niż dwóch sesji albo status nawrót)
+
+## 2026-09-03 — sesja session_01APWRKsZej4SeoF4vvdibEC (druga część)
+- Założono: regula-ciecia-usuwa-zakres-nie-szczegol (dowód: przy przepisywaniu #168 wg reguły głębokości ticketu zniknął cały punkt o `CatalogFilterProvider` oraz reguła życia klienta zapytań, obie niemożliwe do odzyskania z kodu; wyłapał to `codex exec`, nie własna lista kontrolna). Status od razu zaadresowany: cztery odpowiadające pozycje dopisane do `self-check.md` skilla `github-tickets` w tej samej sesji.
+- Założono: kalibracja-na-jednym-elemencie-przed-paczka (dowód: #168 przepisany jako pierwszy i pokazany w całości; po „Jest super, tnij" czternaście pozostałych poszło tym samym cięciem bez poprawek kalibracyjnych)
+- Założono: sciezka-skrocona-nie-jest-klikalna (dowód: podana ścieżka `scratchpad/tickets-new/168.md`, użytkownik: „Nie działa mi link"; plik był pod pełną ścieżką w katalogu tymczasowym sesji)
+- Dopisano dowód: twierdzenie-o-pliku-bez-odczytu (dwa fałszywe twierdzenia o stanie repozytorium przeniesione bez sprawdzenia ze starych treści ticketów do nowych, w #171 i #183; oba wyłapał `codex exec`)
+- Dopisano dowód: windows-path-w-literale-skryptu (heredoc `<<'SPECEOF'` w narzędziu Bash padł na apostrofach w angielskim tekście — `skill's`, `child's` — nie na ścieżce Windows; ten sam wyzwalacz co pierwotny dowód, inny znak)
+- Dopisano dowód: skrypt-z-asercja-zamiast-serii-edycji (wstawienie wpisu do `praca-z-claude.md` z asercją nagłówka i sprawdzeniem przyrostu linii 635+39+2=676; wysyłka 15 przepisanych ticketów zweryfikowana odczytem treści z GitHuba wobec draftów, nie założeniem, że polecenia się powiodły)
+- Sygnał: brak (wszystkie trzy nowe wzorce mają jeden dowód z jednej sesji; próg to dowody z więcej niż dwóch sesji albo status nawrót)

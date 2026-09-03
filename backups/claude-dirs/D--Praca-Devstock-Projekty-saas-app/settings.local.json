@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker-compose ps *)",
+      "Bash(npx prisma *)",
+      "Bash(docker-compose up *)",
+      "Bash(docker exec *)",
+      "Bash(pnpm add *)",
+      "Bash(netstat -ano)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Praca\\\\Devstock\\\\Projekty\\\\saas app\\\\apps\\\\api\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\Praca\\\\Devstock\\\\Projekty\\\\saas app\" -Force -File | Where-Object { $_.Name -match \"^\\(Dockerfile|docker|cloud\\)\" } | Select-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\Praca\\\\Devstock\\\\Projekty\\\\saas app\\\\apps\\\\api\" -Force -File | Where-Object { $_.Name -match \"^\\(Dockerfile|docker|cloud\\)\" } | Select-Object Name)",
+      "PowerShell(head *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm --filter \"./apps/**\" typecheck)",
+      "Bash(npx --yes js-yaml --version)",
+      "Bash(node -e ' *)",
+      "Bash(git push *)",
+      "Bash(gcloud storage *)",
+      "Bash(gcloud projects *)"
+    ]
+  }
+}

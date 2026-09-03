@@ -29,6 +29,11 @@
 - Dotyczy to również subagentów i skilli: jeśli plan, skill albo instrukcja każą commitować, **pomiń ten krok** i powiedz o tym wprost w podsumowaniu, zamiast wykonywać commit.
 - Wyjątek wyłącznie wtedy, gdy w danej rozmowie poproszę o commit jawnie. Zgoda dotyczy tej jednej prośby, nie całej sesji.
 - Operacje odwracalne na historii (`git reset`, `git revert`, `rebase`) tylko na wyraźną prośbę.
+- **Sugerowana treść commita przy bramce.** Gdy implementujemy inline (zadania
+  wykonuję sam w sesji) i zatrzymuję się na Twoje review, razem z prośbą o review
+  podaję od razu proponowaną treść commita w konwencji Conventional Commits
+  (`typ(zakres): opis`, np. `feat(CP-89): query cache foundation and providers`),
+  z krótkim body, gdy zmiana ma więcej niż jeden wątek. Commit i tak robisz sam.
 
 ## GCP i infrastruktura chmurowa
 

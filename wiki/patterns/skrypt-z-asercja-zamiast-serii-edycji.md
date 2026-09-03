@@ -30,6 +30,14 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
   odtworzono po podmianie jako właściwości komponentu, a wynik zweryfikowano
   odczytem właściwości ze wszystkich instancji, nie zrzutem ekranu. Zgodność
   z zapisem sprzed operacji wyszła pełna.
+- 2026-09-03, sesja session_01APWRKsZej4SeoF4vvdibEC (druga część): wstawienie
+  wpisu na górę `praca-z-claude.md` wykonane jednym poleceniem z asercją, że
+  pierwsza linia to nagłówek dziennika, i z porównaniem przyrostu liczby linii
+  z oczekiwaniem (635 + 39 + 2 = 676, wynik 676). Plik miał już trzy wpisy z tego
+  samego dnia od innych sesji, więc edycja „w miejscu” po numerze linii byłaby
+  zgadywaniem. Ten sam ruch powtórzył się przy wysyłce piętnastu ticketów, gdzie
+  weryfikacją była nie liczba linii, tylko odczyt treści z GitHuba i porównanie
+  z draftem, z pominięciem końcowej pustej linii dokładanej przez GitHub.
 
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:
