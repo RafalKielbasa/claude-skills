@@ -67,6 +67,7 @@ Datę bierz z kontekstu sesji (dzisiejsza, `YYYY-MM-DD`). Trzymaj się kolejnoś
 ## Krok 4 — dopisz na GÓRZE pliku
 
 - Nowy wpis idzie **nad** poprzednie (odwrotnie chronologicznie) — rano partner widzi najnowszy pierwszy.
+- „Góra pliku" znaczy **pod nagłówkiem `# Praca z Claude — dziennik sesji`**, nie na fizycznym początku pliku. Nad tym nagłówkiem mogą leżeć inne sekcje (np. tabela pomysłów) — nie ruszasz ich i nie wstawiasz wpisu przed nimi.
 - Jeśli plik pusty/nie istnieje: załóż go z nagłówkiem `# Praca z Claude — dziennik sesji`, potem wpis.
 - **Dopisuj, nie nadpisuj** — starych wpisów nie kasujesz.
 - Po zapisie podaj partnerowi ścieżkę i 1-zdaniowe potwierdzenie.
