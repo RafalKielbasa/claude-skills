@@ -63,16 +63,90 @@ function Find-ClaudeDirs {
     return , $found.ToArray()
 }
 
+function Repair-Registry {
+    <#
+      Rebuilds a parsed registry so every field this module reads or assigns is
+      guaranteed to exist. Private; not exported.
+
+      Two PowerShell behaviours make this necessary, and the second is the
+      dangerous one:
+        - Reading an absent property under Set-StrictMode -Version Latest throws
+          PropertyNotFoundException.
+        - ASSIGNING an absent property on an object produced by ConvertFrom-Json
+          throws SetValueInvocationException *regardless of StrictMode* - such
+          objects do not accept ad-hoc dot-assignment the way a Hashtable does.
+
+      Either one aborts the whole run, every source directory and not merely the
+      malformed entry, on a registry that was hand-edited or written by an older
+      schema. Hand-editing is a realistic path: a user restoring onto a machine
+      with different drive letters may well fix paths in the file directly.
+    #>
+    param($Registry)
+
+    $entriesProperty = $Registry.PSObject.Properties['entries']
+    $rawEntries = @()
+    if ($entriesProperty) { $rawEntries = @($entriesProperty.Value) }
+
+    $entries = New-Object System.Collections.Generic.List[object]
+    foreach ($rawEntry in $rawEntries) {
+        if ($null -eq $rawEntry) { continue }
+        $fields = $rawEntry.PSObject.Properties
+
+        $claudeDir = ''
+        if ($fields['claudeDir']) { $claudeDir = [string]$fields['claudeDir'].Value }
+        $projectPath = ''
+        if ($fields['path']) { $projectPath = [string]$fields['path'].Value }
+
+        # An entry addressing nothing cannot be mirrored or restored; drop it
+        # rather than carry a placeholder that later code would trip over.
+        if (-not $claudeDir -and -not $projectPath) { continue }
+        if (-not $claudeDir) { $claudeDir = Join-Path $projectPath '.claude' }
+        if (-not $projectPath) { $projectPath = Split-Path -Parent $claudeDir }
+
+        $slug = ''
+        if ($fields['slug']) { $slug = [string]$fields['slug'].Value }
+        if (-not $slug) { $slug = Get-ClaudeDirSlug -ProjectPath $projectPath }
+
+        $missing = $false
+        if ($fields['missing']) { $missing = [bool]$fields['missing'].Value }
+        $lastSync = $null
+        if ($fields['lastSync']) { $lastSync = $fields['lastSync'].Value }
+
+        $entries.Add([pscustomobject]@{
+            slug      = $slug
+            path      = $projectPath
+            claudeDir = $claudeDir
+            missing   = $missing
+            lastSync  = $lastSync
+        })
+    }
+
+    $version = 1
+    if ($Registry.PSObject.Properties['version']) {
+        $version = $Registry.PSObject.Properties['version'].Value
+    }
+    $updated = $null
+    if ($Registry.PSObject.Properties['updated']) {
+        $updated = $Registry.PSObject.Properties['updated'].Value
+    }
+
+    return [pscustomobject]@{
+        version = $version
+        updated = $updated
+        entries = @($entries.ToArray())
+    }
+}
+
 function Read-Registry {
     param([Parameter(Mandatory)][string]$Path)
-    if (-not (Test-Path -LiteralPath $Path)) {
-        return [pscustomobject]@{ version = 1; updated = $null; entries = @() }
-    }
+
+    $empty = [pscustomobject]@{ version = 1; updated = $null; entries = @() }
+    if (-not (Test-Path -LiteralPath $Path)) { return $empty }
+
     $raw = Get-Content -LiteralPath $Path -Raw -Encoding UTF8
-    if ([string]::IsNullOrWhiteSpace($raw)) {
-        return [pscustomobject]@{ version = 1; updated = $null; entries = @() }
-    }
-    return ($raw | ConvertFrom-Json)
+    if ([string]::IsNullOrWhiteSpace($raw)) { return $empty }
+
+    return (Repair-Registry -Registry ($raw | ConvertFrom-Json))
 }
 
 function Write-Registry {

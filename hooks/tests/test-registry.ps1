@@ -64,6 +64,47 @@ try {
     $self = Update-Registry -Registry (Read-Registry -Path 'nonexistent.json') `
         -FoundClaudeDir @('C:\Users\rafal\.claude') -SelfClaudeDir 'C:\Users\rafal\.claude'
     Assert-Equal -Expected 0 -Actual (@($self.entries).Count) -Because 'the repo root is excluded from its own mirror'
+
+    # --- a hand-edited registry does not take the whole run down with it ---
+    # Assigning an absent property on a ConvertFrom-Json object throws
+    # SetValueInvocationException even without StrictMode, so an entry lacking
+    # `missing`, or a root object lacking `updated`, would otherwise abort the
+    # sync for every source directory rather than just the malformed one.
+    $handEdited = Join-Path $sandbox 'hand-edited.json'
+    @'
+{
+  "version": 1,
+  "entries": [
+    { "slug": "D--Hand-Edited", "path": "D:\\Hand\\Edited", "claudeDir": "D:\\Hand\\Edited\\.claude" }
+  ]
+}
+'@ | Out-File -LiteralPath $handEdited -Encoding utf8
+
+    $repaired = Read-Registry -Path $handEdited
+    Assert-Equal -Expected 1 -Actual (@($repaired.entries).Count) -Because 'a hand-edited entry survives the read'
+    Assert-True -Condition (@($repaired.entries)[0].PSObject.Properties.Name -contains 'missing') -Because 'the absent missing field is materialised'
+    Assert-True -Condition (@($repaired.entries)[0].PSObject.Properties.Name -contains 'lastSync') -Because 'the absent lastSync field is materialised'
+    Assert-True -Condition ($repaired.PSObject.Properties.Name -contains 'updated') -Because 'the absent updated field is materialised'
+
+    $survived = $true
+    try {
+        $merged2 = Update-Registry -Registry $repaired -FoundClaudeDir @() -SelfClaudeDir 'C:\Users\rafal\.claude'
+        Write-Registry -Registry $merged2 -Path (Join-Path $sandbox 'rewritten.json')
+    } catch {
+        $survived = $false
+    }
+    Assert-True -Condition $survived -Because 'update and write both succeed on a hand-edited registry'
+
+    # --- an entry addressing nothing is dropped rather than carried forward ---
+    $junk = Join-Path $sandbox 'junk.json'
+    '{ "version": 1, "entries": [ { "slug": "orphan" } ] }' | Out-File -LiteralPath $junk -Encoding utf8
+    Assert-Equal -Expected 0 -Actual (@((Read-Registry -Path $junk).entries).Count) -Because 'an entry with neither path nor claudeDir is dropped'
+
+    # --- the same source twice, cased differently, merges to one entry ---
+    $dupes = Update-Registry -Registry (Read-Registry -Path 'nonexistent.json') `
+        -FoundClaudeDir @((Join-Path $sandbox 'proj a\.claude'), (Join-Path $sandbox 'PROJ A\.CLAUDE')) `
+        -SelfClaudeDir 'C:\Users\rafal\.claude'
+    Assert-Equal -Expected 1 -Actual (@($dupes.entries).Count) -Because 'case-insensitive keying merges a duplicate source'
 } finally {
     Remove-Item -LiteralPath $sandbox -Recurse -Force -ErrorAction SilentlyContinue
 }
