@@ -39,6 +39,18 @@
   ```
 
   In the body `$PSScriptRoot` is correct, so `Import-Module (Join-Path $PSScriptRoot ...)` and similar are fine as written.
+- **Never merge a native command's stderr with `2>&1` while `$ErrorActionPreference = 'Stop'` is in effect, without scoping the merge.** Verified on this machine against a real remote: under the combination, PowerShell 5.1 wraps every stderr line from the native process in an `ErrorRecord` and promotes it to a *terminating exception* at the invocation line itself — before `$LASTEXITCODE` is ever checked. This fires not only on real failures but on ordinary success: a genuinely successful `git fetch --verbose` against a valid remote throws this way too, because git routinely writes progress text to stderr regardless of outcome. Left unguarded, this makes any `-AllowFailure`-style retry mechanism dead code for exactly the calls that need it, and can crash the whole script on its first real network operation. Fix: scope `$ErrorActionPreference = 'Continue'` around the single native call, restore it in a `finally`, and check `$LASTEXITCODE` only after that scope closes:
+
+  ```powershell
+  $previousEap = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+      $output = & git @GitArgs 2>&1
+  } finally {
+      $ErrorActionPreference = $previousEap
+  }
+  if ($LASTEXITCODE -ne 0 -and -not $AllowFailure) { ... }
+  ```
 
 ---
 
@@ -1412,6 +1424,40 @@ try {
     Pop-Location
     Assert-True -Condition ($remoteHead.Count -gt 0) -Because 'the pending commit reaches the remote on a no-changes run'
 
+    # --- a genuine divergence is diagnosed distinctly from a transient failure ---
+    # Simulates a commit landing on origin from somewhere else - a second
+    # machine, or an edit made directly on GitHub.com - while this machine
+    # also has an unpushed local commit. A plain `git push` can never
+    # resolve this; the log must say so rather than promising a retry will
+    # succeed, since nothing here ever merges or rebases automatically.
+    $otherClone = Join-Path $sandbox 'other-clone'
+    git clone -q $remote $otherClone
+    Push-Location $otherClone
+    # A bare repo's HEAD symbolic ref is not updated by a push - it still
+    # points at whatever git init picked as the default branch, which may
+    # not exist. Left implicit, the clone lands on no checked-out branch at
+    # all, and the commit below goes nowhere near `main`.
+    git checkout -q -b main origin/main
+    git config user.name 'other'; git config user.email 'other@example.com'
+    # Two commits on the origin side, one on the local side: deliberately
+    # asymmetric. $ahead and $behind must be computed from opposite ranges
+    # (origin/main..HEAD vs HEAD..origin/main); with a symmetric 1-and-1
+    # split, a copy-paste bug that computed $behind from the wrong range
+    # would coincidentally land on the same value and this test would not
+    # notice. With 2-vs-1, that mistake reports the wrong count, and the
+    # assertion below checks the exact count, not just the word DIVERGED.
+    Set-Content -LiteralPath (Join-Path $otherClone 'from-elsewhere-1.txt') -Value 'elsewhere' -Encoding UTF8
+    git add -A; git commit -q -m 'from elsewhere 1'
+    Set-Content -LiteralPath (Join-Path $otherClone 'from-elsewhere-2.txt') -Value 'elsewhere' -Encoding UTF8
+    git add -A; git commit -q -m 'from elsewhere 2'
+    git push -q origin main
+    Pop-Location
+
+    Set-Content -LiteralPath (Join-Path $project '.claude\skills\demo\SKILL.md') -Value 'local change during divergence' -Encoding UTF8
+    $diverged = Invoke-BackupWithPush
+    Assert-Equal -Expected 0 -Actual $diverged.ExitCode -Because 'a diverged push does not fail the run'
+    Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'DIVERGED: origin/main has 2 commit\(s\)') -Because 'the diagnosis reports the correct, larger side of an asymmetric divergence - not $ahead mistaken for $behind'
+
     # --- a vanished source keeps its mirror and is flagged in the registry ---
     Remove-Item -LiteralPath (Join-Path $project '.claude') -Recurse -Force
     Invoke-Backup -ExtraArgs @('-Rescan') | Out-Null
@@ -1501,12 +1547,30 @@ $exitCode = 0
 try {
     # --- registry ---
     $registry = Read-Registry -Path $registryPath
+
+    # Captured before Update-Registry mutates missing in place: a value-type
+    # snapshot, keyed by claudeDir, of what each entry's missing flag was
+    # coming into this run. Used below to detect a flip even when it produces
+    # no mirrored file diff at all (a vanished source mirrors nothing).
+    $missingBefore = @{}
+    foreach ($entry in @($registry.entries)) {
+        $missingBefore[$entry.claudeDir.ToLowerInvariant()] = [bool]$entry.missing
+    }
+
     $found = @()
     if ($Rescan -or -not (Test-Path -LiteralPath $registryPath)) {
         Write-Log 'rescanning for .claude directories'
         $found = Find-ClaudeDirs -SearchRoot $SearchRoot
     }
     $registry = Update-Registry -Registry $registry -FoundClaudeDir $found -SelfClaudeDir $Root
+
+    $registryChanged = $false
+    foreach ($entry in @($registry.entries)) {
+        $key = $entry.claudeDir.ToLowerInvariant()
+        if (-not $missingBefore.ContainsKey($key) -or $missingBefore[$key] -ne [bool]$entry.missing) {
+            $registryChanged = $true
+        }
+    }
 
     # --- mirror ---
     $mirroredFiles = 0
@@ -1517,13 +1581,11 @@ try {
         }
         $mirrorDir = Join-Path $mirrorRoot $entry.slug
         $mirroredFiles += Sync-ClaudeMirror -SourceClaudeDir $entry.claudeDir -MirrorDir $mirrorDir
-        $entry.lastSync = (Get-Date).ToString('o')
     }
-    Write-Registry -Registry $registry -Path $registryPath
     Write-Log ('mirrored {0} files from {1} sources' -f $mirroredFiles, @($registry.entries).Count)
 
     # --- stage, gate, commit ---
-    Push-Location $Root
+    Push-Location -LiteralPath $Root
     try {
         function Invoke-Git {
             <#
@@ -1531,9 +1593,30 @@ try {
               exit into a terminating error, so $ErrorActionPreference = 'Stop'
               would happily let a failed `git add` pass for success. Every call
               whose outcome matters goes through here.
+
+              A second, sharper quirk sits on top of that one: still under
+              $ErrorActionPreference = 'Stop', merging a native command's
+              stderr with 2>&1 wraps each stderr line in an ErrorRecord and
+              PROMOTES it to a terminating exception right at the invocation
+              line - before $LASTEXITCODE is ever checked below. Left alone,
+              that makes -AllowFailure a no-op for exactly the calls that need
+              it most: a fetch or push against an unreachable remote throws
+              here instead of returning a non-zero exit code. Verified against
+              a real remote: even a fully successful `git fetch --verbose`
+              against this repository's own origin throws under the unscoped
+              form, because git routinely writes progress text to stderr on
+              success, not only on failure. The local 'Continue' override,
+              scoped to the call and restored in the finally, neutralises the
+              promotion while still capturing stderr as ordinary output.
             #>
             param([Parameter(Mandatory)][string[]]$GitArgs, [switch]$AllowFailure)
-            $output = & git @GitArgs 2>&1
+            $previousEap = $ErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            try {
+                $output = & git @GitArgs 2>&1
+            } finally {
+                $ErrorActionPreference = $previousEap
+            }
             if ($LASTEXITCODE -ne 0 -and -not $AllowFailure) {
                 Write-Log ('git {0} failed ({1}): {2}' -f ($GitArgs -join ' '), $LASTEXITCODE, ($output -join ' '))
                 throw ('git {0} failed' -f ($GitArgs -join ' '))
@@ -1565,12 +1648,49 @@ try {
             Invoke-Git -GitArgs @('push', 'origin', 'main') -AllowFailure |
                 ForEach-Object { Write-Log ('push: {0}' -f $_) }
             if ($LASTEXITCODE -ne 0) {
-                Write-Log 'push failed; commits stay local and the next run retries'
+                # A plain retry only resolves a transient failure - the
+                # network was down, the remote was briefly unreachable. It
+                # can NEVER resolve a genuine divergence: origin/main
+                # carrying commits this machine does not have, typically
+                # from editing a file directly on GitHub, or from a second
+                # machine sharing this same repository. Distinguish the two
+                # so the log does not promise a self-resolution a divergence
+                # cannot have. This script never merges, rebases, or
+                # force-pushes on its own - CLAUDE.md reserves
+                # history-rewriting git operations for an explicit request,
+                # and an unattended hook is the last place to run one
+                # regardless of how convenient it would be here.
+                $behind = (Invoke-Git -GitArgs @('rev-list', '--count', 'HEAD..origin/main') -AllowFailure |
+                           Select-Object -First 1)
+                if ($LASTEXITCODE -eq 0 -and [int]$behind -gt 0) {
+                    Write-Log ('DIVERGED: origin/main has {0} commit(s) this machine does not have; a plain push cannot resolve this and will keep failing every run. Commits stay local. Resolve by hand: fetch, inspect origin/main..HEAD and HEAD..origin/main, then merge or push --force-with-lease as appropriate.' -f $behind)
+                } else {
+                    Write-Log 'push failed; commits stay local and the next run retries'
+                }
             }
         }
 
         Invoke-Git -GitArgs @('add', '-A') | Out-Null
         $staged = @(Invoke-Git -GitArgs @('-c', 'core.quotepath=false', 'diff', '--cached', '--name-only'))
+
+        # Write-Registry always stamps a fresh 'updated', and every synced
+        # entry would get a fresh lastSync - doing that unconditionally on
+        # every run would make registry.json differ byte for byte between two
+        # otherwise identical runs, staging a phantom change and breaking the
+        # "no changes -> no commit" contract this script exists to honor.
+        # $staged above already reflects any real mirrored-content change
+        # (the mirror was synced before this point; registry.json itself has
+        # not been touched yet this run), so the registry is rewritten only
+        # when that is non-empty or a source's missing flag flipped -
+        # persisting the flag even when nothing was mirrored for it.
+        if ($staged.Count -gt 0 -or $registryChanged) {
+            foreach ($entry in @($registry.entries)) {
+                if (-not $entry.missing) { $entry.lastSync = (Get-Date).ToString('o') }
+            }
+            Write-Registry -Registry $registry -Path $registryPath
+            Invoke-Git -GitArgs @('add', '-A') | Out-Null
+            $staged = @(Invoke-Git -GitArgs @('-c', 'core.quotepath=false', 'diff', '--cached', '--name-only'))
+        }
 
         if ($staged.Count -eq 0) {
             Write-Log 'no changes'
@@ -1721,9 +1841,16 @@ try {
     # --- prefix matching respects segment boundaries ---
     # "D:\Demo=..." must not capture "D:\Demoland". With a naive StartsWith the
     # entry below would be reported against a path containing 'restoredland'.
+    # The sibling also gets its OWN memory directory, on disk - without one,
+    # the memory-rename loop's Get-ChildItem never even sees "D--Demoland-proj"
+    # as a candidate, and this test cannot catch a missing boundary check in
+    # that loop specifically (only in the per-entry .claude restore, which
+    # already goes through Convert-MappedPath and was never the risk).
     $sibling = Join-Path $repo 'backups\claude-dirs\D--Demoland-proj'
     New-Item -ItemType Directory -Path $sibling -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $sibling 'settings.json') -Value '{}' -Encoding UTF8
+    New-Item -ItemType Directory -Path (Join-Path $repo 'projects\D--Demoland-proj\memory') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $repo 'projects\D--Demoland-proj\memory\MEMORY.md') -Value '- unrelated note' -Encoding UTF8
     $registry.entries = @($registry.entries) + @([pscustomobject]@{
         slug = 'D--Demoland-proj'; path = 'D:\Demoland\proj'; claudeDir = 'D:\Demoland\proj\.claude'
         missing = $false; lastSync = $null
@@ -1733,17 +1860,33 @@ try {
     $boundary = Invoke-Restore -ExtraArgs @('-Map', $map)
     Assert-True -Condition ($boundary.Output -notmatch 'restoredland') -Because 'D:\Demo does not capture D:\Demoland'
 
+    # --- a stray file the mirror never claimed to contain survives ---
+    # The restore's whole reason to exist is to never delete. The stray file
+    # goes INSIDE the actual restore target, $target\.claude - not $target
+    # itself, which the script never touches at all and would make this
+    # assertion pass even against a version that wiped .claude clean first.
+    # Verified: an earlier draft seeded the stray file in $target and a
+    # mutation that cleared $target\.claude before copying went undetected.
+    New-Item -ItemType Directory -Path (Join-Path $target '.claude') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $target '.claude\pre-existing-unrelated-file.txt') -Value 'do not touch me' -Encoding UTF8
+
     # --- apply writes the files ---
     $apply = Invoke-Restore -ExtraArgs @('-Apply', '-Map', $map)
     Assert-Equal -Expected 0 -Actual $apply.ExitCode -Because 'apply succeeds'
     Assert-True -Condition (Test-Path -LiteralPath (Join-Path $target '.claude\skills\demo\SKILL.md')) -Because 'skills are restored under the mapped path'
     Assert-True -Condition (Test-Path -LiteralPath (Join-Path $target '.claude\settings.json')) -Because 'settings are restored'
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $target '.claude\pre-existing-unrelated-file.txt')) -Because 'a file the mirror never claimed to contain survives the restore'
 
     # --- memory directories follow the same remap ---
     $newSlug = Get-ClaudeDirSlug -ProjectPath $target
     $renamed = Join-Path $repo "projects\$newSlug"
     Assert-True -Condition (Test-Path -LiteralPath $renamed) -Because 'the memory slug is renamed to match the new path'
     Assert-True -Condition (Test-Path -LiteralPath (Join-Path $renamed 'memory\MEMORY.md')) -Because 'memory content survives the rename'
+
+    # --- the sibling's memory is untouched by the same -Apply ---
+    # This is the assertion that actually exercises the boundary check inside
+    # the memory-rename loop, not just the per-entry .claude restore.
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $repo 'projects\D--Demoland-proj\memory\MEMORY.md')) -Because 'D--Demo does not capture D--Demoland-proj in slug space either'
 
     # --- an unmapped, nonexistent target is reported, not created ---
     $unmapped = Invoke-Restore -ExtraArgs @('-Apply')
@@ -1885,7 +2028,16 @@ foreach ($rule in $Map) {
 
     foreach ($dir in @(Get-ChildItem -LiteralPath $projectsRoot -Directory)) {
         if (-not $dir.Name.StartsWith($oldPrefix, [StringComparison]::OrdinalIgnoreCase)) { continue }
-        $newName = $newPrefix + $dir.Name.Substring($oldPrefix.Length)
+
+        # Slug space has already collapsed every path separator - : \ / and
+        # even a literal space - into '-', so the boundary check here mirrors
+        # Convert-MappedPath's but checks for '-' rather than '\' or '/':
+        # the character right after the matched prefix must be a separator or
+        # end-of-string, or "D--Demo" would also capture "D--Demoland-proj".
+        $memRest = $dir.Name.Substring($oldPrefix.Length)
+        if ($memRest.Length -gt 0 -and $memRest[0] -ne '-') { continue }
+
+        $newName = $newPrefix + $memRest
         Write-Host "$verb memory $($dir.Name) -> $newName" -ForegroundColor Cyan
         if ($Apply) { Rename-Item -LiteralPath $dir.FullName -NewName $newName -Force }
     }
@@ -1938,7 +2090,7 @@ Expected: `all tests passed`, exit code 0.
 git add hooks/restore-claude.ps1 hooks/tests/test-restore.ps1 hooks/tests/run-all.ps1
 git commit -m "feat: add restore script with dry-run default and path remapping
 
-Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_0115YBg2ri1ajCfG8GNynEsZ"
 git push origin main
 ```
@@ -2011,7 +2163,7 @@ No output means the gate passed.
 ```bash
 git commit -m "chore: run backup-claude on SessionEnd in every directory
 
-Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_0115YBg2ri1ajCfG8GNynEsZ"
 git push origin main
 ```
@@ -2252,7 +2404,7 @@ No output means the gate passed.
 ```bash
 git commit -m "docs: add restore procedure and daily operations
 
-Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_0115YBg2ri1ajCfG8GNynEsZ"
 git push origin main
 ```
