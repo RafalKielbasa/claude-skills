@@ -292,6 +292,70 @@ function Sync-ClaudeMirror {
     return $copied
 }
 
+# Every pattern requires a key body of minimum length, never a bare prefix.
+# The spec, the plan and these tests all mention the prefixes as text; a
+# prefix-only pattern would block commits of this project's own documentation.
+$script:SecretPattern = @(
+    'sk-ant-[A-Za-z0-9_\-]{24,}',
+    'ghp_[A-Za-z0-9]{36}',
+    'github_pat_[A-Za-z0-9_]{40,}',
+    'AIza[0-9A-Za-z_\-]{35}',
+    '-----BEGIN [A-Z ]*PRIVATE KEY-----',
+    '"(accessToken|refreshToken)"\s*:\s*"[^"]{20,}"'
+)
+
+function Test-SecretContent {
+    <#
+      Returns the matched pattern, or $null when the file looks clean.
+
+      Size is not an exemption. A large text file is read in 1MB chunks with a
+      4KB overlap - far wider than the longest pattern - so a key cannot hide
+      past an arbitrary cutoff. Only binary files are skipped: a NUL byte in
+      the first 8KB means a regex over the content would yield noise, not
+      findings.
+    #>
+    param([Parameter(Mandatory)][string]$Path)
+
+    $item = Get-Item -LiteralPath $Path -ErrorAction SilentlyContinue
+    if (-not $item -or $item.Length -eq 0) { return $null }
+
+    $stream = $null
+    try {
+        $stream = [System.IO.File]::Open($Path, 'Open', 'Read', 'ReadWrite')
+
+        $probe = New-Object byte[] ([Math]::Min(8KB, $item.Length))
+        $probeRead = $stream.Read($probe, 0, $probe.Length)
+        for ($i = 0; $i -lt $probeRead; $i++) {
+            if ($probe[$i] -eq 0) { return $null }
+        }
+        $stream.Position = 0
+
+        $reader      = New-Object System.IO.StreamReader($stream)
+        $chunkSize   = 1MB
+        $overlapSize = 4KB
+        $buffer      = New-Object char[] $chunkSize
+        $carry       = ''
+
+        while (($read = $reader.Read($buffer, 0, $chunkSize)) -gt 0) {
+            $text = $carry + [System.String]::new($buffer, 0, $read)
+            foreach ($pattern in $script:SecretPattern) {
+                if ($text -cmatch $pattern) { return $pattern }
+            }
+            $carry = if ($text.Length -gt $overlapSize) {
+                $text.Substring($text.Length - $overlapSize)
+            } else {
+                $text
+            }
+        }
+        return $null
+    } catch {
+        return $null
+    } finally {
+        if ($stream) { $stream.Dispose() }
+    }
+}
+
 Export-ModuleMember -Function Get-ClaudeDirSlug, Find-ClaudeDirs,
                               Read-Registry, Write-Registry, Update-Registry,
-                              Get-MirrorFiles, Get-MirrorDirs, Sync-ClaudeMirror
+                              Get-MirrorFiles, Get-MirrorDirs, Sync-ClaudeMirror,
+                              Test-SecretContent
