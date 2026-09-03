@@ -100,6 +100,27 @@ try {
     '{ "version": 1, "entries": [ { "slug": "orphan" } ] }' | Out-File -LiteralPath $junk -Encoding utf8
     Assert-Equal -Expected 0 -Actual (@((Read-Registry -Path $junk).entries).Count) -Because 'an entry with neither path nor claudeDir is dropped'
 
+    # --- a registry that is valid JSON but not an object reads as empty ---
+    # ConvertFrom-Json accepts all three of these. The `null` case is the sharp
+    # one: it yields $null, which has no .PSObject, so an unguarded property
+    # chain throws the exact exception Repair-Registry exists to prevent.
+    $notAnObject = @{
+        'root-null.json'   = 'null'
+        'root-array.json'  = '[1, 2, 3]'
+        'root-string.json' = '"hello"'
+    }
+    foreach ($name in $notAnObject.Keys) {
+        $file = Join-Path $sandbox $name
+        Set-Content -LiteralPath $file -Value $notAnObject[$name] -Encoding UTF8
+        $readBack = $null
+        $threw = $false
+        try { $readBack = Read-Registry -Path $file } catch { $threw = $true }
+        Assert-True -Condition (-not $threw) -Because "$name does not throw"
+        if (-not $threw) {
+            Assert-Equal -Expected 0 -Actual (@($readBack.entries).Count) -Because "$name reads as an empty registry"
+        }
+    }
+
     # --- the same source twice, cased differently, merges to one entry ---
     $dupes = Update-Registry -Registry (Read-Registry -Path 'nonexistent.json') `
         -FoundClaudeDir @((Join-Path $sandbox 'proj a\.claude'), (Join-Path $sandbox 'PROJ A\.CLAUDE')) `

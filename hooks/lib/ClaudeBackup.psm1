@@ -83,6 +83,16 @@ function Repair-Registry {
     #>
     param($Registry)
 
+    $empty = [pscustomobject]@{ version = 1; updated = $null; entries = @() }
+
+    # ConvertFrom-Json turns the four-byte file `null` into $null, and $null has
+    # no .PSObject to interrogate: the chained access below would throw the very
+    # PropertyNotFoundException this function exists to prevent. A scalar root
+    # (a bare number or string) is harmless by comparison - its
+    # .PSObject.Properties['entries'] simply returns $null - but $null itself
+    # must be caught here.
+    if ($null -eq $Registry) { return $empty }
+
     $entriesProperty = $Registry.PSObject.Properties['entries']
     $rawEntries = @()
     if ($entriesProperty) { $rawEntries = @($entriesProperty.Value) }
