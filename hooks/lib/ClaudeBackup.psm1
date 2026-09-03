@@ -213,5 +213,85 @@ function Update-Registry {
     return $Registry
 }
 
+# Only these names are copied out of a source .claude directory. Anything
+# else there is cache, credentials or session state.
+$script:MirrorFiles = @('CLAUDE.md', 'settings.json', 'settings.local.json')
+$script:MirrorDirs  = @('skills', 'agents', 'commands', 'hooks', 'wiki', 'plans', 'specs')
+
+function Get-MirrorFiles { return , $script:MirrorFiles }
+function Get-MirrorDirs  { return , $script:MirrorDirs }
+
+function Sync-Directory {
+    <#
+      One-way mirror of a single directory: copies every file from Source and
+      removes files in Destination that Source no longer has. Returns the
+      number of files copied.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$Source,
+        [Parameter(Mandatory)][string]$Destination
+    )
+    if (-not (Test-Path -LiteralPath $Destination)) {
+        New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+    }
+
+    $seen = @{}
+    foreach ($file in @(Get-ChildItem -LiteralPath $Source -Recurse -File -Force)) {
+        $relative = $file.FullName.Substring($Source.Length).TrimStart('\', '/')
+        $seen[$relative] = $true
+        $target = Join-Path $Destination $relative
+        $targetDir = Split-Path -Parent $target
+        if (-not (Test-Path -LiteralPath $targetDir)) {
+            New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+        }
+        Copy-Item -LiteralPath $file.FullName -Destination $target -Force
+    }
+
+    foreach ($file in @(Get-ChildItem -LiteralPath $Destination -Recurse -File -Force)) {
+        $relative = $file.FullName.Substring($Destination.Length).TrimStart('\', '/')
+        if (-not $seen.ContainsKey($relative)) {
+            Remove-Item -LiteralPath $file.FullName -Force
+        }
+    }
+
+    return $seen.Count
+}
+
+function Sync-ClaudeMirror {
+    param(
+        [Parameter(Mandatory)][string]$SourceClaudeDir,
+        [Parameter(Mandatory)][string]$MirrorDir
+    )
+    if (-not (Test-Path -LiteralPath $MirrorDir)) {
+        New-Item -ItemType Directory -Path $MirrorDir -Force | Out-Null
+    }
+
+    $copied = 0
+
+    foreach ($name in (Get-MirrorFiles)) {
+        $src = Join-Path $SourceClaudeDir $name
+        $dst = Join-Path $MirrorDir $name
+        if (Test-Path -LiteralPath $src -PathType Leaf) {
+            Copy-Item -LiteralPath $src -Destination $dst -Force
+            $copied++
+        } elseif (Test-Path -LiteralPath $dst -PathType Leaf) {
+            Remove-Item -LiteralPath $dst -Force
+        }
+    }
+
+    foreach ($name in (Get-MirrorDirs)) {
+        $src = Join-Path $SourceClaudeDir $name
+        $dst = Join-Path $MirrorDir $name
+        if (Test-Path -LiteralPath $src -PathType Container) {
+            $copied += Sync-Directory -Source $src -Destination $dst
+        } elseif (Test-Path -LiteralPath $dst -PathType Container) {
+            Remove-Item -LiteralPath $dst -Recurse -Force
+        }
+    }
+
+    return $copied
+}
+
 Export-ModuleMember -Function Get-ClaudeDirSlug, Find-ClaudeDirs,
-                              Read-Registry, Write-Registry, Update-Registry
+                              Read-Registry, Write-Registry, Update-Registry,
+                              Get-MirrorFiles, Get-MirrorDirs, Sync-ClaudeMirror
