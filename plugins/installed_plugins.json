@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "plugins": {
+    "frontend-design@claude-plugins-official": [
+      {
+        "scope": "project",
+        "projectPath": "D:\\Praca\\Devstock\\Projekty\\company-agent-chat",
+        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\frontend-design\\unknown",
+        "version": "unknown",
+        "installedAt": "2026-04-17T06:43:04.829Z",
+        "lastUpdated": "2026-04-17T06:43:04.829Z"
+      }
+    ],
+    "superpowers@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\superpowers\\6.3.0",
+        "version": "6.3.0",
+        "installedAt": "2026-04-20T12:06:36.431Z",
+        "lastUpdated": "2026-08-13T09:57:21.716Z",
+        "gitCommitSha": "b55764852ac78870e65c6565fb585b6cd8b3c5c9"
+      }
+    ],
+    "figma@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\figma\\2.2.107",
+        "version": "2.2.107",
+        "installedAt": "2026-06-05T07:34:24.064Z",
+        "lastUpdated": "2026-09-02T19:52:10.612Z",
+        "gitCommitSha": "a742f0a700a7772ff5ed85f7c9fc1dad5afa9fcc"
+      }
+    ],
+    "obsidian@obsidian-skills": [
+      {
+        "scope": "project",
+        "projectPath": "D:\\Notatki\\notatki",
+        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\obsidian-skills\\obsidian\\1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-07-09T09:13:07.959Z",
+        "lastUpdated": "2026-07-09T09:13:07.959Z",
+        "gitCommitSha": "a1dc48e68138490d522c04cbf5822214c6eb1202"
+      }
+    ]
+  }
+}

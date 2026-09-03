@@ -1,0 +1,37 @@
+- [App shell + account hub spec](app-shell-account-hub-spec.md) — 2026-09-02 spec po review codex, w main (2f1b1d7); issues ZAŁOŻONE: epik #167 z #168-#175 (CP-89..96) + #157 przepisane; CP-94 #173 pod #128; #137 (CP-40) przepisane na ranking szkoły, blocked by #168/#173
+- [Artefakt: Bramki i trasy](artifact-bramki-i-trasy.md) — link do wizualnej mapy bramek/tras/subskrypcji (stan docelowy po obu specach); w środku 2 ustalenia spoza speców: branding bez @Roles, 409 na drugą organizację
+- [GitHub issues: stan 2026-09-02](github-issue-candidates-2026-08.md) — 10 otwartych, PR #165/#164 czekają na review; CP-86/88/84/78/81 bez issue; subskrypcja = Rafał sam; spec app-shell blokuje CP-82/CP-40; luki bez ticketu (404, kategorie, sidebar owner)
+- [FE: inwentarz 45 ekranów](fe-screen-gaps-2026-08-28.md) — 2026-09-03 pełny przegląd Figma vs kod: 10 zgodnych / 15 do poprawek / 9 atrap / 11 braków; link do artefaktu z tabelą; 2 rozjazdy koncepcyjne do decyzji
+- [Web security audit EXECUTED](web-security-audit-concept-frozen.md) — 2026-08-13 wykonany; A1 (cross-tenant write) 2026-08-21 naprawione POŁOWICZNIE: nadpisanie zablokowane, zostaje create+DoS; reszta safe/fragile-by-design; RLS martwe
+- [Tenant→subscription model audit](tenant-subscription-model-audit-2026-08.md) — 2026-08-13: brak modelu Subscription i zapisu transakcji; 2026-08-21 spec naprawczy napisany (zob. niżej)
+- [Subscription model spec](subscription-model-spec.md) — 2026-08-21 spec (portal Stripe, dostęp do końca okresu, idempotencja od etapu 1, CP-87 wchłonięty); 2026-08-22 rozpisany na 3 plany, codex-review wcielony, 4 rozstrzygnięcia spoza specu w środku; next: tryb egzekucji
+- [Conventions plan EXECUTED → PR 150](repo-conventions-plan-pending.md) — 2026-08-13 all 20 tasks done, committed 2026-08-14 as PR 150; junk/duplicate review passed, 3 leftovers fixed; deviations inside
+- [platform/types contract spec](platform-types-contract-spec.md) — 2026-08-14 spec CZEKA NA REVIEW Rafała, zero implementacji; pułapka dist/rootDir w środku; 2026-08-21 dopisany Follow-up 4 o interakcji ze specem membershipu
+- [Design system foundations](design-system-foundations-work.md) — apps/web tokens from Figma udu-saas-v1, shadcn/ui, Roboto, dark default
+- [Subagents share the working tree](subagents-shared-worktree-checkout.md) — non-isolated agents can checkout/switch branch under you
+- [Figma DS library](figma-design-system-library.md) — Figma file zVmr90...Iuot built via MCP from apps/web tokens; conventions + build state
+- [Ticket rules moved](feedback-junior-tickets-no-code.md) — reguły są teraz w skillu `github-tickets` i w `docs/ticket-conventions.md`; plik to wskaźnik plus jedna rzecz warta pamiętania: 2026-09-03 odwrócono regułę opisowości, ticket nie prowadzi już za rączkę po repo
+- [FE na mockach, podpięcie osobno](feedback-fe-mocks-then-wiring.md) — zadanie FE na fixture’ach + osobne zadanie FE→BE; wiring czeka na TanStack Query z CP-89; fixture z udokumentowanego kontraktu, nie wymyślony
+- [CP-26 free content → done](cp26-free-content-deprioritized.md) — 2026-08-11: 15-task plan content-without-enrollment executed, all suites green, w mainie; deviations + leftovers inside
+- [Student tenant blocker → CP-73/74](student-tenant-resolution-blocker.md) — students lack tenantId in JWT (400 on all reads); CP-73/74 tickets unblock CP-21; enroll price gate lands with rescoped CP-27..29, else enforce in review
+- [Maks 3 subagenty](feedback-no-multiagent-fanout.md) — limit 3, /code-review tylko na prośbę; setup (opus[1m], xhigh) zostaje, nie proponuj obniżania
+- [GCP — never mutate](feedback-gcp-never-mutate.md) — zmiany w GCP tylko jako komenda CLI z wyjaśnieniem krok po kroku; odczyt wolno, poza IAM/SA/kluczami/tokenami/sekretami
+- [RLS: stan i dokumentacja](rls-docs-state-2026-08.md) — martwe z 3 powodów; apps/api/README.md to źródło prawdy; główny README i review-guide naprawione 2026-08-21; manual_rls_*.sql to celowy pre-staging
+- [Plans dir is gitignored](plans-dir-gitignored.md) — docs/superpowers/plans/ poza gitem (38 plików, 0 śledzonych); nie odsyłaj zespołu do tych ścieżek w issues/PR; specy są w repo
+- [No commits — user only](feedback-no-commits-user-only.md) — never commit/push; leave changes in working tree, Rafał commits himself (overrides skill steps)
+- [Bramka po każdym zadaniu](feedback-per-task-review-gate.md) — po każdym zadaniu planu stop na review Rafała i jego commit; nadpisuje „Continuous execution" ze skilla
+- [Session brief location](feedback-session-brief-location.md) — podsumuj-sesja-claude ZAWSZE do D:\Notatki\notatki\praca-z-claude.md, tylko tam; marker w CLAUDE.local.md
+- [GCS bucket + ADC setup](gcs-adc-bucket-setup.md) — 2026-08-14 zweryfikowane: edu-saas-dev, tylko ADC (bez SA), publiczny odczyt przez managed folder thumbnails/ (warunki IAM zakazane dla allUsers); PDF-y CP-37 muszą iść poza ten prefiks
+- [API boot env requirements](api-boot-env-requirements.md) — MUX/GCS/Stripe keys required at bootstrap; local .env has placeholders; PORT=3001
+- [Registration changes on hold](registration-changes-on-hold.md) — CP-78/CP-81 written but WSTRZYMANE; PR #105 zmergowany 2026-07-20, powód blokady wygasł — odblokowanie wymaga decyzji Rafała
+- [Auth/multitenancy audit 2026-08](auth-multitenancy-audit-2026-08.md) — codex-confirmed findings; fixes W MAINIE (#147, zweryfikowane 2026-08-21); dead RLS + open arch decisions
+- [Skill registry in Obsidian](skill-registry-in-obsidian-notes.md) — after creating a global skill, add entry to D:\Notatki\notatki\praca\claude-code.md "Moje skille"
+- [FE tenant routing decisions](fe-tenant-routing-decisions.md) — decyzje w specu content-without-enrollment (sekcja FE); x-tenant-id usunięty, tylko x-tenant-subdomain
+- [E2e test DB migrations](e2e-test-db-migrations.md) — course_platform_test wymaga ręcznego `prisma migrate deploy`; brak pretest hooka, dryf wygląda jak zepsuty kod
+- [Global seed 2026-08-11](global-seed-2026-08-11.md) — nowy modularny prisma/seed/ (3 tenanty, 7 kont, 9 kursów) wykonany i zweryfikowany (31/31), w mainie; ID z ids.ts, seed cmd w prisma.config.ts
+- [Code always English](feedback-code-always-english.md) — identifiers too (suspended/new/draft/photo); proper nouns from data (kuznia) may stay; rule in global CLAUDE.md + repo AGENTS.md
+- [PR144 merge resolved 2026-08-12](pr144-merge-resolution-2026-08-12.md) — main c6c2ee8 into CP-16, staged uncommitted; BFF alignment + route move; /login build bug pre-exists on main
+- [CP-21 merge resolved 2026-08-12](cp21-merge-resolution-2026-08-12.md) — main b07927f into CP-21, working tree only (NIC nie zestage'owane); student views → tenant/[subdomain], search @OptionalAuth, katalog modulesCount/lessonsCount
+- [Stripe payment confirmation](stripe-payment-confirmation-pattern.md) — WDROŻONE 2026-08: confirm-on-redirect + fulfil-on-webhook dla kursów (#148) i subskrypcji (#149); notatka = historia problemu
+- [Membership model decisions](user-tenant-membership-decisions.md) — 2026-08-21 owner wyłączny, 4 role, tenantId out of JWT, 3 etapy; WYKONANE i ZMERGOWANE jako PR #166 (2026-09-02, 32 commity, 143 pliki): model członkostwa, platformRole, panel twórcy pod subdomeną, specy membership+subscription w mainie
+- [localhost → IPv6 hijack portu](localhost-ipv6-port-hijack.md) — obcy proces na [::1]:3001 przechwytuje ruch z localhost; FE dostaje 404 przy zdrowym API; diagnoza curl -4 vs -6, fix: API_URL na 127.0.0.1

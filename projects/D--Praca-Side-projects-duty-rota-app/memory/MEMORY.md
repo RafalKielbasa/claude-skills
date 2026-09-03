@@ -1,0 +1,7 @@
+- [OR-Tools SIGILL / worker cap](ortools-sigill-workers.md) — CP-SAT crashes at default workers on this Alder Lake CPU; num_search_workers capped at 8; solver tests run in Docker
+- [Web UI stack](web-ui-stack.md) — frontend web/ uses Tailwind v3 + hand-rolled UI primitives, NOT shadcn CLI; don't run `shadcn add`
+- [Docker Desktop cold start](docker-desktop-cold-start.md) — must be started manually; first `docker build` after startup can fail transiently with buildkit EOF, just retry
+- [Edit tool CRLF flip](edit-tool-crlf-flip.md) — Edit can flip LF→CRLF and explode the git diff; check `git diff --stat` and fix with sed before committing
+- [Testing env quirks](testing-env-quirks.md) — MSYS_NO_PATHCONV=1 dla docker -w w Git Bash; web bez skryptu npm test (npx vitest run); flake-watch na test_seed_generate
+- [Repo CRLF mixed index](repo-crlf-mixed-index.md) — wiele plików ma CRLF w indeksie; punktowe diffy zamiast normalizacji
+- [Docker tests build = frontend tsc](docker-tests-build-frontend-stage.md) — błąd typów w web/ wywala build obrazu testowego backendu i zostawia stary obraz; nie ucinaj logu builda
