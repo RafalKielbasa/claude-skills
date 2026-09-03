@@ -313,13 +313,26 @@ function Test-SecretContent {
       past an arbitrary cutoff. Only binary files are skipped: a NUL byte in
       the first 8KB means a regex over the content would yield noise, not
       findings.
+
+      A read failure returns a descriptive "<could not scan: ...>" string
+      instead of $null. This gate fails closed: a file locked by another
+      process, denied by permissions, or deleted mid-scan has not been
+      confirmed clean - it has not been scanned at all. Returning $null for
+      that case would make "unreadable" indistinguishable from "read and
+      found nothing," which is exactly the distinction a secret gate cannot
+      blur. The caller already treats any non-null return as a match to
+      abort on, so this needs no change on that side - the abort log line
+      will show the sentinel in place of a pattern name, which is intended:
+      it names the file and the reason in the same slot a real hit would.
     #>
     param([Parameter(Mandatory)][string]$Path)
 
     $item = Get-Item -LiteralPath $Path -ErrorAction SilentlyContinue
-    if (-not $item -or $item.Length -eq 0) { return $null }
+    if (-not $item) { return ('<could not scan: {0}>' -f 'file not found') }
+    if ($item.Length -eq 0) { return $null }
 
     $stream = $null
+    $reader = $null
     try {
         $stream = [System.IO.File]::Open($Path, 'Open', 'Read', 'ReadWrite')
 
@@ -349,9 +362,9 @@ function Test-SecretContent {
         }
         return $null
     } catch {
-        return $null
+        return ('<could not scan: {0}: {1}>' -f $_.Exception.GetType().Name, $_.Exception.Message)
     } finally {
-        if ($stream) { $stream.Dispose() }
+        if ($reader) { $reader.Dispose() } elseif ($stream) { $stream.Dispose() }
     }
 }
 
