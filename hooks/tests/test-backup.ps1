@@ -133,22 +133,30 @@ try {
     $otherClone = Join-Path $sandbox 'other-clone'
     git clone -q $remote $otherClone
     Push-Location $otherClone
-    # A fresh bare repo's HEAD stays a symbolic ref to whatever
-    # init.defaultBranch names (commonly "master"), and a plain push of
-    # "main" from elsewhere never updates that symbolic ref - so a clone
-    # here lands on a phantom, ref-less "master" rather than "main" without
-    # an explicit checkout.
+    # A bare repo's HEAD symbolic ref is not updated by a push - it still
+    # points at whatever git init picked as the default branch, which may
+    # not exist. Left implicit, the clone lands on no checked-out branch at
+    # all, and the commit below goes nowhere near `main`.
     git checkout -q -b main origin/main
     git config user.name 'other'; git config user.email 'other@example.com'
-    Set-Content -LiteralPath (Join-Path $otherClone 'from-elsewhere.txt') -Value 'elsewhere' -Encoding UTF8
-    git add -A; git commit -q -m 'from elsewhere'
+    # Two commits on the origin side, one on the local side: deliberately
+    # asymmetric. $ahead and $behind must be computed from opposite ranges
+    # (origin/main..HEAD vs HEAD..origin/main); with a symmetric 1-and-1
+    # split, a copy-paste bug that computed $behind from the wrong range
+    # would coincidentally land on the same value and this test would not
+    # notice. With 2-vs-1, that mistake reports the wrong count, and the
+    # assertion below checks the exact count, not just the word DIVERGED.
+    Set-Content -LiteralPath (Join-Path $otherClone 'from-elsewhere-1.txt') -Value 'elsewhere' -Encoding UTF8
+    git add -A; git commit -q -m 'from elsewhere 1'
+    Set-Content -LiteralPath (Join-Path $otherClone 'from-elsewhere-2.txt') -Value 'elsewhere' -Encoding UTF8
+    git add -A; git commit -q -m 'from elsewhere 2'
     git push -q origin main
     Pop-Location
 
     Set-Content -LiteralPath (Join-Path $project '.claude\skills\demo\SKILL.md') -Value 'local change during divergence' -Encoding UTF8
     $diverged = Invoke-BackupWithPush
     Assert-Equal -Expected 0 -Actual $diverged.ExitCode -Because 'a diverged push does not fail the run'
-    Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'DIVERGED') -Because 'a genuine divergence is diagnosed distinctly from a transient failure'
+    Assert-True -Condition ((Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw) -match 'DIVERGED: origin/main has 2 commit\(s\)') -Because 'the diagnosis reports the correct, larger side of an asymmetric divergence - not $ahead mistaken for $behind'
 
     # --- a vanished source keeps its mirror and is flagged in the registry ---
     Remove-Item -LiteralPath (Join-Path $project '.claude') -Recurse -Force
