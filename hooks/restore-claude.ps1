@@ -114,7 +114,16 @@ foreach ($rule in $Map) {
 
     foreach ($dir in @(Get-ChildItem -LiteralPath $projectsRoot -Directory)) {
         if (-not $dir.Name.StartsWith($oldPrefix, [StringComparison]::OrdinalIgnoreCase)) { continue }
-        $newName = $newPrefix + $dir.Name.Substring($oldPrefix.Length)
+
+        # Slug space has already collapsed every path separator - : \ / and
+        # even a literal space - into '-', so the boundary check here mirrors
+        # Convert-MappedPath's but checks for '-' rather than '\' or '/':
+        # the character right after the matched prefix must be a separator or
+        # end-of-string, or "D--Demo" would also capture "D--Demoland-proj".
+        $memRest = $dir.Name.Substring($oldPrefix.Length)
+        if ($memRest.Length -gt 0 -and $memRest[0] -ne '-') { continue }
+
+        $newName = $newPrefix + $memRest
         Write-Host "$verb memory $($dir.Name) -> $newName" -ForegroundColor Cyan
         if ($Apply) { Rename-Item -LiteralPath $dir.FullName -NewName $newName -Force }
     }
