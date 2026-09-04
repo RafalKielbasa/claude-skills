@@ -1,0 +1,489 @@
+<title>{{TITLE}}</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --fg: #1a1d23;
+    --muted: #5b6472;
+    --border: #d8dce3;
+    --card-bg: #ffffff;
+    --card-border: #e2e5ea;
+    --link: #1a5fb4;
+    --code-bg: #f1f3f6;
+    --code-fg: #1a1d23;
+    --select-bg: #ffffff;
+
+    --sev-blocking-bg: #fdeceb;
+    --sev-blocking-fg: #9a1c1c;
+    --sev-blocking-border: #f3b4b0;
+    --sev-suggestion-bg: #fff6e0;
+    --sev-suggestion-fg: #8a5a00;
+    --sev-suggestion-border: #f0d38a;
+    --sev-nitpick-bg: #eef1f5;
+    --sev-nitpick-fg: #3c4450;
+    --sev-nitpick-border: #ccd3dc;
+
+    --codex-confirms-bg: #e7f6ec;
+    --codex-confirms-fg: #1c6b34;
+    --codex-confirms-border: #a9dab8;
+    --codex-rejects-bg: #fdeceb;
+    --codex-rejects-fg: #9a1c1c;
+    --codex-rejects-border: #f3b4b0;
+    --codex-unsure-bg: #eef1f5;
+    --codex-unsure-fg: #3c4450;
+    --codex-unsure-border: #ccd3dc;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161a;
+      --fg: #e8eaee;
+      --muted: #9aa3b0;
+      --border: #2b2f37;
+      --card-bg: #1c1f26;
+      --card-border: #2b2f37;
+      --link: #7aa7e0;
+      --code-bg: #10131a;
+      --code-fg: #e8eaee;
+      --select-bg: #1c1f26;
+
+      --sev-blocking-bg: #3a1a1a;
+      --sev-blocking-fg: #f5a3a0;
+      --sev-blocking-border: #6b2b28;
+      --sev-suggestion-bg: #3a2f10;
+      --sev-suggestion-fg: #f0c96a;
+      --sev-suggestion-border: #6b551f;
+      --sev-nitpick-bg: #262a31;
+      --sev-nitpick-fg: #c3cad4;
+      --sev-nitpick-border: #3a4048;
+
+      --codex-confirms-bg: #123822;
+      --codex-confirms-fg: #8fe0a8;
+      --codex-confirms-border: #1f5c37;
+      --codex-rejects-bg: #3a1a1a;
+      --codex-rejects-fg: #f5a3a0;
+      --codex-rejects-border: #6b2b28;
+      --codex-unsure-bg: #262a31;
+      --codex-unsure-fg: #c3cad4;
+      --codex-unsure-border: #3a4048;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #14161a;
+    --fg: #e8eaee;
+    --muted: #9aa3b0;
+    --border: #2b2f37;
+    --card-bg: #1c1f26;
+    --card-border: #2b2f37;
+    --link: #7aa7e0;
+    --code-bg: #10131a;
+    --code-fg: #e8eaee;
+    --select-bg: #1c1f26;
+
+    --sev-blocking-bg: #3a1a1a;
+    --sev-blocking-fg: #f5a3a0;
+    --sev-blocking-border: #6b2b28;
+    --sev-suggestion-bg: #3a2f10;
+    --sev-suggestion-fg: #f0c96a;
+    --sev-suggestion-border: #6b551f;
+    --sev-nitpick-bg: #262a31;
+    --sev-nitpick-fg: #c3cad4;
+    --sev-nitpick-border: #3a4048;
+
+    --codex-confirms-bg: #123822;
+    --codex-confirms-fg: #8fe0a8;
+    --codex-confirms-border: #1f5c37;
+    --codex-rejects-bg: #3a1a1a;
+    --codex-rejects-fg: #f5a3a0;
+    --codex-rejects-border: #6b2b28;
+    --codex-unsure-bg: #262a31;
+    --codex-unsure-fg: #c3cad4;
+    --codex-unsure-border: #3a4048;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    margin: 0;
+    padding: 24px 20px 64px;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .wrap { max-width: 920px; margin: 0 auto; }
+
+  .page-header h1 {
+    font-size: 20px;
+    margin: 0 0 10px;
+  }
+
+  .page-header p {
+    margin: 4px 0;
+    color: var(--muted);
+  }
+
+  .page-header code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+  }
+
+  .filters label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .filters select {
+    background: var(--select-bg);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  #count {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  #cards {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card {
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .card[hidden] { display: none; }
+
+  .card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+
+  .badge-severity-blocking { background: var(--sev-blocking-bg); color: var(--sev-blocking-fg); border-color: var(--sev-blocking-border); }
+  .badge-severity-suggestion { background: var(--sev-suggestion-bg); color: var(--sev-suggestion-fg); border-color: var(--sev-suggestion-border); }
+  .badge-severity-nitpick { background: var(--sev-nitpick-bg); color: var(--sev-nitpick-fg); border-color: var(--sev-nitpick-border); }
+
+  .badge-codex-confirms { background: var(--codex-confirms-bg); color: var(--codex-confirms-fg); border-color: var(--codex-confirms-border); }
+  .badge-codex-rejects { background: var(--codex-rejects-bg); color: var(--codex-rejects-fg); border-color: var(--codex-rejects-border); }
+  .badge-codex-unsure { background: var(--codex-unsure-bg); color: var(--codex-unsure-fg); border-color: var(--codex-unsure-border); }
+
+  .axis-tag {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .card h3 {
+    margin: 4px 0 8px;
+    font-size: 15px;
+  }
+
+  .location {
+    margin: 0 0 10px;
+    font-size: 12.5px;
+  }
+
+  .location a, .location .loc {
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    color: var(--link);
+  }
+
+  .location .loc { color: var(--muted); }
+
+  .evidence-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--code-bg);
+    margin: 0 0 10px;
+  }
+
+  .evidence {
+    margin: 0;
+    padding: 10px 12px;
+    white-space: pre;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 12.5px;
+    color: var(--code-fg);
+  }
+
+  .card .body {
+    margin: 0 0 8px;
+  }
+
+  .codex-fix {
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .card .meta {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .empty-state {
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+  }
+</style>
+
+<div class="wrap">
+  <header class="page-header">
+    <h1 id="run-title">Code review report</h1>
+    <p id="commit-line"></p>
+    <p id="coverage-line"></p>
+    <p id="spend-line"></p>
+    <p id="suppressed-line" hidden></p>
+  </header>
+
+  <section class="filters">
+    <label>Axis
+      <select data-filter="axis"><option value="">All axes</option></select>
+    </label>
+    <label>Severity
+      <select data-filter="severity">
+        <option value="">All severities</option>
+        <option value="blocking">Blocking</option>
+        <option value="suggestion">Suggestion</option>
+        <option value="nitpick">Nitpick</option>
+      </select>
+    </label>
+    <span id="count"></span>
+  </section>
+
+  <main id="cards"></main>
+</div>
+
+<script type="application/json" id="findings">{{DATA}}</script>
+<script>
+(function () {
+  // Every value below that originates in the embedded payload reaches the DOM
+  // only through `textContent` or a property assignment the browser cannot
+  // interpret as markup (`className`, `href` built from a fixed https: base).
+  // Never `innerHTML` a payload string. The JSON escaping in lib/embed.mjs
+  // keeps a closing script tag quoted in evidence from breaking this block;
+  // it does not stop that same text becoming a live element if it were
+  // poured into innerHTML afterwards, so this file never does that either.
+
+  var SEVERITY_LABEL = { blocking: 'Blocking', suggestion: 'Suggestion', nitpick: 'Nitpick' };
+  var SEVERITY_ORDER = { blocking: 0, suggestion: 1, nitpick: 2 };
+  var CODEX_LABEL = { confirms: 'Codex: confirmed', rejects: 'Codex: disputed', unsure: 'Codex: unsure' };
+
+  function shortSha(sha) {
+    return typeof sha === 'string' && /^[0-9a-f]{40}$/.test(sha) ? sha.slice(0, 7) : sha;
+  }
+
+  function el(tag, props, children) {
+    var node = document.createElement(tag);
+    props = props || {};
+    for (var key in props) {
+      if (!Object.prototype.hasOwnProperty.call(props, key)) continue;
+      if (key === 'className') node.className = props[key];
+      else if (key === 'text') node.textContent = props[key];
+      else if (key === 'value') node.value = props[key];
+      else if (key === 'href') node.setAttribute('href', props[key]);
+      else if (key === 'target') node.setAttribute('target', props[key]);
+      else if (key === 'rel') node.setAttribute('rel', props[key]);
+      else if (key === 'id') node.id = props[key];
+      else if (key === 'hidden') node.hidden = props[key];
+      else if (key === 'dataset') {
+        for (var dataKey in props[key]) {
+          if (Object.prototype.hasOwnProperty.call(props[key], dataKey)) {
+            node.dataset[dataKey] = props[key][dataKey];
+          }
+        }
+      }
+    }
+    (children || []).forEach(function (child) {
+      if (child) node.appendChild(child);
+    });
+    return node;
+  }
+
+  function renderHeader(payload) {
+    var run = payload.run;
+    var selection = payload.selection;
+    var chosen = selection.selected.map(function (s) { return s.axisId; });
+    var total = chosen.length + selection.skippedOnTouch.length + selection.deferred.length;
+
+    document.getElementById('run-title').textContent =
+      'Code review — run ' + run.id + ' (' + run.mode + ' mode)';
+
+    document.getElementById('commit-line').textContent = 'Commit: ' + shortSha(run.head) + '.';
+
+    var coverage = 'Axes reviewed: ' + (chosen.join(', ') || 'none')
+      + ' (' + chosen.length + ' of ' + total + ').';
+    if (selection.skippedOnTouch.length > 0) {
+      coverage += ' Skipped on-touch: ' + selection.skippedOnTouch.join(', ') + '.';
+    }
+    if (selection.deferred.length > 0) {
+      coverage += ' Queued next: ' + selection.deferred.join(', ') + '.';
+    }
+    document.getElementById('coverage-line').textContent = coverage;
+
+    document.getElementById('spend-line').textContent =
+      'Budget spent: ' + selection.agents + ' agents (1 brief + ' + chosen.length + ' axis pass'
+      + (chosen.length === 1 ? '' : 'es') + ' + ' + chosen.length + ' verification'
+      + (chosen.length === 1 ? '' : 's') + ').';
+
+    var suppressedLine = document.getElementById('suppressed-line');
+    if (payload.suppressed > 0) {
+      suppressedLine.textContent = 'Also suppressed by earlier triage: ' + payload.suppressed
+        + ' finding' + (payload.suppressed === 1 ? '' : 's') + ' (not shown here).';
+      suppressedLine.hidden = false;
+    }
+  }
+
+  function locationNode(finding) {
+    var text = finding.file + ':' + finding.lines[0];
+    if (finding.link) {
+      return el('a', { text: text, href: finding.link, target: '_blank', rel: 'noopener noreferrer' });
+    }
+    return el('span', { className: 'loc', text: text });
+  }
+
+  function renderCard(finding) {
+    var badges = [el('span', {
+      className: 'badge badge-severity-' + finding.severity,
+      text: SEVERITY_LABEL[finding.severity] || finding.severity,
+    })];
+    if (finding.codex) {
+      badges.push(el('span', {
+        className: 'badge badge-codex-' + finding.codex.verdict,
+        text: CODEX_LABEL[finding.codex.verdict] || ('Codex: ' + finding.codex.verdict),
+      }));
+    }
+    badges.push(el('span', { className: 'axis-tag', text: finding.axis }));
+
+    var children = [
+      el('div', { className: 'card-head' }, badges),
+      el('h3', { text: finding.title }),
+      el('p', { className: 'location' }, [locationNode(finding)]),
+      el('div', { className: 'evidence-wrap' }, [
+        el('pre', { className: 'evidence' }, [document.createTextNode(finding.evidence)]),
+      ]),
+    ];
+    if (finding.body) children.push(el('p', { className: 'body', text: finding.body }));
+    if (finding.codex && finding.codex.fix) {
+      children.push(el('p', { className: 'codex-fix', text: 'Codex suggestion: ' + finding.codex.fix }));
+    }
+    children.push(el('p', {
+      className: 'meta',
+      text: 'Rule: ' + (finding.rule || finding.axis) + '  ·  Confidence: ' + finding.confidence
+        + '  ·  ' + finding.id,
+    }));
+
+    return el('article', {
+      className: 'card',
+      id: 'finding-' + finding.id,
+      dataset: { axis: finding.axis, severity: finding.severity },
+    }, children);
+  }
+
+  function applyFilters(state) {
+    var axisValue = state.axisSelect.value;
+    var severityValue = state.severitySelect.value;
+    var shown = 0;
+    state.cards.forEach(function (entry) {
+      var visible = (axisValue === '' || entry.finding.axis === axisValue)
+        && (severityValue === '' || entry.finding.severity === severityValue);
+      entry.node.hidden = !visible;
+      if (visible) shown += 1;
+    });
+    document.getElementById('count').textContent = shown + ' of ' + state.cards.length + ' findings shown';
+  }
+
+  function populateAxisOptions(select, findings) {
+    var seen = {};
+    var axes = [];
+    findings.forEach(function (f) {
+      if (!seen[f.axis]) { seen[f.axis] = true; axes.push(f.axis); }
+    });
+    axes.sort();
+    axes.forEach(function (axis) {
+      select.appendChild(el('option', { text: axis, value: axis }));
+    });
+  }
+
+  function main() {
+    var payload = JSON.parse(document.getElementById('findings').textContent);
+    renderHeader(payload);
+
+    var findings = payload.findings.slice().sort(function (a, b) {
+      var byAxis = a.axis < b.axis ? -1 : a.axis > b.axis ? 1 : 0;
+      if (byAxis !== 0) return byAxis;
+      var bySeverity = (SEVERITY_ORDER[a.severity] || 0) - (SEVERITY_ORDER[b.severity] || 0);
+      if (bySeverity !== 0) return bySeverity;
+      return a.file < b.file ? -1 : a.file > b.file ? 1 : 0;
+    });
+
+    var cardsRoot = document.getElementById('cards');
+    var cards = [];
+    if (findings.length === 0) {
+      cardsRoot.appendChild(el('div', { className: 'empty-state', text: 'No findings in this run.' }));
+    } else {
+      findings.forEach(function (finding) {
+        var node = renderCard(finding);
+        cardsRoot.appendChild(node);
+        cards.push({ node: node, finding: finding });
+      });
+    }
+
+    var axisSelect = document.querySelector('[data-filter="axis"]');
+    var severitySelect = document.querySelector('[data-filter="severity"]');
+    populateAxisOptions(axisSelect, findings);
+
+    var state = { axisSelect: axisSelect, severitySelect: severitySelect, cards: cards };
+    axisSelect.addEventListener('change', function () { applyFilters(state); });
+    severitySelect.addEventListener('change', function () { applyFilters(state); });
+    applyFilters(state);
+  }
+
+  main();
+})();
+</script>

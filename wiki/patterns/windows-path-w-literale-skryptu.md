@@ -32,6 +32,14 @@ kodem i nie powinna przechodzić przez składnię języka.
   lekcja weszła potem do skilla `github-tickets` jako reguła kroku 3 i jako
   wymóg podawania promptu codeksowi przez stdin, nie argumentem.
 
+- 2026-09-04, sesja session_013eH7DXzW8DZjC16fy2ZCs4: trzeci raz ten sam
+  wyzwalacz. Skrypt składający payload review dla PR #165, zapisywany heredokiem
+  `<<'SCRIPT'` przez narzędzie Bash, padł na `unexpected EOF while looking for
+  matching ''` — treść komentarzy zawierała angielskie dopełniacze i skrócenia
+  (`student's name`, `endpoint's contract`, `does not`). Naprawa ta sama co
+  poprzednio: skrypt zapisany narzędziem Write, uruchomiony z osobnego pliku,
+  payload podany do `gh api` przez `--input`, nie argumentem.
+
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją
 w skrypcie, zamiast wklejać do literału. Skrypt ma wtedy w sobie wyłącznie

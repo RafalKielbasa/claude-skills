@@ -16,7 +16,7 @@
 - **Never commit.** This plan has no commit steps. Each task ends with a **Checkpoint** — verification plus a stop for review — and leaves changes uncommitted in the working tree. If any sub-skill instructs a commit, skip that step and say so in the summary.
 - **No npm dependencies.** Node standard library only. Anything that would need a package (YAML, glob) is implemented as a small, tested module in `lib/`.
 - **Agent budget invariant:** a run costs `1 + 2 × selectedAxes.length` subagents, `selectedAxes.length ≤ slots`, `slots` default 5. No code path may raise this without an explicit `--slots` argument.
-- **Subagents never receive the `Agent` tool.** Enforced in the dispatch instructions in `SKILL.md` and asserted in Task 13's review.
+- **Every dispatched subagent gets a tool set that excludes the subagent-dispatch tool itself**, so it cannot dispatch further agents. Phrase this as a property of the subagent's tools, never as "dispatch without the Agent tool" — that reads equally as "the orchestrator must not use its dispatch tool", which is self-defeating, and the tool's name differs between harness versions.
 - **Skill root:** `C:\Users\rafal\.claude\skills\code-review-master\` (referred to below as `<skill>`). It sits inside the git repository at `C:\Users\rafal\.claude`.
 - **Codex is one process per run**, batched over all findings, and never a subagent.
 - **Unattended runs never apply fixes and never raise the budget.**
@@ -42,6 +42,7 @@
   lib/report.mjs            # raport.md rendering (Polish)
   lib/codex.mjs             # codex prompt, spawn, verdict parsing
   lib/embed.mjs             # JSON → safe payload for a <script> block
+  lib/fixable.mjs           # which findings a fix pass may touch (pure)
   lib/gate.mjs              # exit-code decision
   prompts/brief.md          # wave 0 agent prompt template
   prompts/axis.md           # wave 1 agent prompt template
@@ -53,8 +54,20 @@
   scripts/review.ps1        # Windows scheduled nightly run
   scripts/review.sh         # CI / POSIX run
   ci/code-review.yml        # GitHub Actions job to copy into a repo
-  test/helpers/repo.mjs     # temp git repository builder for tests
+  test-helpers/repo.mjs     # temp git repository builder (OUTSIDE test/ — see note)
   test/*.test.mjs           # one file per lib module, plus cli, skill and wrapper
+```
+
+**Why the helper lives outside `test/`:** `node --test test/` treats every file
+under that directory as a test file, so a helper placed there is executed and
+counted as a vacuously passing test with zero assertions. Every task's stated
+`Expected: PASS, N tests` would then be short by one, and each implementer would
+report the same phantom discrepancy. A shell glob (`node --test test/*.test.mjs`)
+also fixes the count, but `npm test` runs through `cmd.exe` on this machine and
+does not expand it. Moving the helper is the fix that holds however the suite is
+invoked.
+
+```
 ```
 
 Each `lib/` module is a pure function surface over plain data, apart from `target.mjs` and `codex.mjs`, which shell out, and `state.mjs`, which touches disk. That split is what keeps the tests fast and the budget logic verifiable.
@@ -245,6 +258,20 @@ test('ignores comments outside quotes', () => {
 test('refuses syntax outside the supported subset', () => {
   assert.throws(() => parseYamlLite('key: |\n  folded text\n'), YamlLiteError);
 });
+
+test('input outside the supported subset is refused, not guessed', () => {
+  for (const bad of ["key: 'unterminated\n", 'key: [1, 2\n', 'key: {a: 1\n', 'key: &anchor value\n', 'key: !!str value\n']) {
+    assert.throws(() => parseYamlLite(bad), YamlLiteError, `should refuse: ${bad.trim()}`);
+  }
+});
+
+// The guard on the guard: rejection must not become eager enough to refuse the
+// glob patterns this configuration format exists to carry.
+test('values that merely look exotic are still accepted', () => {
+  const out = parseYamlLite("exclude: ['**/node_modules/**']\nglob: '**/*.tsx'\n");
+  assert.deepEqual(out.exclude, ['**/node_modules/**']);
+  assert.equal(out.glob, '**/*.tsx');
+});
 ```
 
 `<skill>/test/glob.test.mjs`:
@@ -364,6 +391,19 @@ function scalar(raw, lineNo, text) {
   }
   if (t === '|' || t === '>') throw new YamlLiteError(lineNo, text, 'block scalars are not supported');
   if (t.includes(': ')) throw new YamlLiteError(lineNo, text, 'unsupported nested syntax');
+  // Everything below refuses input the subset does not cover. Falling through
+  // to `return t` instead would turn `when: ['apps/api/**'` — one missing
+  // bracket — into a plain string that matches no file, and the axis would
+  // silently review nothing while the run still reported it as covered.
+  if ((t.startsWith("'") || t.startsWith('"')) && (t.length < 2 || t.at(-1) !== t[0])) {
+    throw new YamlLiteError(lineNo, text, 'unterminated quoted string');
+  }
+  if (t.startsWith('[') !== t.endsWith(']')) throw new YamlLiteError(lineNo, text, 'unbalanced brackets');
+  if (t.startsWith('{') !== t.endsWith('}')) throw new YamlLiteError(lineNo, text, 'unbalanced braces');
+  if ('&!%@`'.includes(t[0])) throw new YamlLiteError(lineNo, text, `unsupported YAML construct starting with "${t[0]}"`);
+  // A lone `*` is a YAML alias and is refused; `*` followed by anything is a
+  // glob (`**/*.tsx`), which is the main content this configuration carries.
+  if (t === '*') throw new YamlLiteError(lineNo, text, 'YAML aliases are not supported');
   return t;
 }
 
@@ -412,7 +452,7 @@ export function parseYamlLite(text) {
 - [ ] **Step 5: Run both tests and confirm they pass**
 
 Run: `cd <skill> && node --test test/yaml-lite.test.mjs test/glob.test.mjs`
-Expected: PASS, 6 tests.
+Expected: PASS, 8 tests.
 
 - [ ] **Step 6: Checkpoint**
 
@@ -471,6 +511,12 @@ tools: [git-log]
 \`\`\`
 
 - Read git blame for the touched lines.
+
+## How we review
+
+Prose with no yaml block. This heading must never become an axis, and the
+test below is what proves it: without this section, that assertion would
+pass against a parser that had lost the fence check entirely.
 `;
 
 test('parses frontmatter, axes and their checklists', () => {
@@ -486,8 +532,9 @@ test('parses frontmatter, axes and their checklists', () => {
 
 test('a heading without a yaml block is not an axis', () => {
   const doc = parseConfigDoc(DOC);
-  assert.deepEqual(doc.ignoredSections, []);
-  assert.equal(doc.axes.some((a) => a.heading.startsWith('Review configuration')), false);
+  assert.equal(doc.axes.length, 2, 'the prose section must not have become a third axis');
+  assert.equal(doc.axes.some((a) => a.heading === 'How we review'), false);
+  assert.deepEqual(doc.ignoredSections, [], 'a section with no yaml is not an axis at all, not an ignored one');
 });
 
 test('repo axes override global axes by id and disable removes them', () => {
@@ -502,6 +549,20 @@ test('defaults fill in every setting the documents omit', () => {
   const merged = mergeConfig(parseConfigDoc('---\n---\n'), parseConfigDoc('---\n---\n'));
   assert.deepEqual(merged.settings.budget, DEFAULT_SETTINGS.budget);
   assert.equal(merged.settings.gate_on_disputed, true);
+});
+
+test('a file cap that is not a positive integer is a configuration error, not a runtime guess', () => {
+  const doc = parseConfigDoc(`---\n---\n\n## A\n\n\`\`\`yaml\nid: a\nwhen: always\nrank: always\nmax_files: 0\n\`\`\`\n\n- x\n`);
+  const zeroCap = validateConfig({ settings: DEFAULT_SETTINGS, axes: doc.axes });
+  assert.equal(zeroCap.length, 1);
+  assert.match(zeroCap[0], /max_files/);
+
+  const badDefault = validateConfig({
+    settings: { ...DEFAULT_SETTINGS, budget: { ...DEFAULT_SETTINGS.budget, max_files_per_axis: null } },
+    axes: [],
+  });
+  assert.equal(badDefault.length, 1);
+  assert.match(badDefault[0], /max_files_per_axis/);
 });
 
 test('validateConfig reports a bad rank and a duplicate id', () => {
@@ -617,6 +678,15 @@ export function validateConfig({ settings, axes }) {
       problems.push(`axis "${axis.id}" has a when that is neither "always" nor a list of globs`);
     }
     if (axis.checklist.trim() === '') problems.push(`axis "${axis.id}" has an empty checklist`);
+    // A cap of 0 would be a third way to switch an axis off, next to `disable`
+    // and deleting it — and the only one that is silent. Refuse it here so the
+    // runtime never has to guess whether 0 meant "never" or was a typo.
+    if (axis.max_files !== null && !(Number.isInteger(axis.max_files) && axis.max_files > 0)) {
+      problems.push(`axis "${axis.id}" has max_files ${JSON.stringify(axis.max_files)}; use a positive integer, or omit it to inherit the default`);
+    }
+  }
+  if (!(Number.isInteger(settings.budget.max_files_per_axis) && settings.budget.max_files_per_axis > 0)) {
+    problems.push('budget.max_files_per_axis must be a positive integer');
   }
   if (!['blocking', 'any', 'none'].includes(settings.gate)) {
     problems.push(`gate is "${settings.gate}", expected blocking, any or none`);
@@ -631,7 +701,7 @@ export function validateConfig({ settings, axes }) {
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/config.test.mjs`
-Expected: PASS, 5 tests.
+Expected: PASS, 6 tests.
 
 - [ ] **Step 5: Checkpoint**
 
@@ -641,7 +711,7 @@ Expected: PASS, 5 tests.
 
 **Files:**
 - Create: `<skill>/lib/target.mjs`
-- Create: `<skill>/test/helpers/repo.mjs`
+- Create: `<skill>/test-helpers/repo.mjs`
 - Test: `<skill>/test/target.test.mjs`
 
 **Interfaces:**
@@ -653,18 +723,29 @@ Expected: PASS, 5 tests.
 
 - [ ] **Step 1: Write the test helper**
 
-`<skill>/test/helpers/repo.mjs`:
+`<skill>/test-helpers/repo.mjs`:
 
 ```js
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 
 const git = (dir, ...args) => execFileSync('git', ['-C', dir, ...args], { encoding: 'utf8' }).trim();
 
+// Every repository this helper builds is removed when the test process exits.
+// Without it a full suite run leaves a few dozen directories behind, and this
+// suite is run many times a day: the litter reached four figures in one session.
+const built = [];
+process.on('exit', () => {
+  for (const dir of built) {
+    try { rmSync(dir, { recursive: true, force: true }); } catch { /* best effort */ }
+  }
+});
+
 export function makeRepo(files = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'crm-repo-'));
+  built.push(dir);
   git(dir, 'init', '-q', '-b', 'main');
   git(dir, 'config', 'user.email', 'test@example.com');
   git(dir, 'config', 'user.name', 'Test');
@@ -699,7 +780,7 @@ export { git };
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { makeRepo, writeFiles, commitAll } from './helpers/repo.mjs';
+import { makeRepo, writeFiles, commitAll, git } from '../test-helpers/repo.mjs';
 import { collectTarget, isEmpty } from '../lib/target.mjs';
 
 test('working mode reports uncommitted changes with churn', () => {
@@ -713,7 +794,8 @@ test('working mode reports uncommitted changes with churn', () => {
 
 test('since mode diffs from the stored sha', () => {
   const dir = makeRepo({ 'a.ts': 'one\n' });
-  const base = commitAll(dir, 'noop');
+  // makeRepo already committed; the checkpoint is simply where it left HEAD.
+  const base = git(dir, 'rev-parse', 'HEAD');
   writeFiles(dir, { 'c.ts': 'x\n' });
   commitAll(dir, 'add c');
   const target = collectTarget(dir, 'since', { base });
@@ -838,7 +920,8 @@ export function collectTarget(repoDir, mode, opts = {}) {
   } else if (mode === 'pr') {
     // `opts.gh` is injected by the tests so the PR path is covered without a
     // live pull request; production passes nothing and the real gh runs.
-    const callGh = opts.gh ?? ((args) => execFileSync('gh', args, { cwd: repoDir, encoding: 'utf8' }));
+    const callGh = opts.gh ?? ((args) => execFileSync('gh', args,
+      { cwd: repoDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }));
     const parsed = JSON.parse(callGh(['pr', 'view', String(opts.pr), '--json', 'files,headRefOid,baseRefOid']));
     // Both SHAs come from the PR, never from the local checkout: a CI runner's
     // HEAD is a merge commit, and blob links built from it point nowhere.
@@ -1027,6 +1110,77 @@ test('slotsOverride raises the budget only when passed explicitly', () => {
   assert.equal(out.selected.length, 6);
   assert.equal(out.agents, 13);
 });
+
+// A narrow member must not throw away files the shared slot had room for.
+test('a grouped slot truncates once, against its own cap', () => {
+  const axes = [
+    axis('narrow', ['api/**'], 'rotate', { group: 'q', max_files: 1 }),
+    axis('wide', ['web/**'], 'rotate', { group: 'q', max_files: 40 }),
+  ];
+  const files = [file('api/a.ts', 10), file('api/b.ts', 5), file('api/c.ts', 1), file('web/d.tsx', 7)];
+  const out = selectAxes({ axes, files, settings: settings(), state: state() });
+  assert.equal(out.selected.length, 1);
+  assert.equal(out.selected[0].files.length, 4, 'the slot cap is 40, so nothing is given up');
+  assert.deepEqual(out.selected[0].skippedFiles, []);
+  assert.equal(out.truncated, false);
+});
+
+test('when the union itself overflows, every kept file reports the truncation', () => {
+  const axes = [
+    axis('one', ['a/**'], 'rotate', { group: 'q' }),
+    axis('two', ['b/**'], 'rotate', { group: 'q' }),
+  ];
+  const files = [
+    ...Array.from({ length: 25 }, (_, i) => file(`a/${i}.ts`, 30 - i)),
+    ...Array.from({ length: 25 }, (_, i) => file(`b/${i}.ts`, 5)),
+  ];
+  const out = selectAxes({ axes, files, settings: settings({ budget: { slots: 5, max_files_per_axis: 40 } }), state: state() });
+  assert.equal(out.selected[0].files.length, 40);
+  assert.equal(out.selected[0].skippedFiles.length, 10);
+  assert.ok(out.selected[0].files.every((f) => f.truncatedFrom === 50),
+    'a consumer reading any one file must not conclude the slot was complete');
+  assert.equal(out.truncated, true);
+});
+
+// The failure this guards against is subtle: an axis that sleeps for one run
+// used to lose its queue position and come back behind an axis just served.
+test('an axis that sleeps for a run is not overtaken by one that was just served', () => {
+  const all = [axis('a', ['a/**']), axis('b', ['b/**']), axis('c', ['c/**'])];
+  const one = settings({ budget: { slots: 1 } });
+  const everything = [file('a/1.ts'), file('b/1.ts'), file('c/1.ts')];
+
+  const run1 = selectAxes({ axes: all, files: everything, settings: one, state: state() });
+  assert.deepEqual(run1.selected.map((s) => s.axisId), ['a']);
+
+  // Only b is touched; a and c sleep and must keep the claim they earned.
+  const run2 = selectAxes({ axes: all, files: [file('b/1.ts')], settings: one, state: state({ axis_cursor: run1.nextAxisCursor }) });
+  assert.deepEqual(run2.selected.map((s) => s.axisId), ['b']);
+
+  const run3 = selectAxes({ axes: all, files: everything, settings: one, state: state({ axis_cursor: run2.nextAxisCursor }) });
+  assert.notEqual(run3.selected[0].axisId, 'b', 'the axis served last run must not be served again first');
+  assert.deepEqual(run3.selected.map((s) => s.axisId), ['c']);
+});
+
+// The cursor must not become a graveyard of ids for axes that no longer exist.
+test('an axis deleted from the configuration is pruned from the cursor', () => {
+  const remaining = [axis('a', 'always'), axis('b', 'always')];
+  const out = selectAxes({
+    axes: remaining, files: [file('x.ts')],
+    settings: settings({ budget: { slots: 1 } }),
+    state: state({ axis_cursor: ['gone', 'b', 'a'] }),
+  });
+  assert.equal(out.nextAxisCursor.includes('gone'), false);
+  assert.deepEqual([...out.nextAxisCursor].sort(), ['a', 'b']);
+});
+
+test('a nonsensical file cap reviews everything rather than silently nothing', () => {
+  const out = selectAxes({
+    axes: [axis('a', 'always')], files: [file('x.ts'), file('y.ts')],
+    settings: settings({ budget: { slots: 5, max_files_per_axis: null } }), state: state(),
+  });
+  assert.equal(out.selected.length, 1);
+  assert.equal(out.selected[0].files.length, 2);
+});
 ```
 
 - [ ] **Step 2: Run the test and confirm it fails**
@@ -1053,53 +1207,62 @@ function specificityFor(axis, path) {
   return best;
 }
 
-// Ranking keys, in the order spec §7 step 3 fixes: churn descending, then how
-// specifically the axis glob matched, then size ascending so truncation gives
-// up the files most expensive to read. Path is the final tiebreak, only so the
-// result is stable across runs.
-function rank(axis, files) {
-  return [...files].sort((a, b) => {
-    // A file carried over from a truncated run outranks everything: it lost the
-    // last ranking, and losing every ranking is how a file is never reviewed.
-    if (Boolean(a.carried) !== Boolean(b.carried)) return a.carried ? -1 : 1;
-    const churn = (b.added + b.removed) - (a.added + a.removed);
-    if (churn !== 0) return churn;
-    const spec = specificityFor(axis, b.path) - specificityFor(axis, a.path);
-    if (spec !== 0) return spec;
-    if (a.size !== b.size) return a.size - b.size;
-    return a.path.localeCompare(b.path);
-  });
-}
-
 function filesFor(axis, files) {
   return axis.when === 'always'
     ? [...files]
     : files.filter((file) => axis.when.some((pattern) => matchGlob(pattern, file.path)));
 }
 
-function assign(axis, files, maxFiles) {
-  const mine = rank(axis, filesFor(axis, files));
-  const kept = mine.slice(0, maxFiles);
-  const truncatedFrom = mine.length > maxFiles ? mine.length : null;
-  const skipped = mine.slice(maxFiles).map((file) => file.path);
-  return { kept: kept.map((file) => ({ ...file, truncatedFrom })), skipped };
+// Specificity is taken across every axis sharing the slot. Scoring a file
+// against only the first member would give a file matched by a later member's
+// glob a specificity of 0 and understate it.
+function bestSpecificity(axes, path) {
+  let best = 0;
+  for (const axis of axes) best = Math.max(best, specificityFor(axis, path));
+  return best;
+}
+
+// Ranking keys, in the order spec §7 step 3 fixes: carried-over files first,
+// then churn descending, then how specifically a glob matched, then size
+// ascending so truncation gives up the files most expensive to read. Path is
+// the final tiebreak, only so the result is stable across runs.
+function rank(axes, files) {
+  return [...files].sort((a, b) => {
+    // A file carried over from a truncated run outranks everything: it lost the
+    // last ranking, and losing every ranking is how a file is never reviewed.
+    if (Boolean(a.carried) !== Boolean(b.carried)) return a.carried ? -1 : 1;
+    const churn = (b.added + b.removed) - (a.added + a.removed);
+    if (churn !== 0) return churn;
+    const spec = bestSpecificity(axes, b.path) - bestSpecificity(axes, a.path);
+    if (spec !== 0) return spec;
+    if (a.size !== b.size) return a.size - b.size;
+    return a.path.localeCompare(b.path);
+  });
 }
 
 // Order matters and is the whole point: wake, assign, drop empties, only then
 // spend slots. An axis that would have received no file must not consume one.
 export function selectAxes({ axes, files, settings, state, slotsOverride = null }) {
   const slots = slotsOverride ?? settings.budget.slots;
-  const maxFilesDefault = settings.budget.max_files_per_axis;
+  const configuredCap = settings.budget.max_files_per_axis;
+  // `slice(0, null)` is `slice(0, 0)`, so a misconfigured cap would hand every
+  // axis an empty file list and select nothing at all — a silent no-op review.
+  // Fail open instead: reviewing everything costs visibly, reviewing nothing
+  // costs invisibly.
+  const maxFilesDefault = Number.isInteger(configuredCap) && configuredCap > 0 ? configuredCap : Infinity;
 
   const skippedOnTouch = [];
   const emptyAfterAssignment = [];
   const candidates = [];
 
+  // No truncation here. A file is only given up once the slot that will review
+  // it is known, because a grouped slot's cap can be larger than a narrow
+  // member's and would have had room for the file that member dropped.
   for (const axis of axes) {
     if (!wakes(axis, files)) { skippedOnTouch.push(axis.id); continue; }
-    const assigned = assign(axis, files, axis.max_files ?? maxFilesDefault);
-    if (assigned.kept.length === 0) { emptyAfterAssignment.push(axis.id); continue; }
-    candidates.push({ axis, files: assigned.kept, skipped: assigned.skipped });
+    const mine = filesFor(axis, files);
+    if (mine.length === 0) { emptyAfterAssignment.push(axis.id); continue; }
+    candidates.push({ axis, files: mine });
   }
 
   // Grouped axes collapse into a single slot entry, keeping every checklist.
@@ -1128,34 +1291,49 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null 
   const left = ordered.slice(slots);
 
   // A grouped slot reviews the union of its members' files, not the first
-  // member's. Dropping the rest would hand the agent checklists for files it
-  // was never given.
+  // member's, and it is truncated once — here — against the slot's own cap.
   const selected = taken.map((unit) => {
+    const memberAxes = unit.members.map((m) => m.axis);
+    const capOf = (axis) => (Number.isInteger(axis.max_files) && axis.max_files > 0 ? axis.max_files : maxFilesDefault);
+    const cap = Math.max(...memberAxes.map(capOf));
     const byPath = new Map();
     for (const member of unit.members) for (const file of member.files) byPath.set(file.path, file);
-    const cap = Math.max(...unit.members.map((m) => m.axis.max_files ?? maxFilesDefault));
-    const union = rank(unit.members[0].axis, [...byPath.values()]);
+    const union = rank(memberAxes, [...byPath.values()]);
     const kept = union.slice(0, cap);
-    const overflow = union.slice(cap).map((file) => file.path);
+    const truncatedFrom = union.length > kept.length ? union.length : null;
     return {
-      axisId: unit.members.map((m) => m.axis.id).join('+'),
+      axisId: memberAxes.map((axis) => axis.id).join('+'),
       group: unit.group,
-      axes: unit.members.map((m) => m.axis),
-      files: kept,
-      skippedFiles: [...new Set([...unit.members.flatMap((m) => m.skipped), ...overflow])].sort(),
+      axes: memberAxes,
+      // Every kept file carries the slot's truncation count, so a consumer
+      // reading one file's metadata cannot conclude the slot was complete.
+      files: kept.map((file) => ({ ...file, truncatedFrom })),
+      skippedFiles: union.slice(cap).map((file) => file.path).sort(),
     };
   });
+
+  const takenIds = taken.flatMap((u) => u.members.map((m) => m.axis.id));
+  const leftIds = left.flatMap((u) => u.members.map((m) => m.axis.id));
+  // An axis that slept this run keeps the position it had earned. Dropping it
+  // from the cursor would send it to the back on the run it next wakes —
+  // behind an axis that was just served — which inverts the fairness the
+  // rotation exists to provide.
+  const participated = new Set([...takenIds, ...leftIds]);
+  // `known` prunes ids of axes deleted from the configuration. Without it the
+  // cursor grows without bound: a deleted axis can never become a candidate, so
+  // it can never be "participating", so it would be carried forward forever.
+  const known = new Set(axes.map((axis) => axis.id));
+  const dormant = (state.axis_cursor ?? []).filter((id) => known.has(id) && !participated.has(id));
 
   return {
     selected,
     skippedOnTouch,
     emptyAfterAssignment,
-    deferred: left.flatMap((unit) => unit.members.map((m) => m.axis.id)),
+    deferred: leftIds,
     slots,
     agents: selected.length === 0 ? 0 : 1 + 2 * selected.length,
     truncated: selected.some((entry) => entry.skippedFiles.length > 0),
-    nextAxisCursor: [...left.flatMap((u) => u.members.map((m) => m.axis.id)),
-                     ...taken.flatMap((u) => u.members.map((m) => m.axis.id))],
+    nextAxisCursor: [...leftIds, ...dormant, ...takenIds],
   };
 }
 ```
@@ -1163,7 +1341,7 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null 
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/axes.test.mjs`
-Expected: PASS, 10 tests.
+Expected: PASS, 15 tests.
 
 - [ ] **Step 5: Add a property-style guard for the invariant**
 
@@ -1186,7 +1364,7 @@ test('no configuration of axes and files can exceed the budget', () => {
 - [ ] **Step 6: Run it and confirm it passes**
 
 Run: `cd <skill> && node --test test/axes.test.mjs`
-Expected: PASS, 11 tests.
+Expected: PASS, 16 tests.
 
 - [ ] **Step 7: Checkpoint**
 
@@ -1237,6 +1415,20 @@ test('a rejection suppresses a matching finding in the same file only', () => {
   const state = recordTriage(emptyState(), finding, { verdict: 'rejected', scope: 'here', reason: 'public by design' });
   assert.ok(isSuppressed(finding, state.triage, '2026-09-04'));
   assert.equal(isSuppressed({ ...finding, file: 'b.ts' }, state.triage, '2026-09-04'), null);
+});
+
+// LLM-phrased claims are templated; the differentiator often falls past the
+// token cap. The quoted code is what keeps two defects apart.
+test('two defects sharing a phrasing but not a quote keep separate fingerprints', () => {
+  const a = { axis: 'sec', file: 'a.ts', claim: 'query without tenant filter',
+    evidence: 'prisma.course.findFirst({ where: { id } })' };
+  const b = { axis: 'sec', file: 'a.ts', claim: 'query without tenant filter',
+    evidence: 'prisma.lesson.findMany({ where: { courseId } })' };
+  assert.notEqual(fingerprint(a, 'here'), fingerprint(b, 'here'));
+  const state = recordTriage(emptyState(), a, { verdict: 'rejected', scope: 'here', reason: 'public by design' });
+  assert.ok(isSuppressed(a, state.triage, '2026-09-04'));
+  assert.equal(isSuppressed(b, state.triage, '2026-09-04'), null,
+    'rejecting one defect must not silence a different one');
 });
 
 test('a deferred finding returns after its date', () => {
@@ -1290,16 +1482,25 @@ export function normalizeClaim(claim) {
     .join('-');
 }
 
+// The quoted code discriminates where the prose cannot. Two different defects
+// in one file often share a templated claim ("query without X filter") whose
+// differentiator falls past the token cap; they almost never share the line
+// they quote. Without this, rejecting one defect silences the other.
+export function evidenceKey(evidence) {
+  return String(evidence ?? '').replace(/\s+/g, ' ').trim().slice(0, 60);
+}
+
 export function fingerprint(finding, scope) {
   const file = scope === 'everywhere' ? '*' : finding.file;
-  return `${finding.axis}|${file}|${normalizeClaim(finding.claim)}`;
+  return `${finding.axis}|${file}|${normalizeClaim(finding.claim)}|${evidenceKey(finding.evidence)}`;
 }
 
 export function isSuppressed(finding, triage, today) {
   for (const entry of triage) {
     if (entry.verdict === 'accepted') continue;
-    const scope = entry.fingerprint.split('|')[1] === '*' ? 'everywhere' : 'here';
-    if (fingerprint(finding, scope) !== entry.fingerprint) continue;
+    // The scope is a field on the entry. Recovering it by splitting the
+    // fingerprint would make a `|` in a file path silently select the wrong one.
+    if (fingerprint(finding, entry.scope) !== entry.fingerprint) continue;
     if (entry.verdict === 'deferred' && entry.until !== null && entry.until < today) continue;
     return entry;
   }
@@ -1337,7 +1538,7 @@ export function recordTriage(state, finding, { verdict, scope, reason, until = n
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/triage.test.mjs`
-Expected: PASS, 8 tests.
+Expected: PASS, 9 tests.
 
 - [ ] **Step 5: Checkpoint**
 
@@ -1368,7 +1569,10 @@ import { validateFinding, dedupe, applyThresholds, assemble } from '../lib/findi
 import { recordTriage } from '../lib/triage.mjs';
 import { emptyState } from '../lib/state.mjs';
 
-const SOURCE = { 'a.ts': 'const x = 1;\nconst course = await prisma.course.findFirst({ where: { id } });\n' };
+// Line 3 is deliberately a short whole line: it is what proves the length rule
+// has a whole-line exception. Append to this fixture, never restructure it —
+// the other tests pin evidence to line 2.
+const SOURCE = { 'a.ts': 'const x = 1;\nconst course = await prisma.course.findFirst({ where: { id } });\n@Public()\n' };
 const sourceOf = (path) => SOURCE[path];
 
 const base = {
@@ -1394,6 +1598,34 @@ test('a finding with no evidence is rejected', () => {
 test('evidence differing only in whitespace still matches', () => {
   const spaced = { ...base, evidence: 'const  course = await prisma.course.findFirst({ where: { id } });' };
   assert.equal(validateFinding(spaced, sourceOf).ok, true);
+});
+
+test('evidence too short to identify anything is rejected', () => {
+  const out = validateFinding({ ...base, evidence: 'con' }, sourceOf);
+  assert.equal(out.ok, false);
+  assert.match(out.why, /too short/);
+});
+
+test('a short quote that is a whole line is accepted', () => {
+  assert.equal(validateFinding({ ...base, lines: [3, 3], evidence: '@Public()' }, sourceOf).ok, true);
+  assert.equal(validateFinding({ ...base, lines: [3, 3], evidence: '  @Public()  ' }, sourceOf).ok, true,
+    'the whole-line exemption compares the same way every other match here does');
+});
+
+test('a finding with no usable line range is refused, not quietly unchecked', () => {
+  for (const lines of [undefined, [], [2], [0, 2], ['2', '2']]) {
+    const out = validateFinding({ ...base, lines }, sourceOf);
+    assert.equal(out.ok, false, `should refuse lines=${JSON.stringify(lines)}`);
+    assert.match(out.why, /lines must be/);
+  }
+});
+
+// A real quote at a fabricated location defeats the file:line pairing exactly
+// as much as a fabricated quote would.
+test('a real quote reported at the wrong lines is rejected, and says so', () => {
+  const out = validateFinding({ ...base, lines: [9, 9] }, sourceOf);
+  assert.equal(out.ok, false);
+  assert.match(out.why, /not at the cited lines/);
 });
 
 test('duplicates collapse and keep the highest severity', () => {
@@ -1424,6 +1656,29 @@ test('assemble drops suppressed findings and reports them separately', () => {
   assert.match(out.suppressed[0].reason, /public by design/);
 });
 
+test('a finding exactly at its floor passes, and an unknown severity never does', () => {
+  const { kept, dropped } = applyThresholds(
+    [{ ...base, severity: 'blocking', confidence: 85 }, { ...base, severity: 'unknown', confidence: 100 }],
+    { blocking: 85, suggestion: 70, nitpick: 70 },
+  );
+  assert.deepEqual(kept.map((f) => f.severity), ['blocking']);
+  assert.deepEqual(dropped.map((f) => f.severity), ['unknown']);
+});
+
+test('ids follow severity, so f-01 is genuinely the most severe finding', () => {
+  const out = assemble({
+    run: { id: 'r1' },
+    findings: [
+      { ...base, severity: 'nitpick', confidence: 95, claim: 'trailing whitespace here' },
+      { ...base, severity: 'blocking', confidence: 95, claim: 'query without tenant filter' },
+      { ...base, severity: 'suggestion', confidence: 95, claim: 'extract this helper' },
+    ],
+    triage: [], today: '2026-09-04',
+  });
+  assert.deepEqual(out.findings.map((f) => [f.id, f.severity]),
+    [['f-01', 'blocking'], ['f-02', 'suggestion'], ['f-03', 'nitpick']]);
+});
+
 test('ids are stable and sequential', () => {
   const out = assemble({
     run: { id: 'r1' },
@@ -1442,13 +1697,19 @@ Expected: FAIL — module missing.
 - [ ] **Step 3: Implement `lib/findings.mjs`**
 
 ```js
-import { normalizeClaim, isSuppressed } from './triage.mjs';
+import { fingerprint, isSuppressed } from './triage.mjs';
 
 const SEVERITY_ORDER = { blocking: 3, suggestion: 2, nitpick: 1 };
 const squash = (text) => String(text).replace(/\s+/g, ' ').trim();
 
+// Three characters are a substring of nearly any source file, so a fragment
+// that short proves nothing. A whole line is the exception: `@Public()` is
+// short and still identifies exactly one thing.
+const MIN_EVIDENCE = 12;
+
 export function validateFinding(finding, sourceOf) {
-  if (!finding.evidence || squash(finding.evidence) === '') {
+  const quote = squash(finding.evidence ?? '');
+  if (quote === '') {
     return { ok: false, why: 'evidence is missing — a claim without a quote is not reviewable' };
   }
   let source;
@@ -1458,16 +1719,40 @@ export function validateFinding(finding, sourceOf) {
     return { ok: false, why: `file ${finding.file} could not be read` };
   }
   if (source === undefined) return { ok: false, why: `file ${finding.file} is not part of this run` };
-  if (!squash(source).includes(squash(finding.evidence))) {
-    return { ok: false, why: `evidence not found verbatim in ${finding.file}` };
+
+  const lines = source.split(/\r?\n/);
+  // Without a line range the location check below silently does nothing, which
+  // is the failure it exists to prevent. A finding with no usable `lines` is
+  // off-contract, like an unrecognised severity, and is refused the same way.
+  const hasRange = Array.isArray(finding.lines) && finding.lines.length === 2
+    && finding.lines.every((n) => Number.isInteger(n) && n > 0);
+  if (!hasRange) {
+    return { ok: false, why: 'lines must be a [start, end] pair of positive integers — without it the quote cannot be tied to a location' };
   }
-  return { ok: true, finding };
+  const [from, to] = finding.lines;
+  // Compared the same way as everything else here, so a whole line quoted with
+  // different internal spacing still counts as a whole line.
+  const isWholeLine = lines.some((line) => line.trim() !== '' && squash(line) === quote);
+  if (quote.length < MIN_EVIDENCE && !isWholeLine) {
+    return { ok: false, why: `evidence "${String(finding.evidence).trim()}" is too short to identify anything — quote the whole line` };
+  }
+
+  // The report pairs a file:line link with this quote, so the two have to agree.
+  // Two lines of slack either way: an agent counting lines by eye is often off
+  // by one, and rejecting a true finding over that costs more than it saves.
+  const window = squash(lines.slice(Math.max(0, from - 3), to + 2).join('\n'));
+  if (window.includes(quote)) return { ok: true, finding };
+  if (squash(source).includes(quote)) {
+    return { ok: false, why: `evidence appears in ${finding.file} but not at the cited lines ${from}-${to}` };
+  }
+  return { ok: false, why: `evidence not found verbatim in ${finding.file}` };
 }
 
 export function dedupe(findings) {
   const byKey = new Map();
   for (const finding of findings) {
-    const key = `${finding.axis}|${finding.file}|${normalizeClaim(finding.claim)}`;
+    // The same key suppression uses, so the two can never drift apart.
+    const key = fingerprint(finding, 'here');
     const seen = byKey.get(key);
     if (!seen) { byKey.set(key, { ...finding }); continue; }
     if (SEVERITY_ORDER[finding.severity] > SEVERITY_ORDER[seen.severity]) seen.severity = finding.severity;
@@ -1481,6 +1766,12 @@ export function applyThresholds(findings, thresholds) {
   const kept = [];
   const dropped = [];
   for (const finding of findings) {
+    // A severity outside the three known values means the agent returned
+    // something off-contract. Giving it a floor of 100 would still admit it at
+    // exactly 100; drop it outright instead.
+    // `hasOwn`, not `in`: `in` walks the prototype chain, so a severity of
+    // "toString" would read as known.
+    if (!Object.hasOwn(SEVERITY_ORDER, finding.severity)) { dropped.push(finding); continue; }
     const floor = thresholds[finding.severity] ?? 100;
     ((finding.confidence ?? 0) >= floor ? kept : dropped).push(finding);
   }
@@ -1511,7 +1802,7 @@ export function assemble({ run, findings, triage, today }) {
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/findings.test.mjs`
-Expected: PASS, 8 tests.
+Expected: PASS, 14 tests.
 
 - [ ] **Step 5: Checkpoint**
 
@@ -1545,6 +1836,11 @@ test('ssh and https remotes both resolve', () => {
 test('a non-github remote yields no link', () => {
   assert.equal(remoteToHttps('git@gitlab.com:x/y.git'), null);
   assert.equal(blobLink('git@gitlab.com:x/y.git', 'abc', 'a.ts', [1, 2]), null);
+});
+
+test('a single-line finding gets a single-line anchor', () => {
+  assert.equal(blobLink('git@github.com:R/app.git', 'sha1', 'a.ts', [88, 88]),
+    'https://github.com/R/app/blob/sha1/a.ts#L88');
 });
 
 test('blob links carry the sha and the line range', () => {
@@ -1582,7 +1878,7 @@ test('the header states coverage and spend', () => {
   assert.match(md, /Osie w tym przebiegu: security \(1 z 3\)/);
   assert.match(md, /Pominięte przez on-touch: migrations/);
   assert.match(md, /Czeka w rotacji: conventions/);
-  assert.match(md, /Zużycie: 3 agentów \(1 brief \+ 1 osi \+ 1 weryfikacji\)/);
+  assert.match(md, /Zużycie: 3 agenty \(1 brief \+ 1 oś \+ 1 weryfikacja\)/);
 });
 
 test('a finding shows severity, location, quote and the codex verdict', () => {
@@ -1607,6 +1903,15 @@ test('a finding with no prose is marked rather than dropped', () => {
   assert.match(md, /\[bez opisu\]/);
 });
 
+test('an axis whose agent never returned is named as not reviewed', () => {
+  const md = renderReport({
+    run: { id: 'r1', mode: 'since', base: 'x', head: 'y' },
+    selection: { ...selection, incomplete: ['security'] },
+    findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  });
+  assert.match(md, /\*\*Nie przejrzano\*\* \(agent nie zwrócił wyniku\): security/);
+});
+
 test('suppressed findings are counted in the footer', () => {
   const md = renderReport({
     run: { id: 'r1', mode: 'since', base: 'x', head: 'y' },
@@ -1615,6 +1920,23 @@ test('suppressed findings are counted in the footer', () => {
   });
   assert.match(md, /Pominięto 1 uwagę wcześniej odrzuconą/);
   assert.match(md, /codex niedostępny/);
+});
+
+// A report that cries breakage when nothing is broken teaches its reader to
+// stop believing the header.
+test('each codex outcome is named for what it was', () => {
+  const render = (codexStatus) => renderReport({
+    run: { id: 'r1', mode: 'since', base: 'x', head: 'y' },
+    selection, findings: [], suppressed: [], prose: {}, codexStatus, remote: null,
+  });
+  assert.match(render('disabled'), /codex wyłączony w konfiguracji/);
+  assert.match(render('nothing-to-judge'), /nie było uwag do oceny/);
+  assert.match(render('timeout'), /przekroczył limit czasu/);
+  assert.match(render('unparsable'), /nieczytelna/);
+  assert.match(render('skipped'), /krok codexa nie został wykonany/);
+  assert.match(render('something-new'), /nieznany status codexa/);
+  assert.equal(/codex: /.test(render('something-new')), false, 'no raw enum reaches a Polish report');
+  assert.equal(/Uwaga:/.test(render('ok')), false, 'a working codex earns no note at all');
 });
 ```
 
@@ -1660,21 +1982,49 @@ function plural(n, one, few, many) {
   return many;
 }
 
+// Full 40-character hashes push the interesting part of the line off the eye's
+// path; seven characters is what git itself shows and what the reader compares.
+const short = (sha) => (typeof sha === 'string' && /^[0-9a-f]{40}$/.test(sha) ? sha.slice(0, 7) : sha);
+
 function header({ run, selection, codexStatus }) {
   const chosen = selection.selected.map((s) => s.axisId);
   const total = chosen.length + selection.skippedOnTouch.length + selection.deferred.length;
   const lines = [
     `# Review — ${run.id} (tryb \`${run.mode}\`)`,
     '',
-    `Zakres: \`${run.base ?? '—'}\` → \`${run.head}\`.`,
+    `Zakres: \`${short(run.base) ?? '—'}\` → \`${short(run.head)}\`.`,
     `Osie w tym przebiegu: ${chosen.join(', ') || '—'} (${chosen.length} z ${total}).`,
   ];
   if (selection.skippedOnTouch.length > 0) lines.push(`Pominięte przez on-touch: ${selection.skippedOnTouch.join(', ')}.`);
   if (selection.deferred.length > 0) lines.push(`Czeka w rotacji: ${selection.deferred.join(', ')}.`);
-  lines.push(`Zużycie: ${selection.agents} ${plural(selection.agents, 'agent', 'agentów', 'agentów')} `
-    + `(1 brief + ${chosen.length} ${plural(chosen.length, 'oś', 'osi', 'osi')} `
-    + `+ ${chosen.length} ${plural(chosen.length, 'weryfikacja', 'weryfikacji', 'weryfikacji')}).`);
-  if (codexStatus !== 'ok') lines.push(`Uwaga: **codex niedostępny** — uwagi nie mają drugiej opinii.`);
+  // An axis whose agent never returned usable output was paid for and produced
+  // nothing. The coverage block must say so, or the report claims a review that
+  // did not happen.
+  if ((selection.incomplete ?? []).length > 0) {
+    lines.push(`**Nie przejrzano** (agent nie zwrócił wyniku): ${selection.incomplete.join(', ')}.`);
+  }
+  // Three forms per noun, because Polish needs all three: 1 agent, 3 agenty,
+  // 5 agentów. Collapsing "few" into "many" is the mistake that makes generated
+  // Polish read like a machine wrote it.
+  lines.push(`Zużycie: ${selection.agents} ${plural(selection.agents, 'agent', 'agenty', 'agentów')} `
+    + `(1 brief + ${chosen.length} ${plural(chosen.length, 'oś', 'osie', 'osi')} `
+    + `+ ${chosen.length} ${plural(chosen.length, 'weryfikacja', 'weryfikacje', 'weryfikacji')}).`);
+  // Each status says what actually happened. Telling the reader "niedostępny"
+  // when codex was merely switched off reports a breakage that is not there,
+  // in a document whose only job is to be trustworthy about what it checked.
+  const CODEX_NOTE = {
+    disabled: 'codex wyłączony w konfiguracji — uwagi nie mają drugiej opinii.',
+    'nothing-to-judge': 'codex pominięty — nie było uwag do oceny.',
+    skipped: '**krok codexa nie został wykonany** — uwagi nie mają drugiej opinii.',
+    unavailable: '**codex niedostępny** — uwagi nie mają drugiej opinii.',
+    timeout: '**codex przekroczył limit czasu** — uwagi nie mają drugiej opinii.',
+    unparsable: '**odpowiedź codexa nieczytelna** — uwagi nie mają drugiej opinii.',
+  };
+  // The fallback is Polish too. A raw enum spliced into this report is the same
+  // failure as a wrong label: the reader stops trusting the line.
+  if (codexStatus !== 'ok') {
+    lines.push(`Uwaga: ${CODEX_NOTE[codexStatus] ?? `nieznany status codexa: \`${codexStatus}\`.`}`);
+  }
   return lines.join('\n');
 }
 
@@ -1724,7 +2074,7 @@ export function renderReport({ run, selection, findings, suppressed, prose, code
 - [ ] **Step 5: Run both tests and confirm they pass**
 
 Run: `cd <skill> && node --test test/links.test.mjs test/report.test.mjs`
-Expected: PASS, 7 tests.
+Expected: PASS, 10 tests.
 
 - [ ] **Step 6: Checkpoint**
 
@@ -1739,7 +2089,7 @@ Expected: PASS, 7 tests.
 
 **Interfaces:**
 - Consumes: assembled findings (Task 7).
-- Produces: `buildCodexPrompt(findings, { repoDir }) -> string`; `parseCodexVerdicts(stdout) -> Record<findingId, { verdict, reason, fix }>`; `runCodex(prompt, { cwd, timeoutMs, binary }) -> { status: 'ok'|'unavailable'|'timeout'|'unparsable', verdicts, raw }`.
+- Produces: `buildCodexPrompt(findings) -> string`; `parseCodexVerdicts(stdout) -> Record<findingId, { verdict, reason, fix }>`; `runCodex(prompt, { cwd, timeoutMs, binary }) -> { status: 'ok'|'unavailable'|'timeout'|'unparsable', verdicts, raw }`.
 
 - [ ] **Step 1: Write the codex prompt template**
 
@@ -1778,7 +2128,7 @@ const findings = [{
 }];
 
 test('the prompt carries id, location, quote and rule for every finding', () => {
-  const prompt = buildCodexPrompt(findings, { repoDir: '/repo' });
+  const prompt = buildCodexPrompt(findings);
   assert.match(prompt, /f-01/);
   assert.match(prompt, /a\.ts:88-94/);
   assert.match(prompt, /findFirst\(\{ where: \{ id \} \}\)/);
@@ -1801,6 +2151,46 @@ test('a missing binary reports unavailable rather than throwing', () => {
   assert.equal(out.status, 'unavailable');
   assert.deepEqual(out.verdicts, {});
 });
+
+// This pair is the permanent guard for the defect the live test found once:
+// on Windows the npm shim cannot be spawned directly, and without the fallback
+// the cross-check reported "unavailable" on every run while every test passed.
+test('on Windows a failed direct spawn retries through the shell, prompt still on stdin', () => {
+  const calls = [];
+  const spawn = (command, args, options) => {
+    calls.push({ command, args, options });
+    return calls.length === 1
+      ? { error: Object.assign(new Error('nope'), { code: 'ENOENT' }) }
+      : { status: 0, stdout: '{"verdicts":[{"id":"f-01","verdict":"confirms","reason":"r","fix":null}]}' };
+  };
+  const out = runCodex('PROMPT-BODY', { cwd: '.', timeoutMs: 1000, spawn, platform: 'win32' });
+  assert.equal(out.status, 'ok');
+  assert.equal(calls.length, 2);
+  assert.equal(calls[1].command, process.env.ComSpec || 'cmd.exe');
+  assert.deepEqual(calls[1].args.slice(0, 3), ['/d', '/s', '/c']);
+  assert.equal(calls[1].args[3].includes('PROMPT-BODY'), false,
+    'the prompt must never reach the command line');
+  assert.equal(calls[1].options.input, 'PROMPT-BODY');
+});
+
+test('on a POSIX platform a failed spawn is not retried through a shell', () => {
+  const calls = [];
+  const spawn = (command, args, options) => {
+    calls.push({ command, args, options });
+    return { error: Object.assign(new Error('nope'), { code: 'ENOENT' }) };
+  };
+  const out = runCodex('PROMPT-BODY', { cwd: '.', timeoutMs: 1000, spawn, platform: 'linux' });
+  assert.equal(out.status, 'unavailable');
+  assert.equal(calls.length, 1);
+});
+
+// Opt-in, not opt-out: a machine without codex must not fail the suite, since
+// the module's whole contract is that a missing codex never fails a run.
+test('codex can actually be started on this machine', { skip: process.env.CRM_LIVE_CODEX !== '1' }, () => {
+  const out = runCodex('Reply with exactly: STDIN_OK', { cwd: process.cwd(), timeoutMs: 120000 });
+  assert.notEqual(out.status, 'unavailable',
+    'codex could not be spawned — the cross-check would silently never run');
+});
 ```
 
 - [ ] **Step 3: Run the test and confirm it fails**
@@ -1819,7 +2209,7 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const VERDICTS = new Set(['confirms', 'rejects', 'unsure']);
 
-export function buildCodexPrompt(findings, { repoDir }) {
+export function buildCodexPrompt(findings) {
   const template = readFileSync(join(HERE, '..', 'prompts', 'codex.md'), 'utf8');
   const rendered = findings.map((f) => [
     `- id: ${f.id}`,
@@ -1831,7 +2221,7 @@ export function buildCodexPrompt(findings, { repoDir }) {
     '  evidence: |',
     `    ${f.evidence.split('\n').join('\n    ')}`,
   ].join('\n')).join('\n');
-  return template.replace('{{FINDINGS}}', rendered).replace('{{REPO}}', repoDir);
+  return template.replace('{{FINDINGS}}', rendered);
 }
 
 // Codex prints prose around its answer; take the last balanced JSON object.
@@ -1856,11 +2246,29 @@ export function parseCodexVerdicts(stdout) {
   return null;
 }
 
-export function runCodex(prompt, { cwd, timeoutMs, binary = 'codex' }) {
-  const result = spawnSync(binary, ['exec', '--sandbox', 'read-only', prompt],
-    { cwd, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 32 * 1024 * 1024 });
-  if (result.error && result.error.code === 'ENOENT') return { status: 'unavailable', verdicts: {}, raw: '' };
+// The prompt goes on stdin (`-`), never on the command line: it carries quoted
+// source code, and no amount of escaping makes that safe as an argument.
+const CODEX_ARGS = ['exec', '--sandbox', 'read-only', '-'];
+const SAFE_BINARY = /^[A-Za-z0-9._-]+$/;
+
+// `spawn` and `platform` are injectable so the Windows fallback can be tested
+// deterministically, without a codex install and without an API call. The
+// defect this guards against was invisible to every unit test written before it.
+export function runCodex(prompt, { cwd, timeoutMs, binary = 'codex', spawn = spawnSync, platform = process.platform }) {
+  if (!SAFE_BINARY.test(binary)) return { status: 'unavailable', verdicts: {}, raw: 'unsafe binary name' };
+  const attempt = (command, args) => spawn(command, args,
+    { cwd, input: prompt, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 32 * 1024 * 1024 });
+  let result = attempt(binary, CODEX_ARGS);
+  // Windows cannot exec an npm shim directly: the extensionless `codex` is a
+  // shell script, and Node has refused to spawn `.cmd` since CVE-2024-27980.
+  // Retry through the shell with a command line that interpolates no data —
+  // the prompt is still on stdin, and the binary name is pattern-checked above.
+  if (result.error && platform === 'win32') {
+    result = attempt(process.env.ComSpec || 'cmd.exe',
+      ['/d', '/s', '/c', `${binary} ${CODEX_ARGS.join(' ')}`]);
+  }
   if (result.error && result.error.code === 'ETIMEDOUT') return { status: 'timeout', verdicts: {}, raw: result.stdout ?? '' };
+  if (result.error) return { status: 'unavailable', verdicts: {}, raw: String(result.error.code ?? result.error.message) };
   if (result.status !== 0) return { status: 'unavailable', verdicts: {}, raw: result.stderr ?? '' };
   const verdicts = parseCodexVerdicts(result.stdout);
   if (verdicts === null) return { status: 'unparsable', verdicts: {}, raw: result.stdout };
@@ -1871,7 +2279,7 @@ export function runCodex(prompt, { cwd, timeoutMs, binary = 'codex' }) {
 - [ ] **Step 5: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/codex.test.mjs`
-Expected: PASS, 4 tests.
+Expected: PASS, 6 tests plus 1 skipped (the live codex test, opt-in via CRM_LIVE_CODEX=1).
 
 - [ ] **Step 6: Checkpoint**
 
@@ -1894,7 +2302,7 @@ Expected: PASS, 4 tests.
     - `crm assemble --repo <dir> --run <id> --raw <file>` → validates evidence, dedupes, **assigns ids**, applies triage suppression, writes `findings.json` with `confidence: null`
     - `crm score --repo <dir> --run <id> --scores <file>` → merges confidences by finding id, applies the per-severity thresholds, rewrites `findings.json`
     - `crm codex --repo <dir> --run <id>` → merges verdicts into `findings.json`, prints status
-    - `crm render --repo <dir> --run <id> --prose <file>` → writes `raport.md`
+    - `crm render --repo <dir> --run <id> --prose <file> [--incomplete a,b]` → writes `raport.md`; `--incomplete` names axes whose agent never returned usable output, so the coverage block can say they were not reviewed
     - `crm finish --repo <dir> --run <id>` → updates `state.json`, exits with the gate code
     - `crm triage --repo <dir> --run <id> --id <f-NN> --verdict <v> --scope <s> --reason <text> [--until <date>]`
     - `crm suppressed --repo <dir> [--restore <fingerprint>]`
@@ -1963,7 +2371,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-import { makeRepo, writeFiles } from './helpers/repo.mjs';
+import { makeRepo, writeFiles } from '../test-helpers/repo.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'crm.mjs');
 const run = (args, opts = {}) => execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8', ...opts });
@@ -2048,11 +2456,10 @@ Expected: FAIL — `bin/crm.mjs` missing.
 
 ```js
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
-import { fileURLToPath } from 'node:url';
 import { parseConfigDoc, mergeConfig, validateConfig } from '../lib/config.mjs';
 import { collectTarget, isEmpty } from '../lib/target.mjs';
 import { selectAxes } from '../lib/axes.mjs';
@@ -2061,9 +2468,8 @@ import { recordTriage } from '../lib/triage.mjs';
 import { renderReport } from '../lib/report.mjs';
 import { buildCodexPrompt, runCodex } from '../lib/codex.mjs';
 import { exitCode } from '../lib/gate.mjs';
+import { selectFixable } from '../lib/fixable.mjs';
 import { readState, writeState } from '../lib/state.mjs';
-
-const HERE = dirname(fileURLToPath(import.meta.url));
 
 function fail(message) {
   process.stderr.write(`${message}\n`);
@@ -2088,6 +2494,9 @@ function parseArgs(argv) {
 // sane number. Wrapper discipline is not enough: any CI step could call this.
 function readSlots(args) {
   if (args.slots === undefined) return null;
+  // A bare `--slots` parses as `true`, and `Number(true)` is 1 — so forgetting
+  // the number would silently *lower* the budget instead of raising it.
+  if (args.slots === true) fail('--slots needs a number, for example --slots 8');
   if (!process.stdout.isTTY) fail('--slots is refused without a terminal: an unattended run may not raise the agent budget');
   const value = Number(args.slots);
   if (!Number.isInteger(value) || value < 1 || value > 20) fail(`--slots must be an integer between 1 and 20, got "${args.slots}"`);
@@ -2114,6 +2523,25 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
+// Exit 1 means "the review failed you"; exit 2 means "the run broke". A missing
+// artefact is the second, so it must not reach Node's uncaught-exception exit,
+// which is also 1 and would make the two indistinguishable to CI.
+function readRunFile(repo, runId, name) {
+  const path = reportPath(repo, runId, name);
+  if (!existsSync(path)) {
+    fail(`run ${runId} has no ${name} — the pipeline order is plan, assemble, score, codex, render, finish`);
+  }
+  return readJson(path);
+}
+
+// Same contract for caller-supplied paths. A wave agent that failed to write
+// its output is a broken run, not a failed gate, and must not exit 1.
+function readInputFile(path, flag) {
+  if (path === undefined || path === true) fail(`${flag} needs a file path`);
+  if (!existsSync(path)) fail(`${flag} points at ${path}, which does not exist`);
+  return readJson(path);
+}
+
 function writeJson(path, value) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
@@ -2121,7 +2549,10 @@ function writeJson(path, value) {
 
 function gitRemote(repo) {
   try {
-    return execFileSync('git', ['-C', repo, 'remote', 'get-url', 'origin'], { encoding: 'utf8' }).trim();
+    // git writes "No such remote" to stderr, which Node forwards to ours; a
+    // repository with no remote is a normal case, not something to print.
+    return execFileSync('git', ['-C', repo, 'remote', 'get-url', 'origin'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   } catch {
     return null;
   }
@@ -2146,7 +2577,12 @@ const COMMANDS = {
       if (known.has(path) || !existsSync(join(repo, path))) continue;
       target.files.push({ path, added: 0, removed: 0, size: statSync(join(repo, path)).size, carried: true });
     }
-    const runId = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12).replace(/^(\d{8})(\d{4})$/, '$1-$2');
+    // Seconds and a random suffix, because two `plan` calls in the same minute
+    // would otherwise share a runId and overwrite each other's plan.json and
+    // dispatch ledger — and `finish` would then check one run's ledger against
+    // another run's announced budget.
+    const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+    const runId = `${stamp.slice(0, 8)}-${stamp.slice(8)}-${Math.random().toString(36).slice(2, 6)}`;
     if (isEmpty(target)) {
       return { runId, mode, target, empty: true, selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 } };
     }
@@ -2154,6 +2590,21 @@ const COMMANDS = {
       axes: config.axes, files: target.files, settings: config.settings, state, slotsOverride,
     });
     return { runId, mode, target, empty: false, selection, settings: config.settings, axes: config.axes };
+  },
+
+  // The wrapper's half of the gate: run after `claude -p` returns, it exits
+  // with the code the review itself decided on.
+  gate(args) {
+    const repo = args.repo ?? process.cwd();
+    const state = readState(repo);
+    const last = state.runs.at(-1);
+    if (!last) fail('no run recorded in state.json — the review did not reach crm finish');
+    if (last.exit === null || last.exit === undefined) {
+      fail(`run ${last.id} never recorded an exit code — the review did not reach crm finish`);
+    }
+    process.stdout.write(`${JSON.stringify({ run: last.id, exit: last.exit })}
+`);
+    process.exit(last.exit);
   },
 
   dispatched(args) {
@@ -2172,7 +2623,7 @@ const COMMANDS = {
     const sourceOf = (path) => readFileSync(join(repo, path), 'utf8');
     const rejected = [];
     const valid = [];
-    for (const finding of readJson(args.raw)) {
+    for (const finding of readInputFile(args.raw, '--raw')) {
       const check = validateFinding(finding, sourceOf);
       if (!check.ok) { rejected.push({ claim: finding.claim, why: check.why }); continue; }
       valid.push(finding);
@@ -2194,8 +2645,8 @@ const COMMANDS = {
     const repo = args.repo ?? process.cwd();
     const config = loadConfig(repo);
     const path = reportPath(repo, args.run, 'findings.json');
-    const data = readJson(path);
-    const byId = new Map(readJson(args.scores).map((s) => [s.id, s]));
+    const data = readRunFile(repo, args.run, 'findings.json');
+    const byId = new Map(readInputFile(args.scores, '--scores').map((s) => [s.id, s]));
     for (const finding of data.findings) {
       const score = byId.get(finding.id);
       finding.confidence = score ? score.confidence : 0;
@@ -2212,9 +2663,16 @@ const COMMANDS = {
     const repo = args.repo ?? process.cwd();
     const config = loadConfig(repo);
     const path = reportPath(repo, args.run, 'findings.json');
-    const data = readJson(path);
-    if (!config.settings.codex.enabled || data.findings.length === 0) return { status: 'skipped' };
-    const result = runCodex(buildCodexPrompt(data.findings, { repoDir: repo }),
+    const data = readRunFile(repo, args.run, 'findings.json');
+    // The skip must be persisted like any other outcome. Leaving it out made the
+    // report's label a coincidence of a default rather than a recorded fact, so
+    // "codex was switched off" and "the codex step never ran" looked identical.
+    if (!config.settings.codex.enabled || data.findings.length === 0) {
+      data.codexStatus = config.settings.codex.enabled ? 'nothing-to-judge' : 'disabled';
+      writeJson(path, data);
+      return { status: data.codexStatus };
+    }
+    const result = runCodex(buildCodexPrompt(data.findings),
       { cwd: repo, timeoutMs: config.settings.codex.timeout_s * 1000 });
     for (const finding of data.findings) {
       finding.codex = result.verdicts[finding.id] ?? { verdict: 'unsure', reason: result.status, fix: null };
@@ -2226,12 +2684,13 @@ const COMMANDS = {
 
   render(args) {
     const repo = args.repo ?? process.cwd();
-    const data = readJson(reportPath(repo, args.run, 'findings.json'));
-    const plan = readJson(reportPath(repo, args.run, 'plan.json'));
+    const data = readRunFile(repo, args.run, 'findings.json');
+    const plan = readRunFile(repo, args.run, 'plan.json');
+    const incomplete = args.incomplete ? String(args.incomplete).split(',').map((s) => s.trim()).filter(Boolean) : [];
     const markdown = renderReport({
       run: { id: args.run, mode: plan.mode, base: plan.target.base, head: plan.target.head },
-      selection: plan.selection, findings: data.findings, suppressed: data.suppressed,
-      prose: args.prose ? readJson(args.prose) : {},
+      selection: { ...plan.selection, incomplete }, findings: data.findings, suppressed: data.suppressed,
+      prose: args.prose ? readInputFile(args.prose, '--prose') : {},
       codexStatus: data.codexStatus ?? 'skipped', remote: gitRemote(repo),
     });
     const out = reportPath(repo, args.run, 'raport.md');
@@ -2243,8 +2702,8 @@ const COMMANDS = {
   finish(args) {
     const repo = args.repo ?? process.cwd();
     const config = loadConfig(repo);
-    const data = readJson(reportPath(repo, args.run, 'findings.json'));
-    const plan = readJson(reportPath(repo, args.run, 'plan.json'));
+    const data = readRunFile(repo, args.run, 'findings.json');
+    const plan = readRunFile(repo, args.run, 'plan.json');
     // The ledger is the mechanical half of the budget guarantee: the plan says
     // what may run, this says what did, and a mismatch fails the run.
     const ledgerPath = reportPath(repo, args.run, 'dispatch.json');
@@ -2256,6 +2715,15 @@ const COMMANDS = {
     }
     if (stray.length > 0) {
       fail(`dispatch ledger names axes the plan did not select: ${stray.map((e) => e.label).join(', ')}`);
+    }
+    // A ledger shorter than the announcement is not an over-spend, so it does
+    // not fail the run — but it means an agent was dispatched and never came
+    // back, and a silent shortfall is how a review claims coverage it lacks.
+    const shortfall = plan.selection.agents - ledger.length;
+    if (shortfall > 0) {
+      process.stderr.write(`warning: ledger holds ${ledger.length} of ${plan.selection.agents} announced agents; `
+        + `${shortfall} never reported back — check the report names them as not reviewed
+`);
     }
 
     const state = readState(repo);
@@ -2269,13 +2737,23 @@ const COMMANDS = {
       const listed = plan.target.files.map((f) => f.path);
       const reviewed = new Set(plan.selection.selected.flatMap((s) => s.files.map((f) => f.path)));
       const lastReviewed = listed.filter((path) => reviewed.has(path)).at(-1);
-      state.file_cursor = { ...state.file_cursor, full: listed.find((path) => path > lastReviewed) ?? '' };
+      // Only move the cursor when something was actually reviewed. Advancing on
+      // an empty pass would reset to the start of the repository, making "read
+      // nothing this time" indistinguishable from "finished, wrap around".
+      if (lastReviewed !== undefined) {
+        state.file_cursor = { ...state.file_cursor, full: listed.find((path) => path > lastReviewed) ?? '' };
+      }
     }
-    state.runs = [...state.runs, { id: args.run, artifact_url: args.artifact ?? null }].slice(-50);
+    state.runs = [...state.runs, { id: args.run, artifact_url: args.artifact ?? null, exit: null }].slice(-50);
     writeState(repo, state);
     const code = exitCode({
       findings: data.findings, gate: config.settings.gate, gateOnDisputed: config.settings.gate_on_disputed,
     });
+    // Recorded, not only returned. `crm finish` runs inside the Claude session,
+    // and `claude -p` exits with its own status — so a wrapper reading only the
+    // process code would see 0 for every run and the CI gate would never fail.
+    state.runs[state.runs.length - 1].exit = code;
+    writeState(repo, state);
     process.stdout.write(`${JSON.stringify({ exit: code, findings: data.findings.length })}\n`);
     process.exit(code);
   },
@@ -2283,7 +2761,7 @@ const COMMANDS = {
   triage(args) {
     const repo = args.repo ?? process.cwd();
     const path = reportPath(repo, args.run, 'findings.json');
-    const data = readJson(path);
+    const data = readRunFile(repo, args.run, 'findings.json');
     const finding = data.findings.find((f) => f.id === args.id);
     if (!finding) fail(`no finding ${args.id} in run ${args.run}`);
     const state = recordTriage(readState(repo), finding, {
@@ -2441,8 +2919,10 @@ point at lines. Code references are always `file:line`.
 Never report:
 
 - a pre-existing issue on lines the change did not touch;
-- anything a linter, typechecker, or compiler catches — those run separately;
-- a nitpick a senior engineer would not raise;
+- anything a linter, typechecker, or compiler catches — the repository names its
+  `lint` and `typecheck` commands in this configuration, and they run separately;
+- a nitpick a senior engineer would not raise: styling with no rule behind it, a
+  preference stated as a defect, a rename that changes nothing;
 - a finding deliberately silenced in code with a justified suppression comment;
 - a functional change that is plainly intentional and part of the broader change.
 
@@ -2556,6 +3036,22 @@ test('the axis prompt demands verbatim evidence and fixes the return shape', () 
   assert.match(text, /\{\{FILES\}\}/);
 });
 
+test('the verify prompt separates "could not find it" from "not sure about it"', () => {
+  const text = read('verify.md');
+  assert.match(text, /could not find the cited evidence/i);
+  assert.match(text, /not-found and not-sure are different/i);
+});
+
+test('the axis prompt fixes the shape of lines and how to encode evidence', () => {
+  const text = read('axis.md');
+  assert.match(text, /\[start, end\] pair/);
+  assert.match(text, /\[88, 88\]/);
+  assert.match(text, /escape it as one/i);
+  assert.match(text, /whole reply is the JSON array/i);
+  assert.equal(/nothing before it, nothing after it/.test(text), false,
+    'the fence exception must not contradict the surrounding rule');
+});
+
 test('the verify prompt carries the 0-100 rubric and is batched', () => {
   const text = read('verify.md');
   assert.match(text, /\b0\b[\s\S]*\b100\b/);
@@ -2612,7 +3108,10 @@ covers the other axes; a finding outside your checklist is noise.
 
 ## What to return
 
-A JSON array. One object per finding:
+Your whole reply is the JSON array: no explanation, no summary, no preamble.
+Wrapping it in a ```json fence is fine; anything else around it is not.
+
+One object per finding:
 
 ```json
 {"axis": "{{AXIS_ID}}", "file": "path/from/repo/root.ts", "lines": [88, 94],
@@ -2621,10 +3120,19 @@ A JSON array. One object per finding:
  "evidence": "the exact line or lines from the file"}
 ```
 
+`lines` is a `[start, end]` pair of 1-based line numbers, inclusive — the span
+the evidence was taken from, not a list of interesting lines. For a single line
+write it twice: `[88, 88]`.
+
 `evidence` must be copied **verbatim** from the file. A finding whose evidence
 does not appear in the file is discarded before anyone reads it, so never
 paraphrase, never reconstruct from memory, and never quote a line you did not
-open.
+open. Quote one line wherever one line carries the point.
+
+It goes into a JSON string, so escape it as one: a double quote becomes `\"`, a
+backslash becomes two backslashes, and a line break becomes `\n`. The check that
+matches your quote ignores differences in spacing, so you need not reproduce
+indentation exactly — everything else must be exact.
 
 Return `[]` when the files are clean against your checklist. An empty array is a
 valid, useful answer; an invented finding is not.
@@ -2641,16 +3149,19 @@ pass — do not delegate, and do not look for new problems.
 For each finding, open the file, look at the cited lines, and score how confident
 you are that it is real:
 
-- **0** — a false positive that does not survive light scrutiny, or a pre-existing
-  issue on lines this change did not touch.
-- **25** — might be real, might not; you could not verify it.
+- **0** — you could not find the cited evidence at the cited lines; or it is a
+  false positive that does not survive light scrutiny; or a pre-existing issue
+  on lines this change did not touch.
+- **25** — you found the code and it says what the finding claims, but you could
+  not establish that it is a real problem.
 - **50** — verified as real, but a nitpick or rare in practice.
 - **75** — verified, likely to be hit in practice, and the current code is
   insufficient. Or: named explicitly by the axis checklist.
 - **100** — certain; the evidence directly confirms it.
 
-A finding you cannot confirm in the file scores **0**, however convincing its
-wording.
+A finding whose evidence you cannot find at the cited lines scores **0**,
+however convincing its wording. **Not-found and not-sure are different:**
+not-found is 0, not-sure is 25. Say which one you mean in the note.
 
 Return a JSON array: `[{"id": "f-01", "confidence": 92, "note": "one line"}]`.
 
@@ -2664,7 +3175,7 @@ Do not dispatch or spawn any further agents. Do not modify any file.
 - [ ] **Step 6: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/prompts.test.mjs`
-Expected: PASS, 3 tests.
+Expected: PASS, 5 tests.
 
 - [ ] **Step 7: Checkpoint**
 
@@ -2709,8 +3220,15 @@ test('the main model is checked at entry but never blocks the run', () => {
   assert.match(TEXT, /Never refuse over it/i);
 });
 
-test('assemble runs before verification so ids exist to score by', () => {
-  assert.ok(TEXT.indexOf('crm assemble') < TEXT.indexOf('crm score'), 'assemble must be documented before score');
+// Anchored on the step headings, not on where a command name happens to appear.
+// The earlier version compared `indexOf('crm score')`, which broke twice when a
+// step above merely mentioned that command in passing — a test that fails for a
+// reason unrelated to what it claims to check is worse than no test.
+test('assemble is documented before verification, so ids exist to score by', () => {
+  const assembleAt = TEXT.indexOf('## Step 5 — assemble');
+  const verifyAt = TEXT.indexOf('## Step 6 — wave 2');
+  assert.ok(assembleAt > 0, 'Step 5 heading is missing');
+  assert.ok(verifyAt > assembleAt, 'verification must be documented after assemble');
   assert.match(TEXT, /scores by id/i);
 });
 
@@ -2721,8 +3239,12 @@ test('the budget is announced before dispatch and never raised silently', () => 
   assert.match(TEXT, /never pass `--slots`/i);
 });
 
-test('subagents are dispatched without the Agent tool, and nothing walks it back', () => {
-  assert.match(TEXT, /without the `Agent` tool/);
+test('every subagent is denied the dispatch tool, stated as a property of its tools', () => {
+  assert.match(TEXT, /excludes the subagent-dispatch tool/);
+  // The old phrasing "dispatch it without the Agent tool" reads equally as an
+  // instruction to the orchestrator, which then has no way to dispatch at all.
+  assert.equal(/without the `?Agent`? tool/i.test(TEXT), false,
+    'ambiguous phrasing: it must be the subagent\'s tool set that excludes it');
   assert.equal(/grant(ing)? (them |the )?(the )?`?Agent`? tool|allow[a-z]* (them )?to (dispatch|spawn)/i.test(TEXT), false,
     'no sentence may re-grant fan-out to a subagent');
 });
@@ -2748,20 +3270,29 @@ Expected: FAIL — `SKILL.md` missing.
 
 - [ ] **Step 3: Write `<skill>/SKILL.md`**
 
-Write the document with these sections, in this order. Content requirements are given per section; write them out in full — no placeholders.
+Write the document with these sections, in this order (sixteen of them — the numbering below is the contract). Content requirements are given per section; write them out in full — no placeholders.
 
 1. **Frontmatter.** `name: code-review-master`; `description:` covering the triggers ("zrób review", "sprawdź kod", "/code-review-master", nightly and CI invocations) and the exclusions ("NOT for reviewing a course student's homework — that is `review-pracy-domowej`; NOT the bundled `/code-review` plugin").
 2. **Overview.** Three sentences: what it does, that the budget is computed by `bin/crm.mjs` and not negotiable, and that the report is Polish while everything else is English.
 3. **Invocation table.** Every mode from spec §3 with one line each.
-4. **Step 0 — check the main model.** The skill does not choose it; the session does. When the session runs on Haiku or Sonnet, say in one line that planning and prose will be weaker on this model and that Opus or Fable is the intended one, then continue. Never refuse over it.
+4. **Bootstrap the global configuration.** Before the first `crm plan` of a session, if `~/.claude/review/global.md` is absent, copy `<skill>/templates/global.md` there; skip silently when it already exists, since it may carry the user's own edits and this skill never overwrites it. Without that file the universal axes and the report's register rules are missing from every repository, not just this one.
+5. **Step 0 — check the main model.** The skill does not choose it; the session does. When the session runs on Haiku or Sonnet, say in one line that planning and prose will be weaker on this model and that Opus or Fable is the intended one, then continue. Never refuse over it.
 5. **Step 1 — plan.** Run `node <skill>/bin/crm.mjs plan --repo <cwd> --mode <mode> [...]`. Exit 2 means stop and show the message. `empty: true` means say so and stop — no agents. Otherwise print the budget line to the user **before dispatching anything**: axes selected, axes skipped, axes deferred, and `selection.agents`.
 5. **Step 2 — raise the budget only on request.** `--slots` is passed only when the user typed it. State: in a non-interactive run, never pass `--slots`.
-6. **Step 3 — wave 0.** Dispatch one Haiku agent with `prompts/brief.md`, `{{SUMMARY_INPUT}}` filled from `selection`. Dispatch it **without the `Agent` tool**. Immediately after dispatching, run `crm dispatched --run <id> --wave brief --label brief`. Do the same after every agent in every wave: `crm finish` compares the ledger with the announced budget and fails the run on a mismatch, so a missed log line is itself an error.
-7. **Step 4 — wave 1.** Dispatch one Sonnet agent per entry in `selection.selected`, all in a single message so they run concurrently, each with `prompts/axis.md` filled from that entry's `axes[].checklist` and `files`. **Without the `Agent` tool.** Collect the JSON arrays into `raw.json`.
+6. **Step 3 — wave 0.** Dispatch one Haiku agent with `prompts/brief.md`, `{{SUMMARY_INPUT}}` filled from `selection`. Give the subagent a tool set that **excludes the subagent-dispatch tool**, so it cannot dispatch further agents. **Log the dispatch before waiting for the result** — `crm dispatched --run <id> --wave brief --label brief` — and the same for every agent in every wave. The ledger records what was *spent*, and an agent costs from the moment it starts, not from the moment it answers; logging on return would leave a hung or crashed agent unrecorded. State plainly what `crm finish` does and does not catch: it fails the run when the ledger *exceeds* the announcement or names an axis the plan never selected, and it only *warns* when the ledger falls short.
+7. **Step 3b — when an agent does not come back usable.** An agent may hang, crash, or return output that cannot be parsed; the dispatch itself may fail before any agent starts. All four cases are handled the same way, and the first rule is the one that matters:
+
+   **Never re-dispatch within a run.** The budget was announced before anything started and it does not grow afterwards — that is the whole promise. A retry is a second agent, and a run that quietly buys itself another agent when one fails is exactly the unbounded behaviour this skill exists to prevent. If an axis must be covered, start a new run: it announces its own budget, in front of the user. This is why `crm finish` treats a ledger exceeding the announcement as a defect with no exception — there is no legitimate way to get there.
+
+   What to record depends on which wave failed:
+   - **The brief agent (wave 0).** Continue with an empty change summary and tell the user in one line that the brief did not return. The brief is not load-bearing: the file-to-axis assignment comes from `crm plan`, not from the brief, so its loss costs the axis agents a summary and a risk ordering, not their inputs. Nothing is marked incomplete, because no axis went unreviewed.
+   - **An axis agent (wave 1).** Record that entry's `axisId`, carry it to Step 8 as `--incomplete <ids>`, and continue. The report's coverage block then names it as not reviewed — **an axis that was paid for and produced nothing must never be presented as covered.**
+   - **A verification agent (wave 2).** `crm score` gives every finding no agent scored a confidence of `0` and files it under `belowThreshold`, so that axis's findings vanish from the report entirely — verified: a run whose scores file was an empty array reported `kept: 0, belowThreshold: 1`. Record that `axisId` as incomplete too. This is the quietest of the four failures: the axis loses its findings without losing its heading, so without the marker it reads as a clean axis that nobody actually judged.
+7. **Step 4 — wave 1.** Dispatch one Sonnet agent per entry in `selection.selected`, all in a single message so they run concurrently, each with `prompts/axis.md` filled from that entry's `axes[].checklist` and `files`. **Its tool set excludes the subagent-dispatch tool.** Collect the JSON arrays into `raw.json`.
 8. **Step 5 — assemble.** `crm assemble --raw raw.json`. This validates evidence, dedupes, applies triage suppression, and **assigns the finding ids**. It runs before verification because wave 2 scores by id. Report how many findings were discarded for missing or invented evidence.
-9. **Step 6 — wave 2.** For each selected axis, one Haiku agent with `prompts/verify.md` and that axis's findings **as returned by `assemble`, with their ids**, batched. **Without the `Agent` tool.** Collect into `scores.json`, then run `crm score --scores scores.json`. State explicitly: one agent per axis, never one per finding.
+9. **Step 6 — wave 2.** For each selected axis, one Haiku agent with `prompts/verify.md` and that axis's findings **as returned by `assemble`, with their ids**, batched. **Its tool set excludes the subagent-dispatch tool.** Collect into `scores.json`, then run `crm score --scores scores.json`. State explicitly: one agent per axis, never one per finding.
 10. **Step 7 — codex.** `crm codex`. If the status is not `ok`, say so and continue.
-11. **Step 8 — prose.** For each surviving finding write `{title, body}` in Polish following the register rules in `~/.claude/review/global.md`; two to three sentences naming the function and the line. Write `prose.json`, then `crm render --prose prose.json`.
+11. **Step 8 — prose.** For each surviving finding write `{title, body}` in Polish following the register rules in `~/.claude/review/global.md`; two to three sentences naming the function and the line. Write `prose.json`, then `crm render --prose prose.json`, adding `--incomplete <ids>` when Step 3b recorded any.
 12. **Step 9 — artifact.** Interactive runs only; see Task 17.
 13. **Step 10 — finish.** `crm finish`, which checks the dispatch ledger against the announced budget and then sets the exit code. Show the user the report path and the headline counts. An exit 2 here means the run dispatched more agents than it announced — report it as a defect, not as a review result.
 14. **Modes `ask` and `fix`.** One paragraph each pointing at Tasks 15 and 16.
@@ -2791,7 +3322,7 @@ Report the observed agent count against `selection.agents`. A mismatch is a bloc
 
 **Interfaces:**
 - Consumes: `templates/config.md` (Task 11).
-- Produces: `crm detect --repo <dir>` → `{ name, hasGit, remote, packageManager, languages, lintCommands, docs: string[], topLevelDirs: string[] }`. `SKILL.md` turns that plus the repository's own documents into axes.
+- Produces: `crm detect --repo <dir>` → `{ name, remote, packageManager, languages, lintCommands, docs: string[], topLevelDirs: string[] }`. `SKILL.md` turns that plus the repository's own documents into axes.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2803,7 +3334,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { makeRepo, writeFiles } from './helpers/repo.mjs';
+import { makeRepo, writeFiles } from '../test-helpers/repo.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'crm.mjs');
 const run = (args) => JSON.parse(execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8' }));
@@ -2852,7 +3383,6 @@ Insert into `COMMANDS`:
       .filter(Boolean))];
     return {
       name: pkg?.name ?? repo.split(/[\\/]/).pop(),
-      hasGit: true,
       remote: gitRemote(repo),
       packageManager: has('pnpm-lock.yaml') || has('pnpm-workspace.yaml') ? 'pnpm'
         : has('yarn.lock') ? 'yarn' : has('package-lock.json') ? 'npm' : null,
@@ -2907,7 +3437,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { makeRepo } from './helpers/repo.mjs';
+import { makeRepo } from '../test-helpers/repo.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'crm.mjs');
 const run = (args) => JSON.parse(execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8' }));
@@ -2964,7 +3494,7 @@ Requirements, written out in full:
 - Read `findings.json` and `raport.md`. Answer questions from them.
 - When asked to justify a finding — "is that really a problem", "how do you know" — **read the code** with `Read` and `Grep` and answer from what you see. Either bring firmer evidence or say plainly that it was a false positive. Do not defend a finding you cannot re-confirm.
 - **Dispatch no subagents.** This mode is a conversation; the budget belongs to the review, not to the discussion of it.
-- Recording a verdict: `crm triage --run <id> --id <f-NN> --verdict accepted|rejected|deferred --scope here|everywhere --reason "<one line>" [--until YYYY-MM-DD]`. For `rejected` and `deferred`, **ask for the reason if the user did not give one** — the CLI refuses a blank reason, and a later report's silence is unreadable without it.
+- Recording a verdict: `crm triage --run <id> --id <f-NN> --verdict accepted|rejected|deferred --scope here|everywhere --reason "<one line>" [--until YYYY-MM-DD]`. For `rejected` and `deferred`, **ask for the reason if the user did not give one, and wait for their answer before running `crm triage`.** The CLI refuses a blank reason, but it cannot tell a real reason from a plausible one you supplied yourself — so asking and then answering on the user's behalf satisfies the check and defeats its purpose. A later report's silence is unreadable without a reason that is actually theirs.
 - `show-suppressed` runs `crm suppressed`; `restore <fingerprint>` runs `crm suppressed --restore <fingerprint>`.
 - Never commit.
 
@@ -2981,7 +3511,7 @@ Requirements, written out in full:
 
 **Interfaces:**
 - Consumes: `findings.json` with codex verdicts (Task 9).
-- Produces: `crm fixable --repo <dir> --run <id> [--ids f-01,f-03]` → `{ fixable: Finding[], skipped: [{ id, why }] }`. A finding is fixable when `codex.verdict === 'confirms'` **and** it carries a `confidence` — `crm score` has already removed everything below threshold, so a finding still in the file has passed it. The `confidence` check is a guard against a `findings.json` that never went through `score`, not a second filter.
+- Produces: `selectFixable(findings, ids) -> { fixable, skipped }` in `lib/fixable.mjs`, and `crm fixable --repo <dir> --run <id> [--ids f-01,f-03]` which refuses without a terminal, reads the run through `readRunFile`, and returns `selectFixable`'s result. A finding is fixable when `codex.verdict === 'confirms'` **and** it carries a `confidence` — `crm score` has already removed everything below threshold, so a finding still in the file has passed it. The `confidence` check is a guard against a `findings.json` that never went through `score`, not a second filter.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2991,30 +3521,23 @@ Requirements, written out in full:
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { makeRepo } from './helpers/repo.mjs';
+import { makeRepo } from '../test-helpers/repo.mjs';
+import { selectFixable } from '../lib/fixable.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'crm.mjs');
-const run = (args) => JSON.parse(execFileSync(process.execPath, [CLI, ...args], { encoding: 'utf8' }));
 
-function repoWithFindings(findings) {
-  const dir = makeRepo({ 'a.ts': 'x\n' });
-  const reports = join(dir, '.claude', 'review', 'reports');
-  mkdirSync(reports, { recursive: true });
-  writeFileSync(join(reports, 'r1-findings.json'), JSON.stringify({ findings }));
-  return dir;
-}
-
+// The selection rules are unit-tested against the pure function, because the
+// CLI refuses to run without a terminal and a spawned test process never has
+// one. Weakening the guard to make it testable would defeat the guard.
 test('only codex-confirmed, scored findings are fixable', () => {
-  const dir = repoWithFindings([
+  const out = selectFixable([
     { id: 'f-01', severity: 'blocking', confidence: 92, codex: { verdict: 'confirms', reason: 'r', fix: 'do x' } },
     { id: 'f-02', severity: 'blocking', confidence: 92, codex: { verdict: 'rejects', reason: 'r', fix: null } },
     { id: 'f-03', severity: 'suggestion', confidence: 80, codex: null },
     { id: 'f-04', severity: 'blocking', confidence: null, codex: { verdict: 'confirms', reason: 'r', fix: 'x' } },
   ]);
-  const out = run(['fixable', '--repo', dir, '--run', 'r1']);
   assert.deepEqual(out.fixable.map((f) => f.id), ['f-01']);
   assert.equal(out.skipped.length, 3);
   assert.match(out.skipped.find((s) => s.id === 'f-02').why, /rejects/);
@@ -3023,58 +3546,88 @@ test('only codex-confirmed, scored findings are fixable', () => {
 });
 
 test('--ids narrows the set further', () => {
-  const dir = repoWithFindings([
+  const out = selectFixable([
     { id: 'f-01', severity: 'blocking', confidence: 92, codex: { verdict: 'confirms', reason: 'r', fix: 'x' } },
     { id: 'f-02', severity: 'blocking', confidence: 92, codex: { verdict: 'confirms', reason: 'r', fix: 'y' } },
-  ]);
-  const out = run(['fixable', '--repo', dir, '--run', 'r1', '--ids', 'f-02']);
+  ], 'f-02');
   assert.deepEqual(out.fixable.map((f) => f.id), ['f-02']);
+});
+
+// The guard itself, exercised the only honest way: a spawned process has no
+// terminal, so this is exactly the situation the guard exists to refuse.
+test('the CLI refuses to list fixable findings without a terminal', () => {
+  const dir = makeRepo({ 'a.ts': 'x
+' });
+  try {
+    execFileSync(process.execPath, [CLI, 'fixable', '--repo', dir, '--run', 'anyrun'], { encoding: 'utf8' });
+    assert.fail('should have exited non-zero');
+  } catch (err) {
+    assert.equal(err.status, 2);
+    assert.match(String(err.stderr), /refused without a terminal/);
+  }
 });
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [ ] **Step 3a: Implement `lib/fixable.mjs`**
 
-Run: `cd <skill> && node --test test/fixable.test.mjs`
-Expected: FAIL — unknown command `fixable`.
+The selection logic lives here, as a pure function over plain data, so it can be
+unit-tested without a terminal. The CLI keeps only the terminal guard and the
+file read — which is why no test escape hatch is needed, and none exists.
 
-- [ ] **Step 3: Add `fixable` to `bin/crm.mjs`**
+```js
+// A finding is fixable when codex confirmed it and a verification agent scored
+// it. `crm score` has already dropped everything below threshold, so a finding
+// still present has passed; the confidence check guards against a findings.json
+// that never went through score at all.
+export function selectFixable(findings, ids = null) {
+  const only = ids ? new Set(String(ids).split(',').map((s) => s.trim())) : null;
+  const fixable = [];
+  const skipped = [];
+  for (const finding of findings) {
+    if (only && !only.has(finding.id)) { skipped.push({ id: finding.id, why: 'not named in --ids' }); continue; }
+    if (finding.confidence === undefined || finding.confidence === null) {
+      skipped.push({ id: finding.id, why: 'never scored — run crm score before fixing' });
+      continue;
+    }
+    if (!finding.codex) { skipped.push({ id: finding.id, why: 'no codex verdict — cross-check did not run' }); continue; }
+    if (finding.codex.verdict !== 'confirms') { skipped.push({ id: finding.id, why: `codex ${finding.codex.verdict}` }); continue; }
+    fixable.push(finding);
+  }
+  return { fixable, skipped };
+}
+```
+
+- [ ] **Step 3b: Add `fixable` to `bin/crm.mjs`**
 
 ```js
   fixable(args) {
     const repo = args.repo ?? process.cwd();
-    const data = readJson(reportPath(repo, args.run, 'findings.json'));
-    const only = args.ids ? new Set(String(args.ids).split(',').map((s) => s.trim())) : null;
-    const fixable = [];
-    const skipped = [];
-    for (const finding of data.findings) {
-      if (only && !only.has(finding.id)) { skipped.push({ id: finding.id, why: 'not named in --ids' }); continue; }
-      if (finding.confidence === undefined || finding.confidence === null) {
-        skipped.push({ id: finding.id, why: 'never scored — run crm score before fixing' });
-        continue;
-      }
-      if (!finding.codex) { skipped.push({ id: finding.id, why: 'no codex verdict — cross-check did not run' }); continue; }
-      if (finding.codex.verdict !== 'confirms') { skipped.push({ id: finding.id, why: `codex ${finding.codex.verdict}` }); continue; }
-      fixable.push(finding);
-    }
-    return { fixable, skipped };
+    // Listing what could be fixed is the first step of fixing, so the same
+    // terminal requirement applies here as to `--slots`: an unattended run must
+    // not be able to start this flow. There is deliberately no way past this —
+    // an escape hatch for tests is an escape hatch in production too.
+    if (!process.stdout.isTTY) fail('fix is refused without a terminal: an unattended run never edits code');
+    const data = readRunFile(repo, args.run, 'findings.json');
+    return selectFixable(data.findings, args.ids);
   },
 ```
 
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/fixable.test.mjs`
-Expected: PASS, 2 tests.
+Expected: PASS, 3 tests.
 
 - [ ] **Step 5: Add the `fix` section to `SKILL.md`**
 
 Requirements, written out in full:
 
-- `/code-review-master fix [ids]`. **Interactive runs only.** In a non-interactive run, refuse and say why: a scheduled or CI run that edits code unattended is a different product with a different risk profile.
+- `/code-review-master fix [ids]`. **Interactive runs only.** In a non-interactive run, refuse and say why, in Polish: a scheduled or CI run that edits code unattended is a different product with a different risk profile. Say plainly that this is not left to your discretion — `crm fixable` itself exits 2 without a terminal, so the flow cannot start unattended even if this section were ignored. A reader who knows a rule is enforced treats it as a fact; a reader who thinks it is their own obligation may treat it as advice.
 - Run `crm fixable`. Show the user what will be attempted and what is skipped, with the reason for each skip, and **wait for approval before editing anything**.
-- Implement each fix yourself. `codex.fix` is advice: judge it before writing it, and reject it when it is wrong, stating why.
+- **Before implementing any single fix, ask whether it would change scope, add a dependency, or do something irreversible.** If it would, that fix is not this mode's to make: set it aside for the separate list below and move to the next one. Make this judgement per fix, before touching that fix's files — never as a pass over the work afterwards, because by then an irreversible edit is already in the working tree.
+- Implement each remaining fix yourself. `codex.fix` is advice: judge it before writing it, and reject it when it is wrong, stating why.
 - Follow the repository's own conventions and tests. Where the repository has tests for the touched behaviour, run them.
 - Afterwards, present a table: finding id, what it said, your assessment, applied or not, and why. **A rejected remark with no stated reason is worse than a bad remark applied**, because the trace of the decision disappears.
-- A fix that would change scope, add a dependency, or do something irreversible is not yours to decide. List it separately and stop for the user.
+- Present the fixes set aside by the pre-check as their own list, with what each would change and why it exceeds this mode, and stop for the user. These were never attempted, and the closing table must say so rather than showing them as skipped for some other reason.
 - **Never commit.** Leave every edit uncommitted in the working tree and say so in the closing summary.
 
 - [ ] **Step 6: Checkpoint**
@@ -3127,6 +3680,67 @@ test('it filters by axis and severity', () => {
   assert.match(TEXT, /data-filter="severity"/);
 });
 
+// The command's own logic — the prose merge, the fallback, the link and the
+// title — was added beyond the brief's pseudocode and had no test at all: a
+// swapped blobLink argument would have passed the whole suite.
+test('crm artifact merges prose, links and title into the page', () => {
+  const dir = makeRepo({ 'a.ts': 'x
+' });
+  const reports = join(dir, '.claude', 'review', 'reports');
+  mkdirSync(reports, { recursive: true });
+  const run = 'r1';
+  writeFileSync(join(reports, `${run}-plan.json`), JSON.stringify({
+    mode: 'working', target: { head: 'a1f2e30' },
+    selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 },
+  }));
+  writeFileSync(join(reports, `${run}-findings.json`), JSON.stringify({
+    findings: [
+      { id: 'f-01', axis: 'sec', severity: 'blocking', confidence: 90, file: 'a.ts', lines: [1, 1], evidence: 'x', claim: 'english claim', codex: null },
+      { id: 'f-02', axis: 'sec', severity: 'nitpick', confidence: 80, file: 'a.ts', lines: [2, 3], evidence: 'y', claim: 'uncovered claim', codex: null },
+    ],
+    suppressed: [],
+  }));
+  writeFileSync(join(reports, `${run}-prose.json`), JSON.stringify({
+    'f-01': { title: 'Polski tytuł', body: 'Polskie zdanie.' },
+  }));
+  // A remote, so blobLink reaches the file and line arguments at all. Without
+  // one it returns null on its first line and the link assertion below would
+  // pass whatever order those arguments were given in.
+  execFileSync('git', ['-C', dir, 'remote', 'add', 'origin', 'git@github.com:acme/demo.git']);
+
+  const out = join(dir, 'page.html');
+  execFileSync(process.execPath, [CLI, 'artifact', '--repo', dir, '--run', run, '--out', out], { encoding: 'utf8' });
+  const page = readFileSync(out, 'utf8');
+  const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(page)[1]);
+
+  assert.match(page, /<title>Review /, 'the title is filled from the repository name');
+  assert.equal(payload.findings[0].title, 'Polski tytuł');
+  assert.equal(payload.findings[1].title, 'uncovered claim [bez opisu]',
+    'a finding with no prose entry is marked, not dropped');
+  assert.equal(payload.findings[1].link, 'https://github.com/acme/demo/blob/a1f2e30/a.ts#L2-L3',
+    'the exact url, so a swapped file/lines argument pair fails here');
+});
+
+test('a repository with no remote yields no link rather than a broken one', () => {
+  const dir = makeRepo({ 'a.ts': 'x
+' });
+  const reports = join(dir, '.claude', 'review', 'reports');
+  mkdirSync(reports, { recursive: true });
+  writeFileSync(join(reports, 'r1-plan.json'), JSON.stringify({
+    mode: 'working', target: { head: 'a1f2e30' },
+    selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 },
+  }));
+  writeFileSync(join(reports, 'r1-findings.json'), JSON.stringify({
+    findings: [{ id: 'f-01', axis: 'sec', severity: 'blocking', confidence: 90, file: 'a.ts', lines: [1, 1], evidence: 'x', claim: 'c', codex: null }],
+    suppressed: [],
+  }));
+  writeFileSync(join(reports, 'r1-prose.json'), '{}');
+  const out = join(dir, 'page.html');
+  execFileSync(process.execPath, [CLI, 'artifact', '--repo', dir, '--run', 'r1', '--out', out], { encoding: 'utf8' });
+  const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(readFileSync(out, 'utf8'))[1]);
+  assert.equal(payload.findings[0].link, null);
+});
+
 test('embedded JSON cannot close the script block', () => {
   const payload = embedJson({ evidence: '</script><img src=x onerror=alert(1)>', amp: 'a & b' });
   assert.equal(payload.includes('</script>'), false);
@@ -3166,13 +3780,39 @@ export function embedJson(value) {
 ```js
   artifact(args) {
     const repo = args.repo ?? process.cwd();
-    const data = readJson(reportPath(repo, args.run, 'findings.json'));
-    const plan = readJson(reportPath(repo, args.run, 'plan.json'));
+    if (args.out === undefined || args.out === true) fail('--out needs a file path');
+    const data = readRunFile(repo, args.run, 'findings.json');
+    const plan = readRunFile(repo, args.run, 'plan.json');
+    // The prose written in Step 8 is the only Polish text tied to a finding —
+    // findings.json itself is English by contract. Without this merge the page
+    // would have no body to show for any finding.
+    const prose = readRunFile(repo, args.run, 'prose.json');
+    const remote = gitRemote(repo);
+    const findings = data.findings.map((finding) => {
+      const text = prose[finding.id];
+      return {
+        ...finding,
+        // `?.` and `??`, not a truthiness check on the whole entry: a prose
+        // entry present but missing one field would otherwise render the
+        // literal string "undefined" as a heading.
+        title: text?.title ?? `${finding.claim} [bez opisu]`,
+        body: text?.body ?? '',
+        link: blobLink(remote, plan.target.head, finding.file, finding.lines),
+      };
+    });
     const template = readFileSync(join(HERE, '..', 'templates', 'artifact.html'), 'utf8');
-    const page = template.replace('{{DATA}}', embedJson({
-      run: { id: args.run, mode: plan.mode, head: plan.target.head },
-      selection: plan.selection, findings: data.findings, suppressed: data.suppressed.length,
-    }));
+    // Named for the repository, not the run: a title is a name, not a summary,
+    // and it must stay stable across that repository's runs so people find the
+    // artifact by it. Trailing separators are trimmed first, or a path given as
+    // `.../repo/` yields an empty name and the artifact is called "Review ".
+    const title = `Review ${repo.replace(/[\\/]+$/, '').split(/[\\/]/).pop()}`;
+    const page = template
+      .replace('{{TITLE}}', title)
+      .replace('{{DATA}}', embedJson({
+        run: { id: args.run, mode: plan.mode, head: plan.target.head },
+        selection: plan.selection, findings, suppressed: data.suppressed.length,
+      }));
+    mkdirSync(dirname(args.out), { recursive: true });
     writeFileSync(args.out, page, 'utf8');
     return { page: args.out, findings: data.findings.length };
   },
@@ -3184,7 +3824,7 @@ Add `import { embedJson } from '../lib/embed.mjs';` to the imports.
 
 Requirements, written out in full — no `<!doctype>`, `<html>`, `<head>` or `<body>` tags, because the publisher wraps the file:
 
-- A `<title>` naming the repository and the run, e.g. `Review saas app`.
+- A `{{TITLE}}` placeholder where the `<title>` goes, filled by `crm artifact` with `Review <repo name>`. Do **not** hardcode a title: the publisher never overrides a `<title>` the file already carries, so a fixed string would name every artifact of every repository identically in the gallery and silently ignore the `title` parameter passed at publish time. The name stays the same across that repository's runs — the run is identified by the description and the gallery's timestamp, not by the name.
 - `<style>` defining the full light palette on bare `:root`, redefining tokens under `@media (prefers-color-scheme: dark)` guarded as `:root:not([data-theme="light"])`, and again under `:root[data-theme="dark"]`. `body` gets an explicit token background.
 - A header block repeating the coverage and spend lines from `raport.md`.
 - Filter controls: one `<select data-filter="axis">` and one `<select data-filter="severity">`, plus a live count.
@@ -3194,7 +3834,7 @@ Requirements, written out in full — no `<!doctype>`, `<html>`, `<head>` or `<b
 - [ ] **Step 6: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/artifact.test.mjs`
-Expected: PASS, 5 tests.
+Expected: PASS, 8 tests.
 
 - [ ] **Step 7: Fill in step 9 of `SKILL.md`**
 
@@ -3221,13 +3861,13 @@ Expected: PASS, 5 tests.
 - Consumes: the finished skill (Tasks 13–17).
 - Produces: three copyable artifacts. The scripts take `-Repo`/`--repo` and `-Mode`/`--mode`, force the model, and propagate the exit code.
 
-- [ ] **Step 1: Confirm the CLI flags before writing anything**
+- [ ] **Step 1: The flags, already confirmed**
 
-Run: `claude --help`
+I ran `claude --help` and read them out, so this step is a re-check rather than a discovery: `-p` / `--print` for non-interactive, `--model <alias>` accepting `opus`, `fable` or `sonnet`, `--output-format text|json|stream-json`, `--permission-mode acceptEdits|auto|bypassPermissions|manual|dontAsk|plan`, `--add-dir`, and `--allowedTools`. Re-run `claude --help` and confirm each is still spelled that way before writing the scripts; if any differs, report it rather than adapting silently.
 
-Record, in the plan's own execution notes, the exact flags for: non-interactive prompt, model override, output format, and permission mode. **Do not write a flag you have not seen in that output.** If a needed flag does not exist, say so in the checkpoint rather than inventing one.
+**Use `--permission-mode acceptEdits` with a scoped `--allowedTools`, never `--dangerously-skip-permissions`.** An unattended review writes only under `.claude/review/` and runs `node`, `git` and `gh`; a blanket permission bypass on the user's own machine buys nothing this needs and removes every guard at once. If a run stalls on a permission it lacks, the fix is to widen the allowlist by one entry, not to remove the mechanism.
 
-This is why Steps 2–4 below are written as requirement lists rather than finished files: the invocation line is the substance of all three, and it cannot be written from memory without risking a script that fails silently at 3 a.m. Everything else about those files is specified here down to the flag names.
+**The gate does not travel through `claude`'s exit code.** `crm finish` runs inside the Claude session, so `claude -p` exits with its own status and a wrapper reading only that would see success for every run. Each script therefore runs `crm gate --repo <repo>` after `claude` returns, which exits with the code the review itself recorded in `state.json`.
 
 - [ ] **Step 2: Write `scripts/review.ps1`**
 

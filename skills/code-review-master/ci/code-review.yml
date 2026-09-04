@@ -1,0 +1,113 @@
+# ci/code-review.yml — code-review-master on pull_request.
+#
+# One of this skill's three copyable artifacts (with scripts/review.sh and
+# scripts/review.ps1). Copy this file to .github/workflows/code-review.yml
+# in the repository you want reviewed.
+#
+# This workflow assumes the WHOLE code-review-master skill — this file's
+# own directory, one level up — is vendored inside that repository at
+# SKILL_DIR below (bin/, lib/, prompts/, templates/, scripts/, SKILL.md,
+# this ci/ folder). That is what lets a bare `crm gate --repo <dir>` inside
+# scripts/review.sh find bin/crm.mjs next to itself, exactly as it does
+# when the skill runs from ~/.claude/skills/code-review-master on a
+# person's own machine. If you vendor it somewhere else, change SKILL_DIR
+# and nothing else in this file needs to move.
+#
+# Required repository secret (Settings -> Secrets and variables -> Actions
+# -> New repository secret): ANTHROPIC_API_KEY, the key the `claude` CLI
+# authenticates with. Nothing else here reads a secret you must add — the
+# PR-comment step uses the built-in GITHUB_TOKEN.
+
+name: code-review-master
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  SKILL_DIR: .claude/skills/code-review-master
+  # This workflow's marker for finding — and updating in place, instead of
+  # re-posting — its own comment on the PR. Never change this once a repo
+  # has review comments in its history, or the next run stops finding them.
+  MARKER: "<!-- code-review-master -->"
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the PR
+        uses: actions/checkout@v4
+        with:
+          # `crm plan`'s pr/branch modes read `git merge-base` against the
+          # PR's base ref, which needs real history, not a shallow clone.
+          fetch-depth: 0
+
+      - name: Install Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install the Claude CLI
+        # Pin a version once this settles into steady use, so a claude-code
+        # release can't change this job's behaviour out from under it.
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run code-review-master
+        id: review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          bash "$SKILL_DIR/scripts/review.sh" --repo . --mode pr --pr ${{ github.event.pull_request.number }}
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Post or update the review comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          RUN_JSON=$(node "$SKILL_DIR/bin/crm.mjs" latest --repo . --json)
+          REPORT_PATH=$(echo "$RUN_JSON" | jq -r '.report // empty')
+
+          BODY_FILE=$(mktemp)
+          if [ -n "$REPORT_PATH" ] && [ -f "$REPORT_PATH" ]; then
+            { echo "$MARKER"; echo; cat "$REPORT_PATH"; } > "$BODY_FILE"
+          else
+            # crm gate exited before a report ever got written (a broken
+            # run, exit 2) — say so instead of posting an empty comment.
+            { echo "$MARKER"; echo; echo "code-review-master did not produce a report this run (exit ${{ steps.review.outputs.exit_code }}). See the workflow log."; } > "$BODY_FILE"
+          fi
+
+          EXISTING_ID=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" --paginate \
+            | jq -r --arg marker "$MARKER" '[.[] | select(.body | startswith($marker))] | last | .id // empty')
+
+          if [ -n "$EXISTING_ID" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$EXISTING_ID" -f body=@"$BODY_FILE"
+          else
+            gh pr comment ${{ github.event.pull_request.number }} --body-file "$BODY_FILE"
+          fi
+
+      - name: Enforce the gate
+        run: |
+          code="${{ steps.review.outputs.exit_code }}"
+          if [ "$code" = "1" ]; then
+            echo "::error::code-review-master found a blocking finding — see the PR comment for details."
+            exit 1
+          elif [ "$code" = "2" ]; then
+            # Distinct from a review failure on purpose: exit 2 means the
+            # run itself broke (bin/crm.mjs's own `fail()` — a missing
+            # artefact, a bad ledger, an unimplemented command), not that
+            # the review found something to fix. Report it as a defect in
+            # this workflow or the skill, not as "the review failed".
+            echo "::error::code-review-master's run itself broke (exit 2) — this is a workflow/skill defect, not a review verdict. Check the job log above."
+            exit 1
+          elif [ "$code" != "0" ]; then
+            echo "::error::code-review-master exited with an unexpected code $code"
+            exit 1
+          fi
+          echo "code-review-master: gate passed"
