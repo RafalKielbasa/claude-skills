@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: cbf3d6d0-ffa3-443a-a798-d316b47ca2aa
-  modified: 2026-08-21T10:21:15.652Z
+  modified: 2026-09-04T09:20:33.272Z
 ---
 
 Ustalone 2026-08-19 przy review PR-a CP-31. Powiązane: [[tenant-subscription-model-audit-2026-08]].
@@ -14,7 +14,7 @@ Ustalone 2026-08-19 przy review PR-a CP-31. Powiązane: [[tenant-subscription-mo
 
 **Stan obecny.** `/payments/success` po powrocie ze Stripe woła `GET /courses/:courseId/access` w pętli (5 prób × 2 s), bo enrollment tworzy dopiero webhook `checkout.session.completed`. Okno 10 s bywa za krótkie przy retry webhooków → użytkownik, którego właśnie obciążono, dostaje „Nie możemy potwierdzić dostępu".
 
-**To NIE jest wpadka autora.** Polling zadany wprost w tickecie: `docs/superpowers/plans/2026-07-09-frontend-payments-jira-tasks.md:209-213` („ponów sprawdzenie kilka razy z odstępem") i w AC `:232`. Krytyka celuje w kontrakt CP-75, nie w wykonanie — poprawka wymaga zmiany ticketu, nie CR-a do PR-a.
+**To NIE jest wpadka autora.** Polling zadany wprost w tickecie CP-31 („ponów sprawdzenie kilka razy z odstępem", powtórzone w AC); plik roboczy `2026-07-09-frontend-payments-jira-tasks.md` już nie istnieje, treść ticketu jest w issue na GitHubie (tickety to GitHub issues, nie Jira). Krytyka celuje w kontrakt CP-75, nie w wykonanie — poprawka wymaga zmiany ticketu, nie CR-a do PR-a.
 
 **Dwie rzeczy, które to umożliwiają, a nie są używane:**
 

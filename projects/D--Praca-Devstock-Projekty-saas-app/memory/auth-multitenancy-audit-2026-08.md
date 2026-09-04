@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 7713c74c-e0b1-4994-b94d-327e781fa3a4
-  modified: 2026-08-21T10:21:03.640Z
+  modified: 2026-09-04T09:20:12.270Z
 ---
 
 Audyt FE->BE auth + multitenancy (2026-08-07), 13/13 tez potwierdzonych przez codex CLI.
@@ -26,7 +26,7 @@ Dopisane 2026-08-12 przy review PR #144 (potwierdzone w kodzie i przez codex CLI
   Co zostaje jako realne ryzyko: izolacja twórców opiera się na sposobie rozwiązywania tenanta, a nie na autoryzacji, i jest poprawna tylko dlatego, że `Tenant.creatorUserId` jest `@unique`. Przy wielu użytkownikach w tenancie `user.tenantId` przestaje być jednoznaczne i ta ochrona znika — wtedy `canViewUnpublishedCourses` (modules/courses/courses.service.ts:52), patrzące wyłącznie na globalną rolę, staje się faktyczną dziurą.
 - Brak ownership authorization między creatorami w jednym tenantcie (serwisy mutują po `(id, tenantId)`, bez `creatorId`). Czy rola `creator` ma być tenant-wide, to otwarte pytanie produktowe do Rafała, nie bug do cichej naprawy.
 - Kluczowa przeszkoda dla obu: **nie ma modelu członkostwa user-tenant**. Relacja `User.tenant` to `CreatorTenant`, czyli własność tenanta, więc claim `tenantId` ma tylko założyciel studia (student i twórca-nie-założyciel nie mają nic). Naiwne wymuszenie `user.tenantId === tenant z requestu` zamknie studentom dostęp na zawsze, dlatego musi iść w parze z CP-73.
-- Tickety rozpisane 2026-08-12 w `docs/superpowers/plans/2026-08-12-security-hardening-jira-tasks.md`: CP-83 (tenant binding, 5 SP), CP-84 (ownership, 3 SP, startuje od decyzji produktowej), CP-85 (idempotencja webhooka Mux, 2 SP). Numery CP-83/84/85 są propozycją z maksimum w docs (CP-82) i wymagają potwierdzenia w Jirze.
+- Tickety rozpisane 2026-08-12: CP-83 (tenant binding, 5 SP), CP-84 (ownership, 3 SP, startuje od decyzji produktowej), CP-85 (idempotencja webhooka Mux, 2 SP). Zadania są issues na GitHubie (kodozercy/edu_saas), nie w Jirze; plik roboczy `…-security-hardening-jira-tasks.md` już nie istnieje (sprawdzone 2026-09-04). CP-85 weszło jako #158 (zamknięte), CP-84 nadal bez issue — zob. [[github-issue-candidates-2026-08]], [[feedback-tickets-are-github-issues]].
 
 Otwarte decyzje architektoniczne (NIE ruszane):
 - RLS jest martwe: polityki w prisma/migrations/manual_rls_*.sql nieaplikowane przez Prisma Migrate, PrismaService nie ustawia app.current_tenant_id; README API twierdziło że działa (poprawione). Naturalny krok: Prisma client extension na bazie istniejącego ALS (TenantContextService)

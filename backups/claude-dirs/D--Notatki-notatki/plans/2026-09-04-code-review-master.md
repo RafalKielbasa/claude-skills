@@ -41,6 +41,7 @@
   lib/links.mjs             # git remote → GitHub blob URL
   lib/report.mjs            # raport.md rendering (Polish)
   lib/codex.mjs             # codex prompt, spawn, verdict parsing
+  lib/embed.mjs             # JSON → safe payload for a <script> block
   lib/gate.mjs              # exit-code decision
   prompts/brief.md          # wave 0 agent prompt template
   prompts/axis.md           # wave 1 agent prompt template
@@ -53,7 +54,7 @@
   scripts/review.sh         # CI / POSIX run
   ci/code-review.yml        # GitHub Actions job to copy into a repo
   test/helpers/repo.mjs     # temp git repository builder for tests
-  test/*.test.mjs           # one file per lib module
+  test/*.test.mjs           # one file per lib module, plus cli, skill and wrapper
 ```
 
 Each `lib/` module is a pure function surface over plain data, apart from `target.mjs` and `codex.mjs`, which shell out, and `state.mjs`, which touches disk. That split is what keeps the tests fast and the budget logic verifiable.
@@ -78,7 +79,8 @@ Two places where this plan resolves something the spec left to implementation:
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: `readState(repoDir) -> State`, `writeState(repoDir, state) -> void`, `emptyState() -> State`, where `State` is `{ schema: 1, last_reviewed_sha: string|null, axis_cursor: string[], file_cursor: Record<string,string>, triage: TriageEntry[], runs: {id: string, artifact_url: string|null}[] }` and `TriageEntry` is `{ fingerprint: string, verdict: 'accepted'|'rejected'|'deferred', scope: 'here'|'everywhere', reason: string, at: string, until: string|null }`.
+- Produces: `readState(repoDir) -> State`, `writeState(repoDir, state) -> void`, `emptyState() -> State`, where `State` is `{ schema: 1, last_reviewed_sha: string|null, axis_cursor: string[], file_cursor: Record<string,string>, pending_files: string[], triage: TriageEntry[], runs: {id: string, artifact_url: string|null}[] }` and `TriageEntry` is `{ fingerprint: string, verdict: 'accepted'|'rejected'|'deferred', scope: 'here'|'everywhere', reason: string, at: string, until: string|null }`.
+- `pending_files` holds paths a truncated run ranked out. The next run puts them at the head of the queue, which is what makes spec §4.3 rule 3 true rather than aspirational.
 
 - [ ] **Step 1: Create the package manifest**
 
@@ -142,7 +144,10 @@ import { join, dirname } from 'node:path';
 const SCHEMA = 1;
 
 export function emptyState() {
-  return { schema: SCHEMA, last_reviewed_sha: null, axis_cursor: [], file_cursor: {}, triage: [], runs: [] };
+  return {
+    schema: SCHEMA, last_reviewed_sha: null, axis_cursor: [], file_cursor: {},
+    pending_files: [], triage: [], runs: [],
+  };
 }
 
 export function statePath(repoDir) {
@@ -641,7 +646,9 @@ Expected: PASS, 5 tests.
 
 **Interfaces:**
 - Consumes: `matchGlob` (Task 2), `readState` (Task 1).
-- Produces: `collectTarget(repoDir, mode, opts) -> { mode, base, head, files: TargetFile[] }` where `TargetFile` is `{ path, added, removed }`; `opts` is `{ base?, pr?, path?, exclude? }`. Modes: `working`, `branch`, `pr`, `since`, `full`. Also `isEmpty(target) -> boolean`.
+- Produces: `collectTarget(repoDir, mode, opts) -> { mode, base, head, files: TargetFile[] }` where `TargetFile` is `{ path, added, removed, size }` (`size` in bytes, `0` for a deleted file); `opts` is `{ base?, pr?, path?, cursor?, exclude? }`. Modes: `working`, `branch`, `pr`, `since`, `full`. Also `isEmpty(target) -> boolean`.
+- `size` exists because spec §7 step 3 makes file size the third ranking key. Without it the heuristic silently degrades to two keys.
+- **Deviation from spec §7, noted deliberately:** `pr` mode uses `gh pr view --json files,headRefOid,baseRefOid` rather than `gh pr diff`. The JSON gives per-file additions and deletions directly, where `gh pr diff` would need patch parsing to produce the same numbers, and it also gives both SHAs — which the spec's version does not, and without which `base`/`head` and every blob link point at the wrong commit.
 - Test helper: `makeRepo({ files, commit }) -> repoDir` and `commitAll(repoDir, message) -> sha`.
 
 - [ ] **Step 1: Write the test helper**
@@ -691,6 +698,7 @@ export { git };
 ```js
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { makeRepo, writeFiles, commitAll } from './helpers/repo.mjs';
 import { collectTarget, isEmpty } from '../lib/target.mjs';
 
@@ -729,6 +737,31 @@ test('full mode lists tracked files from the cursor onwards', () => {
   const target = collectTarget(dir, 'full', { cursor: 'b.ts' });
   assert.deepEqual(target.files.map((f) => f.path), ['b.ts', 'c.ts']);
 });
+
+test('pr mode takes both shas from the pull request, not from the checkout', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  const gh = (args) => {
+    assert.deepEqual(args, ['pr', 'view', '42', '--json', 'files,headRefOid,baseRefOid']);
+    return JSON.stringify({
+      baseRefOid: 'base111', headRefOid: 'head222',
+      files: [{ path: 'a.ts', additions: 3, deletions: 1 }],
+    });
+  };
+  const target = collectTarget(dir, 'pr', { pr: 42, gh });
+  assert.equal(target.base, 'base111');
+  assert.equal(target.head, 'head222');
+  assert.deepEqual(target.files.map((f) => f.path), ['a.ts']);
+  assert.equal(target.files[0].added, 3);
+});
+
+test('every file carries its size, and a deleted file reports zero', () => {
+  const dir = makeRepo({ 'a.ts': 'x'.repeat(100) + '\n', 'gone.ts': 'y\n' });
+  writeFiles(dir, { 'a.ts': 'x'.repeat(100) + '\nmore\n' });
+  execFileSync('git', ['-C', dir, 'rm', '-q', 'gone.ts']);
+  const target = collectTarget(dir, 'working', {});
+  assert.equal(target.files.find((f) => f.path === 'a.ts').size, 106);
+  assert.equal(target.files.find((f) => f.path === 'gone.ts').size, 0);
+});
 ```
 
 - [ ] **Step 3: Run the test and confirm it fails**
@@ -740,7 +773,18 @@ Expected: FAIL — `lib/target.mjs` missing.
 
 ```js
 import { execFileSync } from 'node:child_process';
+import { statSync } from 'node:fs';
+import { join } from 'node:path';
 import { matchGlob } from './glob.mjs';
+
+// A file the change deleted has no size on disk; rank it as the cheapest to read.
+function sizeOf(repoDir, path) {
+  try {
+    return statSync(join(repoDir, path)).size;
+  } catch {
+    return 0;
+  }
+}
 
 function git(repoDir, args) {
   return execFileSync('git', ['-C', repoDir, ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
@@ -773,6 +817,7 @@ export function collectTarget(repoDir, mode, opts = {}) {
   const exclude = opts.exclude ?? [];
   const head = git(repoDir, ['rev-parse', 'HEAD']).trim();
   let base = null;
+  let prHead = null;
   let files = [];
 
   if (mode === 'working') {
@@ -791,10 +836,14 @@ export function collectTarget(repoDir, mode, opts = {}) {
     if (base === null) throw new Error('since mode needs a base sha; state.json has none — run another mode first');
     files = parseNumstat(git(repoDir, ['diff', '--numstat', `${base}..HEAD`]));
   } else if (mode === 'pr') {
-    const raw = execFileSync('gh', ['pr', 'view', String(opts.pr), '--json', 'files,headRefOid'],
-      { cwd: repoDir, encoding: 'utf8' });
-    const parsed = JSON.parse(raw);
-    base = parsed.headRefOid;
+    // `opts.gh` is injected by the tests so the PR path is covered without a
+    // live pull request; production passes nothing and the real gh runs.
+    const callGh = opts.gh ?? ((args) => execFileSync('gh', args, { cwd: repoDir, encoding: 'utf8' }));
+    const parsed = JSON.parse(callGh(['pr', 'view', String(opts.pr), '--json', 'files,headRefOid,baseRefOid']));
+    // Both SHAs come from the PR, never from the local checkout: a CI runner's
+    // HEAD is a merge commit, and blob links built from it point nowhere.
+    base = parsed.baseRefOid;
+    prHead = parsed.headRefOid;
     files = parsed.files.map((f) => ({ path: f.path, added: f.additions, removed: f.deletions }));
   } else if (mode === 'full') {
     const listed = git(repoDir, ['ls-files', ...(opts.path ? [opts.path] : [])]).split('\n').filter(Boolean);
@@ -805,9 +854,11 @@ export function collectTarget(repoDir, mode, opts = {}) {
     throw new Error(`unknown mode "${mode}"`);
   }
 
-  files = files.filter((file) => !exclude.some((pattern) => matchGlob(pattern, file.path)));
+  files = files
+    .filter((file) => !exclude.some((pattern) => matchGlob(pattern, file.path)))
+    .map((file) => ({ ...file, size: sizeOf(repoDir, file.path) }));
   files.sort((a, b) => a.path.localeCompare(b.path));
-  return { mode, base, head, files };
+  return { mode, base, head: prHead ?? head, files };
 }
 
 export function isEmpty(target) {
@@ -818,7 +869,7 @@ export function isEmpty(target) {
 - [ ] **Step 5: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/target.test.mjs`
-Expected: PASS, 5 tests. The `pr` path is not covered here — it needs `gh` and a live PR, and is exercised in Task 19.
+Expected: PASS, 7 tests. The `pr` path is covered through the injected `gh` function; Task 19 exercises it against a real pull request.
 
 - [ ] **Step 6: Checkpoint**
 
@@ -838,12 +889,19 @@ This is the task the whole design exists to protect. Review it hardest.
 
 ```
 {
-  selected: [{ axisId, group, files: [{ path, added, removed, truncatedFrom: number|null }] }],
+  selected: [{
+    axisId: string,             // "a" for one axis, "a+b" for a grouped slot
+    group: string|null,
+    axes: Axis[],               // every member's checklist travels with the slot
+    files: [{ path, added, removed, size, truncatedFrom: number|null }],
+    skippedFiles: string[]      // ranked out by the cap; the next run picks them up
+  }],
   skippedOnTouch: string[],     // axis ids no changed file wakes
   emptyAfterAssignment: string[],
   deferred: string[],           // woken, but no slot this run
   slots: number,
-  agents: number,               // 1 + 2 * selected.length
+  agents: number,               // 1 + 2 * selected.length, or 0 when nothing was selected
+  truncated: boolean,           // any slot gave up files — the run is not complete
   nextAxisCursor: string[]
 }
 ```
@@ -863,7 +921,7 @@ const axis = (id, when, rank = 'rotate', extra = {}) => ({
   max_files: null, tools: [], heading: id, checklist: `- check ${id}`, ...extra,
 });
 
-const file = (path, added = 1) => ({ path, added, removed: 0 });
+const file = (path, added = 1, size = 100) => ({ path, added, removed: 0, size });
 
 const settings = (over = {}) => ({ ...DEFAULT_SETTINGS, ...over, budget: { ...DEFAULT_SETTINGS.budget, ...over.budget } });
 const state = (over = {}) => ({ axis_cursor: [], ...over });
@@ -905,15 +963,23 @@ test('the rotation cursor gives a deferred axis first claim next run', () => {
   assert.deepEqual(second.selected.map((s) => s.axisId), ['b']);
 });
 
-test('axes sharing a group share one slot', () => {
-  const axes = [axis('q1', 'always', 'rotate', { group: 'quality' }), axis('q2', 'always', 'rotate', { group: 'quality' })];
-  const out = selectAxes({ axes, files: [file('x.ts')], settings: settings({ budget: { slots: 1 } }), state: state() });
+test('axes sharing a group share one slot and review the union of their files', () => {
+  const axes = [
+    axis('q1', ['api/**'], 'rotate', { group: 'quality' }),
+    axis('q2', ['web/**'], 'rotate', { group: 'quality' }),
+  ];
+  const out = selectAxes({
+    axes, files: [file('api/a.ts'), file('web/b.tsx')],
+    settings: settings({ budget: { slots: 1 } }), state: state(),
+  });
   assert.equal(out.selected.length, 1);
-  assert.deepEqual(out.selected[0].group, 'quality');
+  assert.equal(out.selected[0].group, 'quality');
   assert.equal(out.agents, 3);
+  assert.deepEqual(out.selected[0].files.map((f) => f.path).sort(), ['api/a.ts', 'web/b.tsx']);
+  assert.deepEqual(out.selected[0].axes.map((a) => a.id), ['q1', 'q2'], 'both checklists travel with the slot');
 });
 
-test('files are ranked by churn, then glob specificity, then size, and truncated', () => {
+test('files are ranked by churn first, and truncation is reported', () => {
   const axes = [axis('api', ['apps/api/**', '**'])];
   const files = [file('apps/api/a.ts', 1), file('apps/api/b.ts', 90), file('apps/api/c.ts', 40)];
   const out = selectAxes({
@@ -921,6 +987,29 @@ test('files are ranked by churn, then glob specificity, then size, and truncated
   });
   assert.deepEqual(out.selected[0].files.map((f) => f.path), ['apps/api/b.ts', 'apps/api/c.ts']);
   assert.equal(out.selected[0].files[0].truncatedFrom, 3);
+  assert.deepEqual(out.selected[0].skippedFiles, ['apps/api/a.ts']);
+  assert.equal(out.truncated, true);
+});
+
+test('a file carried over from a truncated run outranks fresh churn', () => {
+  const axes = [axis('api', ['apps/api/**'])];
+  const files = [
+    file('apps/api/hot.ts', 500),
+    { ...file('apps/api/carried.ts', 0), carried: true },
+  ];
+  const out = selectAxes({
+    axes, files, settings: settings({ budget: { slots: 5, max_files_per_axis: 1 } }), state: state(),
+  });
+  assert.deepEqual(out.selected[0].files.map((f) => f.path), ['apps/api/carried.ts']);
+});
+
+test('size breaks a tie in churn and specificity, smallest first', () => {
+  const axes = [axis('api', ['apps/api/**'])];
+  const files = [file('apps/api/big.ts', 5, 9000), file('apps/api/small.ts', 5, 40)];
+  const out = selectAxes({
+    axes, files, settings: settings({ budget: { slots: 5, max_files_per_axis: 1 } }), state: state(),
+  });
+  assert.deepEqual(out.selected[0].files.map((f) => f.path), ['apps/api/small.ts']);
 });
 
 test('an axis whose files all fall outside its globs is dropped, not merely empty', () => {
@@ -964,20 +1053,36 @@ function specificityFor(axis, path) {
   return best;
 }
 
-function assign(axis, files, maxFiles) {
-  const mine = axis.when === 'always'
-    ? [...files]
-    : files.filter((file) => axis.when.some((pattern) => matchGlob(pattern, file.path)));
-  mine.sort((a, b) => {
+// Ranking keys, in the order spec §7 step 3 fixes: churn descending, then how
+// specifically the axis glob matched, then size ascending so truncation gives
+// up the files most expensive to read. Path is the final tiebreak, only so the
+// result is stable across runs.
+function rank(axis, files) {
+  return [...files].sort((a, b) => {
+    // A file carried over from a truncated run outranks everything: it lost the
+    // last ranking, and losing every ranking is how a file is never reviewed.
+    if (Boolean(a.carried) !== Boolean(b.carried)) return a.carried ? -1 : 1;
     const churn = (b.added + b.removed) - (a.added + a.removed);
     if (churn !== 0) return churn;
     const spec = specificityFor(axis, b.path) - specificityFor(axis, a.path);
     if (spec !== 0) return spec;
+    if (a.size !== b.size) return a.size - b.size;
     return a.path.localeCompare(b.path);
   });
+}
+
+function filesFor(axis, files) {
+  return axis.when === 'always'
+    ? [...files]
+    : files.filter((file) => axis.when.some((pattern) => matchGlob(pattern, file.path)));
+}
+
+function assign(axis, files, maxFiles) {
+  const mine = rank(axis, filesFor(axis, files));
   const kept = mine.slice(0, maxFiles);
   const truncatedFrom = mine.length > maxFiles ? mine.length : null;
-  return kept.map((file, index) => ({ ...file, truncatedFrom: index === 0 ? truncatedFrom : null }));
+  const skipped = mine.slice(maxFiles).map((file) => file.path);
+  return { kept: kept.map((file) => ({ ...file, truncatedFrom })), skipped };
 }
 
 // Order matters and is the whole point: wake, assign, drop empties, only then
@@ -993,8 +1098,8 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null 
   for (const axis of axes) {
     if (!wakes(axis, files)) { skippedOnTouch.push(axis.id); continue; }
     const assigned = assign(axis, files, axis.max_files ?? maxFilesDefault);
-    if (assigned.length === 0) { emptyAfterAssignment.push(axis.id); continue; }
-    candidates.push({ axis, files: assigned });
+    if (assigned.kept.length === 0) { emptyAfterAssignment.push(axis.id); continue; }
+    candidates.push({ axis, files: assigned.kept, skipped: assigned.skipped });
   }
 
   // Grouped axes collapse into a single slot entry, keeping every checklist.
@@ -1022,12 +1127,24 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null 
   const taken = ordered.slice(0, slots);
   const left = ordered.slice(slots);
 
-  const selected = taken.map((unit) => ({
-    axisId: unit.members.map((m) => m.axis.id).join('+'),
-    group: unit.group,
-    axes: unit.members.map((m) => m.axis),
-    files: unit.members[0].files,
-  }));
+  // A grouped slot reviews the union of its members' files, not the first
+  // member's. Dropping the rest would hand the agent checklists for files it
+  // was never given.
+  const selected = taken.map((unit) => {
+    const byPath = new Map();
+    for (const member of unit.members) for (const file of member.files) byPath.set(file.path, file);
+    const cap = Math.max(...unit.members.map((m) => m.axis.max_files ?? maxFilesDefault));
+    const union = rank(unit.members[0].axis, [...byPath.values()]);
+    const kept = union.slice(0, cap);
+    const overflow = union.slice(cap).map((file) => file.path);
+    return {
+      axisId: unit.members.map((m) => m.axis.id).join('+'),
+      group: unit.group,
+      axes: unit.members.map((m) => m.axis),
+      files: kept,
+      skippedFiles: [...new Set([...unit.members.flatMap((m) => m.skipped), ...overflow])].sort(),
+    };
+  });
 
   return {
     selected,
@@ -1036,6 +1153,7 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null 
     deferred: left.flatMap((unit) => unit.members.map((m) => m.axis.id)),
     slots,
     agents: selected.length === 0 ? 0 : 1 + 2 * selected.length,
+    truncated: selected.some((entry) => entry.skippedFiles.length > 0),
     nextAxisCursor: [...left.flatMap((u) => u.members.map((m) => m.axis.id)),
                      ...taken.flatMap((u) => u.members.map((m) => m.axis.id))],
   };
@@ -1045,7 +1163,7 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null 
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/axes.test.mjs`
-Expected: PASS, 8 tests.
+Expected: PASS, 10 tests.
 
 - [ ] **Step 5: Add a property-style guard for the invariant**
 
@@ -1068,7 +1186,7 @@ test('no configuration of axes and files can exceed the budget', () => {
 - [ ] **Step 6: Run it and confirm it passes**
 
 Run: `cd <skill> && node --test test/axes.test.mjs`
-Expected: PASS, 9 tests.
+Expected: PASS, 11 tests.
 
 - [ ] **Step 7: Checkpoint**
 
@@ -1138,6 +1256,15 @@ test('a rejection without a reason is refused', () => {
   const finding = { axis: 'perf', file: 'a.ts', claim: 'x' };
   assert.throws(() => recordTriage(emptyState(), finding, { verdict: 'rejected', scope: 'here', reason: '' }), /reason/);
 });
+
+test('verdict, scope and date are validated, not stored blindly', () => {
+  const finding = { axis: 'perf', file: 'a.ts', claim: 'x' };
+  const at = (over) => () => recordTriage(emptyState(), finding, { verdict: 'rejected', scope: 'here', reason: 'r', ...over });
+  assert.throws(at({ verdict: 'maybe' }), /verdict must be/);
+  assert.throws(at({ scope: 'globally' }), /scope must be/);
+  assert.throws(at({ until: '01.10.2026' }), /YYYY-MM-DD/);
+  assert.throws(at({ verdict: 'deferred', until: null }), /until date/);
+});
 ```
 
 - [ ] **Step 2: Run the test and confirm it fails**
@@ -1179,9 +1306,21 @@ export function isSuppressed(finding, triage, today) {
   return null;
 }
 
+const VERDICTS = new Set(['accepted', 'rejected', 'deferred']);
+const SCOPES = new Set(['here', 'everywhere']);
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
 export function recordTriage(state, finding, { verdict, scope, reason, until = null }) {
+  if (!VERDICTS.has(verdict)) throw new Error(`verdict must be accepted, rejected or deferred, got "${verdict}"`);
+  if (!SCOPES.has(scope)) throw new Error(`scope must be here or everywhere, got "${scope}"`);
   if (verdict !== 'accepted' && String(reason).trim() === '') {
     throw new Error('a rejected or deferred finding needs a reason — silence in a later report is unreadable without one');
+  }
+  if (verdict === 'deferred' && !ISO_DATE.test(String(until))) {
+    throw new Error(`a deferred finding needs an until date as YYYY-MM-DD, got "${until}"`);
+  }
+  if (until !== null && !ISO_DATE.test(String(until))) {
+    throw new Error(`until must be YYYY-MM-DD, got "${until}" — dates here are compared as strings`);
   }
   const entry = {
     fingerprint: fingerprint(finding, scope),
@@ -1198,7 +1337,7 @@ export function recordTriage(state, finding, { verdict, scope, reason, until = n
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/triage.test.mjs`
-Expected: PASS, 7 tests.
+Expected: PASS, 8 tests.
 
 - [ ] **Step 5: Checkpoint**
 
@@ -1750,14 +1889,18 @@ Expected: PASS, 4 tests.
 - Produces:
   - `exitCode({ findings, gate, gateOnDisputed }) -> 0|1`.
   - CLI subcommands, each reading and writing JSON on stdout/stdin so `SKILL.md` can pipe them:
-    - `crm plan --repo <dir> --mode <mode> [--base <ref>] [--pr <n>] [--path <p>] [--slots <n>]` → `{ runId, target, selection, config, empty }`
-    - `crm assemble --repo <dir> --run <id> --raw <file> --scores <file>` → writes `findings.json`, prints its summary
+    - `crm plan --repo <dir> --mode <mode> [--base <ref>] [--pr <n>] [--path <p>] [--slots <n>]` → `{ runId, mode, target, empty, selection, settings, axes }` — the same object is written to `reports/<runId>-plan.json`, which every later subcommand reads
+    - `crm dispatched --repo <dir> --run <id> --wave brief|axis|verify --label <name>` → appends one line to the run's dispatch ledger; `crm finish` refuses a run whose ledger exceeds the announced budget
+    - `crm assemble --repo <dir> --run <id> --raw <file>` → validates evidence, dedupes, **assigns ids**, applies triage suppression, writes `findings.json` with `confidence: null`
+    - `crm score --repo <dir> --run <id> --scores <file>` → merges confidences by finding id, applies the per-severity thresholds, rewrites `findings.json`
     - `crm codex --repo <dir> --run <id>` → merges verdicts into `findings.json`, prints status
     - `crm render --repo <dir> --run <id> --prose <file>` → writes `raport.md`
     - `crm finish --repo <dir> --run <id>` → updates `state.json`, exits with the gate code
     - `crm triage --repo <dir> --run <id> --id <f-NN> --verdict <v> --scope <s> --reason <text> [--until <date>]`
     - `crm suppressed --repo <dir> [--restore <fingerprint>]`
   - `--json` on every subcommand; without a TTY the CLI never prompts.
+  - **`--slots` is validated and gated.** It must be a positive integer; `0`, a negative number, or a non-number exits 2. Without a TTY it exits 2 as well, with the message that an unattended run may not raise the budget. This closes the hole a wrapper's discipline alone would leave: any CI step could otherwise call `crm plan --slots 100`.
+  - **Dispatch ledger.** `crm plan` records the budget it announced. Each dispatch is logged through `crm dispatched`, and `crm finish` exits 2 when the ledger holds more agents than the plan allowed, or when a logged axis label is not one the plan selected. The ceiling stops being a rule `SKILL.md` promises to keep and becomes a check that fails the run.
 
 - [ ] **Step 1: Write the failing gate test**
 
@@ -1882,9 +2025,11 @@ test('finish exits 1 when a blocking finding survives', () => {
     axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking',
     claim: 'query without tenant filter', evidence: 'const course = findFirst({ where: { id } });',
   }]));
+  const assembled = JSON.parse(run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']));
+  assert.deepEqual(assembled.findings.map((f) => f.id), ['f-01'], 'assemble assigns ids before verification');
   const scores = join(dir, 'scores.json');
-  writeFileSync(scores, JSON.stringify([{ id: 'f-01', confidence: 95 }]));
-  run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--scores', scores, '--json']);
+  writeFileSync(scores, JSON.stringify([{ id: 'f-01', confidence: 95, note: 'confirmed' }]));
+  run(['score', '--repo', dir, '--run', plan.runId, '--scores', scores, '--json']);
   try {
     run(['finish', '--repo', dir, '--run', plan.runId, '--json']);
     assert.fail('should have exited 1');
@@ -1903,7 +2048,7 @@ Expected: FAIL — `bin/crm.mjs` missing.
 
 ```js
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
@@ -1937,6 +2082,16 @@ function parseArgs(argv) {
     i += 1;
   }
   return out;
+}
+
+// The budget may only be raised by a person, in front of a terminal, with a
+// sane number. Wrapper discipline is not enough: any CI step could call this.
+function readSlots(args) {
+  if (args.slots === undefined) return null;
+  if (!process.stdout.isTTY) fail('--slots is refused without a terminal: an unattended run may not raise the agent budget');
+  const value = Number(args.slots);
+  if (!Number.isInteger(value) || value < 1 || value > 20) fail(`--slots must be an integer between 1 and 20, got "${args.slots}"`);
+  return value;
 }
 
 const reviewDir = (repo) => join(repo, '.claude', 'review');
@@ -1978,47 +2133,79 @@ const COMMANDS = {
     const config = loadConfig(repo);
     const state = readState(repo);
     const mode = args.mode ?? 'working';
+    const slotsOverride = readSlots(args);
     const target = collectTarget(repo, mode, {
       base: mode === 'since' ? state.last_reviewed_sha : args.base,
       pr: args.pr, path: args.path, cursor: state.file_cursor[mode],
       exclude: config.settings.exclude,
     });
+    // Files a truncated earlier run gave up come back at the head of the queue,
+    // otherwise the same low-churn files lose every ranking forever.
+    const known = new Set(target.files.map((f) => f.path));
+    for (const path of state.pending_files ?? []) {
+      if (known.has(path) || !existsSync(join(repo, path))) continue;
+      target.files.push({ path, added: 0, removed: 0, size: statSync(join(repo, path)).size, carried: true });
+    }
     const runId = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12).replace(/^(\d{8})(\d{4})$/, '$1-$2');
     if (isEmpty(target)) {
       return { runId, mode, target, empty: true, selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 } };
     }
     const selection = selectAxes({
-      axes: config.axes, files: target.files, settings: config.settings, state,
-      slotsOverride: args.slots ? Number(args.slots) : null,
+      axes: config.axes, files: target.files, settings: config.settings, state, slotsOverride,
     });
     return { runId, mode, target, empty: false, selection, settings: config.settings, axes: config.axes };
   },
 
+  dispatched(args) {
+    const repo = args.repo ?? process.cwd();
+    const path = reportPath(repo, args.run, 'dispatch.json');
+    const ledger = existsSync(path) ? readJson(path) : [];
+    ledger.push({ wave: args.wave, label: args.label ?? '', at: new Date().toISOString() });
+    writeJson(path, ledger);
+    return { logged: ledger.length };
+  },
+
+  // Ids are assigned here, before verification, because wave 2 scores by id.
   assemble(args) {
     const repo = args.repo ?? process.cwd();
-    const config = loadConfig(repo);
     const state = readState(repo);
-    const raw = readJson(args.raw);
-    const scores = args.scores ? readJson(args.scores) : [];
-    const scoreById = new Map(scores.map((s) => [s.id ?? s.claim, s.confidence]));
-
     const sourceOf = (path) => readFileSync(join(repo, path), 'utf8');
     const rejected = [];
     const valid = [];
-    for (const finding of raw) {
+    for (const finding of readJson(args.raw)) {
       const check = validateFinding(finding, sourceOf);
-      if (!check.ok) { rejected.push({ finding, why: check.why }); continue; }
-      valid.push({ ...finding, confidence: scoreById.get(finding.id ?? finding.claim) ?? finding.confidence ?? 0 });
+      if (!check.ok) { rejected.push({ claim: finding.claim, why: check.why }); continue; }
+      valid.push(finding);
     }
-    const { kept, dropped } = applyThresholds(valid, config.settings.confidence_threshold);
     const out = assemble({
       run: { id: args.run, mode: args.mode ?? null },
-      findings: kept, triage: state.triage, today: new Date().toISOString().slice(0, 10),
+      findings: valid, triage: state.triage, today: new Date().toISOString().slice(0, 10),
     });
-    out.rejectedForEvidence = rejected.length;
-    out.belowThreshold = dropped.length;
+    out.rejectedForEvidence = rejected;
     writeJson(reportPath(repo, args.run, 'findings.json'), out);
-    return { findings: out.findings.length, suppressed: out.suppressed.length, rejectedForEvidence: rejected.length, belowThreshold: dropped.length };
+    return {
+      findings: out.findings.map((f) => ({ id: f.id, axis: f.axis, file: f.file, lines: f.lines, severity: f.severity, claim: f.claim, evidence: f.evidence })),
+      suppressed: out.suppressed.length,
+      rejectedForEvidence: rejected.length,
+    };
+  },
+
+  score(args) {
+    const repo = args.repo ?? process.cwd();
+    const config = loadConfig(repo);
+    const path = reportPath(repo, args.run, 'findings.json');
+    const data = readJson(path);
+    const byId = new Map(readJson(args.scores).map((s) => [s.id, s]));
+    for (const finding of data.findings) {
+      const score = byId.get(finding.id);
+      finding.confidence = score ? score.confidence : 0;
+      finding.verifyNote = score ? (score.note ?? '') : 'not scored — verification returned nothing for this id';
+    }
+    const { kept, dropped } = applyThresholds(data.findings, config.settings.confidence_threshold);
+    data.findings = kept;
+    data.belowThreshold = dropped.map((f) => ({ id: f.id, confidence: f.confidence, claim: f.claim }));
+    writeJson(path, data);
+    return { kept: kept.length, belowThreshold: dropped.length };
   },
 
   codex(args) {
@@ -2058,9 +2245,32 @@ const COMMANDS = {
     const config = loadConfig(repo);
     const data = readJson(reportPath(repo, args.run, 'findings.json'));
     const plan = readJson(reportPath(repo, args.run, 'plan.json'));
+    // The ledger is the mechanical half of the budget guarantee: the plan says
+    // what may run, this says what did, and a mismatch fails the run.
+    const ledgerPath = reportPath(repo, args.run, 'dispatch.json');
+    const ledger = existsSync(ledgerPath) ? readJson(ledgerPath) : [];
+    const allowedLabels = new Set(plan.selection.selected.map((s) => s.axisId));
+    const stray = ledger.filter((entry) => entry.wave !== 'brief' && !allowedLabels.has(entry.label));
+    if (ledger.length > plan.selection.agents) {
+      fail(`dispatch ledger holds ${ledger.length} agents, the announced budget was ${plan.selection.agents}`);
+    }
+    if (stray.length > 0) {
+      fail(`dispatch ledger names axes the plan did not select: ${stray.map((e) => e.label).join(', ')}`);
+    }
+
     const state = readState(repo);
     state.last_reviewed_sha = plan.target.head;
     state.axis_cursor = plan.selection.nextAxisCursor ?? state.axis_cursor;
+    // Files the caps ranked out are remembered by path and jump the queue next
+    // run. Without this, spec §4.3 rule 3 — "the next run picks up the
+    // remainder" — is a sentence nothing implements.
+    state.pending_files = [...new Set(plan.selection.selected.flatMap((s) => s.skippedFiles))].sort();
+    if (plan.mode === 'full') {
+      const listed = plan.target.files.map((f) => f.path);
+      const reviewed = new Set(plan.selection.selected.flatMap((s) => s.files.map((f) => f.path)));
+      const lastReviewed = listed.filter((path) => reviewed.has(path)).at(-1);
+      state.file_cursor = { ...state.file_cursor, full: listed.find((path) => path > lastReviewed) ?? '' };
+    }
     state.runs = [...state.runs, { id: args.run, artifact_url: args.artifact ?? null }].slice(-50);
     writeState(repo, state);
     const code = exitCode({
@@ -2109,17 +2319,40 @@ if (name === 'plan') {
 process.stdout.write(`${JSON.stringify(result, null, args.json ? 0 : 2)}\n`);
 ```
 
-- [ ] **Step 7: Run the CLI test and confirm it passes**
+- [ ] **Step 7: Add a test for an unscored finding**
+
+Append to `test/cli.test.mjs`:
+
+```js
+test('a finding verification never scored is treated as unconfirmed, not as passing', () => {
+  const dir = makeRepo({ 'a.ts': 'const course = findFirst({ where: { id } });\n' });
+  writeFiles(dir, { '.claude/review/config.md': CONFIG, 'a.ts': 'const course = findFirst({ where: { id } });\nchanged\n' });
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json']));
+  const raw = join(dir, 'raw.json');
+  writeFileSync(raw, JSON.stringify([{
+    axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking',
+    claim: 'query without tenant filter', evidence: 'const course = findFirst({ where: { id } });',
+  }]));
+  run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']);
+  const scores = join(dir, 'scores.json');
+  writeFileSync(scores, JSON.stringify([]));
+  const scored = JSON.parse(run(['score', '--repo', dir, '--run', plan.runId, '--scores', scores, '--json']));
+  assert.equal(scored.kept, 0);
+  assert.equal(scored.belowThreshold, 1);
+});
+```
+
+- [ ] **Step 8: Run the CLI test and confirm it passes**
 
 Run: `cd <skill> && node --test test/cli.test.mjs test/gate.test.mjs`
-Expected: PASS, 8 tests.
+Expected: PASS, 9 tests.
 
-- [ ] **Step 8: Run the whole suite**
+- [ ] **Step 9: Run the whole suite**
 
 Run: `cd <skill> && node --test test/`
 Expected: PASS, all tests from Tasks 1–10.
 
-- [ ] **Step 9: Checkpoint**
+- [ ] **Step 10: Checkpoint**
 
 ---
 
@@ -2471,6 +2704,16 @@ test('every mode from the spec is documented', () => {
   }
 });
 
+test('the main model is checked at entry but never blocks the run', () => {
+  assert.match(TEXT, /Haiku or Sonnet/);
+  assert.match(TEXT, /Never refuse over it/i);
+});
+
+test('assemble runs before verification so ids exist to score by', () => {
+  assert.ok(TEXT.indexOf('crm assemble') < TEXT.indexOf('crm score'), 'assemble must be documented before score');
+  assert.match(TEXT, /scores by id/i);
+});
+
 test('the budget is announced before dispatch and never raised silently', () => {
   assert.match(TEXT, /crm plan/);
   assert.match(TEXT, /before dispatching/i);
@@ -2478,8 +2721,15 @@ test('the budget is announced before dispatch and never raised silently', () => 
   assert.match(TEXT, /never pass `--slots`/i);
 });
 
-test('subagents are dispatched without the Agent tool', () => {
+test('subagents are dispatched without the Agent tool, and nothing walks it back', () => {
   assert.match(TEXT, /without the `Agent` tool/);
+  assert.equal(/grant(ing)? (them |the )?(the )?`?Agent`? tool|allow[a-z]* (them )?to (dispatch|spawn)/i.test(TEXT), false,
+    'no sentence may re-grant fan-out to a subagent');
+});
+
+test('every dispatch is logged, so the budget is checked and not merely stated', () => {
+  assert.match(TEXT, /crm dispatched/);
+  assert.match(TEXT, /crm finish[\s\S]{0,600}ledger/i);
 });
 
 test('the skill states that it never commits', () => {
@@ -2503,23 +2753,24 @@ Write the document with these sections, in this order. Content requirements are 
 1. **Frontmatter.** `name: code-review-master`; `description:` covering the triggers ("zrób review", "sprawdź kod", "/code-review-master", nightly and CI invocations) and the exclusions ("NOT for reviewing a course student's homework — that is `review-pracy-domowej`; NOT the bundled `/code-review` plugin").
 2. **Overview.** Three sentences: what it does, that the budget is computed by `bin/crm.mjs` and not negotiable, and that the report is Polish while everything else is English.
 3. **Invocation table.** Every mode from spec §3 with one line each.
-4. **Step 1 — plan.** Run `node <skill>/bin/crm.mjs plan --repo <cwd> --mode <mode> [...]`. Exit 2 means stop and show the message. `empty: true` means say so and stop — no agents. Otherwise print the budget line to the user **before dispatching anything**: axes selected, axes skipped, axes deferred, and `selection.agents`.
+4. **Step 0 — check the main model.** The skill does not choose it; the session does. When the session runs on Haiku or Sonnet, say in one line that planning and prose will be weaker on this model and that Opus or Fable is the intended one, then continue. Never refuse over it.
+5. **Step 1 — plan.** Run `node <skill>/bin/crm.mjs plan --repo <cwd> --mode <mode> [...]`. Exit 2 means stop and show the message. `empty: true` means say so and stop — no agents. Otherwise print the budget line to the user **before dispatching anything**: axes selected, axes skipped, axes deferred, and `selection.agents`.
 5. **Step 2 — raise the budget only on request.** `--slots` is passed only when the user typed it. State: in a non-interactive run, never pass `--slots`.
-6. **Step 3 — wave 0.** Dispatch one Haiku agent with `prompts/brief.md`, `{{SUMMARY_INPUT}}` filled from `selection`. Dispatch it **without the `Agent` tool**.
+6. **Step 3 — wave 0.** Dispatch one Haiku agent with `prompts/brief.md`, `{{SUMMARY_INPUT}}` filled from `selection`. Dispatch it **without the `Agent` tool**. Immediately after dispatching, run `crm dispatched --run <id> --wave brief --label brief`. Do the same after every agent in every wave: `crm finish` compares the ledger with the announced budget and fails the run on a mismatch, so a missed log line is itself an error.
 7. **Step 4 — wave 1.** Dispatch one Sonnet agent per entry in `selection.selected`, all in a single message so they run concurrently, each with `prompts/axis.md` filled from that entry's `axes[].checklist` and `files`. **Without the `Agent` tool.** Collect the JSON arrays into `raw.json`.
-8. **Step 5 — wave 2.** For each selected axis, one Haiku agent with `prompts/verify.md` and that axis's findings, batched. **Without the `Agent` tool.** Collect into `scores.json`. State explicitly: one agent per axis, never one per finding.
-9. **Step 6 — assemble.** `crm assemble --raw raw.json --scores scores.json`. Report how many findings were discarded for missing or invented evidence, and how many fell below threshold.
+8. **Step 5 — assemble.** `crm assemble --raw raw.json`. This validates evidence, dedupes, applies triage suppression, and **assigns the finding ids**. It runs before verification because wave 2 scores by id. Report how many findings were discarded for missing or invented evidence.
+9. **Step 6 — wave 2.** For each selected axis, one Haiku agent with `prompts/verify.md` and that axis's findings **as returned by `assemble`, with their ids**, batched. **Without the `Agent` tool.** Collect into `scores.json`, then run `crm score --scores scores.json`. State explicitly: one agent per axis, never one per finding.
 10. **Step 7 — codex.** `crm codex`. If the status is not `ok`, say so and continue.
 11. **Step 8 — prose.** For each surviving finding write `{title, body}` in Polish following the register rules in `~/.claude/review/global.md`; two to three sentences naming the function and the line. Write `prose.json`, then `crm render --prose prose.json`.
 12. **Step 9 — artifact.** Interactive runs only; see Task 17.
-13. **Step 10 — finish.** `crm finish`, which sets the exit code. Show the user the report path and the headline counts.
+13. **Step 10 — finish.** `crm finish`, which checks the dispatch ledger against the announced budget and then sets the exit code. Show the user the report path and the headline counts. An exit 2 here means the run dispatched more agents than it announced — report it as a defect, not as a review result.
 14. **Modes `ask` and `fix`.** One paragraph each pointing at Tasks 15 and 16.
 15. **Rules that do not bend.** A short list: never commit; subagents never get the `Agent` tool; verification is per axis, never per finding; a non-interactive run never applies fixes and never raises the budget; a finding without verbatim evidence is discarded rather than reported.
 
 - [ ] **Step 4: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/skill.test.mjs`
-Expected: PASS, 6 tests.
+Expected: PASS, 9 tests.
 
 - [ ] **Step 5: Dry-run the skill end to end on a scratch repository**
 
@@ -2626,9 +2877,9 @@ Requirements for that section, written out in full:
 - Run `crm detect`. Read every document it lists under `docs`, plus `AGENTS.md` and `CLAUDE.md` when present.
 - Draft `.claude/review/config.md` from `templates/config.md`: fill `{{REPO_NAME}}` and `{{REPO_SUMMARY}}`, and turn each coherent group of rules found in those documents into one axis with an `id`, a `when` derived from the directories the rules concern, a `rank`, and the checklist in the document's own words.
 - Ask about gaps rather than inventing: an axis whose `when` you cannot infer, a rule that names a tool the repository does not appear to use, a severity you are unsure of.
-- Show the drafted file and **wait for approval before writing it**.
-- When a document was lifted wholesale — `docs/review-guide.md` is the case in `saas app` — **propose**, as a separate question, reducing it to a heading plus a pointer at `.claude/review/config.md`. Never do it unasked: people read that document without Claude.
-- Add `.claude/review/reports/` to the repository's `.gitignore`, and say that `state.json` is deliberately left tracked.
+- Show the drafted file and **wait for approval**. Until that approval arrives, `init` writes nothing at all — not `config.md`, not `.gitignore`, not a directory. A repository must look untouched if the user says no.
+- After approval, write `config.md` and append `.claude/review/reports/` to the repository's `.gitignore`, saying that `state.json` is deliberately left tracked and why.
+- When a document was lifted wholesale — `docs/review-guide.md` is the case in `saas app` — **propose**, as a separate question after the first approval, reducing it to a heading plus a pointer at `.claude/review/config.md`. Never do it unasked: people read that document without Claude.
 
 - [ ] **Step 6: Checkpoint**
 
@@ -2730,7 +2981,7 @@ Requirements, written out in full:
 
 **Interfaces:**
 - Consumes: `findings.json` with codex verdicts (Task 9).
-- Produces: `crm fixable --repo <dir> --run <id> [--ids f-01,f-03]` → `{ fixable: Finding[], skipped: [{ id, why }] }`. A finding is fixable when `codex.verdict === 'confirms'` and it passed its threshold; everything else is skipped with a stated reason.
+- Produces: `crm fixable --repo <dir> --run <id> [--ids f-01,f-03]` → `{ fixable: Finding[], skipped: [{ id, why }] }`. A finding is fixable when `codex.verdict === 'confirms'` **and** it carries a `confidence` — `crm score` has already removed everything below threshold, so a finding still in the file has passed it. The `confidence` check is a guard against a `findings.json` that never went through `score`, not a second filter.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2756,23 +3007,25 @@ function repoWithFindings(findings) {
   return dir;
 }
 
-test('only codex-confirmed findings are fixable', () => {
+test('only codex-confirmed, scored findings are fixable', () => {
   const dir = repoWithFindings([
-    { id: 'f-01', severity: 'blocking', codex: { verdict: 'confirms', reason: 'r', fix: 'do x' } },
-    { id: 'f-02', severity: 'blocking', codex: { verdict: 'rejects', reason: 'r', fix: null } },
-    { id: 'f-03', severity: 'suggestion', codex: null },
+    { id: 'f-01', severity: 'blocking', confidence: 92, codex: { verdict: 'confirms', reason: 'r', fix: 'do x' } },
+    { id: 'f-02', severity: 'blocking', confidence: 92, codex: { verdict: 'rejects', reason: 'r', fix: null } },
+    { id: 'f-03', severity: 'suggestion', confidence: 80, codex: null },
+    { id: 'f-04', severity: 'blocking', confidence: null, codex: { verdict: 'confirms', reason: 'r', fix: 'x' } },
   ]);
   const out = run(['fixable', '--repo', dir, '--run', 'r1']);
   assert.deepEqual(out.fixable.map((f) => f.id), ['f-01']);
-  assert.equal(out.skipped.length, 2);
+  assert.equal(out.skipped.length, 3);
   assert.match(out.skipped.find((s) => s.id === 'f-02').why, /rejects/);
   assert.match(out.skipped.find((s) => s.id === 'f-03').why, /no codex verdict/);
+  assert.match(out.skipped.find((s) => s.id === 'f-04').why, /never scored/);
 });
 
 test('--ids narrows the set further', () => {
   const dir = repoWithFindings([
-    { id: 'f-01', severity: 'blocking', codex: { verdict: 'confirms', reason: 'r', fix: 'x' } },
-    { id: 'f-02', severity: 'blocking', codex: { verdict: 'confirms', reason: 'r', fix: 'y' } },
+    { id: 'f-01', severity: 'blocking', confidence: 92, codex: { verdict: 'confirms', reason: 'r', fix: 'x' } },
+    { id: 'f-02', severity: 'blocking', confidence: 92, codex: { verdict: 'confirms', reason: 'r', fix: 'y' } },
   ]);
   const out = run(['fixable', '--repo', dir, '--run', 'r1', '--ids', 'f-02']);
   assert.deepEqual(out.fixable.map((f) => f.id), ['f-02']);
@@ -2795,6 +3048,10 @@ Expected: FAIL — unknown command `fixable`.
     const skipped = [];
     for (const finding of data.findings) {
       if (only && !only.has(finding.id)) { skipped.push({ id: finding.id, why: 'not named in --ids' }); continue; }
+      if (finding.confidence === undefined || finding.confidence === null) {
+        skipped.push({ id: finding.id, why: 'never scored — run crm score before fixing' });
+        continue;
+      }
       if (!finding.codex) { skipped.push({ id: finding.id, why: 'no codex verdict — cross-check did not run' }); continue; }
       if (finding.codex.verdict !== 'confirms') { skipped.push({ id: finding.id, why: `codex ${finding.codex.verdict}` }); continue; }
       fixable.push(finding);
@@ -2828,12 +3085,15 @@ Requirements, written out in full:
 
 **Files:**
 - Create: `<skill>/templates/artifact.html`
+- Create: `<skill>/lib/embed.mjs`
+- Modify: `<skill>/bin/crm.mjs` — add the `artifact` subcommand
 - Modify: `<skill>/SKILL.md` — fill in step 9
 - Test: `<skill>/test/artifact.test.mjs`
 
 **Interfaces:**
 - Consumes: `findings.json`, `raport.md`.
-- Produces: an HTML page written to the scratchpad and published with the `Artifact` tool by `SKILL.md`. Data is injected as a single `<script type="application/json" id="findings">` block, so the template stays static and testable.
+- Produces: `embedJson(value) -> string` — JSON with `<`, `>` and `&` escaped as `<`, `>`, `&`; and `crm artifact --repo <dir> --run <id> --out <path>` which fills the template and writes the page. `SKILL.md` publishes that file with the `Artifact` tool.
+- **Why a subcommand rather than string replacement in `SKILL.md`:** an evidence quote containing `</script>` would close the JSON block and inject whatever follows into the page. Evidence is copied verbatim out of the repository, so this is reachable from any file containing that string — and the artifact is a URL the user may share. The escaping belongs in tested code, not in a prose instruction.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2845,6 +3105,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { embedJson } from '../lib/embed.mjs';
 
 const TEXT = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'templates', 'artifact.html'), 'utf8');
 
@@ -2864,6 +3126,21 @@ test('it filters by axis and severity', () => {
   assert.match(TEXT, /data-filter="axis"/);
   assert.match(TEXT, /data-filter="severity"/);
 });
+
+test('embedded JSON cannot close the script block', () => {
+  const payload = embedJson({ evidence: '</script><img src=x onerror=alert(1)>', amp: 'a & b' });
+  assert.equal(payload.includes('</script>'), false);
+  assert.match(payload, /\\u003c\/script\\u003e/);
+  assert.match(payload, /\\u0026/);
+  assert.deepEqual(JSON.parse(payload).evidence, '</script><img src=x onerror=alert(1)>',
+    'escaping must be reversible — JSON.parse in the page sees the original text');
+});
+
+test('a rendered page keeps the payload inside one script block', () => {
+  const page = TEXT.replace('{{DATA}}', embedJson({ findings: [{ evidence: '</script>' }] }));
+  assert.equal(page.split('</script>').length, TEXT.split('</script>').length,
+    'no extra closing tag was introduced by the data');
+});
 ```
 
 - [ ] **Step 2: Run it and confirm it fails**
@@ -2871,7 +3148,39 @@ test('it filters by axis and severity', () => {
 Run: `cd <skill> && node --test test/artifact.test.mjs`
 Expected: FAIL — template missing.
 
-- [ ] **Step 3: Write `templates/artifact.html`**
+- [ ] **Step 3: Implement `lib/embed.mjs`**
+
+```js
+// `</script>` inside a JSON string closes the block that holds it. Evidence is
+// copied verbatim out of the repository, so any file containing that string
+// would otherwise inject markup into a page the user may share.
+const ESCAPES = { '<': '\\u003c', '>': '\\u003e', '&': '\\u0026', ' ': '\\u2028', ' ': '\\u2029' };
+
+export function embedJson(value) {
+  return JSON.stringify(value).replace(/[<>&  ]/g, (ch) => ESCAPES[ch]);
+}
+```
+
+- [ ] **Step 4: Add the `artifact` subcommand to `bin/crm.mjs`**
+
+```js
+  artifact(args) {
+    const repo = args.repo ?? process.cwd();
+    const data = readJson(reportPath(repo, args.run, 'findings.json'));
+    const plan = readJson(reportPath(repo, args.run, 'plan.json'));
+    const template = readFileSync(join(HERE, '..', 'templates', 'artifact.html'), 'utf8');
+    const page = template.replace('{{DATA}}', embedJson({
+      run: { id: args.run, mode: plan.mode, head: plan.target.head },
+      selection: plan.selection, findings: data.findings, suppressed: data.suppressed.length,
+    }));
+    writeFileSync(args.out, page, 'utf8');
+    return { page: args.out, findings: data.findings.length };
+  },
+```
+
+Add `import { embedJson } from '../lib/embed.mjs';` to the imports.
+
+- [ ] **Step 5: Write `templates/artifact.html`**
 
 Requirements, written out in full — no `<!doctype>`, `<html>`, `<head>` or `<body>` tags, because the publisher wraps the file:
 
@@ -2882,19 +3191,19 @@ Requirements, written out in full — no `<!doctype>`, `<html>`, `<head>` or `<b
 - One card per finding: severity badge coloured by severity, `file:line` as a link when `link` is present and as plain copyable text when it is not, the evidence in a `<pre>` that scrolls horizontally inside its own container, the Polish body, and the codex verdict as a second badge.
 - `<script type="application/json" id="findings">{{DATA}}</script>` followed by an inline `<script>` that reads it with `JSON.parse(document.getElementById('findings').textContent)` and renders. No external scripts, no fonts, no fetch.
 
-- [ ] **Step 4: Run the test and confirm it passes**
+- [ ] **Step 6: Run the test and confirm it passes**
 
 Run: `cd <skill> && node --test test/artifact.test.mjs`
-Expected: PASS, 3 tests.
+Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Fill in step 9 of `SKILL.md`**
+- [ ] **Step 7: Fill in step 9 of `SKILL.md`**
 
 - Interactive runs only. Skip silently when there is no TTY.
-- Read `templates/artifact.html`, replace `{{DATA}}` with the contents of `findings.json`, write the result into the scratchpad directory, and publish it with the `Artifact` tool: a two-to-four-word title (`Review <repo>`), a one-sentence `description`, and a favicon on first publish only.
+- Run `crm artifact --run <id> --out <scratchpad>/review-<id>.html`, then publish that file with the `Artifact` tool: a two-to-four-word title (`Review <repo>`), a one-sentence `description`, and a favicon on first publish only. **Never build the page by hand-substituting into the template** — the escaping in `lib/embed.mjs` is what keeps a `</script>` in an evidence quote from becoming markup.
 - Record the returned URL by passing `--artifact <url>` to `crm finish`.
 - A new artifact per run. Never redeploy over a previous run's URL: comparing runs is the point.
 
-- [ ] **Step 6: Checkpoint**
+- [ ] **Step 8: Checkpoint**
 
 ---
 
@@ -2918,10 +3227,13 @@ Run: `claude --help`
 
 Record, in the plan's own execution notes, the exact flags for: non-interactive prompt, model override, output format, and permission mode. **Do not write a flag you have not seen in that output.** If a needed flag does not exist, say so in the checkpoint rather than inventing one.
 
+This is why Steps 2–4 below are written as requirement lists rather than finished files: the invocation line is the substance of all three, and it cannot be written from memory without risking a script that fails silently at 3 a.m. Everything else about those files is specified here down to the flag names.
+
 - [ ] **Step 2: Write `scripts/review.ps1`**
 
 Requirements:
 
+- Resolves the Claude binary from `$env:CRM_CLAUDE_BIN`, defaulting to `claude`, so Step 5's stub test can drive it.
 - Parameters `-Repo` (required), `-Mode` (default `since`), `-Model` (default the strong model), `-LogDir` (default `<repo>\.claude\review\reports`).
 - Sets the working directory to `-Repo`, invokes `claude` non-interactively with `/code-review-master <mode>` using the flags recorded in Step 1.
 - Writes stdout and stderr to `<LogDir>\<timestamp>-nightly.log`.
@@ -2931,7 +3243,7 @@ Requirements:
 
 - [ ] **Step 3: Write `scripts/review.sh`**
 
-Same behaviour for POSIX: `set -euo pipefail`, `--repo` and `--mode` arguments, log to the same location, propagate the exit code, no `--slots`.
+Same behaviour for POSIX: `set -euo pipefail`, `--repo`, `--mode` and `--pr` arguments, the binary taken from `${CRM_CLAUDE_BIN:-claude}`, log to the same location, propagate the exit code, no `--slots`.
 
 - [ ] **Step 4: Write `ci/code-review.yml`**
 
@@ -2945,15 +3257,68 @@ A workflow that:
 - lets the job fail on exit code 1 and marks exit code 2 as a workflow error with a distinct message;
 - reads `ANTHROPIC_API_KEY` from `secrets`, with a comment naming what to add and where.
 
-- [ ] **Step 5: Verify the nightly path end to end**
+- [ ] **Step 5: Make the wrappers testable and test them**
+
+Both scripts resolve the Claude binary from `${CRM_CLAUDE_BIN:-claude}` (PowerShell: `$env:CRM_CLAUDE_BIN`), so a test can substitute a stub that records its arguments and returns a chosen exit code.
+
+`<skill>/test/wrapper.test.mjs`:
+
+```js
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync, readFileSync, chmodSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'review.sh');
+
+// A stub that writes its argv to a file and exits with the code we ask for.
+function stub(dir, exitCode) {
+  const path = join(dir, 'claude-stub');
+  writeFileSync(path, `#!/bin/sh\nprintf '%s\\n' "$@" > "${dir}/argv.txt"\nexit ${exitCode}\n`);
+  chmodSync(path, 0o755);
+  return path;
+}
+
+const runWrapper = (dir, code, args) => {
+  try {
+    execFileSync('sh', [SCRIPT, ...args], { env: { ...process.env, CRM_CLAUDE_BIN: stub(dir, code) }, encoding: 'utf8' });
+    return 0;
+  } catch (err) {
+    return err.status;
+  }
+};
+
+test('the wrapper propagates the gate exit code', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'crm-wrap-'));
+  assert.equal(runWrapper(dir, 0, ['--repo', dir, '--mode', 'since']), 0);
+  assert.equal(runWrapper(dir, 1, ['--repo', dir, '--mode', 'since']), 1);
+  assert.equal(runWrapper(dir, 2, ['--repo', dir, '--mode', 'since']), 2);
+});
+
+test('the wrapper never passes --slots and passes the mode through', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'crm-wrap-'));
+  runWrapper(dir, 0, ['--repo', dir, '--mode', 'pr', '--pr', '42']);
+  const argv = readFileSync(join(dir, 'argv.txt'), 'utf8');
+  assert.equal(argv.includes('--slots'), false, 'an unattended run must not be able to raise the budget');
+  assert.match(argv, /code-review-master pr 42/);
+});
+```
+
+Run: `cd <skill> && node --test test/wrapper.test.mjs`
+Expected: PASS, 2 tests. On a machine without `sh`, skip this file and say so in the checkpoint rather than deleting it — the Windows path is covered by Step 6.
+
+- [ ] **Step 6: Verify the nightly path end to end**
 
 On the scratch repository from Task 13: register nothing in Task Scheduler yet, just run `scripts/review.ps1 -Repo <scratch> -Mode since` from a non-interactive shell. Confirm: no artifact is published; no `--slots` reaches the CLI; the log file exists; the exit code matches the gate.
 
-- [ ] **Step 6: Verify the fix bar**
+- [ ] **Step 7: Verify the fix bar**
 
 In the same non-interactive run, confirm the skill refuses `fix` and says why.
 
-- [ ] **Step 7: Checkpoint**
+- [ ] **Step 8: Checkpoint**
 
 Report the exact `claude` flags used and the observed exit codes. Note that registering the scheduled task and adding the repository secret are the user's actions, listed as commands to paste, not executed.
 
@@ -3016,7 +3381,11 @@ Report: the axes created, the budget observed, the findings count, how many code
 
 - [ ] `cd <skill> && node --test test/` — every test passes.
 - [ ] The agent-count guard from Task 5 Step 5 passes for 1–40 axes at 1, 3, 5 and 8 slots.
-- [ ] A run on the `saas app` branch dispatches exactly `1 + 2 × selected.length` subagents, counted from the transcript, and the number matches the budget line printed before dispatch.
+- [ ] A run on the `saas app` branch dispatches exactly `1 + 2 × selected.length` subagents, counted from the transcript, and the number matches both the budget line printed before dispatch and the dispatch ledger.
+- [ ] `crm finish` exits 2 on a ledger with one extra entry — verify by appending a fake entry with `crm dispatched` before finishing a scratch run.
+- [ ] `crm plan --slots 6` exits 2 when stdout is not a TTY, and `--slots 0`, `--slots -1` and `--slots abc` exit 2 always.
+- [ ] A truncated run leaves `pending_files` non-empty, and the next run reviews those files first.
 - [ ] A non-interactive run publishes no artifact, applies no fix, and passes no `--slots`.
+- [ ] An evidence quote containing `</script>` renders as text in the artifact, not as markup.
 - [ ] `raport.md` is Polish; `SKILL.md`, configuration, prompts, templates and tests are English.
 - [ ] Nothing is committed anywhere.

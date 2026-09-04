@@ -11,6 +11,7 @@
 - [Design system foundations](design-system-foundations-work.md) — apps/web tokens from Figma udu-saas-v1, shadcn/ui, Roboto, dark default
 - [Subagents share the working tree](subagents-shared-worktree-checkout.md) — non-isolated agents can checkout/switch branch under you
 - [Figma DS library](figma-design-system-library.md) — Figma file zVmr90...Iuot built via MCP from apps/web tokens; conventions + build state
+- [Tickety = GitHub issues, nie Jira](feedback-tickets-are-github-issues.md) — Jira nie obowiązuje, pliki `*-jira-tasks.md` skasowane (sprawdzone 2026-09-04); treść ticketu = ciało issue (`gh issue view`); mów „issue", nie „ticket Jira"
 - [Ticket rules moved](feedback-junior-tickets-no-code.md) — reguły są teraz w skillu `github-tickets` i w `docs/ticket-conventions.md`; plik to wskaźnik plus jedna rzecz warta pamiętania: 2026-09-03 odwrócono regułę opisowości, ticket nie prowadzi już za rączkę po repo
 - [FE na mockach, podpięcie osobno](feedback-fe-mocks-then-wiring.md) — zadanie FE na fixture’ach + osobne zadanie FE→BE; wiring czeka na TanStack Query z CP-89; fixture z udokumentowanego kontraktu, nie wymyślony
 - [CP-26 free content → done](cp26-free-content-deprioritized.md) — 2026-08-11: 15-task plan content-without-enrollment executed, all suites green, w mainie; deviations + leftovers inside

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 1e256b77-0d94-428b-9168-7ebd5ff4724e
-  modified: 2026-08-21T10:21:01.543Z
+  modified: 2026-09-04T09:20:22.771Z
 ---
 
 **Update 2026-08-11: plan wykonany w całości (15/15 zadań). 2026-08-21
@@ -45,6 +45,6 @@ As of 2026-07-07, free/anonymous lesson content support is paused. CP-26's `Enro
 - Free/public reads vs. state-mutating actions (quiz submit, progress tracking) are treated differently — public preview should stay read-only.
 - Video playback tokens (Mux) for free content need separate handling (shorter TTL / separate playback policy) since a signed token is effectively a public hotlinkable URL.
 
-Planning docs updated with this decision: `docs/superpowers/plans/2026-04-20-plan-3-jira-tasks.md` (CP-26 section) and `docs/superpowers/plans/2026-04-20-plan-3-payments-enrollments.md` (Task 4).
+Planning docs updated with this decision: `docs/superpowers/plans/2026-04-20-plan-3-payments-enrollments.md` (Task 4). The former `2026-04-20-plan-3-jira-tasks.md` (CP-26 section) no longer exists on disk (checked 2026-09-04); tickets are GitHub issues, not Jira ([[feedback-tickets-are-github-issues]]).
 
 See also [[feedback-junior-tickets-no-code]] if this work gets broken into tickets later.

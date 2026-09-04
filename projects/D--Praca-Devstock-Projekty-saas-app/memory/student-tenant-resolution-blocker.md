@@ -5,6 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 42081904-1ae7-44ca-9980-df3af20a7006
+  modified: 2026-09-04T09:20:37.776Z
 ---
 
 As of 2026-07-09, student-facing reads are hard-blocked on the backend: `@TenantId()` reads only
@@ -14,7 +15,7 @@ the JWT claim, and `AuthService.generateTokens()` sets it from the `CreatorTenan
 (header `x-tenant-id` = subdomain → `TenantContextService`) exists but is not wired into
 `@TenantId()`.
 
-Payments FE tickets written in `docs/superpowers/plans/2026-07-09-frontend-payments-jira-tasks.md`:
+Payments FE tickets (written 2026-07-09; the `…-frontend-payments-jira-tasks.md` working file is gone, tickets are GitHub issues, not Jira — [[feedback-tickets-are-github-issues]]):
 **CP-75** (BE, 2 SP: plan param for `POST /payments/subscription` which today has a single
 STRIPE_PRICE_ID + 409 when tenant active; Stripe return URLs with context, today static shared
 `/payments/success|cancel`; `GET /enrollments/me` must include course data, today bare
@@ -22,7 +23,7 @@ enrollments) blocks full **CP-30** (subscription plans page, 3 SP) and **CP-31**
 /payments returns + My courses, 3 SP; also blocked by CP-73 and CP-28 webhook). Coordinate CP-75
 with the rescoped CP-28/29 work before starting.
 
-Tickets written in `docs/superpowers/plans/2026-07-09-frontend-creator-student-views-jira-tasks.md`:
+Creator/student view tickets (written 2026-07-09; the `…-creator-student-views-jira-tasks.md` working file is gone):
 - **CP-73** (BE, 3 SP): tenant from request context for student reads + fix EnrollmentGuard scoping
   (residual 404/403 oracle from [[cp26-free-content-deprioritized]]). Blocks CP-21.
 - **CP-74** (BE, 1 SP): playback response must include `playbackId` (today only `{ token }`,

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: e4032bd2-589e-43fc-82d3-1fbaa145c2b6
-  modified: 2026-09-03T12:47:04.989Z
+  modified: 2026-09-04T09:20:19.777Z
 ---
 
 Ticket-writing rules are no longer recorded here. Two places hold them now, and
@@ -33,7 +33,8 @@ does not exist yet. Issue #168 was the clearest example of the old style and
 stopped being the model on the same day, when CP-89 to CP-103 were rewritten to
 the new one.
 
-See [[feedback-fe-mocks-then-wiring]] for the split rule the skill also absorbed.
+See [[feedback-fe-mocks-then-wiring]] for the split rule the skill also absorbed,
+and [[feedback-tickets-are-github-issues]] for the fact that Jira is gone entirely.
 
 **How to apply:** when writing or reviewing a ticket, read
 `docs/ticket-conventions.md`. Do not restate ticket rules in memory again: a rule
