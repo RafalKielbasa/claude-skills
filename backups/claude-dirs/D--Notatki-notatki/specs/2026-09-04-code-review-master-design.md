@@ -31,8 +31,10 @@ is known before the run starts and cannot grow with the size of the change.
 
 - Not a replacement for lint, typecheck, or tests. Anything a tool already
   catches is an explicit false positive (see §5.1).
-- Not an autofix tool. The skill reports; applying fixes is a separate action.
-- Not a PR-comment bot beyond the single CI comment described in §12.
+- Not a blind autofix tool. Fixes are applied only to findings that survived
+  both the verification wave and the codex cross-check, and only in the modes
+  §12 permits.
+- Not a PR-comment bot beyond the single CI comment described in §13.
 - Does not review repositories without a `.claude/review/config.md`. Instead it
   offers `init`.
 
@@ -49,6 +51,7 @@ daily papercut.
 /code-review-master since               # incremental, from the stored checkpoint
 /code-review-master full [path]         # audit, resumed through a file cursor
 /code-review-master ask [report]        # Q&A + triage over a finished report
+/code-review-master fix [ids]           # implement findings codex confirmed
 /code-review-master init                # draft a configuration for this repo
 ```
 
@@ -97,6 +100,9 @@ count**.
    scheduling cheap.
 5. **An axis with no assigned files after the brief is not dispatched.** The
    typical run costs less than the ceiling.
+6. **The codex cross-check (§12) is one external process per run**, batched over
+   all surviving findings. It is not a Claude subagent, does not draw on the
+   agent budget, and — like verification — never scales with finding count.
 
 ### 4.4 Main model
 
@@ -151,6 +157,8 @@ Frontmatter keys:
 budget: { slots: 5, max_files_per_axis: 40 }
 confidence_threshold: { blocking: 85, suggestion: 70, nitpick: 70 }
 gate: blocking            # exit 1 while a blocking finding survives
+gate_on_disputed: true    # a finding codex rejects still fails the gate
+codex: { enabled: true, timeout_s: 300 }
 commands: { lint: pnpm lint, typecheck: pnpm typecheck }
 exclude: ['**/node_modules/**', 'pnpm-lock.yaml', '**/*.snap']
 disable: []               # inherited global axes to switch off
@@ -332,12 +340,20 @@ receives its axis's findings and **reads the code to confirm them**, scoring eac
 85 for `blocking`, 70 for `suggestion` and `nitpick`. A finding that cannot be
 confirmed in the file scores 0 regardless of how convincing the claim reads.
 
-**7. Editorial pass (main model).** Group by axis, order by severity, write the
-Polish prose, attach `file:line` references and the configuration rule that was
-broken. The main model sees only filtered, confirmed findings with quotes.
+**7. Codex cross-check (main model, one external process).** The surviving
+findings go to `codex exec --sandbox read-only` in a single batched call, for an
+independent second opinion. Detail in §12.
 
-**8. Persist and gate.** Write `findings.json`, `raport.md`, publish the artifact
+**8. Editorial pass (main model).** Group by axis, order by severity, write the
+Polish prose, attach `file:line` references, the configuration rule that was
+broken, and the codex verdict. The main model sees only filtered, confirmed
+findings with quotes.
+
+**9. Persist and gate.** Write `findings.json`, `raport.md`, publish the artifact
 when interactive, update `state.json` (new SHA, cursors), exit per `gate`.
+
+**10. Apply fixes (interactive only).** Findings endorsed by both verification
+and codex are implemented. Detail in §12.
 
 ## 8. Agent contracts
 
@@ -370,6 +386,9 @@ None of them receives the `Agent` tool. None of them writes files.
     "title": "Zapytanie o kurs bez filtra tenanta",
     "body": "...", "rule": "config.md#security-tenant",
     "link": "https://github.com/.../blob/a1f2e30/apps/api/...#L88-L94",
+    "codex": { "verdict": "confirms",
+               "reason": "findFirst has no tenantId in where; caller does not scope it either",
+               "fix": "Add tenantId from TenantContextService to the where clause." },
     "triage": null
   }],
   "suppressed": []
@@ -461,7 +480,78 @@ The masking risk is real: a rejection can hide a later regression. Two
 counterweights — the report footer always states how many findings were
 suppressed, and the mode supports `show-suppressed` and `restore <id>`.
 
-## 12. Non-interactive execution
+## 12. Codex cross-check and applying fixes
+
+### 12.1 Why a second opinion
+
+Waves 1 and 2 are the same model family disagreeing with itself. A Sonnet
+finding confirmed by a Haiku reader shares the blind spots of both. `codex`,
+already installed and already used in this setup to review implementation plans,
+is a genuinely independent reader — and agreement across model families is a much
+stronger signal than agreement within one.
+
+### 12.2 The call
+
+One `codex exec --sandbox read-only` process per run, batched over every finding
+that survived §7 step 6. Read-only sandbox: codex inspects the repository and
+judges, it does not write.
+
+The prompt carries, for each finding: id, axis, `file:line`, the verbatim
+evidence quote, the claim, and the configuration rule it is measured against. It
+asks codex to return, per finding, one of three verdicts with a one-line reason:
+
+| Verdict | Meaning |
+|---|---|
+| `confirms` | Real problem; codex saw it in the code |
+| `rejects` | False positive, pre-existing, or explicitly intended |
+| `unsure` | Cannot judge without context the sandbox does not give it |
+
+Codex may also attach a `fix` — a concrete change it would make. That suggestion
+is advice to the implementer, never applied unread.
+
+A missing or unusable `codex` binary is not a failed run: the stage is skipped,
+every finding records `codex: "unavailable"`, and the report says so in the
+header. The review still produces its report and its exit code.
+
+### 12.3 Where the verdict lands
+
+`findings.json` gains `codex: { verdict, reason, fix }` per finding. The report
+shows the verdict next to each finding, so a finding carrying **confirmed by both
+verification and codex** is visibly different from one only Claude believes in.
+
+The verdict does not silently change the gate. A `rejects` verdict lowers a
+finding to the bottom of its section and marks it `sporne` (disputed); it does
+not delete the finding, because codex is a second opinion, not an authority.
+Whether a disputed blocking finding still fails the gate is set by
+`gate_on_disputed: true|false` in configuration, default `true` — a security
+finding that two readers disagree about is exactly the one a human should see.
+
+### 12.4 Applying fixes
+
+Only in interactive runs, and only after the report exists and you have said to
+proceed. `/code-review-master fix [ids]` implements findings that carry
+`verdict: confirms` from codex and passed their confidence threshold; naming ids
+narrows it further.
+
+The implementation follows the discipline already established for codex remarks
+on implementation plans:
+
+- each fix is judged before it is written — a codex `fix` suggestion that is
+  wrong is rejected, with the reason stated;
+- afterwards a table is presented: finding id, what it said, the assessment,
+  applied or not, and why. **A rejected remark with no stated reason is worse
+  than a bad remark applied, because the trace of the decision disappears.**
+- a fix that changes scope, adds a dependency, or does something irreversible is
+  not the skill's to decide: it is listed separately and waits for the user.
+
+**Nothing is committed.** Changes are left in the working tree as uncommitted
+edits, per the user's standing git rule. The skill states this in its closing
+summary rather than staging or committing anything.
+
+Unattended runs — `since` from the scheduler, `pr` from CI — **never apply
+fixes**. They review, report, and exit. The fix step requires a person.
+
+## 13. Non-interactive execution
 
 **Mode detection.** No TTY means: no artifact, no questions, and `--slots` is
 refused. Output is files on disk, a summary on stdout, and an exit code. An
@@ -480,20 +570,27 @@ Exact `claude -p` flags (output format, permission mode, model override) are to
 be read from `claude --help` during implementation rather than written from
 memory.
 
-## 13. Rollout
+## 14. Rollout
 
 1. Skill, `global.md` template, and `init` mode.
 2. `init` against `saas app`; migrate `docs/review-guide.md` and the relevant
    parts of `docs/conventions.md` into axes; leave the old document as a pointer
    once the user approves.
-3. Interactive modes (`default`, `branch`, `since`, `full`), then `ask`.
+3. Interactive modes (`default`, `branch`, `since`, `full`), then the codex
+   cross-check, then `ask`, then `fix`.
 4. `pr` mode, wrapper scripts, the Actions job, and the scheduled task.
 
-## 14. Decisions deliberately not taken
+## 15. Decisions deliberately not taken
 
 - **No wave queueing.** Seven axes may cost seven agents or not run at all; they
   may not run as five plus two under a "still five at a time" label.
 - **No automatic axis merging.** See §5.3 item 4.
-- **No autofix.** Out of scope for this skill.
+- **No unattended fixing.** `fix` requires a person. A scheduled or CI run that
+  edits code while nobody watches is a different product with a different risk
+  profile.
+- **Codex does not get a vote on the gate by default.** Its `rejects` verdict
+  marks a finding disputed and demotes it in the report; `gate_on_disputed:
+  false` is available but is not the default, because a finding two readers
+  disagree about is the one worth a human's minute.
 - **No expiry on rejections.** A rejection persists until cleared; the footer
   count and `show-suppressed` are the mitigation, not a timer.
