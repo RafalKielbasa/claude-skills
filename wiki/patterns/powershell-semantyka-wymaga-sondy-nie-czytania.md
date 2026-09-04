@@ -1,0 +1,49 @@
+# powershell-semantyka-wymaga-sondy-nie-czytania
+
+- **Skill:** ogólny
+- **Typ:** sukces
+- **Status:** otwarty
+
+## Opis
+PowerShell 5.1 ma kilka miejsc, w których zachowanie jest zaskakujące względem intuicji
+przeniesionej z innych języków (np. rozpakowywanie tablic w pipeline, moment ewaluacji
+`$PSScriptRoot`, wpływ `$ErrorActionPreference` na komendy natywne łączone przez `2>&1`).
+Czytanie dokumentacji albo samego kodu nie wystarczyło — poprawne ustalenie zachowania
+wymagało za każdym razem odizolowanej sondy: minimalnego skryptu uruchomionego naprawdę,
+nie przewidzianego na papierze.
+
+## Przyczyna źródłowa
+Semantyka PowerShell w tych miejscach zależy od interakcji kilku mechanizmów naraz
+(pipeline unwrapping, kolejność inicjalizacji `param()`, sposób, w jaki `$ErrorActionPreference`
+przechwytuje strumień błędów komend natywnych) — efekt końcowy nie jest wyprowadzalny
+z osobnego przeczytania dokumentacji każdego mechanizmu z osobna, bo dokumentacja opisuje
+mechanizmy pojedynczo, nie ich skład.
+
+## Dowody
+- 2026-09-03, sesja `session_0115YBg2ri1ajCfG8GNynEsZ`: `$PSScriptRoot` okazał się pusty
+  podczas ewaluacji wartości domyślnej w `param()` przy wywołaniu `powershell.exe -File` —
+  potwierdzone osobną sondą, nie wywnioskowane z dokumentacji. Fix: rozwiązywać `-Root` na
+  pierwszej linii ciała skryptu, nie w bloku `param()`.
+- 2026-09-03, ta sama sesja: obiekt z `ConvertFrom-Json` rzuca
+  `SetValueInvocationException` przy przypisaniu przez kropkę do nieistniejącej właściwości,
+  **niezależnie od `Set-StrictMode`** — zweryfikowane sondą z i bez `Set-StrictMode`.
+- 2026-09-03, ta sama sesja: `2>&1` na komendzie natywnej przy aktywnym
+  `$ErrorActionPreference = 'Stop'` zamienia sam output na stderr w wyjątek terminujący w
+  linii wywołania, zanim `$LASTEXITCODE` zostanie sprawdzony — potwierdzone nawet dla
+  faktycznie udanego `git fetch --verbose` (git pisze postęp na stderr). Fix: skopować
+  `$ErrorActionPreference = 'Continue'` wyłącznie wokół wywołania natywnego, przywrócić w
+  `finally`.
+- 2026-09-03, ta sama sesja: owinięcie w zewnętrzny `@(...)` w miejscu wywołania funkcji,
+  która sama zwraca `return , @(...)`, podwójnie opakowuje pusty wynik w jednoelementową
+  tablicę zawierającą pustą tablicę (`.Count` = 1 zamiast 0). Zwykłe nawiasy albo
+  bezpośrednie przechwycenie do zmiennej nie mają tego efektu — tylko `@(Get-Thing)` w
+  miejscu wywołania.
+
+## Rozwiązanie
+Gdy zachowanie PowerShell 5.1 jest niepewne albo zaskakujące (a zwłaszcza gdy dotyczy
+`$PSScriptRoot`, `ConvertFrom-Json`, `$ErrorActionPreference` z komendami natywnymi, albo
+opakowania tablic w pipeline) — nie rozstrzygać przez czytanie kodu ani dokumentacji.
+Napisać dwu-trzy-liniowy izolowany skrypt sondujący, uruchomić go naprawdę, i dopiero na
+tej podstawie projektować fix. Udokumentować ustalone zachowanie jako trwałą regułę
+(np. w sekcji Global Constraints planu), żeby kolejne zadania w tej samej sesji z niej
+korzystały bez ponownego sondowania.
