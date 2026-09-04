@@ -22,9 +22,22 @@ niczyją wyłączną własnością.
   i 18 wpisów — druga sesja Claude skasowała cały wpis o WikiSkillu. Zmiana
   wyszła na jaw przypadkiem, przy porównaniu rozmiaru kopii z oryginałem, a nie
   przez świadome sprawdzenie. Numery linii do cięcia zebrano ponownie.
+- 2026-09-03, sesja session_01TR43bKGaUWASqCrAsDE6GT: dwa rozjazdy w jednej
+  sesji, z dwóch różnych źródeł. (1) `praca-z-claude.md` zmienił się między
+  `Read` a `Edit`, bo użytkownik wypełniał w Obsidianie tabelę pomysłów
+  równolegle z pisaniem briefu — narzędzie ostrzegło („file had been modified
+  on disk"), a wpis w briefie o „pustym wierszu" trzeba było poprawić, bo
+  wiersze były już dwa. (2) `~/.claude/wiki/index.md` odczytany na starcie
+  Kroku 5 wymieniał 15 wzorców; kwadrans później na dysku było 19 —
+  równoległa sesja session_0115YBg2ri1ajCfG8GNynEsZ dopisała cztery. Krok 5.8
+  każe przepisać `index.md` w całości, więc zapis z nieodświeżonego kontekstu
+  skasowałby te cztery wpisy.
 
 ## Rozwiązanie
 Przed edycją pliku, który odczytałeś wcześniej niż przed chwilą, potwierdź jego
 stan — rozmiar, `mtime` albo sumę kontrolną — i dopiero wtedy zbieraj adresy do
 zmiany. Gdy edycję wykonuje skrypt, wbuduj w niego asercję na stan wejściowy
 (liczba linii, hash), żeby rozjazd zatrzymał zapis zamiast go wykonać.
+Osobno traktuj zapisy przepisujące plik w całości: tam rozjazd nie psuje
+numerów linii, tylko kasuje cudzą treść, więc plik przeczytaj ponownie
+bezpośrednio przed złożeniem nowej wersji, a nie na początku procedury.

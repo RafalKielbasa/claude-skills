@@ -20,3 +20,8 @@ Format wpisu:
 - Bez nowych wzorców
 - Wzorce globalne dotknięte w tej sesji: pdf-read-wymaga-pdftotext, subagent-limit-zastapiony-wlasna-ocena, jednorazowe-zapoznanie-startuje-cala-nauke, przekierowanie-uzytkownika-respektowane-bez-oporu, nauka-przerwana-zostawia-punkt-wznowienia
 - Sygnał: brak
+
+## 2026-09-03 — sesja session_01TR43bKGaUWASqCrAsDE6GT
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; zmiany objęły `praca-z-claude.md` i skill globalny `podsumuj-sesja-claude`)
+- Wzorce globalne dotknięte w tej sesji: instrukcja-zakotwiczona-na-pozycji-nie-na-naglowku (założony), zmiana-skilla-poza-evolve-skill-bez-sladu (założony), plik-zmieniony-miedzy-odczytem-a-edycja (dopisany dowód)
+- Sygnał: brak

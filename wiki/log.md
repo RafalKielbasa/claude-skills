@@ -59,3 +59,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Założono: powershell-semantyka-wymaga-sondy-nie-czytania (dowód: `$PSScriptRoot` pusty w `param()` pod `-File`; `ConvertFrom-Json` rzuca na przypisaniu do nieistniejącej właściwości niezależnie od `Set-StrictMode`; `2>&1` na komendzie natywnej z `$ErrorActionPreference='Stop'` zamienia udany `git fetch --verbose` w wyjątek; zewnętrzny `@(...)` wokół `return , @(...)` podwaja opakowanie pustego wyniku — wszystkie cztery ustalone sondą, nie lekturą)
 - Założono: branch-finish-zaklada-oddzielna-galaz-feature (dowód: 8-zadaniowy plan backupu `.claude` wykonany od początku wprost na `main` per pre-flight ruling; wywołanie `finishing-a-development-branch` wymagało przekazania tego w `ARGUMENTS`, bo standardowe kroki 2–4 menu merge/PR/zostaw nie miały zastosowania)
 - Sygnał: brak (wszystkie cztery nowe wzorce mają dowody z jednej sesji; próg to dowody z więcej niż dwóch sesji albo status nawrót)
+
+## 2026-09-03 — sesja session_01TR43bKGaUWASqCrAsDE6GT
+- Założono: instrukcja-zakotwiczona-na-pozycji-nie-na-naglowku (dowód: sekcja `# Pomysły` dołożona nad dziennikiem w `praca-z-claude.md` weszła w konflikt z Krokiem 4 „dopisz na GÓRZE pliku"; kolizja wyłapana przed zapisem, Krok 4 przekotwiczony na nagłówek dziennika)
+- Założono: zmiana-skilla-poza-evolve-skill-bez-sladu (dowód: ta sama zmiana Kroku 4, wprowadzona wprost na prośbę użytkownika, zostawiła ślad tylko w `PURPOSE.md` skilla; w `skill-impact.md` nie było jej do czasu tego kroku)
+- Dopisano dowód: plik-zmieniony-miedzy-odczytem-a-edycja (dwa rozjazdy w jednej sesji: `praca-z-claude.md` zmieniony przez użytkownika w Obsidianie między `Read` a `Edit`, oraz `index.md` tego wiki wymieniający 15 wzorców przy odczycie i 19 na dysku kwadrans później — równoległa sesja session_0115YBg2ri1ajCfG8GNynEsZ; przepisanie z nieodświeżonego kontekstu skasowałoby cztery wpisy)
+- Skill: podsumuj-sesja-claude — propozycja zaakceptowana (Krok 4, wpis z diffem w `skill-impact.md`)
+- Sygnał: brak (oba nowe wzorce mają jeden dowód; `plik-zmieniony-miedzy-odczytem-a-edycja` ma dowody z dwóch różnych sesji, a próg to więcej niż dwie)
