@@ -1,6 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # scripts/review.sh — unattended code-review-master runner (POSIX-ish shell,
-# tested against Git Bash's /bin/sh and Linux GitHub Actions runners).
+# tested against Git Bash's /bin/sh and Linux GitHub Actions runners, but
+# pinned to bash by the shebang above — see the comment on `set -euo pipefail`
+# below for why dash's /bin/sh cannot run this script).
 #
 # Runs the skill non-interactively against a repository, then asks
 # `crm gate` for the verdict that run recorded and exits with THAT code —
@@ -22,6 +24,13 @@
 #   0 — the run recorded no gating findings.
 #   1 — the run recorded a gating finding: a real review failure.
 #   2 — the run itself broke (crm/gate error), not a review verdict.
+#
+# pipefail is load-bearing, not decorative: every external command below runs
+# through `tee -a "$LOG_FILE"` for logging, and without pipefail a pipeline's
+# exit status is `tee`'s (almost always 0), not the command that actually ran
+# claude or crm — the gate at the bottom would then see success no matter what
+# either one returned. dash (Debian's /bin/sh) has no `pipefail` at all, which
+# is exactly why the shebang above pins this script to bash.
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -74,24 +83,44 @@ if [ "$MODE" = "pr" ]; then
   PROMPT="$PROMPT $PR"
 fi
 
-# Tool scope for the top-level session: it only ever shells out to node
-# (crm.mjs), git and gh (SKILL.md Steps 1–10), reads files, and dispatches
-# the subagents those steps describe. No Write/Edit — crm.mjs writes
-# .claude/review/** itself via Node's fs, never through Claude's own file
-# tools, so the session needs no standing write grant at all.
-ALLOWED_TOOLS="Bash(node *) Bash(git *) Bash(gh *) Read Task"
+# Tool scope for the top-level session: it shells out to node (crm.mjs),
+# git and gh (SKILL.md Steps 1–10), reads and searches files (Read, Grep,
+# Glob), writes `prose.json` in Step 8 (Write, Edit), and dispatches the
+# subagents those steps describe. Both Task and Agent are listed for the
+# dispatch tool on purpose — its name differs across harness versions,
+# listing both costs nothing and guessing wrong costs every run, the same
+# reasoning SKILL.md's own tool-set phrasing uses. Under
+# --permission-prompts none (below) a tool missing from this list is
+# denied outright, so an incomplete list fails the session for a reason
+# the exit code alone cannot express.
+ALLOWED_TOOLS="Bash(node *) Bash(git *) Bash(gh *) Read Grep Glob Write Edit Task Agent"
 
 {
   echo "review.sh: repo=$REPO mode=$MODE model=$MODEL log=$LOG_FILE"
 } | tee -a "$LOG_FILE" >&2
 
+# Written before the session starts, removed by `crm finish` on the way out.
+# It is how `crm gate` (below) tells "this run finished" from "this run
+# died and the newest state.json entry belongs to a previous run" — without
+# it, a session that crashes mid-review would have its exit code silently
+# read as whatever the *last successful* run recorded. A wrapper that
+# cannot even write its own sentinel cannot gate honestly, so this failure
+# is fatal, not captured-and-continued like the two below.
+if ! node "$SKILL_DIR/bin/crm.mjs" begin --repo "$REPO" 2>&1 | tee -a "$LOG_FILE"; then
+  echo "review.sh: crm begin failed — a run that cannot write its own sentinel cannot be gated honestly. See $LOG_FILE" | tee -a "$LOG_FILE" >&2
+  exit 2
+fi
+
 CLAUDE_EXIT=0
 # --permission-prompts none: a headless run has no host to answer a prompt
 # that falls outside --permission-mode/--allowedTools, so anything not
 # already allowed is denied outright instead of hanging forever.
-# No --slots here, ever: an unattended run must not be able to raise its
-# own agent budget. `crm plan` refuses --slots without a terminal anyway
-# (bin/crm.mjs's readSlots), but this script does not even try.
+# No --slots and no --interactive here, ever: an unattended run must not be
+# able to raise its own agent budget or reach mode `fix`. `crm plan` and
+# `crm fixable` both refuse to do either without --interactive anyway
+# (bin/crm.mjs's readSlots and its `fixable` command), but this script not
+# passing the flag in the first place is the actual enforcement, not a
+# courtesy on top of it.
 (
   cd "$REPO" && "$CLAUDE_BIN" -p "$PROMPT" \
     --model "$MODEL" \
@@ -106,9 +135,10 @@ if [ "$CLAUDE_EXIT" -ne 0 ]; then
   {
     echo "review.sh: claude exited $CLAUDE_EXIT — that is only the session's own"
     echo "exit status, not the review verdict (crm finish runs *inside* that"
-    echo "session — see SKILL.md Step 10). If the session crashed before finish"
-    echo "ran, the gate result below may reflect a stale, earlier run's"
-    echo "state.json rather than this one. Full transcript: $LOG_FILE"
+    echo "session — see SKILL.md Step 10). The .running sentinel crm begin wrote"
+    echo "above means the gate below will correctly report a broken run (exit 2)"
+    echo "if this session never reached finish, rather than inheriting whatever"
+    echo "an earlier, unrelated run decided. Full transcript: $LOG_FILE"
   } | tee -a "$LOG_FILE" >&2
 fi
 

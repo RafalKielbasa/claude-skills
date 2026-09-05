@@ -63,3 +63,33 @@ test('the skill states that it never commits', () => {
 test('unattended runs are barred from fixing', () => {
   assert.match(TEXT, /non-interactive[\s\S]{0,400}never (apply|applies)/i);
 });
+
+test('raising the budget and fixing both require an explicit --interactive flag', () => {
+  assert.match(TEXT, /--interactive/);
+  assert.match(TEXT, /crm fixable --run <runId> --interactive/);
+});
+
+test('Step 4 fills the axis prompt with the severity default', () => {
+  assert.match(TEXT, /\{\{SEVERITY_DEFAULT\}\}/);
+});
+
+// B3: `crm render` (Step 8) and `crm artifact` (Step 9) are two renderings of
+// the same run and must not disagree about which axes were actually
+// reviewed. Step 9 used to omit `--incomplete` entirely, so an incomplete
+// axis read as "not reviewed" in raport.md and as clean — silently — in the
+// artifact, the same disclaimer mismatch the finding this skill fixed was
+// about, just moved one file over.
+test('crm artifact in Step 9 takes --incomplete on the same terms as crm render in Step 8', () => {
+  const step8At = TEXT.indexOf('## Step 8 — prose');
+  const step9At = TEXT.indexOf('## Step 9 — artifact');
+  const step10At = TEXT.indexOf('## Step 10 — finish');
+  assert.ok(step8At > 0, 'Step 8 heading is missing');
+  assert.ok(step9At > step8At, 'Step 9 heading is missing or out of order');
+  assert.ok(step10At > step9At, 'Step 10 heading is missing or out of order');
+  const step8 = TEXT.slice(step8At, step9At);
+  const step9 = TEXT.slice(step9At, step10At);
+  assert.match(step8, /--incomplete <ids>/);
+  assert.match(step9, /--incomplete <ids>/,
+    'Step 9\'s crm artifact call must also accept --incomplete, or the artifact can never show an incomplete axis');
+  assert.match(step9, /same terms as Step 8/i);
+});

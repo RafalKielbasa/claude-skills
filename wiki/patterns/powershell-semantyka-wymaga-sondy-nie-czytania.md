@@ -38,6 +38,7 @@ mechanizmy pojedynczo, nie ich skład.
   tablicę zawierającą pustą tablicę (`.Count` = 1 zamiast 0). Zwykłe nawiasy albo
   bezpośrednie przechwycenie do zmiennej nie mają tego efektu — tylko `@(Get-Thing)` w
   miejscu wywołania.
+- 2026-09-04/05, sesja session_01WXmUJrXM5viDmNJuc3xjy6: `Write-Error` pod `$ErrorActionPreference = "Stop"` przerywa skrypt, więc następujące po nim `exit 2` nigdy się nie wykonuje i skrypt kończy **kodem 1** — czyli tym, który w tym projekcie znaczy „przeszła uwaga blokująca". Wykryte sondą uruchamiającą te trzy instrukcje po kolei i pokazującą EXITCODE=1, nie lekturą kodu. W tej samej sesji ten sam mechanizm psuł kod wyjścia przy przekierowaniu stderr do `Tee-Object`.
 
 ## Rozwiązanie
 Gdy zachowanie PowerShell 5.1 jest niepewne albo zaskakujące (a zwłaszcza gdy dotyczy

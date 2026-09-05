@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { statSync } from 'node:fs';
+import { statSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { matchGlob } from './glob.mjs';
 
@@ -34,9 +34,27 @@ function mergeFiles(lists) {
   return [...byPath.values()];
 }
 
+// A brand-new file has no diff to count lines from — `git diff --numstat`
+// simply never sees it — so it needs its own count, or it ranks below every
+// modified file on the churn key, the opposite of its actual risk: a new file
+// is entirely unreviewed code, not a small edit.
+function lineCount(repoDir, path) {
+  try {
+    const text = readFileSync(join(repoDir, path), 'utf8');
+    if (text === '') return 0;
+    // Matches how `git diff --numstat` counts an added file: a trailing
+    // newline is the line terminator, not a further empty line.
+    return text.split(/\r?\n/).length - (text.endsWith('\n') ? 1 : 0);
+  } catch {
+    // Binary content, or the file is gone by the time this runs — treat it as
+    // the cheapest to review rather than fail the whole target collection.
+    return 0;
+  }
+}
+
 function untrackedFiles(repoDir) {
   return git(repoDir, ['ls-files', '--others', '--exclude-standard']).split('\n').filter(Boolean)
-    .map((path) => ({ path, added: 0, removed: 0 }));
+    .map((path) => ({ path, added: lineCount(repoDir, path), removed: 0 }));
 }
 
 export function collectTarget(repoDir, mode, opts = {}) {
@@ -60,6 +78,20 @@ export function collectTarget(repoDir, mode, opts = {}) {
   } else if (mode === 'since') {
     base = opts.base ?? null;
     if (base === null) throw new Error('since mode needs a base sha; state.json has none — run another mode first');
+    // A force-push, rebase, squash-merge or `git gc` can make the recorded
+    // baseline unreachable in this clone — and so can a first `since` run
+    // after `pr` seeded it with a headRefOid from the GitHub API, which need
+    // not exist locally at all. Left unchecked, `git diff` would surface
+    // git's own "bad revision" message instead of naming the recovery.
+    try {
+      git(repoDir, ['cat-file', '-e', `${base}^{commit}`]);
+    } catch {
+      throw new Error(`the recorded baseline ${base} is not in this repository any more `
+        + '(a force-push, rebase or gc will do that). Run '
+        + `\`crm reseed --repo ${repoDir}\` to set the checkpoint to the current HEAD and `
+        + 'review from there, accepting that anything between the lost baseline and now '
+        + 'goes unreviewed.');
+    }
     files = parseNumstat(git(repoDir, ['diff', '--numstat', `${base}..HEAD`]));
   } else if (mode === 'pr') {
     // `opts.gh` is injected by the tests so the PR path is covered without a
@@ -84,7 +116,12 @@ export function collectTarget(repoDir, mode, opts = {}) {
   files = files
     .filter((file) => !exclude.some((pattern) => matchGlob(pattern, file.path)))
     .map((file) => ({ ...file, size: sizeOf(repoDir, file.path) }));
-  files.sort((a, b) => a.path.localeCompare(b.path));
+  // Code-unit comparison, not locale-aware: the `full`-mode cursor above
+  // (`>=`) and the cursor advance in bin/crm.mjs's `finish` (`>`) both compare
+  // paths the same primitive way. `localeCompare` orders mixed-case paths
+  // differently, which let this sort's order disagree with the cursor's — an
+  // audit whose only purpose is completeness was silently dropping files.
+  files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   return { mode, base, head: prHead ?? head, files };
 }
 

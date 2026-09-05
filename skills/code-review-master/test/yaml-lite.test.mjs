@@ -49,3 +49,31 @@ test('values that merely look exotic are still accepted', () => {
   assert.deepEqual(out.exclude, ['**/node_modules/**']);
   assert.equal(out.glob, '**/*.tsx');
 });
+
+test('an inline map key may contain a colon', () => {
+  const out = parseYamlLite("commands: { lint: pnpm lint, format:check: prettier --check ., test:e2e: pnpm e2e }\n");
+  assert.deepEqual(out.commands, {
+    lint: 'pnpm lint',
+    'format:check': 'prettier --check .',
+    'test:e2e': 'pnpm e2e',
+  });
+});
+
+test('a quoted inline map key may contain a colon', () => {
+  const out = parseYamlLite("commands: { 'format:check': prettier --check . }\n");
+  assert.deepEqual(out.commands, { 'format:check': 'prettier --check .' });
+});
+
+test('a value keeps its own colons', () => {
+  const out = parseYamlLite("links: { home: https://example.com/a:b }\n");
+  assert.deepEqual(out.links, { home: 'https://example.com/a:b' });
+});
+
+test('a block-mapping key may contain a colon', () => {
+  const out = parseYamlLite("commands:\n  lint: pnpm lint\n  format:check: prettier --check .\n  test:e2e: pnpm e2e\n");
+  assert.deepEqual(out.commands, {
+    lint: 'pnpm lint',
+    'format:check': 'prettier --check .',
+    'test:e2e': 'pnpm e2e',
+  });
+});

@@ -38,6 +38,17 @@ test('it filters by axis and severity', () => {
   assert.match(TEXT, /data-filter="severity"/);
 });
 
+// The page — the output a user may share with someone else — used to claim
+// coverage raport.md correctly disclaimed: no `--incomplete` flag on `crm
+// artifact`, and no rendering of either honesty marker in the template.
+test('the template renders an incomplete-axis note, a codex-status note and a truncation note', () => {
+  assert.match(TEXT, /id="incomplete-line"/);
+  assert.match(TEXT, /id="codex-line"/);
+  assert.match(TEXT, /id="truncated-line"/);
+  assert.match(TEXT, /Not reviewed/);
+  assert.match(TEXT, /Held over to the next run/);
+});
+
 test('embedded JSON cannot close the script block', () => {
   const payload = embedJson({ evidence: '</script><img src=x onerror=alert(1)>', amp: 'a & b' });
   assert.equal(payload.includes('</script>'), false);
@@ -90,6 +101,35 @@ test('crm artifact merges prose, links and title into the page', () => {
     'a finding with no prose entry is marked, not dropped');
   assert.equal(payload.findings[1].link, 'https://github.com/acme/demo/blob/a1f2e30/a.ts#L2-L3',
     'the exact url, so a swapped file/lines argument pair fails here');
+});
+
+// `--incomplete` mirrors `crm render`'s flag exactly, and prose.json is
+// optional here too (the way it already is for `crm render`) — a zero-finding
+// run may legitimately have none, and exiting 2 for a missing one would tell
+// the model to report a defect that is not one.
+test('crm artifact carries an incomplete axis and a non-ok codex status into the payload', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  const reports = join(dir, '.claude', 'review', 'reports');
+  mkdirSync(reports, { recursive: true });
+  const run = 'r1';
+  writeFileSync(join(reports, `${run}-plan.json`), JSON.stringify({
+    mode: 'working', target: { head: 'a1f2e30' },
+    selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 },
+  }));
+  writeFileSync(join(reports, `${run}-findings.json`), JSON.stringify({
+    findings: [],
+    suppressed: [],
+    codexStatus: 'disabled',
+  }));
+  // No prose.json written on purpose — a zero-finding run may have none.
+  const out = join(dir, 'page.html');
+  execFileSync(process.execPath,
+    [CLI, 'artifact', '--repo', dir, '--run', run, '--out', out, '--incomplete', 'security,conventions'],
+    { encoding: 'utf8' });
+  const page = readFileSync(out, 'utf8');
+  const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(page)[1]);
+  assert.deepEqual(payload.incomplete, ['security', 'conventions']);
+  assert.equal(payload.codexStatus, 'disabled');
 });
 
 test('a repository with no remote yields no link rather than a broken one', () => {

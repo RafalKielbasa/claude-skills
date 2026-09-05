@@ -32,6 +32,7 @@ z API GitHuba przy każdej sesji od nowa.
   (przeniesienie trzech ustaleń do Blocking) trzeba było doszukać, że ciała
   review nie da się zmienić przez `gh pr review`, tylko przez `PUT` na review
   i `PATCH` na pojedynczych komentarzach.
+- 2026-09-04/05, sesja session_01WXmUJrXM5viDmNJuc3xjy6: skill `code-review-master` zbudowany w całości — 50 plików, 167 testów, budżet agentów `1 brief + N osi + N weryfikacji` potwierdzony dwoma niezależnie napisanymi sweepami. Wzorzec **pozostaje otwarty**: skill nie został jeszcze użyty do żadnego prawdziwego review, konfiguracja dla `saas app` czeka na zatwierdzenie, a żadna sesja `claude -p` ani żaden prawdziwy agent nie zostały uruchomione.
 
 ## Rozwiązanie
 Do skilla review, budowanego od 2026-09-04, wnieść z tej sesji cztery rzeczy,

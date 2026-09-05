@@ -7,6 +7,13 @@ test('ssh and https remotes both resolve', () => {
   assert.equal(remoteToHttps('https://github.com/RafalKielbasa/app.git'), 'https://github.com/RafalKielbasa/app');
 });
 
+test('ssh:// URLs and https URLs carrying userinfo also resolve', () => {
+  assert.equal(remoteToHttps('ssh://git@github.com/RafalKielbasa/app.git'), 'https://github.com/RafalKielbasa/app');
+  assert.equal(remoteToHttps('https://user@github.com/RafalKielbasa/app.git'), 'https://github.com/RafalKielbasa/app');
+  assert.equal(remoteToHttps('https://user:token@github.com/RafalKielbasa/app'), 'https://github.com/RafalKielbasa/app');
+  assert.equal(remoteToHttps('ssh://git@github.com:22/RafalKielbasa/app.git'), 'https://github.com/RafalKielbasa/app');
+});
+
 test('a non-github remote yields no link', () => {
   assert.equal(remoteToHttps('git@gitlab.com:x/y.git'), null);
   assert.equal(blobLink('git@gitlab.com:x/y.git', 'abc', 'a.ts', [1, 2]), null);

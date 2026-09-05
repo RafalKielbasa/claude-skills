@@ -277,7 +277,10 @@
     <h1 id="run-title">Code review report</h1>
     <p id="commit-line"></p>
     <p id="coverage-line"></p>
+    <p id="truncated-line" hidden></p>
     <p id="spend-line"></p>
+    <p id="incomplete-line" hidden></p>
+    <p id="codex-line" hidden></p>
     <p id="suppressed-line" hidden></p>
   </header>
 
@@ -366,10 +369,51 @@
     }
     document.getElementById('coverage-line').textContent = coverage;
 
+    // Same figure lib/report.mjs's header() sums, from the same field
+    // (`selection.selected[].skippedFiles`) — so the artifact and raport.md
+    // can never disagree about how much was held over.
+    var heldOver = selection.selected.reduce(function (n, s) {
+      return n + ((s.skippedFiles && s.skippedFiles.length) || 0);
+    }, 0);
+    var truncatedLine = document.getElementById('truncated-line');
+    if (heldOver > 0) {
+      truncatedLine.textContent = 'Held over to the next run: ' + heldOver
+        + ' file' + (heldOver === 1 ? '' : 's') + '. This run did not cover '
+        + (heldOver === 1 ? 'it' : 'them') + ' in full.';
+      truncatedLine.hidden = false;
+    }
+
     document.getElementById('spend-line').textContent =
       'Budget spent: ' + selection.agents + ' agents (1 brief + ' + chosen.length + ' axis pass'
       + (chosen.length === 1 ? '' : 'es') + ' + ' + chosen.length + ' verification'
       + (chosen.length === 1 ? '' : 's') + ').';
+
+    // An axis whose agent hung, crashed, or returned garbage was still paid
+    // for — it must never read as covered just because nothing else went
+    // wrong. Mirrors raport.md's "Nie przejrzano" line.
+    var incompleteLine = document.getElementById('incomplete-line');
+    if (payload.incomplete && payload.incomplete.length > 0) {
+      incompleteLine.textContent = 'Not reviewed (agent returned nothing): ' + payload.incomplete.join(', ') + '.';
+      incompleteLine.hidden = false;
+    }
+
+    // Each status says what actually happened — the same distinctions
+    // lib/report.mjs's CODEX_NOTE makes — so the two renderings of one run
+    // cannot disagree about what codex did or did not do.
+    var CODEX_NOTE = {
+      disabled: 'Codex disabled in configuration — findings carry no second opinion.',
+      'nothing-to-judge': 'Codex skipped — there was nothing to judge.',
+      skipped: 'Codex step did not run — findings carry no second opinion.',
+      unavailable: 'Codex unavailable — findings carry no second opinion.',
+      timeout: 'Codex timed out — findings carry no second opinion.',
+      unparsable: 'Codex response was unreadable — findings carry no second opinion.',
+    };
+    var codexLine = document.getElementById('codex-line');
+    if (payload.codexStatus && payload.codexStatus !== 'ok') {
+      codexLine.textContent = 'Note: '
+        + (CODEX_NOTE[payload.codexStatus] || ('unknown codex status: ' + payload.codexStatus));
+      codexLine.hidden = false;
+    }
 
     var suppressedLine = document.getElementById('suppressed-line');
     if (payload.suppressed > 0) {

@@ -3,7 +3,7 @@ budget: { slots: 5, max_files_per_axis: 40 }
 gate: blocking
 gate_on_disputed: true
 commands: {}
-exclude: ['**/node_modules/**', '**/dist/**', '**/*.snap']
+exclude: ['**/node_modules/**', '**/dist/**', '**/*.snap', '.claude/review/**']
 disable: []
 ---
 

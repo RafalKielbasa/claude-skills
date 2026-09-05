@@ -37,7 +37,7 @@ The skill does not choose which model this session runs on — the session does,
 
 ## Step 1 — plan
 
-Before the first `crm plan` of a fresh session, make sure the universal axes exist: if `~/.claude/review/global.md` is absent, copy `<skill>/templates/global.md` there. Skip silently when it is already present — it may carry the user's own edits, and this skill never overwrites it. Without this file the `secrets` and `debug-leftovers` axes, and the report's register rules, are silently missing from every repository, not just this one.
+Before the first `crm plan` of a fresh session, make sure the universal axes exist: if `~/.claude/review/global.md` is absent, copy `<skill>/templates/global.md` there. Skip silently when it is already present — it may carry the user's own edits, and this skill never overwrites it. Without this file the `secrets` and `debug-leftovers` axes, and the report's register rules, are silently missing from every repository, not just this one. The path itself is overridable with the `CRM_GLOBAL_CONFIG` environment variable; this skill's own test suite sets it to a nonexistent path so the tests' outcome does not depend on the machine they run on.
 
 Run `crm plan --mode <mode> ...` with exactly the extra flags the mode needs, nothing more:
 
@@ -49,7 +49,7 @@ Run `crm plan --mode <mode> ...` with exactly the extra flags the mode needs, no
 
 Read the result:
 
-- **Exit code 2** — `crm plan` refused to run in a way it recognized: no `.claude/review/config.md` in `<repo>`, a `config.md` that fails validation, or a `--slots` value that is not a positive integer between 1 and 20 (including one passed without a terminal). Stop, and show the user the process's stderr message verbatim. Do not guess a fix and retry.
+- **Exit code 2** — `crm plan` refused to run in a way it recognized: no `.claude/review/config.md` in `<repo>`, a `config.md` that fails validation, or a `--slots` value that is not a positive integer between 1 and 20 (including one passed without `--interactive`). Stop, and show the user the process's stderr message verbatim. Do not guess a fix and retry.
 - **Any other non-zero exit** — something broke that `crm plan` did not anticipate (a bad git ref, a `since` run with no prior `last_reviewed_sha`, and so on). Stop, show the user the raw error, and do not proceed to Step 3 with a run that produced no `plan.json`.
 - **`empty: true`** — there is nothing in scope to review. Tell the user so, in one line, and stop. Dispatch nothing.
 - **Otherwise** — before dispatching a single agent, print the budget to the user in Polish:
@@ -60,9 +60,9 @@ Read the result:
 
 ## Step 2 — raise the budget only on request
 
-Pass `--slots <n>` to the `crm plan` call in Step 1 only when the user typed a number in their own invocation of this skill (e.g. `/code-review-master branch main --slots 8`). Never infer a value, never suggest one, never default one yourself — the budget line in Step 1 already tells the user what the default would review, and raising it is their call alone.
+Pass `--slots <n>` to the `crm plan` call in Step 1 only when the user typed a number in their own invocation of this skill (e.g. `/code-review-master branch main --slots 8`). Never infer a value, never suggest one, never default one yourself — the budget line in Step 1 already tells the user what the default would review, and raising it is their call alone. When you do pass `--slots`, pass `--interactive` alongside it too — but **only** when the user typed the flag themselves in an interactive session, i.e. someone is at the keyboard to have typed `--slots` in the first place. `crm plan` refuses `--slots` without `--interactive` (exit 2), so a bare `--slots` with no flag never silently no-ops — it fails loudly instead.
 
-In a non-interactive run (nightly, CI, any invocation with no one at the keyboard to answer a prompt), never pass `--slots`, regardless of what a config file or environment variable might suggest. `crm plan` enforces the same rule independently — it exits 2 without a TTY — so this is belt and suspenders, not the only guard, but the instruction on this side must hold too: an unattended run must not be able to raise its own agent budget.
+In a non-interactive run (nightly, CI, any invocation with no one at the keyboard to answer a prompt), never pass `--slots` or `--interactive`, regardless of what a config file or environment variable might suggest. `crm plan` enforces the same rule independently — it exits 2 without `--interactive` — so this is belt and suspenders, not the only guard, but the instruction on this side must hold too: an unattended run must not be able to raise its own agent budget. The wrapper scripts (`scripts/review.sh`, `scripts/review.ps1`) never pass `--slots` or `--interactive` at all — that omission, not any TTY detection, is what actually keeps an unattended run from raising its own budget.
 
 ## Step 3 — wave 0 (brief)
 
@@ -100,6 +100,7 @@ For **each entry** in `selection.selected`, in a **single message** so all of th
 - `{{CHECKLIST}}` — the entry's `axes[]` checklists concatenated, each preceded by its own axis id as a heading when the entry groups more than one axis, so a grouped agent still knows which rule belongs to which axis.
 - `{{SUMMARY}}` — the `summary` string from wave 0.
 - `{{FILES}}` — the entry's `files`, one per line as `path (+added/-removed)`. Never paste file contents into the prompt; the agent reads each file itself with its own `Read` tool.
+- `{{SEVERITY_DEFAULT}}` — the entry's axis's `severity_default`. For a grouped slot, since one prompt carries more than one axis's checklist, name each axis's default alongside its checklist heading instead of filling a single value (e.g. `security: blocking by default; code-quality: suggestion by default`) — the placeholder exists to tell the agent which default applies to which checklist item, not to average them into one number.
 
 Dispatch **one Sonnet agent per entry** with `<skill>/prompts/axis.md` filled as above. **Its tool set excludes the subagent-dispatch tool**, same reasoning as Step 3. **Log the dispatch before waiting for the result** — `crm dispatched --run <runId> --wave axis --label <axisId>` — for each one, same reasoning as Step 3. If one does not come back usable, follow Step 3b.
 
@@ -153,13 +154,15 @@ Add `--incomplete <ids>` (the axis ids Step 3b recorded, comma-separated) when S
 
 ## Step 9 — artifact
 
-**Interactive runs only. Skip this step silently, saying nothing, when the session has no one at the keyboard** — a nightly or CI invocation has nowhere to hand a URL. Unlike `--slots` (Step 2) and mode `fix`, `crm artifact` itself carries no TTY check: the CLI process's own stdout is piped for `--json` on every call this document makes, interactive or not, so "is a person watching" is a fact only this document's caller can know, not something the subprocess can infer from its own I/O. The judgment is yours to make, not the CLI's to enforce.
+**Interactive runs only. Skip this step silently, saying nothing, when the session has no one at the keyboard** — a nightly or CI invocation has nowhere to hand a URL. Unlike `--slots` (Step 2) and mode `fix`, `crm artifact` itself carries no `--interactive` gate: "is a person watching" is a fact only this document's caller can know, not something worth encoding as a flag the CLI would refuse to run without. The judgment is yours to make, not the CLI's to enforce.
 
 Run:
 
 ```
 crm artifact --run <runId> --out <scratchpad>/review-<runId>.html
 ```
+
+Add `--incomplete <ids>` on exactly the same terms as Step 8 — the axis ids Step 3b recorded, comma-separated, the flag omitted entirely when there are none. `raport.md` and this artifact are two renderings of one run, and they must not disagree about coverage.
 
 `<scratchpad>` is this session's own scratch/temp directory (named in your system prompt, if one is provided) — never a path inside `<repo>`, since the file is a publishing intermediate, not a review artefact the repository should carry. This reads `findings.json`, `plan.json`, and the `prose.json` Step 8 wrote, and fills `<skill>/templates/artifact.html` with the run's data: coverage and spend restated as page chrome, one card per finding with its severity badge, its codex verdict as a second badge when one exists, the evidence quote in a horizontally-scrolling block, its Polish body, and a link into the code when the repository has a recognized GitHub remote. It also carries axis and severity filters and a live count.
 
@@ -208,10 +211,10 @@ On success, show the user (in Polish) the path to `raport.md` and the headline c
 
 ## Mode `fix`
 
-`/code-review-master fix [ids]` implements the findings codex confirmed in the latest run. **Interactive only.** In a non-interactive run — nightly, CI, any invocation with no one at the keyboard to answer a prompt — refuse before touching anything and say why, in Polish: a scheduled or CI run that edits code unattended is a different product with a different risk profile. This is not left to your discretion — `crm fixable` itself exits 2 without a terminal, so the flow cannot start unattended even if this section were ignored.
+`/code-review-master fix [ids]` implements the findings codex confirmed in the latest run. **Interactive only.** In a non-interactive run — nightly, CI, any invocation with no one at the keyboard to answer a prompt — refuse before touching anything and say why, in Polish: a scheduled or CI run that edits code unattended is a different product with a different risk profile. This is not left to your discretion — `crm fixable` itself exits 2 without `--interactive`, so the flow cannot start unattended even if this section were ignored. Pass `--interactive` on every `crm fixable` call this mode makes, because only a person typing this command themselves in an interactive session can have reached this section at all; the wrapper scripts never pass it, and a bare `crm fixable` without the flag is refused for exactly that reason.
 
 1. Run `crm latest` (unless the user named a run); `runId: null` means there is no report to fix from — say so and stop.
-2. Run `crm fixable --run <runId> [--ids <ids>]`. It returns `{ fixable, skipped }` — a finding is fixable only when codex's verdict on it was `confirms` and it still carries a `confidence`. A finding with neither has never been scored, which `crm fixable` treats as skipped rather than fixable — a guard against a `findings.json` that never went through `crm score`, not a second confidence threshold on top of the one `crm score` already applied.
+2. Run `crm fixable --run <runId> --interactive [--ids <ids>]`. It returns `{ fixable, skipped }` — a finding is fixable only when codex's verdict on it was `confirms` and it still carries a `confidence`. A finding with neither has never been scored, which `crm fixable` treats as skipped rather than fixable — a guard against a `findings.json` that never went through `crm score`, not a second confidence threshold on top of the one `crm score` already applied.
 3. **Show the user the full list**: what will be attempted (`fixable`) and what is skipped, with the reason `crm fixable` gave for each skip. **Wait for approval before editing a single file.** Nothing in this mode touches the working tree before that approval arrives.
 4. **Before implementing any single fix, ask whether it would change scope, add a dependency, or do something irreversible.** If it would, that fix is not this mode's to make: set it aside for the separate list below and move to the next one. Make this judgement per fix, before touching that fix's files — never as a pass over the work afterwards, because by then an irreversible edit is already in the working tree.
 5. Implement each remaining fix yourself. `codex.fix` is advice: judge it before writing it, and reject it when it is wrong, stating why.

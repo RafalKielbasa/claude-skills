@@ -7,7 +7,12 @@ export const DEFAULT_SETTINGS = {
   gate_on_disputed: true,
   codex: { enabled: true, timeout_s: 300 },
   commands: {},
-  exclude: [],
+  // A review's own artefacts are never its subject: without this, a
+  // repository whose config.md predates this default keeps spending its
+  // budget reviewing state.json and its reports, which every run rewrites —
+  // an otherwise-clean tree stays permanently non-empty because of the review
+  // itself, not because of anything the repository's own history changed.
+  exclude: ['.claude/review/**'],
   disable: [],
 };
 

@@ -2456,7 +2456,7 @@ Expected: FAIL — `bin/crm.mjs` missing.
 
 ```js
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, rmSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { homedir } from 'node:os';
@@ -2504,6 +2504,7 @@ function readSlots(args) {
 }
 
 const reviewDir = (repo) => join(repo, '.claude', 'review');
+const runningPath = (repo) => join(reviewDir(repo), '.running');
 const reportPath = (repo, runId, name) => join(reviewDir(repo), 'reports', `${runId}-${name}`);
 
 function loadConfig(repo) {
@@ -2592,10 +2593,27 @@ const COMMANDS = {
     return { runId, mode, target, empty: false, selection, settings: config.settings, axes: config.axes };
   },
 
+  // Written by the wrapper before it starts the session, removed by `finish`.
+  // Without it `gate` has no way to tell "this run finished" from "this run
+  // died and the newest entry belongs to last night" — and the second case
+  // would report last night's verdict as today's.
+  begin(args) {
+    const repo = args.repo ?? process.cwd();
+    mkdirSync(reviewDir(repo), { recursive: true });
+    writeFileSync(runningPath(repo), `${new Date().toISOString()}
+`, 'utf8');
+    return { started: true };
+  },
+
   // The wrapper's half of the gate: run after `claude -p` returns, it exits
   // with the code the review itself decided on.
   gate(args) {
     const repo = args.repo ?? process.cwd();
+    if (existsSync(runningPath(repo))) {
+      const started = readFileSync(runningPath(repo), 'utf8').trim();
+      fail(`a run started at ${started} never reached crm finish — treating it as broken, `
+        + 'not as the verdict of whatever ran before it');
+    }
     const state = readState(repo);
     const last = state.runs.at(-1);
     if (!last) fail('no run recorded in state.json — the review did not reach crm finish');
@@ -2754,6 +2772,9 @@ const COMMANDS = {
     // process code would see 0 for every run and the CI gate would never fail.
     state.runs[state.runs.length - 1].exit = code;
     writeState(repo, state);
+    // The run reached its end, so the sentinel the wrapper wrote comes down.
+    // Anything that leaves it in place is a run that died on the way here.
+    try { rmSync(runningPath(repo)); } catch { /* absent when run outside a wrapper */ }
     process.stdout.write(`${JSON.stringify({ exit: code, findings: data.findings.length })}\n`);
     process.exit(code);
   },
@@ -3865,7 +3886,9 @@ Expected: PASS, 8 tests.
 
 I ran `claude --help` and read them out, so this step is a re-check rather than a discovery: `-p` / `--print` for non-interactive, `--model <alias>` accepting `opus`, `fable` or `sonnet`, `--output-format text|json|stream-json`, `--permission-mode acceptEdits|auto|bypassPermissions|manual|dontAsk|plan`, `--add-dir`, and `--allowedTools`. Re-run `claude --help` and confirm each is still spelled that way before writing the scripts; if any differs, report it rather than adapting silently.
 
-**Use `--permission-mode acceptEdits` with a scoped `--allowedTools`, never `--dangerously-skip-permissions`.** An unattended review writes only under `.claude/review/` and runs `node`, `git` and `gh`; a blanket permission bypass on the user's own machine buys nothing this needs and removes every guard at once. If a run stalls on a permission it lacks, the fix is to widen the allowlist by one entry, not to remove the mechanism.
+**Use `--permission-mode acceptEdits` with a scoped `--allowedTools`, never `--dangerously-skip-permissions`.** The allowlist must cover everything a review actually uses, or the run stalls on a tool it was never granted and gate-fails for a reason the exit code cannot express: `Bash(node *) Bash(git *) Bash(gh *) Read Grep Glob Write Edit Task Agent`. Both `Task` and `Agent` are listed on purpose — the subagent-dispatch tool is named differently across harness versions, listing both costs nothing, and omitting the right one costs every run. The `Bash(cmd *)` spelling, with a space and no colon, is the one `claude --help` gives as its own example.
+
+**The wrapper writes a run sentinel before it starts the session.** `crm begin` writes `.claude/review/.running`, `crm finish` removes it, and `crm gate` refuses — exit 2 — while it is still there. Without it `gate` reads only the newest entry in `state.json`, which for a session that died before `finish` is the *previous* run's, complete with its own exit code: a nightly job would report last night's pass as tonight's verdict, silently, for as long as the failure persisted. An unattended review writes only under `.claude/review/` and runs `node`, `git` and `gh`; a blanket permission bypass on the user's own machine buys nothing this needs and removes every guard at once. If a run stalls on a permission it lacks, the fix is to widen the allowlist by one entry, not to remove the mechanism.
 
 **The gate does not travel through `claude`'s exit code.** `crm finish` runs inside the Claude session, so `claude -p` exits with its own status and a wrapper reading only that would see success for every run. Each script therefore runs `crm gate --repo <repo>` after `claude` returns, which exits with the code the review itself recorded in `state.json`.
 
@@ -3915,27 +3938,66 @@ import { fileURLToPath } from 'node:url';
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'review.sh');
 
 // A stub that writes its argv to a file and exits with the code we ask for.
-function stub(dir, exitCode) {
+// `clearsSentinel` is what makes this a session that reached `crm finish`
+// rather than one that died on the way: the real `finish` removes `.running`,
+// so a stub that leaves it behind is exactly a crashed run — the case the
+// sentinel exists to catch.
+function stub(dir, exitCode, { clearsSentinel = true } = {}) {
   const path = join(dir, 'claude-stub');
-  writeFileSync(path, `#!/bin/sh\nprintf '%s\\n' "$@" > "${dir}/argv.txt"\nexit ${exitCode}\n`);
+  const clear = clearsSentinel ? `rm -f "${dir}/.claude/review/.running"\n` : '';
+  writeFileSync(path, `#!/bin/sh\nprintf '%s\\n' "$@" > "${dir}/argv.txt"\n${clear}exit ${exitCode}\n`);
   chmodSync(path, 0o755);
   return path;
 }
 
-const runWrapper = (dir, code, args) => {
+const runWrapper = (dir, code, args, opts = {}) => {
   try {
-    execFileSync('sh', [SCRIPT, ...args], { env: { ...process.env, CRM_CLAUDE_BIN: stub(dir, code) }, encoding: 'utf8' });
+    execFileSync('sh', [SCRIPT, ...args],
+      { env: { ...process.env, CRM_CLAUDE_BIN: stub(dir, code, opts) }, encoding: 'utf8' });
     return 0;
   } catch (err) {
     return err.status;
   }
 };
 
-test('the wrapper propagates the gate exit code', () => {
+// The wrapper's exit code comes from what the review recorded, never from the
+// CLI's own status: `crm finish` runs inside the Claude session, so a clean
+// `claude -p` exit says nothing about whether the gate passed.
+function seedState(dir, exit) {
+  const reviewDir = join(dir, '.claude', 'review');
+  mkdirSync(reviewDir, { recursive: true });
+  writeFileSync(join(reviewDir, 'state.json'), JSON.stringify({
+    schema: 1, last_reviewed_sha: null, axis_cursor: [], file_cursor: {},
+    pending_files: [], triage: [], runs: [{ id: 'r1', artifact_url: null, exit }],
+  }));
+}
+
+test('the wrapper exits with the recorded gate code, not with the CLI status', () => {
   const dir = mkdtempSync(join(tmpdir(), 'crm-wrap-'));
+  seedState(dir, 1);
+  assert.equal(runWrapper(dir, 0, ['--repo', dir, '--mode', 'since']), 1,
+    'a clean claude exit must not hide a failed gate');
+  seedState(dir, 0);
   assert.equal(runWrapper(dir, 0, ['--repo', dir, '--mode', 'since']), 0);
-  assert.equal(runWrapper(dir, 1, ['--repo', dir, '--mode', 'since']), 1);
-  assert.equal(runWrapper(dir, 2, ['--repo', dir, '--mode', 'since']), 2);
+});
+
+test('a session that never reached crm finish exits 2, not 0', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'crm-wrap-'));
+  assert.equal(runWrapper(dir, 0, ['--repo', dir, '--mode', 'since']), 2,
+    'no recorded run means the review broke, and that must not read as success');
+});
+
+// The failure the sentinel exists for: a repository that has been reviewed
+// before, whose newest run says 0, and whose current session died on the way.
+// Reading the last entry alone would report last night's pass as tonight's.
+test('a died session does not inherit the previous run's verdict', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'crm-wrap-'));
+  seedState(dir, 0);
+  // The wrapper's own `crm begin` writes the sentinel; this stub exits cleanly
+  // without clearing it, which is precisely a session that died before
+  // `crm finish`. No sentinel is planted by hand — the run creates its own.
+  assert.equal(runWrapper(dir, 0, ['--repo', dir, '--mode', 'since'], { clearsSentinel: false }), 2,
+    'a sentinel left behind means this run never finished, whatever the last one decided');
 });
 
 test('the wrapper never passes --slots and passes the mode through', () => {
@@ -4029,3 +4091,53 @@ Report: the axes created, the budget observed, the findings count, how many code
 - [ ] An evidence quote containing `</script>` renders as text in the artifact, not as markup.
 - [ ] `raport.md` is Polish; `SKILL.md`, configuration, prompts, templates and tests are English.
 - [ ] Nothing is committed anywhere.
+
+---
+
+## Post-review amendments
+
+The plan above describes the work as it was designed. A final whole-branch
+review returned **not ready** with five Criticals, all reproduced against real
+repositories, and a scoped re-review of the fix wave found four regressions the
+wave itself introduced. Both were closed. Where the code below now differs from
+a block above, **the code is authoritative** — these amendments say how and why.
+
+- **`assemble` puts its assigned fields last.** The spread `...finding` came
+  last, so an axis agent emitting its own `id` broke scoring silently and two
+  blocking findings became "no findings, exit 0"; one emitting its own `codex`
+  object forged a cross-check verdict that reached the report, the artifact
+  badge, and auto-fix eligibility.
+- **Carried files rank last, not first, and are injected after the empty-target
+  check, keyed by mode.** Ranking them first meant a run reviewed neither file
+  the user had changed while reporting full coverage, and made a clean tree
+  non-empty — which killed the rule that a nightly run on a quiet day costs
+  nothing.
+- **Only `since` advances `last_reviewed_sha`,** and the first-run seed never
+  fires in `pr` mode. Any mode advancing it meant an ad-hoc review swallowed
+  commits the nightly had not seen.
+- **`crm reseed` exists** because that fix removed the accidental repair other
+  modes used to perform: a baseline lost to a force-push or a gc otherwise
+  stranded `since` for ever. Recovery is deliberately manual — what to do about
+  the unreviewed range is a judgement about risk, not a scheduled job's call.
+- **The report names truncation** (`Ponad limit, do kolejnego przebiegu: N
+  plików`). It was computed, stored, and never told to the reader, so a `full`
+  audit that read 40 of 4000 files reported complete coverage.
+- **`--interactive` replaced `process.stdout.isTTY`.** `SKILL.md` pipes stdout
+  for `--json` on every call, so the TTY was never true and both `--slots` and
+  mode `fix` were dead in every context, interactive included. A process cannot
+  infer from its own I/O whether a person is watching; only its caller knows.
+- **`readState` normalises a legacy array-shaped `pending_files`.** The shape
+  changed to a map keyed by mode; an old file would otherwise lose its backlog
+  in silence and gain permanent numeric keys.
+- Smaller: `gh api -F` (not `-f`) for the comment update; `[Console]::Error`
+  rather than `Write-Error` under `ErrorActionPreference = Stop`, which exited
+  1 — the code meaning "blocking findings survived"; one comparator for every
+  path that orders file paths; the dispatch wrapped so an unanticipated throw
+  exits 2 with its stack instead of 1; `severity_default` threaded into the axis
+  prompt; `.claude/review/**` excluded by default so a review is never its own
+  subject.
+
+`tools` on an axis remains parsed, validated and unused: granting per-axis tool
+sets needs a mechanism the skill does not yet have. The `git-history` axis works,
+but with whatever tools the caller's agent type carries rather than the ones the
+configuration names.

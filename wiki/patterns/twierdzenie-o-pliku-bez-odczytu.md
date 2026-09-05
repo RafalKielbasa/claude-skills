@@ -33,6 +33,7 @@ bo twierdzenie brzmi jak fakt operacyjny, nie jak hipoteza do sprawdzenia.
   już w `apps/web/src`”, niewykonalne, bo trzecie wywołanie siedzi w edytorze
   quizu, poza zakresem tego ticketu. Oba wyłapał dopiero codex. Podstawą
   przepisania było to, że zdania stały już w opublikowanych issues.
+- 2026-09-04/05, sesja session_01WXmUJrXM5viDmNJuc3xjy6: do `SKILL.md` trafiło zdanie, że niepunktowane uwagi „spadają poniżej każdego progu" — twierdzenie o zachowaniu modułu, którego czytelnik tego dokumentu nie widzi, wpisane bez sprawdzenia. Reviewer wytknął, że każe wierzyć na słowo. Sprawdzone dopiero wtedy: plik ocen `[]` daje `kept: 0, belowThreshold: 1`. Twierdzenie okazało się prawdziwe, ale to był przypadek, nie metoda.
 
 ## Rozwiązanie
 Zanim powiesz użytkownikowi, co zawiera plik, przeczytaj ten plik. Dotyczy to

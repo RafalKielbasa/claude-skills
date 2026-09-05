@@ -38,6 +38,15 @@ test('the axis prompt demands verbatim evidence and fixes the return shape', () 
   assert.match(text, /\{\{FILES\}\}/);
 });
 
+// A configured severity_default reaches no agent unless the prompt actually
+// says to use it — otherwise a user who set one on an axis (e.g. `secrets:
+// blocking`) is entitled to believe it does something, when it never does.
+test('the axis prompt tells the agent to default to the axis\'s configured severity', () => {
+  const text = read('axis.md');
+  assert.match(text, /\{\{SEVERITY_DEFAULT\}\}/);
+  assert.match(text, /axis's configured default/i);
+});
+
 test('the verify prompt carries the 0-100 rubric and is batched', () => {
   const text = read('verify.md');
   assert.match(text, /\b0\b[\s\S]*\b100\b/);

@@ -35,15 +35,23 @@ function bestSpecificity(axes, path) {
 // result is stable across runs.
 function rank(axes, files) {
   return [...files].sort((a, b) => {
-    // A file carried over from a truncated run outranks everything: it lost the
-    // last ranking, and losing every ranking is how a file is never reviewed.
-    if (Boolean(a.carried) !== Boolean(b.carried)) return a.carried ? -1 : 1;
+    // Carried files fill whatever room is left after this run's own changes.
+    // Ranking them first was the opposite of right: a backlog from an earlier
+    // truncation would push out the very files the user just edited, and the
+    // report would still claim the axis was covered.
+    if (Boolean(a.carried) !== Boolean(b.carried)) return a.carried ? 1 : -1;
     const churn = (b.added + b.removed) - (a.added + a.removed);
     if (churn !== 0) return churn;
     const spec = bestSpecificity(axes, b.path) - bestSpecificity(axes, a.path);
     if (spec !== 0) return spec;
     if (a.size !== b.size) return a.size - b.size;
-    return a.path.localeCompare(b.path);
+    // Code-unit comparison, not `localeCompare`: `lib/target.mjs`'s `full`-mode
+    // cursor compares paths the same primitive way, and when churn and
+    // specificity are tied — the common case for a `full` audit, where every
+    // file has churn 0 — this tiebreak is what actually decides which files
+    // are kept vs. carried. A different ordering here than the cursor uses
+    // would misalign which files are considered "already past the cursor".
+    return a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
   });
 }
 

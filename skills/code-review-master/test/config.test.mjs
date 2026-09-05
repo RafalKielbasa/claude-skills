@@ -72,6 +72,18 @@ test('defaults fill in every setting the documents omit', () => {
   assert.equal(merged.settings.gate_on_disputed, true);
 });
 
+// B5: templates/config.md added `.claude/review/**` to its own exclude list,
+// but a repository whose config.md predates that template change sets no
+// `exclude` of its own and falls back to this default — which was still `[]`.
+// Without this, every such repository keeps spending its budget reviewing
+// its own state.json and reports, which every run rewrites.
+test('a review never reviews its own bookkeeping by default', () => {
+  assert.deepEqual(DEFAULT_SETTINGS.exclude, ['.claude/review/**']);
+  const merged = mergeConfig(parseConfigDoc('---\n---\n'), parseConfigDoc('---\n---\n'));
+  assert.deepEqual(merged.settings.exclude, ['.claude/review/**'],
+    'a repo config.md that sets no exclude of its own must still inherit this default');
+});
+
 test('a file cap that is not a positive integer is a configuration error, not a runtime guess', () => {
   const doc = parseConfigDoc(`---\n---\n\n## A\n\n\`\`\`yaml\nid: a\nwhen: always\nrank: always\nmax_files: 0\n\`\`\`\n\n- x\n`);
   const zeroCap = validateConfig({ settings: DEFAULT_SETTINGS, axes: doc.axes });

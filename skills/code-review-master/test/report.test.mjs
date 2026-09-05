@@ -57,6 +57,30 @@ test('suppressed findings are counted in the footer', () => {
   assert.match(md, /codex niedostępny/);
 });
 
+// `truncatedFrom`, `skippedFiles` and `selection.truncated` were computed by
+// lib/axes.mjs and stored as `pending_files`, but nothing ever told the
+// reader — a `full` audit that read 40 of 4000 files could report complete
+// axis coverage.
+test('a truncated selection tells the reader how much was held over', () => {
+  const truncatedSelection = {
+    ...selection,
+    selected: [{ ...selection.selected[0], skippedFiles: ['a.ts', 'b.ts', 'c.ts'] }],
+  };
+  const md = renderReport({
+    run: { id: 'r1', mode: 'since', base: 'x', head: 'y' },
+    selection: truncatedSelection, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  });
+  assert.match(md, /Ponad limit, do kolejnego przebiegu: 3 pliki\./);
+});
+
+test('a selection with nothing held over says nothing about it', () => {
+  const md = renderReport({
+    run: { id: 'r1', mode: 'since', base: 'x', head: 'y' },
+    selection, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  });
+  assert.equal(/Ponad limit/.test(md), false);
+});
+
 // An axis that was paid for and produced nothing must never read as covered
 // just because "Osie w tym przebiegu" already lists it.
 test('an axis whose agent never returned is named as not reviewed', () => {

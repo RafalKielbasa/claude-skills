@@ -29,6 +29,11 @@ One object per finding:
  "evidence": "the exact line or lines from the file"}
 ```
 
+Unless the checklist item you are reporting against says otherwise, use
+`{{SEVERITY_DEFAULT}}` — the axis's configured default. Choose a different
+severity only when the specific finding plainly warrants it, and say why in the
+claim.
+
 `lines` is a [start, end] pair of 1-based line numbers, inclusive — the span
 the evidence was taken from, not a list of interesting lines. For a single line
 write it twice: `[88, 88]`.

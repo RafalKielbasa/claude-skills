@@ -35,6 +35,7 @@ zmutowanemu kodowi wymusza konfrontację z rzeczywistym zachowaniem, nie z zamia
   pliku w skanerze sekretów (Task 4), granica segmentu w remapie pamięci (Task 6) — każdy
   zweryfikowany mutacją przed dispatchem, każdy złapał realną lukę w pokryciu testowym
   napisanym przez kontrolera.
+- 2026-09-04/05, sesja session_01WXmUJrXM5viDmNJuc3xjy6: prośba o sprawdzenie regresji przez podmianę argumentów `file` i `lines` w `blobLink` była zadana jako formalność — i test **nie padł**. Fixture `makeRepo` nie konfiguruje remote'a, więc `blobLink` zwracał `null` w pierwszej linii, zanim dotknął tych argumentów, a asercja `link === null` była spełniona dla dowolnej ich kolejności. Po dodaniu remote'a i asercji na dokładny URL podmiana daje widocznie inny wynik. Test bez mocy dyskryminującej napisał kontroler dwie wiadomości po tym, jak sam opisywał tę klasę defektu.
 
 ## Rozwiązanie
 Przy każdej poprawce, którą kontroler sam projektuje przed dispatchem: zbudować ją na

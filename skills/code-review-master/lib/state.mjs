@@ -5,8 +5,11 @@ const SCHEMA = 1;
 
 export function emptyState() {
   return {
+    // Keyed by mode, like `file_cursor` already is: a `full` audit's
+    // truncation backlog must not leak into `working`, `branch`, `since` or
+    // `pr` runs that have nothing to do with it.
     schema: SCHEMA, last_reviewed_sha: null, axis_cursor: [], file_cursor: {},
-    pending_files: [], triage: [], runs: [],
+    pending_files: {}, triage: [], runs: [],
   };
 }
 
@@ -26,7 +29,15 @@ export function readState(repoDir) {
   if (state.schema !== SCHEMA) {
     throw new Error(`state.json has schema ${state.schema}, this build understands ${SCHEMA}`);
   }
-  return { ...emptyState(), ...state };
+  const merged = { ...emptyState(), ...state };
+  // `pending_files` used to be a flat array, before it was keyed by mode. An
+  // array read as a map yields undefined for every mode, so the backlog would
+  // be dropped in silence and the array's indices would become permanent keys
+  // in a file a person reads. The old contents cannot be assigned to a mode —
+  // they were recorded without one — so they are discarded, but deliberately
+  // and in one place rather than by accident in three.
+  if (Array.isArray(merged.pending_files)) merged.pending_files = {};
+  return merged;
 }
 
 // Temp file plus rename, so an interrupted run never leaves half a state file.

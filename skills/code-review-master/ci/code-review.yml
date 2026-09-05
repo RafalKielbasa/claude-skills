@@ -11,7 +11,12 @@
 # scripts/review.sh find bin/crm.mjs next to itself, exactly as it does
 # when the skill runs from ~/.claude/skills/code-review-master on a
 # person's own machine. If you vendor it somewhere else, change SKILL_DIR
-# and nothing else in this file needs to move.
+# and nothing else in this file needs to move. Vendoring is the default
+# here because a CI runner has no access to a person's home directory and
+# no other source needs no secret or extra clone; if you would rather not
+# vendor, add a step before "Run code-review-master" that clones the skill
+# from wherever you keep it (a separate repo, a private registry) into
+# SKILL_DIR instead.
 #
 # Required repository secret (Settings -> Secrets and variables -> Actions
 # -> New repository secret): ANTHROPIC_API_KEY, the key the `claude` CLI
@@ -87,7 +92,13 @@ jobs:
             | jq -r --arg marker "$MARKER" '[.[] | select(.body | startswith($marker))] | last | .id // empty')
 
           if [ -n "$EXISTING_ID" ]; then
-            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$EXISTING_ID" -f body=@"$BODY_FILE"
+            # -F (not -f): -F reads a leading @ as a filename and sends that
+            # file's content; -f sends the literal string "@/tmp/tmp.XXXX"
+            # instead. With -f, the first comment posts correctly (it has no
+            # existing comment to PATCH, so it goes through the `gh pr comment
+            # --body-file` branch below) but every later push overwrites it
+            # with that literal path instead of the report. Keep -F here.
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$EXISTING_ID" -F body=@"$BODY_FILE"
           else
             gh pr comment ${{ github.event.pull_request.number }} --body-file "$BODY_FILE"
           fi

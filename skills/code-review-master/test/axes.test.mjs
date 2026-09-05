@@ -78,7 +78,11 @@ test('files are ranked by churn first, and truncation is reported', () => {
   assert.equal(out.truncated, true);
 });
 
-test('a file carried over from a truncated run outranks fresh churn', () => {
+// Previously this asserted the carried file outranked fresh churn — exactly
+// backwards. A backlog from an earlier truncation must not push out the file
+// the user just changed this run, or the report would claim the axis was
+// covered while missing the one file that actually motivated the review.
+test('a file carried over from a truncated run does not outrank this run\'s own changes', () => {
   const axes = [axis('api', ['apps/api/**'])];
   const files = [
     file('apps/api/hot.ts', 500),
@@ -87,7 +91,25 @@ test('a file carried over from a truncated run outranks fresh churn', () => {
   const out = selectAxes({
     axes, files, settings: settings({ budget: { slots: 5, max_files_per_axis: 1 } }), state: state(),
   });
-  assert.deepEqual(out.selected[0].files.map((f) => f.path), ['apps/api/carried.ts']);
+  assert.deepEqual(out.selected[0].files.map((f) => f.path), ['apps/api/hot.ts']);
+});
+
+// The regression this guards: carried files ranking first used to displace a
+// run's own genuinely-changed files entirely, so a working tree with real
+// edits could end up reviewing an unmodified backlog instead of the edits.
+test('carried files fill only the room left after this run\'s own changes', () => {
+  const axes = [axis('api', ['apps/api/**'])];
+  const files = [
+    file('apps/api/changed1.ts', 50),
+    file('apps/api/changed2.ts', 30),
+    { ...file('apps/api/carried1.ts', 0), carried: true },
+    { ...file('apps/api/carried2.ts', 0), carried: true },
+  ];
+  const out = selectAxes({
+    axes, files, settings: settings({ budget: { slots: 5, max_files_per_axis: 2 } }), state: state(),
+  });
+  assert.deepEqual(out.selected[0].files.map((f) => f.path), ['apps/api/changed1.ts', 'apps/api/changed2.ts']);
+  assert.deepEqual(out.selected[0].skippedFiles, ['apps/api/carried1.ts', 'apps/api/carried2.ts']);
 });
 
 test('size breaks a tie in churn and specificity, smallest first', () => {

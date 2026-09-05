@@ -27,6 +27,18 @@ function header({ run, selection, codexStatus, incomplete }) {
   ];
   if (selection.skippedOnTouch.length > 0) lines.push(`Pominięte przez on-touch: ${selection.skippedOnTouch.join(', ')}.`);
   if (selection.deferred.length > 0) lines.push(`Czeka w rotacji: ${selection.deferred.join(', ')}.`);
+  // `skippedFiles` is computed by lib/axes.mjs's `selectAxes` and stored as
+  // `pending_files`, but until now no report ever told the reader about it —
+  // a `full` audit that read 40 of 4000 files could report complete axis
+  // coverage. Summing over `selection.selected` (once per slot) is what avoids
+  // double-counting a file that a truncated slot's every kept entry repeats
+  // in its own `truncatedFrom` metadata.
+  const heldOver = selection.selected.reduce((n, s) => n + (s.skippedFiles?.length ?? 0), 0);
+  if (heldOver > 0) {
+    lines.push(`Ponad limit, do kolejnego przebiegu: ${heldOver} `
+      + `${plural(heldOver, 'plik', 'pliki', 'plików')}. `
+      + 'Ten przebieg nie objął ich w całości.');
+  }
   // Three forms per noun, because Polish needs all three: 1 agent, 3 agenty,
   // 5 agentów. Collapsing "few" into "many" is the mistake that makes generated
   // Polish read like a machine wrote it.

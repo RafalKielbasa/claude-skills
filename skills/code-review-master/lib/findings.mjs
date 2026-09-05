@@ -90,8 +90,14 @@ export function assemble({ run, findings, triage, today }) {
   return {
     run,
     findings: surviving.map((finding, index) => ({
+      ...finding,
+      // Assigned fields come last on purpose: a subagent that emits its own
+      // `id` would otherwise break scoring silently, and one that emits its own
+      // `codex` object would forge a cross-check verdict that reaches the
+      // report, the artifact badge, and the auto-fix eligibility check.
       id: `f-${String(index + 1).padStart(2, '0')}`,
-      codex: null, triage: null, ...finding,
+      codex: null,
+      triage: null,
     })),
     suppressed,
   };

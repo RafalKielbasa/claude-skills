@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,26 +41,41 @@ function parseArgs(argv) {
   return out;
 }
 
-// The budget may only be raised by a person, in front of a terminal, with a
-// sane number. Wrapper discipline is not enough: any CI step could call this.
+// The budget may only be raised by a person, explicitly passing --interactive,
+// with a sane number. Wrapper discipline is not enough: any CI step could call
+// this — and TTY detection could not either, since stdout is piped for --json
+// on every call this skill makes, interactive session or not.
 function readSlots(args) {
   if (args.slots === undefined) return null;
   // A bare `--slots` parses as `true`, and `Number(true)` is 1 — so forgetting
   // the number would silently *lower* the budget instead of raising it.
   if (args.slots === true) fail('--slots needs a number, for example --slots 8');
-  if (!process.stdout.isTTY) fail('--slots is refused without a terminal: an unattended run may not raise the agent budget');
+  if (!args.interactive) fail('--slots needs --interactive: an unattended run may not raise the agent budget');
   const value = Number(args.slots);
   if (!Number.isInteger(value) || value < 1 || value > 20) fail(`--slots must be an integer between 1 and 20, got "${args.slots}"`);
   return value;
 }
 
 const reviewDir = (repo) => join(repo, '.claude', 'review');
+const runningPath = (repo) => join(reviewDir(repo), '.running');
 const reportPath = (repo, runId, name) => join(reviewDir(repo), 'reports', `${runId}-${name}`);
 
 function loadConfig(repo) {
   const repoPath = join(reviewDir(repo), 'config.md');
   if (!existsSync(repoPath)) fail(`no .claude/review/config.md in ${repo} — run "/code-review-master init" first`);
-  const globalPath = join(homedir(), '.claude', 'review', 'global.md');
+  // Overridable so this path — the developer's own home directory — is not
+  // load-bearing for anything that must be reproducible. This is
+  // configuration selection, not a safety bypass: nothing about it weakens a
+  // guard, it only says which global.md to merge in, the same document
+  // Step 1 of SKILL.md already lets the user hand-edit. A test suite whose
+  // outcome depends on whether *this developer's* machine happens to have
+  // `~/.claude/review/global.md`, and what is in it, is not a suite anyone
+  // else can trust — see test/cli.test.mjs's `run` helper, which points this
+  // at a path inside each test's own throwaway repo so every run merges
+  // exactly the repository's own config.md, regardless of the machine it
+  // runs on.
+  const globalPath = process.env.CRM_GLOBAL_CONFIG
+    ?? join(homedir(), '.claude', 'review', 'global.md');
   const globalDoc = existsSync(globalPath)
     ? parseConfigDoc(readFileSync(globalPath, 'utf8'))
     : { settings: {}, axes: [], ignoredSections: [] };
@@ -121,13 +136,6 @@ const COMMANDS = {
       pr: args.pr, path: args.path, cursor: state.file_cursor[mode],
       exclude: config.settings.exclude,
     });
-    // Files a truncated earlier run gave up come back at the head of the queue,
-    // otherwise the same low-churn files lose every ranking forever.
-    const known = new Set(target.files.map((f) => f.path));
-    for (const path of state.pending_files ?? []) {
-      if (known.has(path) || !existsSync(join(repo, path))) continue;
-      target.files.push({ path, added: 0, removed: 0, size: statSync(join(repo, path)).size, carried: true });
-    }
     // Seconds and a random suffix, because two `plan` calls in the same minute
     // would otherwise share a runId and overwrite each other's plan.json and
     // dispatch ledger — and `finish` would then check one run's ledger against
@@ -136,6 +144,19 @@ const COMMANDS = {
     const runId = `${stamp.slice(0, 8)}-${stamp.slice(8)}-${Math.random().toString(36).slice(2, 6)}`;
     if (isEmpty(target)) {
       return { runId, mode, target, empty: true, selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 } };
+    }
+    // Files a truncated earlier run of THIS mode gave up come back at the head
+    // of the queue, otherwise the same low-churn files lose every ranking
+    // forever. Injected only now, after the emptiness check above returns —
+    // a clean tree must stay empty even with a backlog waiting, or the
+    // nightly `since` run stops being free on a day with no commits, which is
+    // the promise the whole unattended story rests on. Keyed by mode, like
+    // `file_cursor` already is, so a truncated `full` audit's remainder
+    // cannot leak into `working`, `branch`, `since` or `pr` runs.
+    const known = new Set(target.files.map((f) => f.path));
+    for (const path of state.pending_files?.[mode] ?? []) {
+      if (known.has(path) || !existsSync(join(repo, path))) continue;
+      target.files.push({ path, added: 0, removed: 0, size: statSync(join(repo, path)).size, carried: true });
     }
     const selection = selectAxes({
       axes: config.axes, files: target.files, settings: config.settings, state, slotsOverride,
@@ -150,6 +171,49 @@ const COMMANDS = {
     ledger.push({ wave: args.wave, label: args.label ?? '', at: new Date().toISOString() });
     writeJson(path, ledger);
     return { logged: ledger.length };
+  },
+
+  // Written by the wrapper before it starts the session, removed by `finish`.
+  // Without it `gate` has no way to tell "this run finished" from "this run
+  // died and the newest entry belongs to last night" — and the second case
+  // would report last night's verdict as today's.
+  begin(args) {
+    const repo = args.repo ?? process.cwd();
+    mkdirSync(reviewDir(repo), { recursive: true });
+    writeFileSync(runningPath(repo), `${new Date().toISOString()}\n`, 'utf8');
+    return { started: true };
+  },
+
+  // The wrapper's half of the gate: run after `claude -p` returns, it exits
+  // with the code the review itself decided on.
+  gate(args) {
+    const repo = args.repo ?? process.cwd();
+    if (existsSync(runningPath(repo))) {
+      const started = readFileSync(runningPath(repo), 'utf8').trim();
+      fail(`a run started at ${started} never reached crm finish — treating it as broken, `
+        + 'not as the verdict of whatever ran before it');
+    }
+    const state = readState(repo);
+    const last = state.runs.at(-1);
+    if (!last) fail('no run recorded in state.json — the review did not reach crm finish');
+    if (last.exit === null || last.exit === undefined) {
+      fail(`run ${last.id} never recorded an exit code — the review did not reach crm finish`);
+    }
+    process.stdout.write(`${JSON.stringify({ run: last.id, exit: last.exit })}\n`);
+    process.exit(last.exit);
+  },
+
+  // The documented recovery from a lost baseline. Deliberately manual: what to
+  // do about the commits between the lost sha and now is a judgement about
+  // risk, not something a nightly job should decide for the user.
+  reseed(args) {
+    const repo = args.repo ?? process.cwd();
+    const state = readState(repo);
+    const head = execFileSync('git', ['-C', repo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+    const previous = state.last_reviewed_sha;
+    state.last_reviewed_sha = head;
+    writeState(repo, state);
+    return { previous, now: head };
   },
 
   // Ids are assigned here, before verification, because wave 2 scores by id.
@@ -242,8 +306,10 @@ const COMMANDS = {
 
   // Interactive-only per SKILL.md Step 9 — that restriction is enforced by the
   // calling document (there is a terminal to publish the result to, or the
-  // step is skipped), not by this command, which has no way to observe a TTY
-  // that would make the distinction meaningful the way `--slots` and `fix` do.
+  // step is skipped), not by this command. Unlike `--slots` and `fixable`,
+  // there is no `--interactive` gate here either: "is a person watching to
+  // receive a URL" is a fact only the calling document knows, not something
+  // worth encoding as a flag this command would refuse to run without.
   artifact(args) {
     const repo = args.repo ?? process.cwd();
     if (args.out === undefined || args.out === true) fail('--out needs a file path');
@@ -252,8 +318,19 @@ const COMMANDS = {
     // The prose written in Step 8 is the only Polish text tied to a finding —
     // findings.json itself is English by contract (see SKILL.md's Overview).
     // Without this merge the page would have no body to show for any finding.
-    const prose = readRunFile(repo, args.run, 'prose.json');
+    // Optional, the way `crm render`'s --prose is: a zero-finding run may
+    // legitimately have no prose.json at all, and failing here would tell the
+    // model to report a defect that is not one.
+    const prosePath = reportPath(repo, args.run, 'prose.json');
+    const prose = existsSync(prosePath) ? readJson(prosePath) : {};
     const remote = gitRemote(repo);
+    // Same contract as `crm render`'s --incomplete: an axis named here was
+    // selected and paid for but produced nothing this skill can stand behind —
+    // the page must say so, not stay silent and let the coverage line imply it
+    // was reviewed like the others.
+    const incomplete = args.incomplete
+      ? String(args.incomplete).split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
     const findings = data.findings.map((finding) => {
       const text = prose[finding.id];
       return {
@@ -282,6 +359,11 @@ const COMMANDS = {
       .replace('{{DATA}}', embedJson({
         run: { id: args.run, mode: plan.mode, head: plan.target.head },
         selection: plan.selection, findings, suppressed: data.suppressed.length,
+        // Both honesty markers `raport.md` already carries, mirrored into the
+        // page the user may hand someone else — matched wording, in
+        // templates/artifact.html, against lib/report.mjs's, so the two
+        // renderings of one run cannot disagree.
+        incomplete, codexStatus: data.codexStatus ?? 'skipped',
       }));
     mkdirSync(dirname(args.out), { recursive: true });
     writeFileSync(args.out, page, 'utf8');
@@ -315,12 +397,25 @@ const COMMANDS = {
     }
 
     const state = readState(repo);
-    state.last_reviewed_sha = plan.target.head;
+    // Only `since` owns the incremental checkpoint. Letting any mode advance it
+    // meant an ad-hoc review swallowed commits the nightly run had not seen —
+    // and they were never reviewed by anything afterwards. The seed lets the
+    // first run bootstrap it, but never from `pr`, whose head sha comes from
+    // the GitHub API and need not exist in this clone at all.
+    if (plan.mode === 'since' || (state.last_reviewed_sha === null && plan.mode !== 'pr')) {
+      state.last_reviewed_sha = plan.target.head;
+    }
     state.axis_cursor = plan.selection.nextAxisCursor ?? state.axis_cursor;
     // Files the caps ranked out are remembered by path and jump the queue next
-    // run. Without this, spec §4.3 rule 3 — "the next run picks up the
-    // remainder" — is a sentence nothing implements.
-    state.pending_files = [...new Set(plan.selection.selected.flatMap((s) => s.skippedFiles))].sort();
+    // run of the SAME mode. Keyed by mode, like `file_cursor`: a truncated
+    // `full` audit's remainder must not surface as carried files in a
+    // `working`, `branch`, `since` or `pr` run. Without the mode key at all,
+    // spec §4.3 rule 3 — "the next run picks up the remainder" — was a
+    // sentence nothing implemented correctly.
+    state.pending_files = {
+      ...state.pending_files,
+      [plan.mode]: [...new Set(plan.selection.selected.flatMap((s) => s.skippedFiles))].sort(),
+    };
     if (plan.mode === 'full') {
       const listed = plan.target.files.map((f) => f.path);
       const reviewed = new Set(plan.selection.selected.flatMap((s) => s.files.map((f) => f.path)));
@@ -332,11 +427,19 @@ const COMMANDS = {
         state.file_cursor = { ...state.file_cursor, full: listed.find((path) => path > lastReviewed) ?? '' };
       }
     }
-    state.runs = [...state.runs, { id: args.run, artifact_url: args.artifact ?? null }].slice(-50);
+    state.runs = [...state.runs, { id: args.run, artifact_url: args.artifact ?? null, exit: null }].slice(-50);
     writeState(repo, state);
     const code = exitCode({
       findings: data.findings, gate: config.settings.gate, gateOnDisputed: config.settings.gate_on_disputed,
     });
+    // Recorded, not only returned. `crm finish` runs inside the Claude session,
+    // and `claude -p` exits with its own status — so a wrapper reading only the
+    // process code would see 0 for every run and the CI gate would never fail.
+    state.runs[state.runs.length - 1].exit = code;
+    writeState(repo, state);
+    // The run reached its end, so the sentinel the wrapper wrote comes down.
+    // Anything that leaves it in place is a run that died on the way here.
+    try { rmSync(runningPath(repo)); } catch { /* absent when run outside a wrapper */ }
     process.stdout.write(`${JSON.stringify({ exit: code, findings: data.findings.length })}\n`);
     process.exit(code);
   },
@@ -404,10 +507,10 @@ const COMMANDS = {
   fixable(args) {
     const repo = args.repo ?? process.cwd();
     // Listing what could be fixed is the first step of fixing, so the same
-    // terminal requirement applies here as to `--slots`: an unattended run must
-    // not be able to start this flow. There is deliberately no way past this —
-    // an escape hatch for tests is an escape hatch in production too.
-    if (!process.stdout.isTTY) fail('fix is refused without a terminal: an unattended run never edits code');
+    // explicit-flag requirement applies here as to `--slots`: an unattended run
+    // must not be able to start this flow. There is deliberately no way past
+    // this — an escape hatch for tests is an escape hatch in production too.
+    if (!args.interactive) fail('fix needs --interactive: an unattended run never edits code');
     const data = readRunFile(repo, args.run, 'findings.json');
     return selectFixable(data.findings, args.ids);
   },
@@ -417,9 +520,18 @@ const args = parseArgs(process.argv.slice(2));
 const name = args._[0];
 const command = COMMANDS[name];
 if (!command) fail(`unknown command "${name ?? ''}" — expected one of ${Object.keys(COMMANDS).join(', ')}`);
-const result = command(args);
-if (name === 'plan') {
-  const repo = args.repo ?? process.cwd();
-  writeJson(reportPath(repo, result.runId, 'plan.json'), result);
+let result;
+try {
+  result = command(args);
+  if (name === 'plan') {
+    const repo = args.repo ?? process.cwd();
+    writeJson(reportPath(repo, result.runId, 'plan.json'), result);
+  }
+  process.stdout.write(`${JSON.stringify(result, null, args.json ? 0 : 2)}\n`);
+} catch (err) {
+  // Anything unanticipated is a broken run, not a review verdict. Node's own
+  // uncaught-exception exit is 1, which already means "a blocking finding
+  // survived" — the two must not collapse. The stack goes with it because this
+  // is the failure class with no other diagnosis.
+  fail(err && err.stack ? err.stack : String(err));
 }
-process.stdout.write(`${JSON.stringify(result, null, args.json ? 0 : 2)}\n`);
