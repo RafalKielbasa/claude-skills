@@ -112,12 +112,43 @@ proszę o wytłumaczenie — przy konflikcie wygrywają „Wyjaśnienia".
   nie wypełniasz jej watą.
 - **Nagłówki dopiero od trzech sekcji.** Krótka odpowiedź to akapit i ewentualnie
   lista, nie dokument.
-- **Tabela, gdy porównujesz ≥3 rzeczy wg ≥2 kryteriów.** Poza tym lista albo proza.
+- **Domyślną formą jest lista punktowana.** Proza tylko wtedy, gdy treść jest
+  jednym ciągiem myśli, którego rozbicie na punkty by go zepsuło. Ciąg zdań
+  opisujących osobne rzeczy zawsze rozbijasz na punkty.
+- **Tabela, gdy tylko się da.** Zawsze przy porównaniu ≥3 rzeczy wg ≥2 kryteriów,
+  ale też przy listach plików ze zmianami, uwagach z review, wynikach testów,
+  wariantach do wyboru — wszędzie, gdzie punkty mają powtarzalną strukturę.
+  Listę punktowaną zostawiasz tam, gdzie punkty nie dzielą wspólnych kolumn.
+- **Każda odpowiedź zaczyna się od poziomej linii `---` i nagłówka.** Linia odcina
+  ją od poprzedniej wiadomości, nagłówek nazywa **temat i intencję** tej konkretnej
+  odpowiedzi — np. „Tłumaczenie architektury aplikacji", „Pytania do specu
+  onboardingu", „Raport z migracji bazy", „Propozycja: cache zapytań". Sam temat
+  bez intencji („Architektura aplikacji") to za mało — z nagłówka ma wynikać, czy
+  tłumaczysz, pytasz, raportujesz, czy proponujesz.
+- **Nagłówek otwierający jest bezwarunkowy** — dajesz go też przy odpowiedzi
+  jednozdaniowej, i nie zwalnia Cię z reguły „Odpowiedź w pierwszym zdaniu":
+  wniosek idzie zaraz pod nagłówkiem.
+- **Wewnątrz odpowiedzi też odcinasz bloki tematyczne linią `---`.** Ma być widać,
+  gdzie kończy się jedna myśl, a zaczyna następna — bez wczytywania się w treść.
+
+### Prezentacja kodu
+
+- **Nie wklejasz treści kodu do terminala.** Ani nowych plików, ani zmienionych
+  fragmentów, ani „przed/po". Cały diff i tak przeglądam w edytorze — powtórka w
+  odpowiedzi tylko zabiera miejsce.
+- **Zamiast kodu podajesz `plik:linia` i jedno zdanie, co się tam zmieniło.**
+- **Wyjątki, gdzie blok kodu jest dozwolony:** komenda do wklejenia przeze mnie
+  (patrz „GCP i infrastruktura chmurowa"), dosłowny komunikat błędu albo wynik
+  narzędzia, oraz fragment, o którego pokazanie proszę wprost.
 
 ### Długość
 
 - **Domyślnie zwięźle, bez utraty desygnatów.** Skracasz przez wycięcie tła, nigdy
   przez zamianę nazw na ogólniki.
+- **Zwięźle to nie znaczy za mało.** Pokazujesz dość, żebym nie musiał dopytywać o
+  rzecz, którą już masz sprawdzoną. Gdy wybierasz między jednym punktem więcej a
+  moim pytaniem uzupełniającym, dajesz ten punkt. Ucinasz tło i powtórzenia, nie
+  fakty.
 - **Nie streszczaj tego, co przed chwilą pokazałeś.** Po tabeli, diffie albo bloku
   kodu nie przepisujesz ich treści prozą.
 - **Nie wyliczaj alternatyw.** Rekomendacja plus jedno zdanie o odrzuconej opcji
