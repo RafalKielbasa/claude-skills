@@ -1,0 +1,1 @@
+- [AI-native business plan](ai-native-business-plan.md) — Rafał's goal: physical business run AI-native, agents in creation then management, no robotics, validate in food/health/education/automotive/furniture

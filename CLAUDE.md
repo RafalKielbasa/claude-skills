@@ -97,3 +97,53 @@
   wskazywać konkretne linie, nie ogólne wrażenie.
 - Odwołania do kodu zawsze jako `plik:linia`, cytat fragmentu wtedy, gdy
   fragment jest sednem wyjaśnienia.
+
+## Forma odpowiedzi
+
+Sekcja ogólna, obowiązuje w każdej odpowiedzi. „Wyjaśnienia" ją zawężają, gdy
+proszę o wytłumaczenie — przy konflikcie wygrywają „Wyjaśnienia".
+
+### Struktura
+
+- **Odpowiedź w pierwszym zdaniu.** Wniosek, decyzja albo „nie da się" idzie na
+  początek, uzasadnienie potem. Bez preambuł i bez powtarzania mojego pytania.
+- **Stała kolejność:** (1) odpowiedź, (2) uzasadnienie albo dowód, (3) zastrzeżenia
+  i to, czego nie sprawdziłeś, (4) następny krok. Sekcję pomijasz, gdy jest pusta —
+  nie wypełniasz jej watą.
+- **Nagłówki dopiero od trzech sekcji.** Krótka odpowiedź to akapit i ewentualnie
+  lista, nie dokument.
+- **Tabela, gdy porównujesz ≥3 rzeczy wg ≥2 kryteriów.** Poza tym lista albo proza.
+
+### Długość
+
+- **Domyślnie zwięźle, bez utraty desygnatów.** Skracasz przez wycięcie tła, nigdy
+  przez zamianę nazw na ogólniki.
+- **Nie streszczaj tego, co przed chwilą pokazałeś.** Po tabeli, diffie albo bloku
+  kodu nie przepisujesz ich treści prozą.
+- **Nie wyliczaj alternatyw.** Rekomendacja plus jedno zdanie o odrzuconej opcji
+  tylko wtedy, gdy odrzucenie jest nieoczywiste.
+- **Rozwinięcie na żądanie.** Gdy świadomie ucinasz coś istotnego, dopisz jedną
+  linię „mogę rozwinąć: X" zamiast rozwijać z własnej inicjatywy.
+
+### Odwołania i dane
+
+- **Kod zawsze jako `plik:linia`**, ścieżka względem katalogu roboczego. Cytat
+  fragmentu tylko wtedy, gdy fragment jest sednem.
+- **Rozdzielaj sprawdzone od wywnioskowanego.** „Sprawdziłem: …" kontra
+  „Zakładam: …". Plik, funkcja albo flaga, których nie otworzyłeś w tej sesji, są
+  hipotezą i mają być tak oznaczone.
+- **Wyniki narzędzi cytujesz dosłownie**, gdy brzmienie ma znaczenie (komunikat
+  błędu, wynik testu, treść ticketu). Parafraza wyniku komendy jest niedopuszczalna
+  tam, gdzie decyduję na jej podstawie.
+
+### Raport po zadaniu
+
+Stały szkielet, w tej kolejności:
+
+1. **Co zrobione** — jedno zdanie na wątek.
+2. **Pliki** — po jednej linii na plik: `ścieżka:linia` i co się zmieniło.
+3. **Weryfikacja** — uruchomiona komenda i jej wynik. Jeśli nie uruchomiłeś
+   testów albo builda, piszesz wprost „nie zweryfikowane" i dlaczego. Brak tej
+   linii oznacza, że coś przemilczałeś.
+4. **Następny krok** — a przy zatrzymaniu na review dodatkowo propozycja treści
+   commita w Conventional Commits (patrz „Git").
