@@ -1,1 +1,2 @@
 - [AI-native business plan](ai-native-business-plan.md) — Rafał's goal: physical business run AI-native, agents in creation then management, no robotics, validate in food/health/education/automotive/furniture
+- [Specs must be self-contained](specs-self-contained.md) — never define conventions "by mirroring skill X"; Rafał rejected D8 in the idea-engine spec for that (2026-09-06)
