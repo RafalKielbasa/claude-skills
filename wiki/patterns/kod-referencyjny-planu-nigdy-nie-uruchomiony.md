@@ -66,6 +66,7 @@ wierność jest tym, o co się go prosi.
   (recenzenci wielokrotnie potwierdzali zgodność bajt w bajt z briefem), co
   dokładnie zgadza się z przyczyną źródłową — im wierniej, tym pewniej defekt
   planu dociera do repozytorium.
+- 2026-09-07, sesja session_01JAgUNken6DG6aFPjDmKkAX: czwarty dowod, czwarta sesja. Skan pre-flight planu B (5157 linii) znalazl w kodzie referencyjnym dwa defekty czyniace plik testowy nieuruchamialnym: `import { validMemo }` kolidujacy z `export function validMemo` w `refs.test.mjs:7` (`SyntaxError`, ktory kladł tez piec testow Plan A) oraz piec wywolan `checked()`/`verified()` w `synthesize.test.mjs` asertujacych `code === 0` bez utworzenia repo — cztery z pieciu testow zadania padalyby na pierwszej asercji. Nowe wzgledem poprzednich dowodow: wystarczyl skan **statyczny** przed pierwszym dispatchem, bez uruchamiania kodu — wystarczylo, ze ktos przeczytal go z zamiarem wykonania, zamiast ocenic jako dokument.
 
 ## Rozwiązanie
 

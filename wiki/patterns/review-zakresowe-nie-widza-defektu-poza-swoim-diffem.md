@@ -38,6 +38,7 @@ w którym taki defekt w ogóle może się pojawić.
   (4 must-fix, 12 na później, 15 do zignorowania, w tym 2 już nieaktualne) —
   czego również nie mogło zrobić żadne review zadaniowe, bo każde widziało
   tylko swoją.
+- 2026-09-07, sesja session_01JAgUNken6DG6aFPjDmKkAX: drugi dowod. Jedenascie review zadaniowych Plan B zamknelo sie czysto; review calej galezi (opus, piec przebiegow) znalazlo, ze `lib/refs.mjs` dopasowuje wzorzec werdyktu do calej sekcji `## Rekomendacja`, wiec polski zaimek „go” w zdaniu „nie warto **go** realizowac” wstawia drugi werdykt do zbioru i kazde memo `no-go` oraz `pivot` leci jako R07 — a memo `go` jest odporne, bo oba trafienia zwijaja sie do jednego elementu. Kod byl brief-verbatim i zgadzal sie ze swoim briefem co do znaku, wiec review Taska 10 nie mialo czego zglosic; luka byla w tescie, ktory nigdy nie przepuscil memo innego niz `go`.
 
 ## Rozwiązanie
 

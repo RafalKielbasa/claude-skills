@@ -23,6 +23,7 @@ każdy nowy dispatch pada niezależnie od treści promptu.
   `.claude/plans/2026-09-02-wikiskill.md` zapisał potem regułę na przyszłość:
   „Jeśli dispatch subagenta zwróci błąd 429, przerwij zadanie, powiedz o tym
   użytkownikowi i wróć po resecie. Nie zastępuj scenariusza własną oceną."
+- 2026-09-07, sesja session_01JAgUNken6DG6aFPjDmKkAX: drugi dowod, tym razem obsluzony poprawnie — zapisany, zeby przyszla zmiana skilla nie zepsula tego zachowania. Implementer rundy poprawek Taska 4 padl na `HTTP 429 — monthly spend limit` przed wykonaniem czegokolwiek. Kontroler nie dokonczyl poprawek wlasna ocena: najpierw sprawdzil, czy cos czesciowo weszlo (diff drzewa wobec `snap-t4fix` pusty), zapisal w ledgerze fakt padniecia i godzine resetu limitu, po czym wyslal swiezego implementera z ta sama lista siedmiu poprawek i notka, ze poprzedni zostal zabity przez infrastrukture i zadna praca nie wyladowala. Klucz: weryfikacja stanu **przed** ponowieniem, bo dispatch mogl paczc w srodku zapisu.
 
 ## Rozwiązanie
 Gdy dispatch podagenta zwraca 429, rozróżnić dwa przypadki. Jeśli podagent miał

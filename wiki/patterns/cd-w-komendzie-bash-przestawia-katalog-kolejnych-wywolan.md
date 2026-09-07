@@ -37,6 +37,7 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   szkody, bo wszystkie ścieżki były bezwzględne, ale `npm run validate` wymaga
   katalogu pakietu i za każdym razem dostawał `cd` zamiast `( cd … && … )`
   (trzeci dowód, trzecia sesja).
+- 2026-09-07, sesja session_01JAgUNken6DG6aFPjDmKkAX: czwarty dowod. `cd .claude/skills/idea-engine && node --test test/` przestawil katalog na kolejne wywolania; nastepne `printf ... >> `.superpowers/sdd/.../progress.md`` padlo z `No such file or directory`, bo sciezka wzgledna liczyla sie od katalogu skilla. Naprawione sciezka bezwzgledna. Komunikat „Environment update: Primary working directory changed” przychodzi po fakcie i w dlugiej sesji latwo go przeoczyc — tu przelaczenie tam i z powrotem zdarzylo sie kilkanascie razy.
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
