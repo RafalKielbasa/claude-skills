@@ -35,6 +35,14 @@ bo twierdzenie brzmi jak fakt operacyjny, nie jak hipoteza do sprawdzenia.
   przepisania było to, że zdania stały już w opublikowanych issues.
 - 2026-09-04/05, sesja session_01WXmUJrXM5viDmNJuc3xjy6: do `SKILL.md` trafiło zdanie, że niepunktowane uwagi „spadają poniżej każdego progu" — twierdzenie o zachowaniu modułu, którego czytelnik tego dokumentu nie widzi, wpisane bez sprawdzenia. Reviewer wytknął, że każe wierzyć na słowo. Sprawdzone dopiero wtedy: plik ocen `[]` daje `kept: 0, belowThreshold: 1`. Twierdzenie okazało się prawdziwe, ale to był przypadek, nie metoda.
 
+- 2026-09-07, sesja session_01BFVYzhLh64ykBPjopBZyHU (wariant: liczba, nie
+  treść): w inwentaryzacji dla użytkownika „10 segmentów" i w prompcie
+  subagenta „nagłówki segmentów: liczba (10)" — z oka, po lekturze pliku, bez
+  `grep -c`; plik miał 9. Wyłapał subagent („Zlecenie mówi o 10 nagłówkach,
+  plik ma 9. Zostawiłem 9"), a `grep -c '^## \[ekran'` policzony dopiero po
+  wysłaniu promptu. Bez szkody, ale liczba w prompcie agenta jest twierdzeniem
+  o pliku i musi pochodzić z narzędzia (czwarty dowód, czwarta sesja).
+
 ## Rozwiązanie
 Zanim powiesz użytkownikowi, co zawiera plik, przeczytaj ten plik. Dotyczy to
 zwłaszcza kopii zapasowych, artefaktów i plików tymczasowych, które powstały

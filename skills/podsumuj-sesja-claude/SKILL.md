@@ -70,6 +70,15 @@ Datę bierz z kontekstu sesji (dzisiejsza, `YYYY-MM-DD`). Trzymaj się kolejnoś
 - „Góra pliku" znaczy **pod nagłówkiem `# Praca z Claude — dziennik sesji`**, nie na fizycznym początku pliku. Nad tym nagłówkiem mogą leżeć inne sekcje (np. tabela pomysłów) — nie ruszasz ich i nie wstawiasz wpisu przed nimi.
 - Jeśli plik pusty/nie istnieje: załóż go z nagłówkiem `# Praca z Claude — dziennik sesji`, potem wpis.
 - **Dopisuj, nie nadpisuj** — starych wpisów nie kasujesz.
+- **Wstawiaj po świeżym odczycie, jedną operacją z asercją wejścia.** Dziennik
+  dzielisz z Obsidianem i z innymi sesjami Claude, a między odczytem na starcie
+  podsumowania a zapisem mija runda pytań — adresy z tamtego odczytu są wtedy
+  nieaktualne. Bezpośrednio przed zapisem przeczytaj plik ponownie i wstaw wpis
+  jedną operacją, która sprawdza stan wejściowy (nagłówek dziennika w linii
+  z tego odczytu, liczba linii pliku, brak Twojego wpisu) i zatrzymuje zapis,
+  gdy coś się nie zgadza. Padnięta asercja znaczy, że plik zmienił ktoś inny:
+  czytasz jeszcze raz i wstawiasz punktowo pod nagłówkiem — nigdy z pamięci
+  i nigdy przez przepisanie pliku w całości.
 - Po zapisie podaj partnerowi ścieżkę i 1-zdaniowe potwierdzenie.
 
 ## Krok 5 — skonsoliduj doświadczenie sesji w wiki (Wiki Maintainer)
@@ -229,5 +238,6 @@ nie dotknęła. Log ma być kompletny.
 | Zgadywanie ścieżki pliku | Marker w `CLAUDE.md` (Krok 1) |
 | Wstrzymanie zapisu do wiki w oczekiwaniu na zgodę | Krok 5.7 — zapisz, potem wypisz listę zmian |
 | `index.md` przepisany w całości, gdy w wiki pisze druga sesja | Krok 5.8 — aktualizacja punktowa, cudze wpisy zostają |
+| Wpis wstawiony z adresów zebranych na starcie podsumowania | Krok 4 — świeży odczyt tuż przed zapisem i asercja wejścia; padnięta asercja = czytaj ponownie |
 | Wzorzec opisujący objaw („Claude się pomylił") | Przyczyna źródłowa: dlaczego to się stało i co to powtórzy |
 | Nowa strona wzorca dla obserwacji, która pasuje do istniejącej | Dowód na istniejącej stronie; duplikat rozprasza dowody |

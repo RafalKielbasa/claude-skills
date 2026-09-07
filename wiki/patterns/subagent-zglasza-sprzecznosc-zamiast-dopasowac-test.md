@@ -33,6 +33,17 @@ nie tylko „nie zmieniaj testów".
   fixture nie miał remote'a i funkcja zwracała `null`, zanim dotknęła
   argumentów; wreszcie odmowa edycji testu napisanego przez kontrolera z
   powołaniem się na wcześniejszą instrukcję kontrolera o innym teście.
+- 2026-09-07, sesja session_01BFVYzhLh64ykBPjopBZyHU (poza kodem: redakcja
+  tekstu kursu przez Workflow): prompt mówił „wątpliwość, czy zmiana jest
+  jeszcze językowa, czy już merytoryczna → zostaw fragment bez zmian i wypisz
+  go w raporcie". Agent B zgłosił trzy sprzeczności zamiast je rozstrzygnąć:
+  „liczba (10)" z promptu wobec 9 nagłówków w pliku (zostawił 9), „pięć
+  skrótów" wobec sześciu wymienionych kombinacji (zostawił „pięć", Rafał potem
+  zmienił na „sześć"), brak nazwy firmy w „zamówienie z naszego sklepu" (nie
+  dopisał). Agent A osobno wypunktował cztery własne zmiany, „które
+  orkiestrator może uznać za merytoryczne", z lokalizacją — jedna stała się
+  punktem decyzji w bramce. Żadnego fałszywego alarmu (drugi dowód, druga
+  sesja).
 
 ## Rozwiązanie
 

@@ -106,7 +106,8 @@ z modelem i effortem wybranym przez Rafała na starcie.
 6. **Status video i walidacja.** Jeśli dotyczy (krok 3), ustaw
    `status.video: brak` w `lekcja.yaml`; statusów `tresc`/`zadania` nie
    ruszaj. Potem `cd tools/course-pipeline && npm run validate --
-   ../../kursy/<slug>` — napraw wszystkie BŁĘDY.
+   ../../kursy/<slug>/<modul>/<lekcja>` (katalog lekcji, nie kursu — błędy
+   z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
 7. **BRAMKA: raport dla Rafała.** Pokaż: per plik 3–5 charakterystycznych
    zmian "przed → po", łączną skalę zmian, listę wątpliwości merytorycznych
    od agentów, pozycje dopisane do `wymowa.md` (jeśli redagowałeś scenariusz),

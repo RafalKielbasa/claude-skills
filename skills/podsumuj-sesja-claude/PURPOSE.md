@@ -6,7 +6,7 @@ Skill leży w `~/.claude/skills/`, poza żadnym repozytorium git, więc jego gen
 
 ## Adresowane wzorce
 
-- brak — skill sprzed wiki
+- [plik-zmieniony-miedzy-odczytem-a-edycja](../../wiki/patterns/plik-zmieniony-miedzy-odczytem-a-edycja.md) — Krok 5.8 (2026-09-07, wyjątek dla `index.md` przy równoległej sesji) i Krok 4 (2026-09-07, świeży odczyt i asercja wejścia przy wstawianiu wpisu do dziennika)
 
 ## Historia ewolucji
 
@@ -14,3 +14,5 @@ Skill leży w `~/.claude/skills/`, poza żadnym repozytorium git, więc jego gen
 - ? — nadpisanie Kroku 1 skilla: ścieżka dziennika w `C:\Users\rafal\.claude\CLAUDE.md` (sekcja „Podsumowania sesji") ustalona na sztywno na `D:\Notatki\notatki\praca-z-claude.md`, bez szukania markera `<!-- podsumuj-sesja-claude: … -->` — powód: nieustalony — wynik: wprowadzona ręcznie — źródło: `C:\Users\rafal\.claude\CLAUDE.md` (sekcja „Podsumowania sesji")
 - 2026-09-02 — dodany Krok 5 (Wiki Maintainer) — powód: wdrożenie warstwy wiki z artykułu WikiSkill — wynik: wprowadzona ręcznie — źródło: `.claude/specs/2026-09-02-wikiskill-design.md`
 - 2026-09-03 — Krok 4 doprecyzowany: „góra pliku" to miejsce pod nagłówkiem `# Praca z Claude — dziennik sesji`, a sekcje nad nim zostają nietknięte — powód: nad dziennikiem stanęła tabela pomysłów (`D:\Notatki\notatki\praca-z-claude.md`), a dotychczasowe brzmienie pozwalało wstawić wpis przed nią — wynik: wprowadzona ręcznie na prośbę użytkownika — źródło: sesja 2026-09-03 (`https://claude.ai/code/session_01TR43bKGaUWASqCrAsDE6GT`)
+- 2026-09-07 — Krok 5.7 bez bramki zgody (zapis od razu, lista zmian po fakcie) oraz wyjątek w Kroku 5.8: `index.md` aktualizowany punktowo, gdy w tym samym wiki pisze równolegle druga sesja — powód: bramka kosztowała turę i niczego nie chroniła; przepisanie `index.md` w całości skasowałoby wpisy równoległej sesji — wynik: wprowadzona ręcznie (5.7 na prośbę użytkownika, 5.8 na dowodzie z sesji), poza `evolve-skill` — źródło: `~/.claude/wiki/skill-impact.md`, wpis 2026-09-07 — podsumuj-sesja-claude (sesja `session_01CqWuPYXRh5VSuurqzqb5y3`)
+- 2026-09-07 — Krok 4: wpis do dziennika wstawiany po ponownym odczycie tuż przed zapisem, jedną operacją z asercją stanu wejściowego (nagłówek dziennika w linii z tego odczytu, liczba linii, brak własnego wpisu); nowy wiersz w „Częstych błędach" — powód: trzy z pięciu dowodów wzorca `plik-zmieniony-miedzy-odczytem-a-edycja` padły w `praca-z-claude.md` między odczytem na starcie podsumowania a zapisem — wynik: zaakceptowana przez `/evolve-skill` — źródło: `~/.claude/wiki/skill-impact.md`, wpis 2026-09-07 — podsumuj-sesja-claude (evolve-skill); sesja `https://claude.ai/code/session_01BFVYzhLh64ykBPjopBZyHU`

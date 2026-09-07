@@ -2,7 +2,7 @@
 
 - **Skill:** ogólny
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-09-07, podsumuj-sesja-claude)
 
 ## Opis
 Między odczytem pliku a jego edycją mija długi czas wypełniony analizą i rundą

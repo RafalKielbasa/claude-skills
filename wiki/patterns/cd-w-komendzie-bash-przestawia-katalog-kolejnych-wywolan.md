@@ -30,6 +30,13 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `pnpm exec` musiała dostać własne `cd`, bo skrypty pakietu wymagają katalogu
   `apps/api` — dokładnie przypadek na podpowłokę `( cd … && … )`, której nie
   użyłem (drugi dowód, druga sesja).
+- 2026-09-07, sesja session_01BFVYzhLh64ykBPjopBZyHU: `cd "/d/…/kursy/_wspolne"
+  && for f in …`, `cd …/tools/course-pipeline && npm run validate …` i powroty
+  przez `cd "/d/Praca/Devstock/Baza wiedzy" && …` — cztery komunikaty
+  „Environment update" i jeden „Shell cwd was reset" w jednej sesji. Bez
+  szkody, bo wszystkie ścieżki były bezwzględne, ale `npm run validate` wymaga
+  katalogu pakietu i za każdym razem dostawał `cd` zamiast `( cd … && … )`
+  (trzeci dowód, trzecia sesja).
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
