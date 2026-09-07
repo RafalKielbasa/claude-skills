@@ -95,3 +95,33 @@ index b1d652e..434b518 100644
  | Wzorzec opisujący objaw („Claude się pomylił") | Przyczyna źródłowa: dlaczego to się stało i co to powtórzy |
  | Nowa strona wzorca dla obserwacji, która pasuje do istniejącej | Dowód na istniejącej stronie; duplikat rozprasza dowody |
 ```
+
+## 2026-09-07 — code-review-master — zaakceptowana
+
+- **Wzorce:** review-pr-bez-skilla-odtwarzany-za-kazdym-razem
+- **Zmiana:** Nowy tryb `recheck <n> [reviewer]` — sprawdza, które uwagi istniejącego review na GitHubie są naniesione na bieżącym tipie PR-a: bazą jest `reviews[].commit.oid`, uwagi z `pulls/<n>/comments`, kod czytany przez `git show origin/<branch>:<path>` bez checkoutu, werdykt z kodu z jawnym ignorowaniem `isResolved`, tabela po polsku; bez agentów i bez `crm`. Do tego wiersz w tabeli Invocation i fraza wyzwalająca w `description`.
+- **Powód decyzji:** akceptacja użytkownika („akceptuje") po propozycji z `/evolve-skill`; pierwsza ewolucja tego skilla, `skill-impact.md` nie miał wcześniej wpisu. Zastrzeżenie z propozycji: punkt 5 Rozwiązania wzorca (tryb re-review) ma jeden dowód (sesja session_01YYxVxgP1QYqdEoh63ozDfs, 2026-09-07), sam wzorzec trzy; punkty 2 i 4 Rozwiązania (sprawdzenia z liczbami przed pierwszym ustaleniem, publikacja komentarzy na PR) zostawione na później.
+
+```diff
+--- a/skills/code-review-master/SKILL.md
++++ b/skills/code-review-master/SKILL.md
+@@ frontmatter @@
+-description: Use for an automated, multi-agent code review of a repository — triggers like "zrób review", "sprawdź kod", "code review this branch/PR", an explicit `/code-review-master` invocation, and unattended nightly or CI invocations of it. Reviews a bounded set of axes (security, quality, conventions, whatever `.claude/review/config.md` defines) with a subagent budget that is computed and announced before anything is dispatched, then writes a Polish report. NOT for reviewing a course student's homework against a task's acceptance criteria — that is `review-pracy-domowej`. NOT the bundled `/code-review` plugin, which is a different, single-session reviewer with no fixed subagent budget.
++description: Use for an automated, multi-agent code review of a repository — triggers like "zrób review", "sprawdź kod", "code review this branch/PR", an explicit `/code-review-master` invocation, and unattended nightly or CI invocations of it — and for checking which remarks of an existing GitHub review on a PR are already addressed ("czy poprawki do PR-a zostały naniesione", "co zostało z review", mode `recheck`). Reviews a bounded set of axes (security, quality, conventions, whatever `.claude/review/config.md` defines) with a subagent budget that is computed and announced before anything is dispatched, then writes a Polish report. NOT for reviewing a course student's homework against a task's acceptance criteria — that is `review-pracy-domowej`. NOT the bundled `/code-review` plugin, which is a different, single-session reviewer with no fixed subagent budget.
+@@ ## Invocation @@
+ | `/code-review-master ask [path]` | Questions about the latest report (or the run at `path`) and triage verdicts. Dispatches no agents — see "Mode `ask`" below. |
++| `/code-review-master recheck <n> [reviewer]` | Which remarks of an existing GitHub review on PR `<n>` are addressed on the PR's current tip. Dispatches no agents, runs no `crm` — see "Mode `recheck`" below. |
+ | `/code-review-master fix [ids]` | Applies codex-confirmed fixes from the latest run. Interactive only — see "Mode `fix`" below. |
+@@ after ## Mode `ask`, before ## Mode `fix` @@
++## Mode `recheck`
++
++`/code-review-master recheck <n> [reviewer]` answers one question about PR `<n>`: which remarks of an existing GitHub review are addressed on the PR's current tip, and which are not. It reads the review from GitHub and the code from `origin`; it dispatches no agents, runs no `crm` command, and never checks the branch out.
++
++1. **Baseline.** `gh pr view <n> --json headRefName,reviews`. Take the review by `reviewer` (default: the user's own login from `gh api user --jq .login`) with the latest `submittedAt`; its `commit.oid` is the SHA the review was written against. No such review → say so, in Polish, and stop.
++2. **Remarks.** `gh api repos/{owner}/{repo}/pulls/<n>/comments --paginate`, filtered to that reviewer: one row per comment, keyed by `path` + `original_line`. Remarks that live only in the review's summary body (step 1) get a row without a line.
++3. **Code.** `git fetch origin <headRefName>`, then `git diff <oid>..origin/<headRefName> --stat` to see which files moved at all, and read every file a remark names with `git show origin/<headRefName>:<path>`. **Never `git checkout`** — the branch is the working tree's, not this mode's, and a checkout swaps files under the user's session.
++4. **Verdict per remark, from the code, never from GitHub:** `naniesiona` with the `plik:linia` on the tip that shows it; `nie naniesiona` with the line that still shows the old behaviour; `nieaktualna` when the code the remark named no longer exists. **Ignore `isResolved` on review threads** — authors push fixes without resolving threads, so thread state says nothing about the code (PR #165, 2026-09-07: 19 of 19 threads unresolved while 5 of 6 blocking remarks were fixed).
++5. **Output, in Polish:** a table `uwaga | plik:linia z review | status | dowód na tipie`, blocking remarks first, then one line listing the commits after the baseline (`gh pr view <n> --json commits`) so the user sees what the verdict rests on.
++6. Dispatch no subagents in this mode, ever — the same rule as mode `ask`. Never commit.
++
+```

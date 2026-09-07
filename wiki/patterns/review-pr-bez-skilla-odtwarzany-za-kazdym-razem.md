@@ -2,7 +2,7 @@
 
 - **Skill:** ogólny (skill do review w budowie od 2026-09-04)
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-09-07, code-review-master)
 
 ## Opis
 Review PR-a nie jest pokryte żadnym skillem, więc procedura powstaje od zera
