@@ -34,10 +34,23 @@ jednocześnie najtańszym możliwym sprawdzeniem.
   50 619 B. Para wyników (403 bez API, 200 przez API) jest kryterium
   akceptacji ustalenia z review, nie tylko jego dowodem; sonda z review wróciła
   jako test odbioru poprawki (drugi dowód, druga sesja).
+- 2026-09-07, sesja session_01YYxVxgP1QYqdEoh63ozDfs (po `/clear`, poza
+  review): teza „commit `69a1405` jest już na origin" stanęła w pierwszej
+  odpowiedzi na lokalnym refie śledzącym (`git status -sb` bez `[ahead]`,
+  `git branch -r --contains HEAD`). Użytkownik po `git reset --soft HEAD~1`
+  zaprzeczył: „zmiany były nie wypchnięte". Rozstrzygnęła żywa sonda
+  `git ls-remote origin refs/heads/<gałąź>` → `69a1405…` plus reflog refa
+  `update by push` o 12:38:57 (push poszedł z IDE razem z commitem); użytkownik:
+  „Masz rację". Teza była prawdziwa, ale dowód konkurencyjny wobec pamięci
+  użytkownika przyszedł dopiero po sporze, choć na jego podstawie zapadała
+  decyzja o operacji na historii (trzeci dowód, trzecia sesja).
 
 ## Rozwiązanie
 Ustalenie o zasobie zewnętrznym (bucket, kolejka, endpoint, uprawnienie) przed
 wpisaniem do review potwierdź najtańszą możliwą sondą i wklej jej wynik do
-komentarza. Sonda musi być odczytem — jeśli sprawdzenie wymagałoby mutacji,
+komentarza. To samo poza review: gdy teza o stanie zasobu (także `origin` —
+lokalny ref śledzący jest cache'em, nie serwerem) ma sterować decyzją
+użytkownika, sonda i jej dosłowny wynik idą w pierwszej odpowiedzi, nie po
+sporze. Sonda musi być odczytem — jeśli sprawdzenie wymagałoby mutacji,
 podaj komendę użytkownikowi zamiast ją uruchamiać. Cytat z dokumentacji zostaje
 w komentarzu jako wskazanie intencji projektu, obok wyniku, nie zamiast niego.
