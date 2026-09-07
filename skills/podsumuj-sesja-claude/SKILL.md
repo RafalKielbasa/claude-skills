@@ -142,21 +142,35 @@ tego, w którym wiki leży sam wzorzec (reguła kierowania zapisu, Krok 5 skilla
 `evolve-skill`). Nawrót jest jedyną miarą skuteczności zmiany skilla, jaką
 mamy — nie pomijaj go.
 
-### 5.7 Pokaż podgląd i poczekaj
+### 5.7 Zapisz i wypisz, co zapisałeś
 
-Wypisz użytkownikowi listę w formie:
+**Zapisujesz od razu, bez pytania o zgodę.** Podgląd przed zapisem był bramką,
+która kosztowała turę i niczego nie chroniła: wiki leży w gicie, każdy wpis da
+się poprawić albo skasować, a użytkownik i tak czyta listę zmian — tyle że po
+fakcie zamiast przed.
 
-- `załóż: <nazwa> (skill: X, typ: porażka|sukces) — <jedno zdanie>`
-- `dopisz dowód: <nazwa> — <jedno zdanie>`
+Po zapisie wypisz, co powstało:
+
+- `założono: <nazwa> (skill: X, typ: porażka|sukces) — <jedno zdanie>`
+- `dopisano dowód: <nazwa> — <jedno zdanie>`
 - `nawrót: <nazwa> — zaadresowany <data>, wraca`
 
-**Nic nie zapisujesz przed zgodą.** Brak odpowiedzi nie jest zgodą.
+Lista po fakcie ma tę samą treść co podgląd, zmienia się tylko moment. Gdy
+obserwacja wydaje Ci się wątpliwa, zapisz ją i powiedz w jednym zdaniu, że jest
+wątpliwa — decyzję o skasowaniu podejmie użytkownik, patrząc na gotowy wpis, a
+nie na jego opis.
 
 ### 5.8 Zapisz
 
 - Nowe strony wzorców w całości wg szablonu poniżej; istniejące — dopisz dowód
   do sekcji „Dowody", resztę popraw punktowo, nie przepisuj strony od zera.
-- `index.md` przepisz w całości, z aktualnym statusem i liczbą dowodów.
+- `index.md` przepisz w całości, z aktualnym statusem i liczbą dowodów —
+  **chyba że w tym samym wiki pisze równolegle druga sesja.** Wtedy aktualizuj
+  punktowo: dopisz swoje linie i popraw liczniki dowodów, bo przepisanie
+  w całości skasuje jej wpisy. Rozpoznasz to po tym, że plik zmienił się między
+  Twoim odczytem a zapisem albo że `Edit` odmówił z powodu nieaktualnego
+  odczytu — potraktuj odmowę jak asercję wejścia, przeczytaj ponownie i pisz
+  punktowo.
 - Dopisz wpis na końcu `log.md` (repo i globalnego, każdy o swoich wzorcach).
 - Dopisz ewentualne linie „Nawrót" w `skill-impact.md`.
 
@@ -213,6 +227,7 @@ nie dotknęła. Log ma być kompletny.
 | Długa narracja przebiegu dnia | TL;DR + „następny krok" |
 | Brak sekcji „następny krok" | To rdzeń briefu — zawsze ją wypełnij |
 | Zgadywanie ścieżki pliku | Marker w `CLAUDE.md` (Krok 1) |
-| Zapis do wiki bez pokazania podglądu | Krok 5.7 — lista zmian, potem zgoda |
+| Wstrzymanie zapisu do wiki w oczekiwaniu na zgodę | Krok 5.7 — zapisz, potem wypisz listę zmian |
+| `index.md` przepisany w całości, gdy w wiki pisze druga sesja | Krok 5.8 — aktualizacja punktowa, cudze wpisy zostają |
 | Wzorzec opisujący objaw („Claude się pomylił") | Przyczyna źródłowa: dlaczego to się stało i co to powtórzy |
 | Nowa strona wzorca dla obserwacji, która pasuje do istniejącej | Dowód na istniejącej stronie; duplikat rozprasza dowody |

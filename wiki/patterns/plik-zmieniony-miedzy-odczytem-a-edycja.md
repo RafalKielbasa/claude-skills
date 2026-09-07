@@ -32,6 +32,30 @@ niczyją wyłączną własnością.
   równoległa sesja session_0115YBg2ri1ajCfG8GNynEsZ dopisała cztery. Krok 5.8
   każe przepisać `index.md` w całości, więc zapis z nieodświeżonego kontekstu
   skasowałby te cztery wpisy.
+- 2026-09-06/07, sesja session_01T6FrJW1rs56KS6EsPB5agM: dwie sesje Claude w
+  jednym drzewie `E:\Praca\agent-biznes` — jedna wykonywała Plan A przez SDD,
+  druga pisała Plan B na podstawie kodu tej pierwszej. `lib/idea.mjs` i
+  `bin/ide.mjs` zmieniły się na dysku po odczycie (Taski 16–18 i poprawki
+  reviewera: `BOOLEAN_FLAGS` w `parseArgs`, komunikaty `CliError`
+  przetłumaczone na polski), więc Plan B cytuje `requireSlug` i końcówkę
+  `model` w brzmieniu, którego już nie ma, a jego testy asertują angielskie
+  komunikaty — rozjazd do naprawienia przed Taskiem 1. Drugi rozjazd:
+  `praca-z-claude.md` między `head -60` na starcie podsumowania a `Read` przed
+  edycją dostał wpis drugiej sesji (06:11) dokładnie pod nagłówkiem, w
+  miejscu, w które szedł nowy wpis — złapane, bo plik został przeczytany
+  ponownie tuż przed `Edit`, a nie edytowany z adresów zebranych na starcie.
+- 2026-09-06/07, sesja session_01CqWuPYXRh5VSuurqzqb5y3: druga strona tej samej
+  pary sesji, i pierwszy raz, gdy mechanizm zadziałał jak zabezpieczenie. `Edit`
+  na `patterns/kod-referencyjny-planu-nigdy-nie-uruchomiony.md` **odmówił
+  zapisu** („File has been modified since read"), bo tamta sesja dopisała tam
+  własny dowód w oknie między moim odczytem a edycją. Odmowa zachowała się
+  dokładnie jak asercja wejścia z „Rozwiązania": wymusiła ponowny odczyt, ten
+  pokazał cudzy dowód, a mój trafił obok niego zamiast go nadpisać. Z tego
+  samego powodu `index.md` zaktualizowałem punktowo zamiast przepisać w całości
+  wbrew krokowi 5.8 — druga sesja miała tam już swoje wpisy i licznik dowodów
+  podniesiony do dwóch. Odstępstwo wróciło potem do samego skilla: krok 5.8 ma
+  teraz jawny wyjątek na równoległą sesję (`skill-impact.md`, wpis
+  2026-09-07 — podsumuj-sesja-claude).
 
 ## Rozwiązanie
 Przed edycją pliku, który odczytałeś wcześniej niż przed chwilą, potwierdź jego

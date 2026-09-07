@@ -34,6 +34,38 @@ wierność jest tym, o co się go prosi.
   (kod i test niezgodne ze sobą i oba błędne), `runCodex` niemogący uruchomić
   codexa na Windowsie, oraz `crm gate` czytające „ostatni przebieg" bez pojęcia,
   którego przebiegu dotyczy pytanie.
+- 2026-09-06/07, sesja session_01T6FrJW1rs56KS6EsPB5agM: Plan B silnika pomysłów
+  (11 zadań, 5157 linii, kompletne bloki kodu dla `lib/dispatch.mjs`,
+  `lib/agent-schema.mjs`, `lib/merge.mjs`, pięciu trybów i piętnastu promptów)
+  oceniony wyłącznie lekturą. Review przez codex znalazło dwa realne defekty:
+  `schema/run-plan.json` z Planu A ma `additionalProperties: false`, więc pola
+  `target`, `input`, `agents[].kind` dopisywane przez Plan B łamały dokument;
+  `SKILL.md` kazał po niepustym `memo-check.json` renderować prompt z
+  `--retry`, a `synthesize finish` nie zapisywał pliku błędów, którego
+  `--retry` wymaga. Self-review złapał trzy kolejne rozumowaniem, nie
+  uruchomieniem: `ref` przenoszony do obiektu claimu psuł detekcję „replace" w
+  `mergeClaims` (`canonicalJson` widział dodatkowy klucz), R10 odrzucało
+  ponowny `validate merge` (plan miał już weryfikatorów, ledger nie), błędna
+  liczba `pending` w podsumowaniu (11 zamiast 15). Żaden blok nie został
+  wykonany przed oddaniem planu do egzekucji.
+- 2026-09-06/07, sesja session_01CqWuPYXRh5VSuurqzqb5y3: egzekucja Planu A tego
+  samego silnika, 18 zadań, każde z osobnym recenzentem. **Wszystkie 7 wad
+  Important znalezionych przez recenzentów w Taskach 1–16 siedziało w kodzie,
+  który plan podaje dosłownie — żadna nie była błędem transkrypcji.** Do tego
+  trzy defekty planu wykryte poza review, każdy uniemożliwiający wykonanie
+  zadania jak napisane: stała `WEIGHTS` zadeklarowana bez `export`, a używana
+  w innym pliku (test rzuciłby `ReferenceError`); helper testowy
+  `entry({ ts: … })` niemogący nadpisać `ts`, bo `makeEntry` liczy je z `now`
+  i nigdy nie czyta takiego parametru (asercja nieosiągalna); brak `join` na
+  liście importów przy kodzie handlera, który go wywołuje. Najgroźniejsza z wad
+  Important: `checkOutputs` i `checkLedgerAgainstPlan` — obie z sygnaturą
+  walidatora zwracającego listę błędów — rzucały surowym `TypeError` na
+  zniekształconym wejściu, łamiąc ograniczenie „Validators never throw"
+  zacytowane dosłownie w Global Constraints tego samego planu. Wzorzec
+  potwierdza się też od drugiej strony: wierność transkrypcji była wysoka
+  (recenzenci wielokrotnie potwierdzali zgodność bajt w bajt z briefem), co
+  dokładnie zgadza się z przyczyną źródłową — im wierniej, tym pewniej defekt
+  planu dociera do repozytorium.
 
 ## Rozwiązanie
 

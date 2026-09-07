@@ -29,6 +29,16 @@ subagent-driven-development z własnym przeglądem zadaniowym i finalnym).
   whole-branch review clean at commit 271c1b5"), bo standardowe kroki 2–4 skilla (wykrycie
   środowiska, menu merge/PR/zostaw) nie mają zastosowania, gdy nie ma osobnej gałęzi do
   scalenia.
+- 2026-09-06/07, sesja `session_01CqWuPYXRh5VSuurqzqb5y3`: ostrzejszy wariant — przy
+  zamykaniu 18-zadaniowego Planu A silnika `idea-engine` skilla **nie wywołałem w ogóle**,
+  bo jego przesłanka nie istniała. Repozytorium miało unborn HEAD (zero commitów w chwili
+  startu), a globalna reguła użytkownika rezerwuje `git commit` wyłącznie dla niego, więc
+  nie było ani osobnej gałęzi, ani żadnego commita do zmergowania czy wypchnięcia. Menu
+  merge/PR/zostaw nie miało żadnej stosowalnej pozycji. Przekazaniem pracy było
+  podsumowanie z listą rozstrzygnięć i propozycją treści commita, którą użytkownik wykonał
+  sam (`5d6c035`). Brak commitów wywrócił też inny krok skilla nadrzędnego: instrukcję
+  „skasuj workspace planu, bo historia gita jest teraz zapisem" — historii gita w chwili
+  decyzji nie było, więc workspace zachowałem.
 
 ## Rozwiązanie
 Gdy plan implementacyjny z góry zakłada pracę wprost na gałęzi głównej (świadoma decyzja
