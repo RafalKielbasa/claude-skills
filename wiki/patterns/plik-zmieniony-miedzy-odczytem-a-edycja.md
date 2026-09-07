@@ -56,6 +56,12 @@ niczyją wyłączną własnością.
   podniesiony do dwóch. Odstępstwo wróciło potem do samego skilla: krok 5.8 ma
   teraz jawny wyjątek na równoległą sesję (`skill-impact.md`, wpis
   2026-09-07 — podsumuj-sesja-claude).
+- 2026-09-07, sesja session_01YYxVxgP1QYqdEoh63ozDfs: proces zmieniający był
+  mój własny — `prettier --write` na dwóch specach i `README.md` po serii
+  `Edit`; harness zgłosił „modified 3 files you've previously read … Call Read
+  before editing", a tabela w README dostała nowe szerokości kolumn. Formatter
+  uruchomiony po edycjach unieważnia adresy tak samo jak druga sesja; kolejne
+  zmiany tych plików wymagały ponownego odczytu (piąty dowód, czwarta sesja).
 
 ## Rozwiązanie
 Przed edycją pliku, który odczytałeś wcześniej niż przed chwilą, potwierdź jego

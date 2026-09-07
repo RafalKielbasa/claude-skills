@@ -26,6 +26,14 @@ jednocześnie najtańszym możliwym sprawdzeniem.
   rozstrzyga sprawę bez odwoływania się do czyjejkolwiek pamięci. Obie sondy są
   odczytem i nie ruszają stanu projektu, więc mieszczą się w regule „w GCP nic
   nie mutuję".
+- 2026-09-07, sesja session_01YYxVxgP1QYqdEoh63ozDfs: ta sama sonda zamknęła
+  pętlę po naprawie. Po wdrożeniu wariantu C (PDF serwowany przez API)
+  anonimowy `GET https://storage.googleapis.com/edu-saas-dev/certificates/…/
+  0ca00c9f-….pdf` na prawdziwy, świeżo wygenerowany obiekt dał `403`, a
+  `GET /api/courses/…/certificate/download` z JWT — `200 application/pdf`,
+  50 619 B. Para wyników (403 bez API, 200 przez API) jest kryterium
+  akceptacji ustalenia z review, nie tylko jego dowodem; sonda z review wróciła
+  jako test odbioru poprawki (drugi dowód, druga sesja).
 
 ## Rozwiązanie
 Ustalenie o zasobie zewnętrznym (bucket, kolejka, endpoint, uprawnienie) przed

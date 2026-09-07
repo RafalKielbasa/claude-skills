@@ -33,6 +33,15 @@ z API GitHuba przy każdej sesji od nowa.
   review nie da się zmienić przez `gh pr review`, tylko przez `PUT` na review
   i `PATCH` na pojedynczych komentarzach.
 - 2026-09-04/05, sesja session_01WXmUJrXM5viDmNJuc3xjy6: skill `code-review-master` zbudowany w całości — 50 plików, 167 testów, budżet agentów `1 brief + N osi + N weryfikacji` potwierdzony dwoma niezależnie napisanymi sweepami. Wzorzec **pozostaje otwarty**: skill nie został jeszcze użyty do żadnego prawdziwego review, konfiguracja dla `saas app` czeka na zatwierdzenie, a żadna sesja `claude -p` ani żaden prawdziwy agent nie zostały uruchomione.
+- 2026-09-07, sesja session_01YYxVxgP1QYqdEoh63ozDfs: pytanie „Czy do PR165
+  zostały naniesione poprawki" uruchomiło trzecią improwizowaną procedurę, tym
+  razem re-review: `gh pr view --json reviews,commits` po SHA review,
+  `git diff <sha-review>..origin/<branch> --stat`, `git show origin/<branch>:<plik>`
+  bez checkoutu, GraphQL `reviewThreads.isResolved`. Ustalenie warte
+  utrwalenia: status wątków na GitHubie jest bezużyteczny jako sygnał (19/19
+  `isResolved: false` przy 5/6 blokujących naniesionych) — sygnałem jest diff
+  od commitu, na którym stało review. `code-review-master` nadal nieużyty do
+  prawdziwego review (trzeci dowód, trzecia sesja).
 
 ## Rozwiązanie
 Do skilla review, budowanego od 2026-09-04, wnieść z tej sesji cztery rzeczy,
@@ -51,3 +60,7 @@ których brak kosztował czas:
    na review (ciało) i `PATCH` na `…/pulls/comments/{id}` (pojedynczy komentarz);
    po publikacji zweryfikuj, że każdy komentarz dostał pozycję w diffie, bo
    komentarz spoza diffu cicho przepada jako outdated.
+5. Tryb „stan poprawek po review": punktem odniesienia jest SHA z
+   `reviews[].commit.oid`, wynikiem tabela uwaga → naniesiona/nie z dowodem
+   `plik:linia` na gałęzi PR-a czytanej przez `git show origin/<branch>:<ścieżka>`;
+   `isResolved` wątków ignorować, bo autorzy nie klikają resolve.

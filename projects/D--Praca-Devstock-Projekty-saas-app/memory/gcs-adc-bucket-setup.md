@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 3bfa3530-1fdf-4747-88dc-100eee187c25
-  modified: 2026-08-14T15:07:12.755Z
+  modified: 2026-09-07T09:30:48.543Z
 ---
 
 Projekt `edu-saas-505415`, bucket `gs://edu-saas-dev` (europe-central2, UBLA
@@ -40,3 +40,13 @@ nieszkodliwy śmieć — do sprzątnięcia w konsoli.
 Zaległość: `cloudbuild.yaml` wstrzykuje na Cloud Run tylko `DATABASE_URL` i
 `JWT_SECRET`, a `StorageService` robi `getOrThrow('GCS_BUCKET')` — patrz
 [[api-boot-env-requirements]].
+
+2026-09-07: odczyt obiektu (`objects.get`, `file.download()`) przez ADC
+zweryfikowany na żywo — certyfikat serwowany przez API, patrz
+[[pr165-cp38-certificate-variant-c]]. Wygaśnięcie ADC objawia się jako
+`{"error":"invalid_grant","error_description":"reauth related error (invalid_rapt)"}`
+przy pierwszej operacji na buckecie, nie jako błąd uprawnień; po
+`gcloud auth application-default login` działający proces API trzeba
+zrestartować, bo `google-auth-library` trzyma stary refresh token w pamięci.
+`gcloud` CLI wygasa niezależnie (`Reauthentication failed. cannot prompt during
+non-interactive execution` przy `gcloud iam roles describe`).

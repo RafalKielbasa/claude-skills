@@ -23,6 +23,13 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `cd /e/Praca/agent-biznes && …`, co przestawiało cwd z powrotem — dwa
   komunikaty „Environment update" w jednej sesji, a wszystkie późniejsze
   komendy pisane już na ścieżkach bezwzględnych.
+- 2026-09-07, sesja session_01YYxVxgP1QYqdEoh63ozDfs: `cd apps/api && pnpm exec
+  jest …` przestawiło cwd na `apps/api`, potem `cd "D:/…/saas app" && git status`
+  z powrotem — cztery komunikaty „Environment update" w jednej sesji. Bez
+  szkody, bo `Read`/`Edit` dostawały ścieżki bezwzględne, ale każda komenda
+  `pnpm exec` musiała dostać własne `cd`, bo skrypty pakietu wymagają katalogu
+  `apps/api` — dokładnie przypadek na podpowłokę `( cd … && … )`, której nie
+  użyłem (drugi dowód, druga sesja).
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
