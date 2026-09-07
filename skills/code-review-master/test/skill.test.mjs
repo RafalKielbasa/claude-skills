@@ -12,9 +12,28 @@ test('frontmatter names the skill and its triggers', () => {
 });
 
 test('every mode from the spec is documented', () => {
-  for (const mode of ['branch', 'pr', 'since', 'full', 'ask', 'fix', 'init']) {
+  for (const mode of ['branch', 'pr', 'since', 'full', 'ask', 'recheck', 'fix', 'init', 'send']) {
     assert.match(TEXT, new RegExp(`/code-review-master ${mode}`), `mode ${mode} is missing`);
   }
+});
+
+// `send` is the only mode that writes outside the working tree: a GitHub review
+// is visible to the PR author the moment it is posted. The section must gate on
+// approval, refuse unattended runs, and anchor every inline comment to a diff
+// line, or GitHub rejects the whole review with 422.
+test('send mode posts nothing before approval and anchors comments to the diff', () => {
+  const at = TEXT.indexOf('## Mode `send`');
+  const fixAt = TEXT.indexOf('## Mode `fix`');
+  assert.ok(at > 0, 'Mode send heading is missing');
+  assert.ok(fixAt > at, 'Mode send must be documented before Mode fix');
+  const section = TEXT.slice(at, fixAt);
+  assert.match(section, /wait for approval/i);
+  assert.match(section, /interactive only/i);
+  assert.match(section, /part of the diff/i);
+  assert.match(section, /REQUEST_CHANGES/);
+  assert.match(section, /never `?APPROVE`?/i);
+  assert.match(section, /dispatch no subagents/i);
+  assert.match(section, /never commit/i);
 });
 
 test('the main model is checked at entry but never blocks the run', () => {

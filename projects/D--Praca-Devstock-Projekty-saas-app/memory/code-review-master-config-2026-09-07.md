@@ -5,15 +5,24 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-09-07T10:10:30.019Z
+  modified: 2026-09-07T11:48:55.448Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
 (15 osi z globalnymi, 5 slotów) zapisany po zatwierdzeniu Rafała; `.claude/review/reports/`
 dopisane do `.gitignore`; `docs/review-guide.md` zredukowany do nagłówka + wskaźnika
 (pełna redukcja — Merge Criteria i szablon komentarza reviewera zniknęły, są w historii gita).
-Wszystko niezacommitowane w chwili zapisu. Żaden prawdziwy przebieg review tym skillem
-jeszcze się nie odbył; `state.json` powstanie przy pierwszym `crm plan`.
+Config zacommitowany na `main` jako `7aca478` (2026-09-07). Pierwszy prawdziwy przebieg:
+2026-09-07 `pr 164` (run `20260907-111319-55oc`, 11 agentów, 5 znalezisk, 3 blokujące,
+5/5 codex potwierdza, bramka exit 1); `state.json` powstał, nieśledzony do decyzji Rafała.
+Wynik wysłany na PR #164 nowym trybem `send` (review 5131590353, `CHANGES_REQUESTED`,
+3 komentarze inline po angielsku w rejestrze `redakcja.md` z Bazy wiedzy; `f-01` odrzucone
+jako kod sprzed PR-a — do triage `rejected` przez `ask`). Tryb `send` w SKILL.md, ślad w
+`~/.claude/wiki/skill-impact.md`; wszystko w `~/.claude` niezacommitowane.
+Pułapka: tryb `pr` wymaga `gh` z polem `baseRefOid` w `pr view --json` — `gh 2.29.0`
+padał z „Unknown JSON field", Rafał kazał zaktualizować przez winget do `2.100.0`
+(nocny VM może mieć to samo). Tryb `pr` czyta pliki z drzewa roboczego, więc gałąź PR-a
+musi być wymeldowana i mieć `config.md` (PR sprzed configu → merge `main` do gałęzi).
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)

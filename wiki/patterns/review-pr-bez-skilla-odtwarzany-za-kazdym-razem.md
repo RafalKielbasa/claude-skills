@@ -42,6 +42,12 @@ z API GitHuba przy każdej sesji od nowa.
   `isResolved: false` przy 5/6 blokujących naniesionych) — sygnałem jest diff
   od commitu, na którym stało review. `code-review-master` nadal nieużyty do
   prawdziwego review (trzeci dowód, trzecia sesja).
+- 2026-09-07, sesja session_01YYxVxgP1QYqdEoh63ozDfs (po `/clear`): sukces —
+  pierwszy prawdziwy przebieg `code-review-master pr 164` w `saas app` (run
+  `20260907-111319-55oc`, 11 agentów w budżecie, 5 znalezisk, 3 blokujące)
+  i wysyłka na PR jako review 5131590353 przez nowy tryb `send` (punkt 4
+  Rozwiązania). Procedura nie była już improwizowana; jedyna improwizacja to
+  samo powstanie trybu `send` w trakcie sesji, od razu utrwalone w skillu.
 
 ## Rozwiązanie
 Do skilla review, budowanego od 2026-09-04, wnieść z tej sesji cztery rzeczy,
