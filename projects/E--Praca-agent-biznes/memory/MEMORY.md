@@ -1,4 +1,4 @@
 - [AI-native business plan](ai-native-business-plan.md) — Rafał's goal: physical business run AI-native, agents in creation then management, no robotics, validate in food/health/education/automotive/furniture
 - [Specs must be self-contained](specs-self-contained.md) — never define conventions "by mirroring skill X"; Rafał rejected D8 in the idea-engine spec for that (2026-09-06)
 - [Parallel execution during wiki update](parallel-execution-during-wiki-update.md) — Rafał runs the next plan execution in a separate terminal while this session does podsumuj-sesja-claude's wiki step, to save context; don't treat concurrent file changes as anomalous
-- [Idea engine needs a review stage](idea-engine-needs-review-stage.md) — Rafał expects to discuss research results and adjust the plan after each engine step; validate mode has no such step (2026-09-07)
+- [Idea engine needs a review stage](idea-engine-needs-review-stage.md) — Rafał wants to steer content: brainstorm the concept, Polish readable findings, actionable interview plan; the pipeline gave JSON + hand-off (2026-09-07/08)
