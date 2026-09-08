@@ -20,6 +20,12 @@ nieostrożna zmiana mogłaby zamienić tę zachętę w wymóg.
   uczył teraz, czy możesz zaimplementować coś z tego artykułu do naszej
   codziennej pracy" Claude domknął stan w pliku postępu nauki i uruchomił
   `superpowers:brainstorming`, bez ponawiania pytania sprawdzającego.
+- 2026-09-07, sesja session_01L3yWR4WmJVjeem37YvxMsw: w trakcie `idea-engine
+  validate` Claude zaczął czytać `claims/*.json` i `interviews/plan.json`, żeby
+  odpowiedzieć na pytanie o rozmowy; użytkownik odrzucił to wywołanie i
+  doprecyzował pytanie („Inczej ro robią rozmowy według interviews/plan.json").
+  Claude odpowiedział ze specu bez ponawiania odczytu, a przy „kończymy na dziś"
+  przerwał otwarty wątek omówienia wyników i przeszedł do podsumowania.
 
 ## Rozwiązanie
 Utrzymać regułę: jawna prośba o zmianę kierunku pracy ma pierwszeństwo przed
