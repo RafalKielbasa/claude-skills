@@ -32,6 +32,16 @@ policzony wynik.
   dopasowuje bajt, nie znak, a „ż" zajmuje dwa. Nowe: raport subagenta podawał
   8 calloutów zamiast 6, więc liczba z cudzego raportu wymagała tej samej
   kontroli kotwicą ASCII co własny `grep`.
+- 2026-09-09, sesja session_01Kpavh9GSwwHtUcwJNUyRNm: ten sam mechanizm uderzył
+  w `Edit`, nie w `grep`. Artykuł lekcji 0.3 powstał ze zwykłymi spacjami,
+  a twarde wstawił dopiero skrypt po zapisaniu pliku. Dwie kolejne edycje
+  odbiły się od „String to replace not found in file", bo `old_string`
+  przepisany z własnego brudnopisu miał zwykłe spacje w „podział na łańcuchy
+  i agentów" oraz „pole `roslina` z panelu INPUT". Narzędzie samo zgłosiło, że
+  próbowało też zamiany `\uXXXX` - i nie trafiło. Zadziałała dopiero kotwica
+  bez jednoliterowego słowa (`bez klucza API.`, `na to nowe pole.`).
+  `grep -c "Też w wideo"` → 0 na pliku z siedmioma calloutami wystąpiło jak
+  poprzednio; kotwica `wideo` → 7.
 
 ## Rozwiązanie
 W kontrolach treści kursu kotwiczyć pattern na fragmencie bez jednoliterowego
@@ -39,3 +49,9 @@ słowa ze spacją i bez emoji (`wideo**`, `Ciebie (`, `^> `), albo w miejscu
 spacji dopuszczać oba znaki: zwykłą spację i bajty `C2 A0`. „0 trafień" na
 pliku właśnie przeczytanym traktować jako błąd patternu, nie jako fakt,
 i sprawdzić kotwicą ASCII, zanim wynik trafi do raportu.
+
+Ta sama zasada dotyczy `old_string` w `Edit`: po każdym przebiegu skryptu
+wstawiającego twarde spacje kotwica musi być fragmentem bez `a i o u w z`
+ze spacją, bo tekst przepisany z pamięci albo z brudnopisu ma w tych miejscach
+zwykłą spację i nie trafi. Odbita edycja na pliku, który się właśnie zapisało,
+to znak twardej spacji, nie zmiany pliku przez kogoś innego.

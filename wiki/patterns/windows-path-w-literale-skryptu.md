@@ -40,6 +40,17 @@ kodem i nie powinna przechodzić przez składnię języka.
   poprzednio: skrypt zapisany narzędziem Write, uruchomiony z osobnego pliku,
   payload podany do `gh api` przez `--input`, nie argumentem.
 - 2026-09-04/05, sesja session_01WXmUJrXM5viDmNJuc3xjy6: skrypty Pythona wklejane do heredoca przez narzędzie Bash wielokrotnie zjadły sekwencje ucieczki w podmienianym kodzie. Regex miał wejść jako klasa znaków dopasowująca ukośnik i backslash, a wyszedł z jednym backslashem mniej, czyli jako coś innego. Ciąg oznaczający nową linię stał się prawdziwą nową linią w środku literału szablonu, a escapowany cudzysłów zamienił się w goły. Naprawa za każdym razem szła przez narzędzie Edit na pliku docelowym. **Trzecia sesja z tym samym objawem — i zdarzyło się to ponownie przy zapisywaniu tego właśnie dowodu.**
+- 2026-09-09, sesja session_01Kpavh9GSwwHtUcwJNUyRNm: piąty raz, tym razem na
+  polskiej prozie. Dwa heredoki `<<'PLIK'` i `<<'ZRODLA'` przez narzędzie Bash
+  padły na `unexpected EOF while looking for matching ''` — pierwszy przy
+  zapisie artykułu lekcji, drugi przy dopisywaniu sekcji do `zrodla.md`.
+  Cytowany ogranicznik heredoku nie chroni, bo komenda i tak jedzie przez
+  `bash -c '...'`, a w treści stały angielskie cytaty z dokumentacji n8n
+  (`You'll receive this error`, `your instance's balance`). Naprawa: artykuł
+  i scenariusz zapisane narzędziem Write, a dopisek do `zrodla.md` — Write do
+  pliku w scratchpadzie plus `cat plik >> cel`. Wniosek do zapamiętania:
+  cytaty z angielskiej dokumentacji to prawie gwarancja apostrofu, więc przy
+  nich heredoku nie ma sensu nawet próbować.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją

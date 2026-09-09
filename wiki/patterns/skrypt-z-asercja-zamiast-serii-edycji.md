@@ -38,6 +38,16 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
   zgadywaniem. Ten sam ruch powtórzył się przy wysyłce piętnastu ticketów, gdzie
   weryfikacją była nie liczba linii, tylko odczyt treści z GitHuba i porównanie
   z draftem, z pominięciem końcowej pustej linii dokładanej przez GitHub.
+- 2026-09-09, sesja session_01Kpavh9GSwwHtUcwJNUyRNm: twarde spacje w artykule
+  kursu (styleguide wymaga U+00A0 po `a i o u w z`) wstawione skryptem
+  `sierotki.mjs`, którego regex jest kopią regexa walidatora
+  (`tools/course-pipeline/src/typografia.js`), a nie odgadniętą regułą. Skrypt
+  pomija bloki kodu i kod inline tym samym podziałem co walidator i na końcu
+  sam raportuje własny wynik: `pozostale sierotki poza kodem: 0`. Uruchomiony
+  trzy razy — po pierwszym zapisie i po dwóch rundach poprawek — za każdym
+  razem z tym samym wynikiem, potwierdzonym niezależnie przez
+  `npm run validate`. Ręcznie było do wstawienia ponad sto znaków niewidocznych
+  w edytorze, czyli klasa zmian, której żadne oko nie zweryfikuje.
 
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:
