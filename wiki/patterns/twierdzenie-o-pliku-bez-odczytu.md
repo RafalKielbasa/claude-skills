@@ -43,6 +43,13 @@ bo twierdzenie brzmi jak fakt operacyjny, nie jak hipoteza do sprawdzenia.
   wysłaniu promptu. Bez szkody, ale liczba w prompcie agenta jest twierdzeniem
   o pliku i musi pochodzić z narzędzia (czwarty dowód, czwarta sesja).
 
+- 2026-09-09, sesja session_01PrFurqNDm53ZdkCryE5kjm (wariant: liczba w raporcie
+  subagenta): agent redakcji napisał w raporcie bramkowym „8 calloutów 🎬 na tych
+  samych miejscach", a w pliku jest ich sześć — tyle samo co przed redakcją.
+  Kontrola po agencie podważyła liczbę i policzyła ją kotwicą ASCII (`grep -c
+  "wideo"` → 6 przed i po). Twierdzenie subagenta o zawartości pliku wchodzi do
+  raportu dla użytkownika tak samo jak własne, więc wymaga tego samego odczytu.
+
 ## Rozwiązanie
 Zanim powiesz użytkownikowi, co zawiera plik, przeczytaj ten plik. Dotyczy to
 zwłaszcza kopii zapasowych, artefaktów i plików tymczasowych, które powstały

@@ -1,15 +1,22 @@
 ---
 name: idea-engine-needs-review-stage
-description: "Rafał wants to steer the idea-engine's content, not just its procedure: brainstorming on the concept, Polish readable findings, a realistic interview plan — the built pipeline gives JSON and a hand-off (2026-09-07/08)"
+description: "Rafał must be able to steer an idea's content, not just the engine's procedure — the complaint that produced the vision mode, and the shape of the fix (2026-09-07/09)"
 metadata:
   node_type: memory
   type: feedback
   originSessionId: 226bb5ac-01d2-4b69-b371-68c264dfd5f2
-  modified: 2026-09-08T07:02:12.132Z
+  modified: 2026-09-08T22:25:35.188Z
 ---
 
-After the first full `import` + `validate fit-fast-food` run (2026-09-07) Rafał said he had imagined it differently: he expected a stage where I explain and we discuss the research results and possibly change the plan before moving on. On 2026-09-08 he restated it more sharply: the run lacked any brainstorming ("odbijanie pomysłów, burza mózgów"), the conclusions were invisible to him ("nie wiem jakie są w ogóle wnioski z opracowania"), everything landed in JSON files he cannot read, and the hand-off to interviews left him not knowing whom to call. The only two questions the engine asked him in that run were procedural (screen vs import; accept the default title/concept).
+After the first live `import` + `validate fit-fast-food` run (2026-09-07) Rafał said the engine had given him no way in: no brainstorming, no idea what the research concluded, everything in JSON he cannot read, and a hand-off to interviews without knowing whom to call. Seventeen agents ran; he was asked two procedural questions.
 
-**Why:** the engine is a decision tool for Rafał, not an unattended pipeline. He wants to take part in shaping the concept and interpreting evidence; the JSON layer is for the CLI and a future app, not for him.
+**Why:** the engine is his decision tool, not an unattended pipeline. He wants to shape the concept and interpret the evidence; JSON is for the CLI and a future app, not for him.
 
-**How to apply:** any mode that produces findings must end with a Polish, human-readable layer (conversation and/or a document in the idea directory) before proposing the next mode; the concept itself must be open to variants before expensive research; interview output must be actionable (few questions, concrete kinds of people and where to find them). Treat adding these stages to the skill/spec as a design change that goes through brainstorming with Rafał. Related: [[specs-self-contained]], [[ai-native-business-plan]].
+**Fixed on 2026-09-09** by the `vision` mode (spec `docs/superpowers/specs/2026-09-08-idea-engine-vision-mode-design.md`, 13 commits, suite 246). What the fix assumes, and what to preserve if this area is touched again:
+
+- A business is eleven blocks in one Polish `vision.md`, each with a thesis, evidence and a status. Brainstorming happens in conversation before any research is dispatched; light desk research runs one agent per block and writes a Polish note.
+- Every mode that produces findings ends by explaining them to Rafał in Polish and asking what to change, then waiting. The `validate` discussion must be read from `claims/*.json` and `model/assumptions.json`, never from the CLI's summary counts — narrating counts is the original defect.
+- The block note's `## Odpowiedzi` section comes first in that discussion: it answers the questions Rafał himself wrote. A review caught its omission; shipping without it would have rebuilt the machinery and kept the defect.
+- `validate` is gated behind a finished vision so fifteen agents are not spent on an unshaped idea, and its researchers receive the vision instead of one sentence from `idea.json`.
+
+Still open, deliberately: the interview planner is unchanged, so plans still name roles and not where to find such people. Rafał deferred that to a separate spec. Related: [[specs-self-contained]], [[ai-native-business-plan]].

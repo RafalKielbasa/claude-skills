@@ -67,6 +67,22 @@ wierność jest tym, o co się go prosi.
   dokładnie zgadza się z przyczyną źródłową — im wierniej, tym pewniej defekt
   planu dociera do repozytorium.
 - 2026-09-07, sesja session_01JAgUNken6DG6aFPjDmKkAX: czwarty dowod, czwarta sesja. Skan pre-flight planu B (5157 linii) znalazl w kodzie referencyjnym dwa defekty czyniace plik testowy nieuruchamialnym: `import { validMemo }` kolidujacy z `export function validMemo` w `refs.test.mjs:7` (`SyntaxError`, ktory kladł tez piec testow Plan A) oraz piec wywolan `checked()`/`verified()` w `synthesize.test.mjs` asertujacych `code === 0` bez utworzenia repo — cztery z pieciu testow zadania padalyby na pierwszej asercji. Nowe wzgledem poprzednich dowodow: wystarczyl skan **statyczny** przed pierwszym dispatchem, bez uruchamiania kodu — wystarczylo, ze ktos przeczytal go z zamiarem wykonania, zamiast ocenic jako dokument.
+- 2026-09-08/09, sesja session_01VwQutH9xHrU3vwiwnhbL8y: piaty dowod, piata sesja. Plan trybu
+  `vision` (8 zadan, ~2000 linii) przeszedl self-review i review przez codex (10 uwag, 9
+  wcielonych) — oba czytaly kod, zaden go nie uruchomil. Dwie z czterech uwag Important
+  znalezionych potem przez recenzentow zadaniowych siedzialy w kodzie planu, nie
+  w transkrypcji: (1) `validateVision` budowal `RegExp` z niezwalidowanego id klocka, wiec
+  wiersz z metaznakiem w id i niepusta kolumna notatek rzucal `SyntaxError: Unterminated
+  group` z walidatora — lamiac ograniczenie „Validators never throw" zacytowane w Global
+  Constraints tego samego planu, dokladnie tak jak w dowodzie z 2026-09-06/07; (2)
+  `checkSeedAgainstCurrent` porownywal `title` i liste id bez sprawdzenia, czy szkic w ogole
+  sparsowal sie jako wizja, wiec dwa dowolne nieparsowalne teksty przechodzily z pusta lista
+  bledow. Nowe wzgledem poprzednich dowodow: wada dotknela **tekstu instrukcji, nie tylko
+  kodu** — dwa Important z Taska 8 to brakujace zdania w `SKILL.md` podanym przez plan
+  dosłownie (krok omowienia nie wymienial pliku zrodlowego tez, a krok omowienia notatek
+  pomijal sekcje `## Odpowiedzi`, czyli dokladnie te tresc, dla ktorej caly plan powstal).
+  Blok prozy w planie jest wykonywany przez model tak samo jak blok kodu i tak samo nikt go
+  przed egzekucja nie „uruchomil".
 
 ## Rozwiązanie
 

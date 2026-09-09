@@ -25,6 +25,13 @@ policzony wynik.
   `grep 'U Ciebie (zwrot\|Dla siebie:'` → 1 (tylko „Dla siebie"),
   `grep 'zwrot z inwestycji'` → nic; `grep 'Ciebie ('` → linia 131. Za każdym
   razem wynik trzeba było podważyć z pamięci odczytu, zanim poszedł dalej.
+- 2026-09-09, sesja session_01PrFurqNDm53ZdkCryE5kjm: powtórka na lekcji 0.2 —
+  `grep -c "Też w wideo"` → 0, `grep -c "w wideo"` → 0 i `grep -c "🎬"` → 0 na
+  pliku z sześcioma calloutami; `grep -c "wideo"` → 6, a `od -c` pokazał bajty
+  `w 302 240 w i d e o`. Wzorzec `"Te.* w wideo"` też chybił, bo `.` w Git Bash
+  dopasowuje bajt, nie znak, a „ż" zajmuje dwa. Nowe: raport subagenta podawał
+  8 calloutów zamiast 6, więc liczba z cudzego raportu wymagała tej samej
+  kontroli kotwicą ASCII co własny `grep`.
 
 ## Rozwiązanie
 W kontrolach treści kursu kotwiczyć pattern na fragmencie bez jednoliterowego

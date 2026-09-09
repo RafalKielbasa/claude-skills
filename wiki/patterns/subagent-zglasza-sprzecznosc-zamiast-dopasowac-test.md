@@ -44,6 +44,15 @@ nie tylko „nie zmieniaj testów".
   orkiestrator może uznać za merytoryczne", z lokalizacją — jedna stała się
   punktem decyzji w bramce. Żadnego fałszywego alarmu (drugi dowód, druga
   sesja).
+- 2026-09-08/09, sesja session_01VwQutH9xHrU3vwiwnhbL8y: implementer finalnej fali poprawek
+  dostal ode mnie regule sformulowana za waska — „tylko pliki `claims/*.json` moga stac sie
+  etykieta retry" — i odkryl, ze jej doslowne wykonanie wywala istniejacy test, ktorego blad
+  R05 dotyczy `model/assumptions.json`. Zamiast oslabic test albo zignorowac przypadek,
+  zatrzymal sie, zglosil sprzecznosc jako punkt do mojej decyzji i **sam wskazal przyczyne**:
+  ten plik pisze badacz ekonomii jako swoje drugie wyjscie (`assumptionsOutputPath`), wiec
+  blad w nim jest legalnie jego wina i ma pozostac ponawialny. Moja instrukcja byla bledna,
+  jego korekta trafna; re-review potwierdzilo predykat co do pliku. Nowe: sprzecznosc
+  wskazala wade **polecenia kontrolera**, nie planu ani kodu.
 
 ## Rozwiązanie
 

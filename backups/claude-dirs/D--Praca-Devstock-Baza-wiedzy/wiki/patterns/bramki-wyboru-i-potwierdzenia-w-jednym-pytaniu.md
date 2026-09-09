@@ -24,6 +24,13 @@ pytaniem, inaczej potwierdzenie jest ślepe.
   i artykuł, nie startuj), nad nim tabela plików i statusów oraz opis
   niezacommitowanych dopisków; odpowiedź „fable, xhigh, Scenariusz i artykuł"
   — zakres większy niż w prośbie, bez dodatkowej tury.
+- 2026-09-09, sesja session_01PrFurqNDm53ZdkCryE5kjm: cztery pytania w jednym
+  wywołaniu — odsłuch próbek / zakres podmiany / model / effort — nad nimi
+  tabela siedmiu scenariuszy z liczbą wystąpień i statusem `video` oraz koszt
+  re-renderu. Rafał odpowiedział raz i przy okazji zawęził zakres do M00L02
+  („Tylko M00L02"), choć rekomendacja szła szerzej. Potwierdzenie startu
+  redakcji stało poza pytaniem, jako jawny warunek „startuję dopiero po Twoim
+  werdykcie z próbek" — i zadziałało tak samo jak opcja „Nie startuj".
 
 ## Rozwiązanie
 W skillu połączyć kroki 2 i 3: po inwentaryzacji jedno `AskUserQuestion`
