@@ -46,6 +46,14 @@ says so. Lines marked with a date came from a finding on that date.
 - [ ] **(2026-09-03)** Every acceptance criterion is achievable inside this
       ticket's scope. A criterion about the whole repository ("X does not occur
       anywhere") fails when a third occurrence sits outside the scope.
+- [ ] **(2026-09-09)** In an investigation ticket, every hypothesis passes two
+      checks, not one: the code or configuration state it describes is true
+      today, **and** that state could actually produce the reported symptom. A
+      true fact that cannot produce it is worse than no hypothesis, because the
+      rest of the ticket is verified and the reader trusts this line too.
+- [ ] **(2026-09-09)** A criterion asking for no regression names the scenario to
+      re-run. "X behaves as before" is not checkable without asking the author
+      what "before" covered.
 
 ## Per batch
 

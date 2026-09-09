@@ -1,5 +1,5 @@
 {
-  "model": "opus[1m]",
+  "model": "claude-fable-5-1[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -36,6 +36,7 @@
       "effortLevel": "xhigh"
     }
   },
+  "fastMode": true,
   "askUserQuestionTimeout": "60s",
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
