@@ -38,6 +38,7 @@ niewykonalna, więc albo się ją łamie, albo rozszerza zakres bez pytania.
   **To nie jest nawrót poprawki w `kurs-redakcja`** (ta trzyma się od dwóch
   sesji), tylko dowód, że poprawka weszła do jednego skilla z rodziny `kurs-*`,
   choć instrukcja jest w nich powielona.
+- 2026-09-09, sesja session_017vpJFetLqZycH7sUkFH2XE: trzeci dowod, nowa manifestacja — koszt ponosi subagent, nie bramka. Krok weryfikacji zadan 6 i 7 uruchamia `npm run validate -- ../../kursy/agenty-ai`; oba raporty wrocily z „57 bledow / 25 ostrzezen” jako wlasna troska, a jeden zajal sie dowodzeniem, ze to nie jego wina. Wszystkie 57 to sierotki w quizach czterech lekcji modulu 1, zero z dotykanych plikow. Musialem wpisywac te baze do kazdego kolejnego dispatchu, zeby recenzenci nie gonili cudzego bledu.
 
 ## Rozwiązanie
 W kroku 6 walidować katalog lekcji:

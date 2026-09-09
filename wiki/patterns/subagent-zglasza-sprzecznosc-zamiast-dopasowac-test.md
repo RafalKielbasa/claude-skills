@@ -53,6 +53,7 @@ nie tylko „nie zmieniaj testów".
   blad w nim jest legalnie jego wina i ma pozostac ponawialny. Moja instrukcja byla bledna,
   jego korekta trafna; re-review potwierdzilo predykat co do pliku. Nowe: sprzecznosc
   wskazala wade **polecenia kontrolera**, nie planu ani kodu.
+- 2026-09-09, sesja session_017vpJFetLqZycH7sUkFH2XE: trzy zatrzymania w jednej sesji, wszystkie na moich blednych regulach. (1) Po zmianie metryki z Dice'a na wspolczynnik pokrycia padl test z poprzedniej rundy; implementer pokazal, ze overlap nasyca sie na 1,0 przy zawieraniu, wiec `>=` rozstrzygalo remis na korzysc wchloniecia. (2) Regula „krotka wskazowka to niepewne dopasowanie” wywalila trzy testy, w ktorych trzywyrazowa wskazowka jest DOKLADNYM trafieniem. (3) Doprecyzowana regula nadal ladowala na wierszu sklejonej wskazowki, bo jej pierwsze dopasowanie idzie ta sama sciezka kodu. Kazde zatrzymanie zaowocowalo poprawka reguly kontrolera, nie oslabieniem testu.
 
 ## Rozwiązanie
 

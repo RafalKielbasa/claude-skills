@@ -48,6 +48,7 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
   razem z tym samym wynikiem, potwierdzonym niezależnie przez
   `npm run validate`. Ręcznie było do wstawienia ponad sto znaków niewidocznych
   w edytorze, czyli klasa zmian, której żadne oko nie zweryfikuje.
+- 2026-09-09, sesja session_017vpJFetLqZycH7sUkFH2XE: `fix-sierotki.mjs` z regexem skopiowanym z `src/typografia.js`, wykonany dwa razy (po tym, jak pierwsza poprawka zniknela z drzewa). Asercja wejscia w postaci dry-run z liczba pol, a po zapisie dwa niezalezne weryfikatory: porownanie kazdego pliku z wersja z HEAD po zamianie U+00A0 z powrotem na spacje (diff wylacznie typograficzny) i sprawdzenie, ze 34 pozycje `poprawne` nadal maja odpowiednik w `odpowiedzi`. Drugi weryfikator zlapal realne ryzyko: tresc odpowiedzi powtarza sie doslownie w `poprawne`, wiec podmiana tylko jednej kopii rozspojnilaby quiz.
 
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:

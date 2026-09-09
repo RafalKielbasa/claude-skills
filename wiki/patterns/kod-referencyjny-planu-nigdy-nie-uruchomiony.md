@@ -83,6 +83,7 @@ wierność jest tym, o co się go prosi.
   pomijal sekcje `## Odpowiedzi`, czyli dokladnie te tresc, dla ktorej caly plan powstal).
   Blok prozy w planie jest wykonywany przez model tak samo jak blok kodu i tak samo nikt go
   przed egzekucja nie „uruchomil".
+- 2026-09-09, sesja session_017vpJFetLqZycH7sUkFH2XE: blok `parseKonspekt` z planu przepisany wiernie do `src/plan-nagrania.js`; flush pola `lead` w galezi kroku mial warunek `if (leadLines)`, prawdziwy dla PUSTEJ tablicy, wiec drugi krok segmentu nadpisywal `lead` pustym stringiem. Test z planu przechodzil, bo jego przyklad mial jeden krok. Review zadania 1 tego nie zobaczylo (kod zgadzal sie z briefem co do znaku); znalazl to dopiero implementer zadania 4, ktory uzyl tej funkcji na dwukrokowym przykladzie.
 
 ## Rozwiązanie
 

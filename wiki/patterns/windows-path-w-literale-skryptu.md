@@ -52,6 +52,8 @@ kodem i nie powinna przechodzić przez składnię języka.
   cytaty z angielskiej dokumentacji to prawie gwarancja apostrofu, więc przy
   nich heredoku nie ma sensu nawet próbować.
 
+- 2026-09-09, sesja session_017vpJFetLqZycH7sUkFH2XE: szosty dowod, tym razem na wlasnym skrypcie aktualizujacym wiki. Heredoc `python - <<PY` przez narzedzie Bash padl na `unexpected EOF while looking for matching` — wyzwalaczem byly apostrofy w polskiej prozie wzorca (`cache'uje`, `Dice'a`) oraz separator `'; '` cytowany w tresci. Naprawa dokladnie wedlug sekcji Rozwiazanie tej strony: skrypt zapisany Write do scratchpada i uruchomiony sciezka, bez heredoku.
+
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją
 w skrypcie, zamiast wklejać do literału. Skrypt ma wtedy w sobie wyłącznie
