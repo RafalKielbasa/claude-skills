@@ -31,6 +31,10 @@ przedstawione Rafałowi do bramki akceptacji.
      lektora + avatary), plik jest = finalne spięcie. Surowe
      `video/nagranie.mp4` jest materiałem roboczym Rafała do edytora —
      pipeline go nie czyta.
+     Dokumentem do nagrywania jest `video/plan-nagrania.md` (kroki ekranu obok
+     narracji i nazw plików lektora). Jeśli go nie ma albo `npm run validate`
+     zgłasza, że jest nieaktualny — przegeneruj przed nagraniem:
+     `npm run plan-nagrania -- <lekcja>`.
 2. **BRAMKA: silnik avatara.** Jeśli Rafał wskazał silnik w komendzie („avatar
    przez MCP", „przez API") — honoruj wskazanie bez pytania. Jeśli **nie**
    wskazał — zapytaj **przed renderem** i **czekaj na odpowiedź**: plan

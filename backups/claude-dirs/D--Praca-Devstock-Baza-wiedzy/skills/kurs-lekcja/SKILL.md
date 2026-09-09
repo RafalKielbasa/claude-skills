@@ -97,6 +97,11 @@ przedstawione Rafałowi do bramki review.
 8. **Po zatwierdzeniu przez Rafała:** ustaw `status.tresc: zatwierdzona`,
    uruchom walidację ponownie, commit
    `kurs(<slug>): lekcja NN-y zatwierdzona`.
+   Dla `typ_video: demo` wygeneruj plan nagrania:
+   `npm run plan-nagrania -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
+   Ostrzeżenia o rozjeździe scenariusza z konspektem pokaż Rafałowi razem ze
+   ścieżką pliku. Plan powstaje WYŁĄCZNIE tutaj, po zatwierdzeniu — nigdy
+   w krokach 3-7.
 
 ## Zasady
 

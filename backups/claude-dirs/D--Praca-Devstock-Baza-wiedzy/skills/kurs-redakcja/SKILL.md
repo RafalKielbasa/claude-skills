@@ -119,6 +119,10 @@ z modelem i effortem wybranym przez Rafała na starcie.
    o re-renderze. Zmiany zostają niezacommitowane — commit robi Rafał.
    Jeśli Rafał przerwie bramkę bez decyzji, powiedz wprost w podsumowaniu,
    że pliki w drzewie są po redakcji, ale bez akceptacji.
+   Jeśli lekcja ma `typ_video: demo`, a redakcja objęła grupę B
+   (`video/scenariusz.md`), przegeneruj plan nagrania:
+   `npm run plan-nagrania -- <lekcja>`. Bez tego `npm run validate` zgłosi
+   ostrzeżenie o nieaktualnym `video/plan-nagrania.md`.
 
 ## Zasady
 
