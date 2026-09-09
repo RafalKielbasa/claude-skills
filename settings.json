@@ -36,7 +36,6 @@
       "effortLevel": "xhigh"
     }
   },
-  "fastMode": true,
   "askUserQuestionTimeout": "60s",
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
