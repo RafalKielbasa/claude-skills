@@ -13,3 +13,4 @@
 - [n8n: webhook z basicAuth bez credentiala](n8n-webhook-basicauth-bez-credentiala.md) — objaw to 500 "No authentication data defined on node!", nie 401; sonda złym hasłem odróżnia zepsuty webhook od zdrowego.
 - [/kurs-video tor B — bez etapu spięcia](kurs-video-tor-b-bez-spiecia.md) — Rafał sam montuje finalne wideo przy nakładaniu głosu; skill ma dostarczyć tylko paczkę lektora + avatary i zatrzymać się, bez `nagranie-z-lektorem.mp4`/`final.mp4` i bez ustawiania `status.video: zaakceptowane`.
 - [Wymowa n8n i JSON — zmiana po odsłuchu](wymowa-n8n-json-odsluch.md) — `"en osiem en"` i `dżejson` od 2026-09-09; podmienione tylko M00L02, siedem starszych scenariuszy nadal ze starym zapisem (moduł 1 = re-render).
+- [Podpisy ilustracji w artykułach](ilustracje-podpis-w-artykulach.md) — format `Ilustracja [NR]. Podpis.` pod obrazkiem; w repo prefiks pogrubiony.

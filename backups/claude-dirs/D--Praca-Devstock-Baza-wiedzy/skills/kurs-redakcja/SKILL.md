@@ -55,6 +55,14 @@ z modelem i effortem wybranym przez Rafała na starcie.
    - zakres: pełna redakcja językowa (wolno przepisywać zdania i akapity,
      łączyć, dzielić, przestawiać w obrębie sekcji); sekcja "Nietykalne"
      z `redakcja.md` obowiązuje bezwzględnie,
+   - dla A: podpisy ilustracji w formacie `**Ilustracja <NR>.** <podpis>` —
+     osobna linia pod obrazkiem, oddzielona od niego pustą linią, numeracja
+     ciągła od 1 w obrębie artykułu, podpis pełnym zdaniem zakończonym kropką
+     (np. `**Ilustracja 1.** Węzeł Edit Fields z trzema polami i panelami
+     INPUT / OUTPUT.`). Obrazek bez podpisu — dopisz podpis z treści obrazka
+     i kontekstu akapitu; podpis w innym formacie — sprowadź do tego formatu
+     i przenumeruj od nowa. Obrazków nie dodajesz, nie usuwasz i nie
+     przestawiasz,
    - dla B: bezwzględną ścieżkę do `kursy/<slug>/wymowa.md` z poleceniem
      przeczytania jej W CAŁOŚCI, stosowania zapisów stamtąd i DOPISANIA do niej
      każdej nowej decyzji fonetycznej — obowiązuje sekcja "Nazwy w scenariuszu"
@@ -97,8 +105,10 @@ z modelem i effortem wybranym przez Rafała na starcie.
      którego nie ma w artykule — to błąd artykułu, nie scenariusza,
    - prezentacja.yaml: liczba i kolejność slajdów, `id` i `uklad` bez zmian,
      zero HTML w treści,
-   - artykuł: callouty 🎬 na miejscach, ≥1 blok bez calloutu; objętość
-     orientacyjnie 1200–2000 słów, ale bez cięcia treści dla widełek,
+   - artykuł: callouty 🎬 na miejscach, ≥1 blok bez calloutu; każdy obrazek ma
+     pod sobą podpis `**Ilustracja <NR>.** …`, numeracja ciągła bez dziur
+     i bez duplikatów; objętość orientacyjnie 1200–2000 słów, ale bez cięcia
+     treści dla widełek,
    - quiz/ćwiczenia: JSON się parsuje, pola bez zmian, poprawne odpowiedzi
      te same,
    - merytoryka: diff nie dodaje ani nie gubi faktów, liczb, cen, nazw.
