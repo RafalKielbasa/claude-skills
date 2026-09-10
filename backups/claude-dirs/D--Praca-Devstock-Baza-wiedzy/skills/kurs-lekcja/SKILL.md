@@ -83,10 +83,18 @@ przedstawione Rafałowi do bramki review.
      twarda spacja U+00A0 po jednoliterowych słowach (`a i o u w z`) w artykule
      i na slajdach; scenariusz bez reguły sierotek, ale z regułą myślników
      i cudzysłowów,
-   - liczba segmentów avatar ≤ 3.
+   - liczba segmentów avatar ≤ 3,
+   - **kontrole tej checklisty rób odczytem pliku, nie `grep`-em po frazie
+     z treści.** Po wstawieniu twardych spacji `w wideo`, `z inwestycji`
+     i `U Ciebie` mają w środku U+00A0, a emoji jako pattern w Git Bash nie
+     trafia — oba przypadki dają ciche "0", nie błąd. Kotwicz na fragmencie
+     bez jednoliterowego słowa (`wideo**`, `Ciebie (`, `^> `). "0 trafień"
+     na pliku, który właśnie napisałeś, to błąd wzorca, nie fakt — tak samo
+     odbite `old_string` w `Edit` i licznik z własnego skryptu kontrolnego.
 5. **Walidacja.** Ustaw `status.tresc: do_review` w lekcja.yaml, potem
-   `cd tools/course-pipeline && npm run validate -- ../../kursy/<slug>` —
-   napraw wszystkie BŁĘDY.
+   `cd tools/course-pipeline && npm run validate --
+   ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog lekcji, nie kursu —
+   błędy z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
 6. **Niezależny review AI.**
    `npm run review-ai -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
    Przeczytaj `review-ai.md`: problemy zasadne → popraw treść i powtórz

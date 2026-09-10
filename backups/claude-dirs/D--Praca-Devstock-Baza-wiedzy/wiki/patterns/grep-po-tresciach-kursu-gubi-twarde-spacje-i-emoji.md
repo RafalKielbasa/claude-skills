@@ -1,8 +1,9 @@
 # grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji
 
-- **Skill:** kurs-redakcja (krok 5), dotyczy wszystkich skilli `kurs-*`
+- **Skill:** kurs-lekcja (krok 4, reguła wpisana 2026-09-10); dotyczy wszystkich
+  skilli `kurs-*`, a `kurs-redakcja` i `kurs-zadania` reguły jeszcze nie mają
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-09-10, kurs-lekcja)
 
 ## Opis
 Kontrolne `grep` po `artykul.md` zwracało 0 trafień dla fraz, które w pliku na
@@ -42,6 +43,19 @@ policzony wynik.
   bez jednoliterowego słowa (`bez klucza API.`, `na to nowe pole.`).
   `grep -c "Też w wideo"` → 0 na pliku z siedmioma calloutami wystąpiło jak
   poprzednio; kotwica `wideo` → 7.
+- 2026-09-10, sesja session_01316pV2UPCFTTDHE9dksP6H: czwarty dowod, trzecia
+  klasa narzedzia - po `grep` i `Edit` teraz wlasny skrypt kontrolny.
+  `node -e` liczacy callouty wzorcem `/Też w wideo/g` zwrocil
+  `calloutow: 0` na artykule lekcji 2.1, w ktorym jest ich szesc, bo
+  skrypt sierotek wstawil U+00A0 miedzy „w" a „wideo" juz po napisaniu
+  pliku. Rownolegle `grep -c "🎬"` zwrocil 0 przy szesciu emoji.
+  Przez chwile wygladalo to na skasowanie calloutow przez wlasna edycje;
+  rozstrzygnal dopiero licznik w Pythonie po `'Te\u017c w\u00a0wideo'`
+  (6) i `'\U0001F3AC'` (6). Wniosek do sekcji Rozwiazanie: skrypt
+  kontrolny pisany PO przebiegu fixera podlega tej samej regule co
+  `grep` i `old_string` - jego wzorzec tez trzeba kotwiczyc bez
+  jednoliterowego slowa albo dopuszczac oba znaki spacji.
+
 
 ## Rozwiązanie
 W kontrolach treści kursu kotwiczyć pattern na fragmencie bez jednoliterowego
@@ -55,3 +69,11 @@ wstawiającego twarde spacje kotwica musi być fragmentem bez `a i o u w z`
 ze spacją, bo tekst przepisany z pamięci albo z brudnopisu ma w tych miejscach
 zwykłą spację i nie trafi. Odbita edycja na pliku, który się właśnie zapisało,
 to znak twardej spacji, nie zmiany pliku przez kogoś innego.
+
+Reguła wpisana do `kurs-lekcja` krok 4 (2026-09-10, `/evolve-skill`).
+Nawrotem będzie dopiero ciche „0" w sesji prowadzonej TYM skillem po tej
+dacie. Wystąpienie w `kurs-redakcja` albo `kurs-zadania` to nie nawrót, tylko
+dowód, że poprawka nie objęła całej rodziny - dokładnie ta sama sytuacja co
+przy [[walidacja-calego-kursu-wnosi-cudze-bledy-do-bramki]], gdzie został
+`kurs-zadania`. Rytm z tamtej strony obowiązuje i tu: przy pierwszej okazji
+`grep` po katalogu skilli i lista pozostałych wystąpień do zrobienia.

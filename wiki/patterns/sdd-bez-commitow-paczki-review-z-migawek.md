@@ -23,9 +23,23 @@ odtwarzalny z `git log`. Diff jest jednak funkcja dwoch stanow plikow, nie dwoch
   uzyl migawki `task-2-base` do sprawdzenia, czy nowy test pada przed poprawka. Ledger przejal role
   `git log` jako mapa odtworzenia po kompaktowaniu.
 
+- 2026-09-10, sesja session_015PLcG6rJFegWQiawFUeamB: skrot `git diff -- <sciezki>` wobec HEAD,
+  dopuszczony przez poprzedni dowod dla plikow nietknietych wczesniej, zawiodl. W rulingu
+  pre-flight wybralem wlasnie ten wariant zamiast migawek. Zadanie 1 skonczylo sie o 13:12,
+  a uzytkownik w tym samym momencie zrobil commit `9a94b3e`, ktory wciagnal `src/scenariusz.js`
+  (+48) i `tests/scenariusz.test.js` (+92) razem z wlasna praca nad kursem. `git diff --stat`
+  na tych plikach zwrocil pusto: zmian zadania nie bylo juz w drzewie roboczym, a paczka review
+  wyszlaby pusta i recenzent zatwierdzilby kod, ktorego nie widzial. Ratunek: `git show 9a94b3e --
+  <sciezki>`, mozliwy tylko dlatego, ze commit dalo sie zidentyfikowac po fakcie.
+
 ## Rozwiazanie
 W repo bez commitow per zadanie: na starcie zapisz ruling o migawkach w ledgerze, przed kazdym
 dispatchem kopiuj pliki zadania do katalogu roboczego planu, a paczke review buduj jako `diff -u`
 migawki z drzewem. Numery testow i sciezki plikow podawaj recenzentowi wprost, bo `git log` nie
 opowie historii zadania. Migawke odswiezaj po kazdej rundzie poprawek, inaczej kolejna paczka
 niesie cudze zmiany.
+
+Migawke rob dla KAZDEGO zadania, takze dla plikow nietknietych wczesniej — `git diff` wobec HEAD
+jest odporny na wlasne zmiany, ale nie na to, ze uzytkownik commituje w trakcie pracy subagenta,
+a wtedy diff zadania cicho znika. Migawka pliku sprzed dispatchu jest jedynym punktem odniesienia,
+ktorego cudzy commit nie uniewazni.

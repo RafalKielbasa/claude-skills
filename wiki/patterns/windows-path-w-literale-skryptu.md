@@ -54,6 +54,29 @@ kodem i nie powinna przechodzić przez składnię języka.
 
 - 2026-09-09, sesja session_017vpJFetLqZycH7sUkFH2XE: szosty dowod, tym razem na wlasnym skrypcie aktualizujacym wiki. Heredoc `python - <<PY` przez narzedzie Bash padl na `unexpected EOF while looking for matching` — wyzwalaczem byly apostrofy w polskiej prozie wzorca (`cache'uje`, `Dice'a`) oraz separator `'; '` cytowany w tresci. Naprawa dokladnie wedlug sekcji Rozwiazanie tej strony: skrypt zapisany Write do scratchpada i uruchomiony sciezka, bez heredoku.
 
+- 2026-09-10, sesja session_015PLcG6rJFegWQiawFUeamB: siódmy dowód, i pierwszy, w którym do
+  heredoku popchnęła mnie instrukcja środowiska. Tryb auto tej sesji mówi wprost „make file
+  changes with sed, heredocs, or short scripts, rather than using the dedicated Read, Edit, or
+  Write tools". Zapis specu `cat > 2026-09-10-kurs-uwagi-design.md <<'SPEC_EOF'` padł na
+  `unexpected EOF while looking for matching ''` — parser wskazał linię 40, czyli zdanie
+  `Rafał's remark outranks a course rule`. Plik nie powstał w ogóle. Naprawa: narzędzie Write.
+  Wniosek: instrukcja „preferuj Bash do zmian w plikach" dotyczy edycji punktowych, nie
+  wielolinijkowych dokumentów prozą — te zawsze przez Write, niezależnie od tego, co mówi tryb.
+- 2026-09-10, sesja session_01316pV2UPCFTTDHE9dksP6H: osmy dowod, i pierwszy,
+  w ktorym regula z tej strony byla mi znana i mimo to jej nie
+  zastosowalem. `cat >> zrodla.md <<'EOF'` z trzynastoma pozycjami
+  zrodel padl na `unexpected EOF while looking for matching '`;
+  wyzwalaczem byly apostrofy w angielskich cytatach z dokumentacji
+  (`agent type setting`, `when it shouldn't`, `Salesforce'a`) - czyli
+  dokladnie przypadek nazwany w sekcji Rozwiazanie zdaniem „cytat
+  z angielskiej dokumentacji w tresci to prawie pewny apostrof".
+  Naprawa zgodna ze strona: tresc zapisana narzedziem Write do
+  scratchpada, potem doklejona krotkim `python -c`, ktory czyta plik.
+  Wniosek: sama swiadomosc reguly nie wystarcza, bo heredoc jest
+  odruchem przy dopisywaniu do pliku - regula musi brzmiec jako zakaz
+  narzedziowy („nie uzywaj heredoku do prozy"), nie jako ostrzezenie.
+
+
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją
 w skrypcie, zamiast wklejać do literału. Skrypt ma wtedy w sobie wyłącznie

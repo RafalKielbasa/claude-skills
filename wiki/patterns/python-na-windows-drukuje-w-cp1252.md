@@ -1,0 +1,41 @@
+# python-na-windows-drukuje-w-cp1252
+
+- **Skill:** ogólny
+- **Typ:** porażka
+- **Status:** otwarty
+
+## Opis
+`python -c` uruchomiony przez narzędzie Bash na Windowsie wywala się na
+`UnicodeEncodeError: 'charmap' codec can't encode character`, gdy drukuje polski
+tekst. Skrypt wykonał już całą pracę — pada dopiero na `print`, więc komunikat
+sugeruje błąd w logice, a nie w wypisywaniu wyniku.
+
+## Przyczyna źródłowa
+Standardowe wyjście Pythona na Windowsie dziedziczy kodowanie konsoli (cp1252),
+niezależnie od tego, że plik źródłowy i odczytywana treść są w UTF-8. Odczyt
+i zapis przez `io.open(..., encoding='utf-8')` działa poprawnie; przewraca się
+wyłącznie ścieżka `print` → strumień. Efekt jest mylący podwójnie: kod pada po
+wykonaniu pracy (więc plik bywa już zapisany), a exit code 1 wygląda jak
+niepowodzenie całej operacji.
+
+## Dowody
+- 2026-09-10, sesja session_01316pV2UPCFTTDHE9dksP6H: dwa razy w jednej sesji.
+  Skrypt podmieniający regex w pliku pomocniczym zapisał plik i padł na
+  `print(s)`: `'charmap' codec can't encode character 'ą' in position 16`.
+  Chwilę później diagnostyka lokalizująca wiersze tabeli w artykule padła na
+  `print(repr(s[i:j]))` z `can't encode character 'ł'` — a częściowe
+  wyjście („SLACK ROW:") zdążyło się wypisać przed wyjątkiem, co wyglądało jak
+  pusty wynik wyszukiwania. Oba przypadki naprawione prefiksem
+  `PYTHONIOENCODING=utf-8`.
+
+## Rozwiązanie
+Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie
+poprzedzaj `PYTHONIOENCODING=utf-8`, jeśli cokolwiek drukuje treść inną niż
+ASCII — także wtedy, gdy drukujesz tylko `repr()` albo krótką diagnostykę,
+bo `repr` polskiego tekstu też zawiera te znaki.
+
+`UnicodeEncodeError` na `print` czytaj jako awarię wypisywania, nie awarię
+operacji: sprawdź stan pliku, zanim powtórzysz skrypt, bo zapis mógł już
+przejść. Alternatywnie drukuj wyłącznie ASCII („ok", liczby, nazwy plików)
+i trzymaj treść poza wyjściem — to działa też wtedy, gdy nie kontrolujesz
+zmiennych środowiskowych wywołania.

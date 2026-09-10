@@ -1,0 +1,29 @@
+# PURPOSE — kurs-lekcja
+
+## Pochodzenie
+
+Skill powstał 2026-07-14 jako etap 1a pipeline'u treści kursowych: generowanie kompletu treści jednej lekcji (artykuł, scenariusz video, mapa prezentacji albo konspekt nagrania) do statusu `tresc: do_review`, z walidacją i niezależnym review AI przed bramką Rafała. Dwa commity tego dnia (`4bd08f5`, `7b777b3`, oba `feat(skills): /kurs-lekcja — generowanie treści lekcji z review AI`) wnoszą od razu konspekt nagrania i krok `review-ai`, więc rozdział na tor prezentacji i tor demo był w projekcie od początku, nie dołożony później. Spec zakładający ten podział to `docs/superpowers/specs/2026-07-13-pipeline-tresci-kursowych-design.md` (dzień przed pierwszym commitem).
+
+Późniejsze zmiany szły w większości poza `evolve-skill` — wprost ze specu wdrażanej funkcji pipeline'u, w commicie obejmującym też kod `tools/course-pipeline`. Trzy z nich dają się przypisać jednoznacznie po treści diffu SKILL.md (`git show <sha> -- .claude/skills/kurs-lekcja/SKILL.md`): oznaczanie pokrycia wideo, mapa prezentacji i plan nagrania. Trzy commity dotknęły pliku bez rozpoznawalnego markera i ich zawartość jest tu nieustalona (`?`).
+
+Skill nigdy nie miał osobnego specu poświęconego wyłącznie sobie; jego zakres jest wypadkową specu pipeline'u z 2026-07-13 i kolejnych speców funkcji, które dokładały mu kroki.
+
+## Adresowane wzorce
+
+- [walidacja-calego-kursu-wnosi-cudze-bledy-do-bramki](../../wiki/patterns/walidacja-calego-kursu-wnosi-cudze-bledy-do-bramki.md) — Krok 5 (2026-09-10, walidacja katalogu lekcji zamiast katalogu kursu)
+
+- [grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji](../../wiki/patterns/grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji.md) — Krok 4 (2026-09-10, kontrole checklisty odczytem zamiast `grep`-em po frazie z treści)
+
+## Historia ewolucji
+
+- 2026-07-14 — utworzenie skilla: kontekst i research (kroki 1-2), generowanie `artykul.md`, `video/scenariusz.md`, `video/prezentacja.yaml` i `video/konspekt-nagrania.md` (krok 3), samokontrola (krok 4), walidacja (krok 5), niezależny `review-ai` (krok 6), bramka Rafała (krok 7) — powód: etap 1a pipeline'u treści kursowych — wynik: wprowadzona ręcznie — źródło: `4bd08f5` i `7b777b3`, spec `docs/superpowers/specs/2026-07-13-pipeline-tresci-kursowych-design.md`
+- 2026-07-21 — krok 3e i punkt samokontroli: callout `> 🎬 **Też w wideo**` przed każdym blokiem artykułu, którego meritum pada w scenariuszu, z wymogiem, żeby ≥1 blok został nieoznaczony — powód: kursant ma wiedzieć, co może przejrzeć pobieżnie po obejrzeniu wideo, a artykuł ma mieć wartość dodaną — wynik: wprowadzona ręcznie — źródło: `04912fd`, spec `docs/superpowers/specs/2026-07-21-oznaczanie-pokrycia-wideo-design.md`
+- 2026-07-30 — 8 linii dopisanych do SKILL.md, treść nieustalona (`?`) — powód: nieustalony — wynik: wprowadzona ręcznie — źródło: `c870dc5` (`feat: new meeting genaration logic`, commit obejmujący wiele plików)
+- 2026-08-05 — 3 linie dodane, 7 usuniętych, treść nieustalona (`?`); commit dotyczy toru B, więc prawdopodobnie przeredagowanie kroku 3d, ale diff nie zawiera markera potwierdzającego — powód: nieustalony — wynik: wprowadzona ręcznie — źródło: `52b4801` (`feat: new B line`)
+- 2026-08-21 — krok 3c rozbudowany o kontrakt mapy prezentacji: `id`, `uklad` z listy układów, zero HTML-a w treści, grafiki jako `rysunek`/`plik` — powód: wdrożenie generatora slajdów — wynik: wprowadzona ręcznie — źródło: `f662210`, spec `docs/superpowers/specs/2026-08-21-generator-slajdow-design.md`
+- 2026-08-24 — reguły kompozycji slajdu (diagram poziomo, `lead` pod nagłówkiem, zero emoji w nagłówkach kolumn, maskotka najwyżej raz na lekcję), zakaz słownictwa grywalizacji w treści i sekcja typografii w samokontroli — powód: reguły z realnych renderów i ze styleguide'u — wynik: wprowadzona ręcznie — źródło: `e50a62d`
+- 2026-08-25 — 8 linii dodanych, 3 usunięte, treść nieustalona (`?`) — powód: nieustalony — wynik: wprowadzona ręcznie — źródło: `f11f452` (`docs: M01L03`)
+- 2026-09-09 — krok 8: po zatwierdzeniu treści generowany `video/plan-nagrania.md` dla `typ_video: demo`, wyłącznie tutaj i nigdy w krokach 3-7 — powód: plan zbudowany z niezatwierdzonej narracji zachęca do nagrywania materiału, który się jeszcze zmieni — wynik: wprowadzona ręcznie — źródło: `bc15c11`, spec `docs/superpowers/specs/2026-09-09-plan-nagrania-generator-design.md`
+- 2026-09-10 — krok 5: walidacja katalogu lekcji (`../../kursy/<slug>/modul-NN-x/lekcja-NN-y`) zamiast katalogu kursu, z dopiskiem, że błędy z innych lekcji nie wchodzą do tej bramki — powód: wzorzec `walidacja-calego-kursu-wnosi-cudze-bledy-do-bramki` z 3 dowodami z 3 sesji; ta sama poprawka weszła do `kurs-redakcja` 2026-09-07, ale nie objęła reszty rodziny `kurs-*` — wynik: zaakceptowana przez `/evolve-skill` — źródło: `.claude/wiki/skill-impact.md`, wpis 2026-09-10 — kurs-lekcja; sesja `https://claude.ai/code/session_015PLcG6rJFegWQiawFUeamB`
+
+- 2026-09-10 — krok 4: nowy punkt checklisty — kontrole robi się odczytem pliku, nie `grep`-em po frazie z treści; po wstawieniu twardych spacji wzorzec ze zwykłą spacją nie trafia, emoji w Git Bash też nie, a oba dają ciche "0"; kotwica bez jednoliterowego słowa, "0 trafień" na właśnie napisanym pliku traktowane jak błąd wzorca — powód: wzorzec `grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji` z 4 dowodami z 4 sesji i trzema klasami narzędzia (`grep`, `Edit`, własny skrypt liczący); żaden skill `kurs-*` nie miał tej reguły — wynik: zaakceptowana przez `/evolve-skill` — źródło: `.claude/wiki/skill-impact.md`, wpis 2026-09-10 — kurs-lekcja — kontrole odczytem; sesja `https://claude.ai/code/session_01316pV2UPCFTTDHE9dksP6H`

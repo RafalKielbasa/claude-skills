@@ -24,6 +24,27 @@ ten kod, ktorego pomiar dotyczyl.
   zmierzyl migawke sprzed fali poprawek i pokazal, ze prawidlowe wartosci to 9 i 26, czyli
   przesunal sie inny kubelek, niz raportowalem.
 
+- 2026-09-10, sesja session_015PLcG6rJFegWQiawFUeamB: tym razem pomiar zdezaktualizowal sie
+  W TRAKCIE jednej tury. Na starcie podsumowania zebralem `git status --short` — nizej dziewiec
+  pozycji, w tym moj spec i plan jako niezacommitowane. Zanim cokolwiek z tego zapisalem,
+  uzytkownik zrobil commit `9a94b3e`, wiec ten sam `git status` pokazywal juz jedna pozycje.
+  Gdybym zlozyl sekcje „Stan” briefu z pierwszego pomiaru, dziennik klamalby o stanie repo
+  w zdaniu, po ktore siega sie nastepnego dnia. Wykryte przypadkiem, bo subagent zaraportowal
+  „index changing between two `git status` calls on files I never touched”.
+- 2026-09-10, sesja session_01316pV2UPCFTTDHE9dksP6H: trzeci dowod, i pierwszy,
+  w ktorym „stala" nie byla liczba, tylko zalozeniem o stanie repo.
+  Regula z `CLAUDE.md` mowi, ze nie commituje, wiec przez cala sesje
+  zakladalem, ze pliki nowej lekcji leza w drzewie jako niezacommitowane,
+  i tak mial brzmiec raport bramki. `git status --short` uruchomiony
+  dopiero przy skladaniu raportu pokazal JEDNA pozycje zamiast szesciu:
+  Rafal zacommitowal je pod sesja jako `80b53bf kurs: M02L01 struktura`
+  i `a497ac0 docs: aktualizacja wiki`. Zdanie „zostawiam niezacommitowane"
+  byloby falszywe, a pochodzilo nie z pomiaru, tylko z reguly.
+  Wniosek do sekcji Rozwiazanie: hipoteza jest nie tylko stary pomiar,
+  ale i stan wyprowadzony z reguly („ja tego nie robie, wiec tego nie ma") -
+  taki tez trzeba zmierzyc w turze, w ktorej sie go cytuje.
+
+
 ## Rozwiazanie
 Liczbe, ktora steruje decyzja albo trafia do promptu subagenta, mierz w tej samej turze, w ktorej
 ja podajesz, i zapisuj razem z nia, czego dokladnie dotyczy pomiar (commit, migawka, katalog).

@@ -70,8 +70,9 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
    rangi, punktów ani awansu — nagrody pokazuje platforma, treść o nich
    milczy.
 5. **Walidacja.** Ustaw `status.zadania: do_review` w `lekcja.yaml`, potem
-   `cd tools/course-pipeline && npm run validate -- ../../kursy/<slug>` —
-   napraw wszystkie BŁĘDY.
+   `cd tools/course-pipeline && npm run validate --
+   ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog lekcji, nie kursu —
+   błędy z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
 6. **BRAMKA: prezentacja Rafałowi.** Pokaż: treść pytań quizu (z poprawnymi
    odpowiedziami oznaczonymi), wygenerowane ćwiczenie (polecenie + treść
    właściwa dla rodzaju) albo uzasadnienie, czemu go nie ma. Uwagi Rafała
