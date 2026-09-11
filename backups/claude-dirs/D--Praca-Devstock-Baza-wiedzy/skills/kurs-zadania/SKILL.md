@@ -31,7 +31,7 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
      inaczej niż w artykule, obowiązuje wersja ze scenariusza; zgłoś
      rozjazd Rafałowi na bramce, bo to artykuł wymaga poprawki.
 3. **Generowanie:**
-   a. `quiz.json` — zawsze. 3–6 pytań, mix `single`/`multi`, dystraktory
+   a. `quiz.json` — zawsze. 5–6 pytań (5 to minimum platformy, mniejszy quiz jest odrzucany), mix `single`/`multi`, dystraktory
       wiarygodne (typowe pomyłki, nie absurdy), każda poprawna odpowiedź
       weryfikowalna w `artykul.md`. Trzy twarde reguły formy:
       - `czas_min` = liczba pytań (minuta na pytanie): 5 pytań → `5`,
@@ -39,7 +39,7 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
       - Treść pytania `multi` NIE zapowiada wielokrotnego wyboru — zero
         dopisków "(zaznacz wszystkie pasujące)" i wariantów; tryb pytania
         pokazuje platforma.
-      - Każda odpowiedź ≤ 70 znaków. Nie mieści się? Przenieś kontekst do
+      - Każda odpowiedź ≤ 69 znaków (platforma odrzuca 70 i więcej). Nie mieści się? Przenieś kontekst do
         treści pytania, nie rozpychaj odpowiedzi.
    b. Oceń charakter sekcji "Praktyka krok po kroku" artykułu i wybierz **co
       najwyżej jeden** pasujący rodzaj ćwiczenia (struktura-zadania.md ma
@@ -50,7 +50,8 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
         `testy`.
       - **`prompt`** — praktyka to pisanie/dopracowywanie promptu. Jasne
         `instrukcje_oceniajace` (co model oceniający ma sprawdzić, kiedy
-        uznać za wykonane) — bez miejsca na interpretację.
+        uznać za wykonane) — bez miejsca na interpretację. `limit_prob` 1..10
+        i `limit_czasu_s` 60..3600 s (zakresy platformy).
       - **`dopasowanie`** — praktyka sprawdza znajomość pojęć lub kolejności
         kroków, ale nie wymaga budowania niczego. `kategoria: MATCH`/
         `CATEGORIZE` dla par pojęcie↔znaczenie, `SORT` dla kolejności kroków
@@ -64,7 +65,7 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
 4. **Samokontrola.** Sprawdź checklistę jakości ze `struktura-zadania.md` dla
    quizu i wybranego rodzaju ćwiczenia. Dla quizu policz osobno: `czas_min`
    równy liczbie pytań, żadna treść pytania nie zapowiada wielokrotnego
-   wyboru, żadna odpowiedź nie przekracza 70 znaków. Osobno przejdź
+   wyboru, żadna odpowiedź nie przekracza 69 znaków, pytań jest 5–6. Osobno przejdź
    typografię: zero pauz (—) i półpauz (–) w roli myślnika (dywiz `-` ze
    spacjami), tylko proste cudzysłowy `"` i `'`, twarda spacja U+00A0 po
    jednoliterowych słowach (`a i o u w z`) w polach widocznych dla kursanta —
