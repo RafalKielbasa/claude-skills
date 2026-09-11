@@ -32,6 +32,20 @@ dokładnie ten tekst, który kursant zobaczy na ekranie.
   automatyczny opis dla akcji Gmaila brzmi „Get many messages in Gmail" — i to
   zdanie stało się pointą kroku 4 lekcji („poprawne i całkowicie bezużyteczne").
   Bez commita ta pointa byłaby zgadywana.
+- 2026-09-11, sesja session_01M1roR3MszbAgi1a1AE3xqh: drugi dowód, lekcja 2.2,
+  ten sam ruch i ten sam skutek, ale tym razem z granicą metody. Dokumentacja
+  n8n opisuje przycisk "Let the model define this parameter" i funkcję
+  `$fromAI()`, nie podaje jednak postaci wyrażenia, które przycisk wstawia -
+  a to ono jest pointą kroku 3 lekcji ("klucz to zlepek nazwy pola, opis jest
+  pusty"). Postać znalazła się w zgłoszeniach repozytorium produktu
+  (`n8n-io/n8n` issue 21606): `{{ /*n8n-auto-generated-fromAI-override*/
+  $fromAI('Calendar', ``, 'string') }}`, plus przykłady kluczy z Gmaila
+  (`Message_ID`, `Label_Names_or_IDs`). Granica: dla węzła Google Sheets,
+  którego lekcja używa, dokładnego klucza nie potwierdza ani dokumentacja, ani
+  żadne zgłoszenie. Zamiast zgadywać cicho, artykuł podaje `Filters_Lookup_Value`
+  ze zdaniem "dokładna nazwa klucza bierze się z nazwy pola, więc u Ciebie może
+  brzmieć nieco inaczej", a `konspekt-nagrania.md` dostał krok, który każe
+  pokazać to pole w kadrze. Weryfikacja przeniesiona do nagrania, nie pominięta.
 
 ## Rozwiązanie
 Gdy lekcja opiera się na konkretnym polu, przycisku albo komunikacie
@@ -45,3 +59,13 @@ Do `zrodla.md` wpisywać wtedy commit z jego tytułem i cytowanym stringiem,
 zaznaczając, że to źródło z kodu, nie z dokumentacji — kolejna lekcja z tej
 rodziny dostaje wtedy gotowy trop zamiast powtarzać poszukiwania. Ten sam ruch
 działa dla każdego produktu open source używanego w kursie.
+
+Gdy nawet repo produktu nie daje pewności co do konkretnego wystąpienia (bo
+string składa się z nazwy pola, a zgłoszenia pokazują go tylko dla innych
+węzłów), nie zgaduj cicho i nie rezygnuj z konkretu. Podaj wartość najbardziej
+prawdopodobną razem ze zdaniem, które nazywa niepewność w treści lekcji
+(„dokładna nazwa bierze się z nazwy pola, więc u Ciebie może brzmieć inaczej"),
+i dołóż do `konspekt-nagrania.md` krok, który każe pokazać to miejsce w kadrze.
+Nagranie jest jedynym momentem, w którym ktoś i tak patrzy na prawdziwy
+interfejs - przeniesienie tam weryfikacji kosztuje jedną linię konspektu,
+a przemilczenie niepewności kosztuje błąd w zatwierdzonej lekcji.

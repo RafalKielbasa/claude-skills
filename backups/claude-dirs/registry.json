@@ -1,55 +1,55 @@
 ﻿{
     "version":  1,
-    "updated":  "2026-09-11T11:09:52.3621263+02:00",
+    "updated":  "2026-09-11T11:15:12.6027614+02:00",
     "entries":  [
                     {
                         "slug":  "D--Notatki-notatki",
                         "path":  "D:\\Notatki\\notatki",
                         "claudeDir":  "D:\\Notatki\\notatki\\.claude",
                         "missing":  false,
-                        "lastSync":  "2026-09-11T11:09:52.3621263+02:00"
+                        "lastSync":  "2026-09-11T11:15:12.6012365+02:00"
                     },
                     {
                         "slug":  "D--Praca-Devstock-Baza-wiedzy",
                         "path":  "D:\\Praca\\Devstock\\Baza wiedzy",
                         "claudeDir":  "D:\\Praca\\Devstock\\Baza wiedzy\\.claude",
                         "missing":  false,
-                        "lastSync":  "2026-09-11T11:09:52.3621263+02:00"
+                        "lastSync":  "2026-09-11T11:15:12.6012365+02:00"
                     },
                     {
                         "slug":  "D--Praca-Devstock-Projekty-Multi-agent-system",
                         "path":  "D:\\Praca\\Devstock\\Projekty\\Multi agent system",
                         "claudeDir":  "D:\\Praca\\Devstock\\Projekty\\Multi agent system\\.claude",
                         "missing":  false,
-                        "lastSync":  "2026-09-11T11:09:52.3621263+02:00"
+                        "lastSync":  "2026-09-11T11:15:12.6012365+02:00"
                     },
                     {
                         "slug":  "D--Praca-Devstock-Projekty-Multi-agent-system-company-agent-chat",
                         "path":  "D:\\Praca\\Devstock\\Projekty\\Multi agent system\\company-agent-chat",
                         "claudeDir":  "D:\\Praca\\Devstock\\Projekty\\Multi agent system\\company-agent-chat\\.claude",
                         "missing":  false,
-                        "lastSync":  "2026-09-11T11:09:52.3621263+02:00"
+                        "lastSync":  "2026-09-11T11:15:12.6012365+02:00"
                     },
                     {
                         "slug":  "D--Praca-Devstock-Projekty-Multi-agent-system-devstock-team-agent",
                         "path":  "D:\\Praca\\Devstock\\Projekty\\Multi agent system\\devstock-team-agent",
                         "claudeDir":  "D:\\Praca\\Devstock\\Projekty\\Multi agent system\\devstock-team-agent\\.claude",
                         "missing":  false,
-                        "lastSync":  "2026-09-11T11:09:52.3621263+02:00"
+                        "lastSync":  "2026-09-11T11:15:12.6012365+02:00"
                     },
                     {
                         "slug":  "D--Praca-Devstock-Projekty-saas-app",
                         "path":  "D:\\Praca\\Devstock\\Projekty\\saas app",
                         "claudeDir":  "D:\\Praca\\Devstock\\Projekty\\saas app\\.claude",
                         "missing":  false,
-                        "lastSync":  "2026-09-11T11:09:52.3621263+02:00"
+                        "lastSync":  "2026-09-11T11:15:12.6012365+02:00"
                     },
                     {
                         "slug":  "D--Praca-Devstock-Projekty-saas-app-docs",
                         "path":  "D:\\Praca\\Devstock\\Projekty\\saas app\\docs",
                         "claudeDir":  "D:\\Praca\\Devstock\\Projekty\\saas app\\docs\\.claude",
                         "missing":  false,
-                        "lastSync":  "2026-09-11T11:09:52.3621263+02:00"
+                        "lastSync":  "2026-09-11T11:15:12.6012365+02:00"
                     }
                 ]
 }

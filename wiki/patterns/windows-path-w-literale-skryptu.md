@@ -75,7 +75,20 @@ kodem i nie powinna przechodzić przez składnię języka.
   Wniosek: sama swiadomosc reguly nie wystarcza, bo heredoc jest
   odruchem przy dopisywaniu do pliku - regula musi brzmiec jako zakaz
   narzedziowy („nie uzywaj heredoku do prozy"), nie jako ostrzezenie.
-
+- 2026-09-11, sesja session_01M1roR3MszbAgi1a1AE3xqh: dziewiąty dowód, dwa
+  wystąpienia w jednej sesji, oba na regule opisanej wprost na tej stronie.
+  Pierwsze: `cat > artykul.md <<'EOF'` z gotowym artykułem lekcji (~3400 słów
+  polskiego markdownu z blokami kodu, backtickami i apostrofami w cytatach
+  z dokumentacji) padł komunikatem `bash: -c: line 82: unexpected EOF while
+  looking for matching `''` - mimo cytowanego delimitera. Plik nie powstał
+  w ogóle, tura przepadła, treść trzeba było podać jeszcze raz narzędziem
+  `Write`. Drugie, godzinę później i po napisaniu tej samej strony wiki:
+  heredoc `python - <<'PY'` z blokiem `'''...'''`, w którym siedziały sekwencje
+  `\\uXXXX` i `\\u{1F3AC}` jako **treść dowodu o innym wzorcu**, wysadził parser
+  Pythona (`SyntaxError: truncated \uXXXX escape`) - też zanim cokolwiek
+  się wykonało. Naprawione dopiero po przejściu na schemat opisany niżej:
+  treść dowodów zapisana narzędziem `Write` do plików w scratchpadzie, skrypt
+  Pythona wyłącznie ASCII, wklejanie przez `io.open(...).read()`.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją

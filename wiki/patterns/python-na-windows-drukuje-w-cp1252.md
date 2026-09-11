@@ -27,6 +27,18 @@ niepowodzenie całej operacji.
   wyjście („SLACK ROW:") zdążyło się wypisać przed wyjątkiem, co wyglądało jak
   pusty wynik wyszukiwania. Oba przypadki naprawione prefiksem
   `PYTHONIOENCODING=utf-8`.
+- 2026-09-11, sesja session_01M1roR3MszbAgi1a1AE3xqh: drugi dowód, druga sesja,
+  dokładnie ten sam kształt. Skrypt wstawiający brief do
+  `D:/Notatki/notatki/praca-z-claude.md` przeszedł wszystkie asercje wejścia,
+  wypisał pierwszą linię diagnostyki i padł na drugiej:
+  `UnicodeEncodeError: 'charmap' codec can't encode character '\u0144'` -
+  bo drukował tytuł sąsiedniego wpisu („Silnik zadań"). Zapis pliku stoi
+  w skrypcie PO tym `print`, więc dziennik nie został ruszony i `grep`
+  potwierdził stary układ; gdyby kolejność była odwrotna, wpis wjechałby do
+  pliku, a exit code 1 sugerowałby, że nic się nie stało. Naprawione
+  `sys.stdout.reconfigure(encoding='utf-8')` w pierwszej linii skryptu -
+  wariant przydatny tam, gdzie treść idzie heredokiem i nie ma jak dopisać
+  prefiksu `PYTHONIOENCODING=utf-8` do wywołania.
 
 ## Rozwiązanie
 Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie

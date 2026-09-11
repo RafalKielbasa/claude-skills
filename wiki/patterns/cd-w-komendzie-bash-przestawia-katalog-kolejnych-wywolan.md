@@ -38,7 +38,8 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   katalogu pakietu i za każdym razem dostawał `cd` zamiast `( cd … && … )`
   (trzeci dowód, trzecia sesja).
 - 2026-09-07, sesja session_01JAgUNken6DG6aFPjDmKkAX: czwarty dowod. `cd .claude/skills/idea-engine && node --test test/` przestawil katalog na kolejne wywolania; nastepne `printf ... >> `.superpowers/sdd/.../progress.md`` padlo z `No such file or directory`, bo sciezka wzgledna liczyla sie od katalogu skilla. Naprawione sciezka bezwzgledna. Komunikat „Environment update: Primary working directory changed” przychodzi po fakcie i w dlugiej sesji latwo go przeoczyc — tu przelaczenie tam i z powrotem zdarzylo sie kilkanascie razy.
-- 2026-09-11, sesja session_017aBB9RTKx1hZBSvF1TH7bi: piaty dowod, piata sesja.
+
+- 2026-09-11, sesja session_017aBB9RTKx1hZBSvF1TH7bi: piaty dowod, piata sesja.
   `cd ".../.claude/skills/kurs-zadania" && find . -type f` przestawilo katalog
   glowny na katalog skilla; kolejna komenda musiala zaczac sie od `cd` z powrotem.
   Potem to samo z `tools/course-pipeline` - dwa komunikaty „Environment update”
@@ -47,6 +48,17 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `npm run tasuj` wymagaja katalogu pakietu i za kazdym razem dostawaly `cd`
   zamiast podpowloki `( cd … && … )` - trzecia sesja z rzedu z tym samym
   konkretnym przypadkiem (`tools/course-pipeline`).
+- 2026-09-11, sesja session_01M1roR3MszbAgi1a1AE3xqh: szósty dowód, szósta
+  sesja, czwarty raz z rzędu ten sam konkretny przypadek `tools/course-pipeline`.
+  `cd ".../tools/course-pipeline" && npm run validate -- ...` i `npm run review-ai`
+  przestawiały katalog główny tam i z powrotem między katalogiem pakietu,
+  katalogiem lekcji a korzeniem repo - siedem komunikatów „Environment update"
+  i cztery „Shell cwd was reset" w jednej sesji. Raz zdarzyło się to
+  z realnym skutkiem: po `cd` do katalogu lekcji kolejne wywołanie skryptu
+  wstawiającego twarde spacje dostało ścieżkę względną `artykul.md`, która
+  akurat trafiła - ale wyłącznie dlatego, że cwd przypadkiem było już tam,
+  gdzie trzeba. Podpowłoka `( cd … && … )` nie została użyta ani razu, mimo że
+  rozwiązanie stoi na tej stronie od pierwszego dowodu.
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a

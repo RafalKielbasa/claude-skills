@@ -83,6 +83,8 @@ index 1fcda34..4fecf0a 100644
  5. **Walidacja.** Ustaw `status.tresc: do_review` w lekcja.yaml, potem
 ```
 
+- **Nawrót:** 2026-09-11, grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji (sesja session_01M1roR3MszbAgi1a1AE3xqh, `/kurs-lekcja M02L02`; `Edit` odbity od `old_string` z brudnopisu i własny skrypt liczący callouty z wynikiem 0 na pliku z ośmioma — reguła z kroku 4 przeczytana i mimo to złamana dwa razy)
+
 ## 2026-09-10 — kurs-zadania — zaakceptowana
 - **Wzorce:** walidacja-calego-kursu-wnosi-cudze-bledy-do-bramki
 - **Zmiana:** Krok 5: komenda walidacji wskazuje katalog lekcji (`../../kursy/<slug>/modul-NN-x/lekcja-NN-y`) zamiast katalogu kursu, z dopiskiem, że błędy z innych lekcji nie wchodzą do tej bramki. Placeholder w konwencji `modul-NN-x/lekcja-NN-y` — tej samej co w `kurs-lekcja` i co zapis wejścia w nagłówku tego pliku (`SKILL.md:8`), nie `<modul>/<lekcja>` z `kurs-redakcja`. Krok 7 („uruchom walidację ponownie") dziedziczy komendę z kroku 5, więc poprawia się bez osobnej zmiany.

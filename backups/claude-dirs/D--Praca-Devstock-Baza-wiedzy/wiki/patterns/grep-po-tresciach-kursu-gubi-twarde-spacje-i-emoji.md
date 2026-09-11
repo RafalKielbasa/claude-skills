@@ -3,7 +3,7 @@
 - **Skill:** kurs-lekcja (krok 4, reguła wpisana 2026-09-10); dotyczy wszystkich
   skilli `kurs-*`, a `kurs-redakcja` i `kurs-zadania` reguły jeszcze nie mają
 - **Typ:** porażka
-- **Status:** zaadresowany (2026-09-10, kurs-lekcja)
+- **Status:** nawrót (2026-09-11) — wpisany 2026-09-10 do `kurs-lekcja`, złamany 2026-09-11 w sesji prowadzonej tym skillem
 
 ## Opis
 Kontrolne `grep` po `artykul.md` zwracało 0 trafień dla fraz, które w pliku na
@@ -55,7 +55,24 @@ policzony wynik.
   kontrolny pisany PO przebiegu fixera podlega tej samej regule co
   `grep` i `old_string` - jego wzorzec tez trzeba kotwiczyc bez
   jednoliterowego slowa albo dopuszczac oba znaki spacji.
-
+- 2026-09-11, sesja session_01M1roR3MszbAgi1a1AE3xqh: piąty dowód, pierwszy PO
+  wpisaniu reguły do `kurs-lekcja` krok 4 - czyli nawrót, w sesji prowadzonej
+  tym właśnie skillem. Lekcja 2.2, dwa wystąpienia pod rząd. Najpierw `Edit`
+  odbił się od "String to replace not found in file" na `old_string`
+  przepisanym z własnego brudnopisu sprzed przebiegu skryptu sierotek; kotwica
+  zawierała "w tej lekcji" i "i obie", czyli dwa jednoliterowe słowa ze zwykłą
+  spacją. Narzędzie samo zgłosiło, że próbowało też zamiany sekwencji
+  unikodowych i nie trafiło. Zadziałała dopiero kotwica bez jednoliterowego
+  słowa (`gwiazdka wstawia pod spodem.**`). Zaraz potem własny skrypt
+  kontrolny `node -e` liczący callouty wzorcem z emoji i zwykłą spacją zwrócił
+  `calloutow w artykule: 0` na pliku z ośmioma calloutami; kotwica `wideo**`
+  dała 8. Regułę z kroku 4 miałem przeczytaną na starcie sesji i złamałem ją
+  dwa razy - rozpoznałem objaw od razu, bo jest opisany, ale nie zapobiegłem
+  mu. Trzecie wystąpienie tej samej rodziny, tym razem odwrotne: kontrolne
+  `grep -i "API"` po artykule dało 15 trafień, wszystkie fałszywe, bo "napisze"
+  i "zapisz" zawierają `api` jako podciąg. Wzorzec nie chybił - trafił za dużo,
+  a wniosek "w artykule jest żargon API" byłby równie nieprawdziwy jak "nie ma
+  calloutów".
 
 ## Rozwiązanie
 W kontrolach treści kursu kotwiczyć pattern na fragmencie bez jednoliterowego
@@ -77,3 +94,20 @@ dowód, że poprawka nie objęła całej rodziny - dokładnie ta sama sytuacja c
 przy [[walidacja-calego-kursu-wnosi-cudze-bledy-do-bramki]], gdzie został
 `kurs-zadania`. Rytm z tamtej strony obowiązuje i tu: przy pierwszej okazji
 `grep` po katalogu skilli i lista pozostałych wystąpień do zrobienia.
+
+**Nawrót 2026-09-11.** Reguła z kroku 4 była przeczytana na starcie sesji
+i mimo to złamana dwa razy w jednej lekcji. Sama reguła jest trafna, ale stoi
+w złym miejscu: krok 4 to samokontrola, a szkoda dzieje się w kroku 3, przy
+edycjach pliku tuż po przebiegu skryptu sierotek - wtedy, gdy o twardych
+spacjach najłatwiej zapomnieć, bo właśnie się je wstawiło. Kandydat na kolejną
+ewolucję: przenieść regułę do kroku 3 albo związać ją ze skryptem
+(„kto wstawia twarde spacje, ten od tej chwili kotwiczy bez `a i o u w z`"),
+zamiast zostawiać ją jako punkt checklisty odczytywanej później.
+
+Drugie rozszerzenie z tej samej sesji: pułapka ma dwie twarze. Obok cichego
+„0" jest ciche „za dużo" - `grep -i` po krótkim ciągu ASCII (`API`) trafia
+w podciągi polskich słów („n**api**sze", „z**api**sz") i daje 15 trafień tam,
+gdzie prawdziwych jest zero. Wniosek z takiego wyniku jest równie fałszywy jak
+z zera, tylko brzmi groźniej. Przy kontrolach na krótkich akronimach kotwiczyć
+na granicy słowa (`\bAPI\b`) albo czytać trafienia z kontekstem, zanim
+wejdą do raportu.

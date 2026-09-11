@@ -32,6 +32,18 @@ brak strony.
   jak „tej strony nie ma" — dopiero trzecia próba pokazała, że to 404.
   Adresy z sekcji `advanced-ai/` stoją w `zrodla.md` przy modułach 1-5 z datą
   dostępu 2026-07-14.
+- 2026-09-11, sesja session_01M1roR3MszbAgi1a1AE3xqh: drugi dowód, druga sesja,
+  ten sam adres. Research do lekcji 2.2 zacząłem od
+  `docs.n8n.io/advanced-ai/examples/using-the-fromai-function/` - adresu, który
+  dzień wcześniej sam trafił do `zrodla.md` jako martwy. `WebFetch` odpowiedział
+  "The webpage content shows a 404 error page for a URL that no longer exists",
+  więc tym razem 404 było rozpoznane od razu, ale tura przepadła. To samo
+  z `docs.n8n.io/data/expression-reference/root/`, wziętym z wyników
+  wyszukiwania. Zadziałały dwie drogi: nowy adres
+  `docs.n8n.io/build/integrate-ai/ai-examples/use-ai-for-parameters` oraz surowy
+  plik `raw.githubusercontent.com/n8n-io/n8n-docs/main/docs/build/integrate-ai/ai-examples/use-ai-for-parameters.md`,
+  który dał pełną treść strony razem z tabelą parametrów `$fromAI()` - czego
+  żadne pobranie samej strony wcześniej nie dało.
 
 ## Rozwiązanie
 W kroku 2 nie zaczynać od kopiowania adresu z `zrodla.md` — najpierw wyszukać
@@ -44,3 +56,11 @@ faktycznie otwarto w tej sesji, a przy okazji researchu do kolejnej lekcji
 z tej samej rodziny narzędzi poprawiać martwe linki znalezione po drodze.
 Osobne zadanie do rozważenia: jednorazowy przegląd wszystkich adresów
 `docs.n8n.io/advanced-ai/` w `zrodla.md` kursu agenty-ai.
+
+Po drugim dowodzie dochodzi druga droga do tej samej treści: dokumentacja n8n
+żyje w repozytorium `n8n-io/n8n-docs`, a ścieżka URL odpowiada ścieżce pliku
+pod `docs/`. Surowy plik z `raw.githubusercontent.com/n8n-io/n8n-docs/main/docs/<ścieżka>.md`
+daje pełny tekst strony razem z tabelami, bez streszczania i bez ryzyka, że
+sensownie wyglądająca strona 404 zostanie wzięta za odpowiedź. Gdy adres
+`docs.n8n.io` wraca pusty, to jest pierwsza rzecz do spróbowania, zanim uzna
+się, że informacji nie ma.
