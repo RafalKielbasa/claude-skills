@@ -26,6 +26,8 @@ poprawia sie osobno, wiec rozbieznosc powstaje domyslnie, a kosztuje dopiero prz
   o przypietych danych” i wrocil jako „sparowany po kolejnosci”. Powrot do slowa
   „baner” ostrzezenie zdjal.
 
+- 2026-09-11, sesja session_01Ed5FeuzWuuXgE2NexUX3pe: mechanizm dzialal, ale ostrzezenie nikt nie przeczytal. Krok 44 konspektu M02L01 ("pokaz liste wezlow narzedziowych i przewin ja powoli") stoi w planie jako "parowanie po kolejnosci", bo linia `[AKCJA: ...]` scenariusza kaze w tym miejscu WYSZUKAC Slack, Notion, Trello i Airtable - czyli wpisac cztery frazy, o ktorych konspekt milczy. Rozjazd wyszedl dopiero przy recznym skladaniu sciagi klawiaturowej, dwa dni po wygenerowaniu planu. Granica metody: ostrzezenie w wygenerowanym pliku jest warte tyle, ile kroki procedury, ktore kaza je przeczytac - zaden skill nie ma dzis punktu "przejdz ostrzezenia planu przed nagraniem".
+
 ## Rozwiazanie
 Po kazdej redakcji scenariusza lekcji demo przegenerowac plan nagrania i przeczytac ostrzezenia,
 zanim lekcja pojdzie do nagrania. Konspekt i scenariusz maja nazywac ten sam kadr tymi samymi

@@ -115,6 +115,18 @@ przedstawione Rafałowi do bramki review.
    Ostrzeżenia o rozjeździe scenariusza z konspektem pokaż Rafałowi razem ze
    ścieżką pliku. Plan powstaje WYŁĄCZNIE tutaj, po zatwierdzeniu — nigdy
    w krokach 3-7.
+   Zaraz po planie napisz albo odśwież `video/dane-do-nagrania.md` — ściągę
+   klawiaturową nagrania. Kontrakt sekcji jest w struktura-lekcji.md
+   („Czwarty artefakt"); procedura: przejdź `konspekt-nagrania.md` krok po
+   kroku (to jedyne miejsce z numeracją) i przy każdym kroku rozstrzygnij, czy
+   coś w nim idzie z klawiatury — sygnały to czasowniki „wpisz", „wklej",
+   „nazwij", „ustaw pole", „zadaj pytanie" oraz treść w odwrotnych
+   apostrofach. Literalne brzmienie bierz z `artykul.md`, a gdy tam go nie ma
+   — z kroku konspektu albo linii `[AKCJA: ...]` w scenariuszu. Rozjazdu między
+   artykułem a scenariuszem nie rozstrzygaj sam: wpisz wersję z konspektu
+   i opisz rozjazd pod tabelą, ze wskazaniem `plik:linia`. Sekcja stoi
+   w pliku pierwsza i powstaje dla KAŻDEJ lekcji `demo`, także takiej, która
+   nie wymaga żadnych danych środowiska. Ten plik też powstaje wyłącznie tutaj.
 
 ## Zasady
 

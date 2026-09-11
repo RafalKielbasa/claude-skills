@@ -37,6 +37,11 @@ przedstawione Rafałowi do bramki akceptacji.
      narracji i nazw plików lektora). Jeśli go nie ma albo `npm run validate`
      zgłasza, że jest nieaktualny — przegeneruj przed nagraniem:
      `npm run plan-nagrania -- <lekcja>`.
+     Obok planu leży `video/dane-do-nagrania.md` — ściąga klawiaturowa (co
+     wpisujesz i wklejasz na ekranie, krok po kroku) plus dane środowiska do
+     przygotowania przed pierwszym kadrem. Brak tego pliku przy `demo` odeślij
+     do `/kurs-lekcja` krok 8: nagrywanie bez ściągi to szukanie kart
+     stanowiska i opisów narzędzi w `artykul.md` przy włączonym nagrywaniu.
 2. **BRAMKA: silnik avatara.** Jeśli Rafał wskazał silnik w komendzie („avatar
    przez MCP", „przez API") — honoruj wskazanie bez pytania. Jeśli **nie**
    wskazał — zapytaj **przed renderem** i **czekaj na odpowiedź**: plan

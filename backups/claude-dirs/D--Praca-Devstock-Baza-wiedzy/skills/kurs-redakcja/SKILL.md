@@ -63,6 +63,15 @@ z modelem i effortem wybranym przez Rafała na starcie.
      i kontekstu akapitu; podpis w innym formacie — sprowadź do tego formatu
      i przenumeruj od nowa. Obrazków nie dodajesz, nie usuwasz i nie
      przestawiasz,
+   - dla A, gdy w zestawie jest `video/scenariusz.md`: jego bezwzględną ścieżkę
+     z poleceniem przeczytania W CAŁOŚCI i doprowadzenia artykułu do zgodności
+     ze scenariuszem. Scenariusz jest źródłem prawdy (redakcja.md → Scenariusz
+     jest źródłem prawdy), więc rozjazd naprawia się PO STRONIE ARTYKUŁU:
+     brakujący wątek dopisujesz, nazwę pola interfejsu, treść pytania testowego
+     i opis zachowania aplikacji poprawiasz na tę ze scenariusza. Rozjazd,
+     którego naprawa wywraca tezę całej sekcji, też naprawiasz — przepisujesz
+     sekcję za scenariuszem i oznaczasz ją w raporcie osobno. Scenariusza
+     agent A nie edytuje,
    - dla B: bezwzględną ścieżkę do `kursy/<slug>/wymowa.md` z poleceniem
      przeczytania jej W CAŁOŚCI, stosowania zapisów stamtąd i DOPISANIA do niej
      każdej nowej decyzji fonetycznej — obowiązuje sekcja "Nazwy w scenariuszu"
@@ -74,7 +83,10 @@ z modelem i effortem wybranym przez Rafała na starcie.
    - format odpowiedzi: per plik 3–5 najważniejszych zmian "przed → po"
      z jednym zdaniem uzasadnienia, łączna liczba zmienionych miejsc,
      osobno lista wątpliwości merytorycznych (fragmenty zostawione bez zmian);
-     B dodatkowo: pozycje dopisane do `wymowa.md` (pisownia → zapis mówiony).
+     A dodatkowo: rozjazdy wobec scenariusza (co mówił artykuł → co mówi
+     scenariusz → jak brzmi po naprawie), z osobnym oznaczeniem tych, przy
+     których trzeba było przepisać tezę sekcji; B dodatkowo: pozycje dopisane
+     do `wymowa.md` (pisownia → zapis mówiony).
    Uruchom przez Workflow (jedyny mechanizm z nadpisaniem modelu i effortu
    per agent):
 
@@ -103,6 +115,15 @@ z modelem i effortem wybranym przez Rafała na starcie.
    - scenariusz po akceptacji jest źródłem prawdy (redakcja.md → Scenariusz
      jest źródłem prawdy): żaden wątek nie może z niego zniknąć, także taki,
      którego nie ma w artykule — to błąd artykułu, nie scenariusza,
+   - rozjazdy: przejdź scenariusz segment po segmencie i sprawdź, czy artykuł
+     zgadza się z nim co do nazw pól interfejsu, treści pytań testowych, opisu
+     zachowania aplikacji i pokrycia wątków. Rozjazdy, których agent A nie
+     naprawił, napraw sam w artykule — łącznie z tymi, które wymagają
+     przepisania tezy sekcji; do bramki nie wraca żaden nienaprawiony rozjazd.
+     Po przepisaniu sekcji sprawdź, czy reszta artykułu nie odwołuje się
+     jeszcze do starej tezy. Potem sprawdź, czy poprawki
+     w artykule nie rozjechały quizu i ćwiczeń — grupa C czytała artykuł
+     sprzed naprawy,
    - prezentacja.yaml: liczba i kolejność slajdów, `id` i `uklad` bez zmian,
      zero HTML w treści,
    - artykuł: callouty 🎬 na miejscach, ≥1 blok bez calloutu; każdy obrazek ma
@@ -119,8 +140,11 @@ z modelem i effortem wybranym przez Rafała na starcie.
    ../../kursy/<slug>/<modul>/<lekcja>` (katalog lekcji, nie kursu — błędy
    z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
 7. **BRAMKA: raport dla Rafała.** Pokaż: per plik 3–5 charakterystycznych
-   zmian "przed → po", łączną skalę zmian, listę wątpliwości merytorycznych
-   od agentów, pozycje dopisane do `wymowa.md` (jeśli redagowałeś scenariusz),
+   zmian "przed → po", łączną skalę zmian, listę naprawionych rozjazdów
+   artykuł vs scenariusz (osobno oznaczone te, przy których przepisałeś tezę
+   sekcji — te Rafał czyta w pierwszej kolejności),
+   listę wątpliwości merytorycznych od agentów, pozycje dopisane
+   do `wymowa.md` (jeśli redagowałeś scenariusz),
    zmiany statusów (w tym `video → brak`, jeśli zaszło),
    przypomnienie, że pełny diff czeka w drzewie roboczym. Uwagi Rafała nanoś
    od ręki (w głównej sesji, bez ponownego Workflow) i iteruj. Rafał może też
@@ -141,6 +165,10 @@ z modelem i effortem wybranym przez Rafała na starcie.
 - Redakcja to nie regeneracja: merytoryka, fakty, struktura plików i pokrycie
   treści zostają identyczne. Wątpliwość merytoryczna → fragment bez zmian
   + wpis w raporcie.
+- Jedyny wyjątek od zdania wyżej: rozjazd artykuł vs scenariusz. Naprawiasz
+  KAŻDY, po stronie artykułu, w tej redakcji — także taki, który wymaga
+  przepisania tezy całej sekcji. Artykuł ma wyjść z redakcji zgodny ze
+  scenariuszem; `/kurs-lekcja` nie jest miejscem na rozjazdy.
 - NIE renderuj video, NIE generuj nowych treści ani zadań — to
   `/kurs-video`, `/kurs-lekcja`, `/kurs-zadania`.
 - Najtaniej redagować PRZED `/kurs-video` — redakcja scenariusza lub slajdów

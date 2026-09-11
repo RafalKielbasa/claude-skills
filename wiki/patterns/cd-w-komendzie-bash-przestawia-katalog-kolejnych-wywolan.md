@@ -60,6 +60,8 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   gdzie trzeba. Podpowłoka `( cd … && … )` nie została użyta ani razu, mimo że
   rozwiązanie stoi na tej stronie od pierwszego dowodu.
 
+- 2026-09-11, sesja session_01Ed5FeuzWuuXgE2NexUX3pe: piata sesja z rzedu z tym samym objawem. Dwa "Environment update" (`tools/course-pipeline` po `npm run validate`, `.claude/skills/kurs-video` po `ls`) i dwa "Shell cwd was reset". Podpowloka `( cd ... && ... )` znowu nie uzyta ani razu, mimo ze strona opisuje ja wprost; nawyk `cd X && komenda` okazuje sie silniejszy niz przeczytana regula. Szkody nie bylo tylko dlatego, ze kazde kolejne wywolanie zaczynalo sie od wlasnego `cd` ze sciezka bezwzgledna - czyli od obejscia, nie od poprawki.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:

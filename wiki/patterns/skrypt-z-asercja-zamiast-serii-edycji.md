@@ -72,6 +72,8 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
   zastosowana: na kazdy plik jedna operacja, zadnych dwoch odczytow tego samego
   pliku przed zapisem.
 
+- 2026-09-11, sesja session_01Ed5FeuzWuuXgE2NexUX3pe: piec wstawek do piatki plikow (`struktura-lekcji.md`, dwa `SKILL.md`, `PURPOSE.md`, `dane-do-nagrania.md`) zrobionych bez narzedzia `Edit` - `awk` po numerze linii i `python` z asercja `s.count(anchor) == 1`. Trzy bloki do wklejenia w sciagu klawiaturowa lekcji 2.1 nie byly przepisywane recznie, tylko wyciete z `artykul.md` przez `sed -n` w tym samym skrypcie, ktory sklada plik - dzieki temu brzmienie w sciadze zgadza sie z artykulem co do znaku z definicji, a nie przez porownanie po fakcie. Wariant wart zapamietania: gdy dokument ma cytowac inny dokument, cytat generuj, nie przepisuj.
+
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:
 asercja na stan wejściowy zatrzymuje zapis, gdy plik zmienił się od czasu
