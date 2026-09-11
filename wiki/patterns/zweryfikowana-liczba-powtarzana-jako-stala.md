@@ -44,6 +44,7 @@ ten kod, ktorego pomiar dotyczyl.
   ale i stan wyprowadzony z reguly („ja tego nie robie, wiec tego nie ma") -
   taki tez trzeba zmierzyc w turze, w ktorej sie go cytuje.
 
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: literał `HASZ_BEZ_UWAG = 'e9f0efdc5de6'` wpisany do briefu Taska 4 dzień wcześniej jako "hasz sprzed zmiany" był już nieaktualny — commit `4f54506` przepisał w międzyczasie nagłówki w fiksturze `SCENARIUSZ_DEMO`. Przeliczony przed dispatchem na `cf19aa86f6c5`. Brief sam przewidywał ten przypadek i podawał komendę do przeliczenia, ale nic nie wymuszało jej uruchomienia.
 
 ## Rozwiazanie
 Liczbe, ktora steruje decyzja albo trafia do promptu subagenta, mierz w tej samej turze, w ktorej

@@ -25,6 +25,7 @@ kształt częściej niż instrukcja skilla.
   zapisem; Krok 4 przekotwiczono na nagłówek `# Praca z Claude — dziennik
   sesji`. Poprawka objęła jeden skill — czy `start-day` i `tidy-journal`
   adresują `zadania.md` i `nauka-z-claude.md` tak samo, nie zostało sprawdzone.
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: brief Taska 6 adresował trzy edycje cytatem dokładnego zdania, czyli treścią, nie pozycją — i i tak się zestarzał. Commit `c1f26ef` przepisał i zawinął jedno ze zdań, `4f54506` dołożył drugą notatkę do bloku, który brief kazał przenieść w całości, a punkt w `CLAUDE.md` był w tym momencie edytowany przez drugą sesję. Adresowanie treścią jest odporniejsze od pozycji, ale nadal jest pomiarem drzewa z dnia pisania briefu.
 
 ## Rozwiązanie
 Miejsce zapisu adresuj nagłówkiem sekcji, nie pozycją w pliku: „na górze"

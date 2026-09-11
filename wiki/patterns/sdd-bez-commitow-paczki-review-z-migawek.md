@@ -31,6 +31,7 @@ odtwarzalny z `git log`. Diff jest jednak funkcja dwoch stanow plikow, nie dwoch
   na tych plikach zwrocil pusto: zmian zadania nie bylo juz w drzewie roboczym, a paczka review
   wyszlaby pusta i recenzent zatwierdzilby kod, ktorego nie widzial. Ratunek: `git show 9a94b3e --
   <sciezki>`, mozliwy tylko dlatego, ze commit dalo sie zidentyfikowac po fakcie.
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: siedem zadań i fala poprawek bez ani jednego commita, paczki z migawek `task-N-before/`. Konwencja obroniła się dwa razy: gdy Rafał zacommitował pliki Taska 1 w trakcie pracy implementera (paczkę trzeba było złożyć z `git show 9a94b3e --`, nie z `git diff`) i gdy pod koniec runu zastage'ował całe `tools/course-pipeline/`, co unieważniłoby każdą paczkę liczoną wobec indeksu.
 
 ## Rozwiazanie
 W repo bez commitow per zadanie: na starcie zapisz ruling o migawkach w ledgerze, przed kazdym

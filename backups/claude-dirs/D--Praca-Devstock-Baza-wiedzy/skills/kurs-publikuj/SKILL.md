@@ -58,10 +58,10 @@ Input: a course, module or lesson path (`kursy/<slug>`, `kursy/<slug>/modul-NN-x
 - Never edit `platformIds` or `status.publikacja` by hand; the command owns them. The one
   exception is step 5's `409` case, and only after Rafał says yes.
 - Never print secrets. `.env` values are checked for presence only.
-- Publish requires every included lesson to pass the **full** `validate` — video files included,
-  and no `[UWAGA: …]` markers left in `video/scenariusz.md`. If the command stops on a
-  video/scenariusz error, that is expected, not a bug in `publish`: finish the video work or ask
-  Rafał how to proceed. There is no partial validate for publishing.
+- Publish validates **only what it sends** — the article, the quiz and the exercises. An
+  unfinished video track never blocks it: `[UWAGA: …]` markers in `video/scenariusz.md`, a missing
+  deck or konspekt, a stale `plan-nagrania.md` are all out of scope for `publish`. For the full
+  lesson check run `npm run validate -- <ścieżka>` separately.
 - Republishing a quiz recreates its tasks. Learners' quiz solutions are scored by question
   position, so reordering or removing a question after learners have answered re-scores their
   history. Warn Rafał in the plan step (step 3) whenever a quiz row says `update`.

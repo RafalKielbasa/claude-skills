@@ -44,6 +44,7 @@ jednocześnie najtańszym możliwym sprawdzeniem.
   „Masz rację". Teza była prawdziwa, ale dowód konkurencyjny wobec pamięci
   użytkownika przyszedł dopiero po sporze, choć na jego podstawie zapadała
   decyzja o operacji na historii (trzeci dowód, trzecia sesja).
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: recenzent Tasków 4+4b przeliczył hasz sprzed zmiany własnym uruchomieniem, przepuścił eksportowane `usunUwagi` przez 33 kształty wejścia i przez wszystkie 11 plików `scenariusz.md` w `kursy/`. Rozstrzygający argument nie był w diffie: wszystkie 12 prawdziwych znaczników jedynej lekcji używającej tej funkcji siedzi w kształcie, który odrzucona wersja poprawki psuła.
 
 ## Rozwiązanie
 Ustalenie o zasobie zewnętrznym (bucket, kolejka, endpoint, uprawnienie) przed

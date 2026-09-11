@@ -31,6 +31,7 @@ zacytowana w kolejnych dispatchach jako ustalenie.
   i zmiany sygnatury, na której zabriefowane są trzy zadania"; reviewer znalazł,
   że `bundle.changelog` już niesie potrzebny high-water mark, więc poprawka to jeden
   klucz w obiekcie opcji z wartością domyślną, bez zmiany sygnatury.
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: ruling "zbiory plików tego planu i równoległej sesji są parami rozłączne" uzasadniał decyzję o kontynuowaniu pracy w dzielonym drzewie i był fałszywy — `tools/course-pipeline/README.md` dotykały obie prace. Wyszło dopiero w review całości. Nic nie zginęło, ale przesłankę dało się sprawdzić jednym `git status` zestawionym z listą plików planu, w momencie jej zapisywania.
 
 ## Rozwiązanie
 Gdy uzasadnienie rulingu zawiera twierdzenie faktyczne o kodzie — „X zależy od Y",
