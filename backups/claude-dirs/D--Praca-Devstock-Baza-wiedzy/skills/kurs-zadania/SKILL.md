@@ -54,7 +54,10 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
       - **`dopasowanie`** — praktyka sprawdza znajomość pojęć lub kolejności
         kroków, ale nie wymaga budowania niczego. `kategoria: MATCH`/
         `CATEGORIZE` dla par pojęcie↔znaczenie, `SORT` dla kolejności kroków
-        z jedną logicznie poprawną odpowiedzią.
+        z jedną logicznie poprawną odpowiedzią. Wszystkie trzy kategorie mają
+        ten sam komplet pól: `elementy` + `cele` + `rozwiazanie`; w `SORT`
+        `cele` to numery pozycji `["1" … "N"]`. Kolejności list NIE ustawiasz
+        sam — od tego jest `npm run tasuj` w kroku 5.
       - **Żaden nie pasuje** — **nie fabrykuj ćwiczenia na siłę**; pomiń
         `cwiczenia/` i przygotuj krótkie uzasadnienie na bramkę.
       Nazwa pliku: `cwiczenia/<rodzaj>-01-<krotki-slug>.json`.
@@ -68,18 +71,26 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
    `tytul`, `opis`, treści i odpowiedzi pytań, `wskazowki`, `elementy`,
    `cele`. Zero grywalizacji: pytanie ani ćwiczenie nie obiecuje odznaki,
    rangi, punktów ani awansu — nagrody pokazuje platforma, treść o nich
-   milczy.
-5. **Walidacja.** Ustaw `status.zadania: do_review` w `lekcja.yaml`, potem
-   `cd tools/course-pipeline && npm run validate --
-   ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog lekcji, nie kursu —
-   błędy z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
+   milczy. Dla ćwiczenia `dopasowanie` sprawdź osobno, czy zadania da się
+   rozwiązać bez wiedzy z lekcji: platforma renderuje obie listy w kolejności
+   z pliku, więc listy wypisane parami zdradzają odpowiedź samym układem kart.
+   Kolejności nie poprawiasz ręcznie — robi to `npm run tasuj` w kroku 5.
+5. **Tasowanie i walidacja.** Ustaw `status.zadania: do_review` w
+   `lekcja.yaml`. Jeśli lekcja ma ćwiczenie `dopasowanie`, najpierw
+   `cd tools/course-pipeline && npm run tasuj -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`
+   — komenda przestawia `cele` (MATCH/CATEGORIZE) albo `elementy` (SORT) tak,
+   żeby odpowiedź nie leżała na przekątnej; `rozwiazanie` zostaje nietknięte,
+   więc tasowanie nie może zepsuć poprawnej odpowiedzi. Potem
+   `npm run validate -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog
+   lekcji, nie kursu — błędy z innych lekcji nie wchodzą do tej bramki) —
+   napraw wszystkie BŁĘDY.
 6. **BRAMKA: prezentacja Rafałowi.** Pokaż: treść pytań quizu (z poprawnymi
    odpowiedziami oznaczonymi), wygenerowane ćwiczenie (polecenie + treść
    właściwa dla rodzaju) albo uzasadnienie, czemu go nie ma. Uwagi Rafała
    nanoś od ręki i iteruj.
 7. **Po zatwierdzeniu przez Rafała:** ustaw `status.zadania: zatwierdzone`,
-   uruchom walidację ponownie, commit
-   `kurs(<slug>): zadania lekcji NN-y zatwierdzone`.
+   uruchom walidację ponownie. Zmiany zostają niezacommitowane — commit robi
+   Rafał.
 
 ## Zasady
 

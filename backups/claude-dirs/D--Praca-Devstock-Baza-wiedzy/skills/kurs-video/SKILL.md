@@ -110,8 +110,8 @@ przedstawione Rafałowi do bramki akceptacji.
    nagranie. Za długich cisz NIE traktuj jako usterki — Rafał skraca je w
    postprodukcji.
 6. **Po akceptacji przez Rafała:** ustaw `status.video: zaakceptowane` w
-   `lekcja.yaml`, commit `kurs(<slug>): video lekcji NN-y zaakceptowane`
-   (commitujesz tylko `lekcja.yaml` — media binarne są w `.gitignore`).
+   `lekcja.yaml`. Zmiany zostają niezacommitowane — commit robi Rafał;
+   do zacommitowania jest sam `lekcja.yaml`, media binarne są w `.gitignore`.
 
 ## Zasady
 

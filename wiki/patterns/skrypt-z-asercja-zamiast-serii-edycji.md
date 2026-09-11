@@ -61,6 +61,16 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
   asercja liczyla sie na oryginale i kazda byla prawdziwa. Wykryte dopiero
   osobnym weryfikatorem po zapisie (`s.count('(otwarty, 4 dowody)')` -> 0),
   czyli przez ten sam mechanizm, ktory ta strona zaleca.
+- 2026-09-11, sesja session_017aBB9RTKx1hZBSvF1TH7bi: siodmy dowod, i pierwszy,
+  w ktorym asercja zatrzymala zapis do dziennika sesji z wlasciwego powodu.
+  Kazda zmiana w `struktura-zadania.md`, `SKILL.md`, `cli.js` i `package.json`
+  szla przez skrypt z funkcja `podmien(przed, po)`, ktora rzuca `nie znaleziono
+  fragmentu` - szesc podmian w szablonie i trzy w skillu przeszly za pierwszym
+  razem, zadna nie trafila w niewlasciwe miejsce. Wpis do `praca-z-claude.md`
+  mial trzy asercje naraz (naglowek dziennika, liczba linii 1167, brak wpisu
+  z dzis) i wstawil sie jedna operacja `splice`. Nauka z szostego dowodu
+  zastosowana: na kazdy plik jedna operacja, zadnych dwoch odczytow tego samego
+  pliku przed zapisem.
 
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:

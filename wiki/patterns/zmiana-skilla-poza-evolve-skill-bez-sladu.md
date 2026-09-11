@@ -23,6 +23,16 @@ wprowadzoną ręcznie tydzień wcześniej albo odrzuconą poza jego ścieżką.
   skilla". Ślad powstał w `PURPOSE.md` skilla; w `skill-impact.md` nie było go
   do końca sesji — wpis dopisano ręcznie dopiero w kroku Wiki Maintainer, po
   tym jak rozbieżność została zauważona przy pisaniu briefu.
+- 2026-09-11, sesja session_017aBB9RTKx1hZBSvF1TH7bi: drugi dowod, druga
+  sesja, i pierwszy przypadek, w ktorym zmiana skilla byla tylko czescia
+  wiekszej zmiany w kodzie. Trzy kroki `kurs-zadania/SKILL.md` (3b, 4, 5)
+  zmienione wprost na zgode Rafala („tak") po przedstawieniu projektu, razem
+  z nowa komenda `npm run tasuj`, regula w walidatorze i przepisanym
+  szablonem — wszystko w commicie `6c7bb30`. Rejestr zna tylko `SKILL.md`,
+  wiec bez recznego wpisu `evolve-skill` zobaczylby skill niezmieniony od
+  2026-09-10 i moglby zaproponowac regule o kolejnosci list jako nowa. Wpis
+  dopisany w tej samej sesji, w kroku Wiki Maintainer — tak samo jak
+  w pierwszym dowodzie, czyli mechanizm nadal jest reczny.
 
 ## Rozwiązanie
 Każdą zmianę treści skilla dopisz do `skill-impact.md` właściwego wiki jako

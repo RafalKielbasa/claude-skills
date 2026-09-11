@@ -37,8 +37,8 @@ szkieletem folderów. NIE generuje treści lekcji — to robi `/kurs-lekcja`.
      numer, modul, cel, typ_video; statusy zostaw domyślne (tresc: szkic).
 7. **Walidacja.** `cd tools/course-pipeline && npm run validate -- ../../kursy/<slug>`
    — napraw wszystkie BŁĘDY (ostrzeżenia zgłoś Rafałowi).
-8. **Commit.** `git add kursy/<slug>` i commit
-   `kurs(<slug>): program kursu zatwierdzony`.
+8. **Zakończenie.** Program i szkielet folderów zostają w drzewie roboczym
+   pod `kursy/<slug>` — commit robi Rafał.
 
 ## Zasady
 

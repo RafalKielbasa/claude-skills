@@ -48,14 +48,14 @@ Data spotkania: z argumentu; brak argumentu → dziś.
      naprawdę pasują (bez zapełniania na siłę).
    Iteruj z Rafałem aż zaakceptuje.
 5. **BRAMKA: Rafał zatwierdza agendę.** Bez zatwierdzenia nie zapisuj
-   plików. Po zatwierdzeniu: zapis `planning/YYYY-MM-DD-agenda.md`,
-   commit `spotkanie(YYYY-MM-DD): agenda`.
+   plików. Po zatwierdzeniu: zapis `planning/YYYY-MM-DD-agenda.md`. Plik
+   zostaje niezacommitowany — commit robi Rafał.
 
 ## Tryb „prowadź"
 
 1. **Start.** Wczytaj `planning/YYYY-MM-DD-agenda.md` z dzisiejszą datą;
    brak → najnowszą; brak jakiejkolwiek → zaproponuj szybką agendę ad-hoc
-   (skrócone „przygotuj": kroki 1 i 4, zapis pliku bez commitu).
+   (skrócone „przygotuj": kroki 1 i 4, sam zapis pliku).
    - Jeśli najnowsza `*-notatka.md` ma status `szkic` → WZNOWIENIE
      (niezależnie od daty): pokaż dotychczasowe wpisy i kontynuuj od
      pierwszego punktu agendy bez wpisów; szkic z wcześniejszej daty →
@@ -94,9 +94,9 @@ Data spotkania: z argumentu; brak argumentu → dziś.
       (punkty agendy bez wpisów).
    c. Zmień `**Status:** szkic` → `**Status:** finalna`, pokaż całą
       notatkę Rafałowi.
-   d. BRAMKA: po akceptacji Rafała commit
-      `spotkanie(YYYY-MM-DD): notatka`.
-   e. Po commicie przejdź do indeksowania notatki do bazy wiedzy
+   d. BRAMKA: akceptacja Rafała. Notatka zostaje niezacommitowana —
+      commit robi Rafał.
+   e. Po akceptacji przejdź do indeksowania notatki do bazy wiedzy
       (sekcja „Indeksowanie notatki do bazy wiedzy").
 
 ## Tryb „transkrypt"
@@ -145,10 +145,10 @@ PRZED wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
 6. **Przegląd z Rafałem.** Pokaż całą notatkę. Rafał poprawia, dopisuje
    lub kwestionuje dopasowania — nanieś poprawki.
 7. **BRAMKA: Rafał zatwierdza notatkę.** Dopiero wtedy: zmień
-   `**Status:** szkic` → `**Status:** finalna`, zapisz plik, commit
-   `spotkanie(YYYY-MM-DD): notatka`, i USUŃ wszystkie pliki (poza
-   `.gitkeep`) z `planning/transkrypty/` — surowy transkrypt to poufna
-   treść rozmowy, nie zostaje w repo ani na dysku po przetworzeniu.
+   `**Status:** szkic` → `**Status:** finalna`, zapisz plik i USUŃ
+   wszystkie pliki (poza `.gitkeep`) z `planning/transkrypty/` — surowy
+   transkrypt to poufna treść rozmowy, nie zostaje w repo ani na dysku po
+   przetworzeniu. Notatka zostaje niezacommitowana — commit robi Rafał.
 8. **Indeksowanie.** Przejdź do indeksowania notatki do bazy wiedzy
    (sekcja „Indeksowanie notatki do bazy wiedzy").
 

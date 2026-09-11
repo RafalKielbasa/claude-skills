@@ -103,8 +103,8 @@ przedstawione Rafałowi do bramki review.
    lekcji (3–5 zdań), werdykt z review-ai.md + co poprawiono, liczbę
    segmentów avatar. Uwagi Rafała nanoś od ręki i iteruj.
 8. **Po zatwierdzeniu przez Rafała:** ustaw `status.tresc: zatwierdzona`,
-   uruchom walidację ponownie, commit
-   `kurs(<slug>): lekcja NN-y zatwierdzona`.
+   uruchom walidację ponownie. Zmiany zostają niezacommitowane — commit robi
+   Rafał.
    Dla `typ_video: demo` wygeneruj plan nagrania:
    `npm run plan-nagrania -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
    Ostrzeżenia o rozjeździe scenariusza z konspektem pokaż Rafałowi razem ze
