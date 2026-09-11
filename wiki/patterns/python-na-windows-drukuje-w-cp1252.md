@@ -40,6 +40,19 @@ niepowodzenie całej operacji.
   wariant przydatny tam, gdzie treść idzie heredokiem i nie ma jak dopisać
   prefiksu `PYTHONIOENCODING=utf-8` do wywołania.
 
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: trzeci dowód, trzecia sesja. Dwa razy w jednej
+  sesji i oba razy dokładnie w kształcie ze strony. `python -c` drukujący linie
+  artykułu padł na `can't encode character` po wypisaniu numeru pierwszej linii
+  — wynik wyglądał na urwany w połowie. Groźniejszy był drugi: skrypt cofający
+  zmiany w segmencie 8 zapisał **wszystkie cztery pliki lekcji** i padł dopiero
+  na końcowym `print('OK: segment 8 przywrócony…')`. Exit code 1 przy komplecie
+  wykonanej pracy — gdybym potraktował go jako awarię i powtórzył skrypt,
+  asercje `find()` nie znalazłyby już starych brzmień i przerwałyby z „0
+  trafien". Sprawdzenie stanu plików przed powtórzeniem, tak jak każe sekcja
+  Rozwiązanie, pokazało, że powtarzać nie ma czego. Wszystkie późniejsze
+  wywołania w sesji szły z `PYTHONIOENCODING=utf-8`.
+
+
 ## Rozwiązanie
 Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie
 poprzedzaj `PYTHONIOENCODING=utf-8`, jeśli cokolwiek drukuje treść inną niż

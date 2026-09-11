@@ -28,6 +28,19 @@ poprawia sie osobno, wiec rozbieznosc powstaje domyslnie, a kosztuje dopiero prz
 
 - 2026-09-11, sesja session_01Ed5FeuzWuuXgE2NexUX3pe: mechanizm dzialal, ale ostrzezenie nikt nie przeczytal. Krok 44 konspektu M02L01 ("pokaz liste wezlow narzedziowych i przewin ja powoli") stoi w planie jako "parowanie po kolejnosci", bo linia `[AKCJA: ...]` scenariusza kaze w tym miejscu WYSZUKAC Slack, Notion, Trello i Airtable - czyli wpisac cztery frazy, o ktorych konspekt milczy. Rozjazd wyszedl dopiero przy recznym skladaniu sciagi klawiaturowej, dwa dni po wygenerowaniu planu. Granica metody: ostrzezenie w wygenerowanym pliku jest warte tyle, ile kroki procedury, ktore kaza je przeczytac - zaden skill nie ma dzis punktu "przejdz ostrzezenia planu przed nagraniem".
 
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi (pamięć rozmowy w M02L01): ostrzeżenia zostały
+  przeczytane i posłużyły jako **sygnał akceptacji zmiany**, a nie tylko jako
+  lista do przejrzenia. Po każdej z trzech rund zmian w segmentach 8 i 9
+  przegenerowałem plan i porównałem zbiór ostrzeżeń ze stanem sprzed zmian:
+  15 przed i 15 po, wszystkie stare, żadne nowe w segmencie 8. Kroki 31 i 39
+  po przepisaniu na wielolinijkowe bloki z uzasadnieniem sparowały się po
+  treści, nie „po kolejności" — czyli rozjazdu nazewniczego nie wprowadziłem.
+  Metoda działa też jako kontrola regresji przy własnej edycji, o ile ma się
+  liczbę wyjściową sprzed zmiany; bez niej 15 ostrzeżeń wygląda jak awaria.
+  Granica z poprzedniego dowodu potwierdzona: krok 40, który mówi nieprawdę
+  o treści narracji, parował się czysto przez całą sesję.
+
+
 ## Rozwiazanie
 Po kazdej redakcji scenariusza lekcji demo przegenerowac plan nagrania i przeczytac ostrzezenia,
 zanim lekcja pojdzie do nagrania. Konspekt i scenariusz maja nazywac ten sam kadr tymi samymi

@@ -50,6 +50,20 @@ popełnienia od zera.
   2026-09-10 nie powstała, bo reguła mieszka wyłącznie w wiki — nie ma jej
   w żadnym skillcie `kurs-*` ani w `course-pipeline`.
 
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi (druga część dnia, po `/clear`): trzeci dowód,
+  tym razem **reguła ze strony zadziałała** — defekt się nie powtórzył. Skrypty
+  dopisujące zdania do `artykul.md` M02L01 użyły wzorca konsumującego
+  `(?<![\w\u00a0*`])([aiouwzAIOUWZ]) ` z podmianą na `grupa + U+00A0`, czyli
+  lookahead przepisany na konsumpcję dokładnie tak, jak każe sekcja
+  Rozwiązanie. Kontrola po przebiegu: `t.count('\u00a0 ')` = **0** przy 351
+  twardych spacjach w pliku. Walidator złapał za to brakujące NBSP w nowych
+  zdaniach dwa razy z rzędu (`sierotka — 14 wystąpień`, potem `1 wystąpienie`),
+  więc kolejność „dopisz tekst → uruchom validate → dołóż NBSP w zmienionych
+  liniach" działa jako pętla, o ile fixer puszcza się tylko na liniach, które
+  się zmieniło. Nadal nie ma `npm run sierotki` w `course-pipeline` ani reguły
+  w żadnym skillcie `kurs-*` — trzeci raz skrypt powstał od zera.
+
+
 ## Rozwiązanie
 Regex z walidatora kopiuj do skryptu naprawczego, ale **przepisz lookahead na
 konsumpcję** i dopisz do skryptu asercję wyniku, która sprawdza to, czego

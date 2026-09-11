@@ -40,6 +40,18 @@ mechanizmy pojedynczo, nie ich skład.
   miejscu wywołania.
 - 2026-09-04/05, sesja session_01WXmUJrXM5viDmNJuc3xjy6: `Write-Error` pod `$ErrorActionPreference = "Stop"` przerywa skrypt, więc następujące po nim `exit 2` nigdy się nie wykonuje i skrypt kończy **kodem 1** — czyli tym, który w tym projekcie znaczy „przeszła uwaga blokująca". Wykryte sondą uruchamiającą te trzy instrukcje po kolei i pokazującą EXITCODE=1, nie lekturą kodu. W tej samej sesji ten sam mechanizm psuł kod wyjścia przy przekierowaniu stderr do `Tee-Object`.
 
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: `$_` w bloku `catch` wewnątrz `ForEach-Object`
+  wskazuje **ErrorRecord**, nie element potoku. Sonda szukająca zablokowanych
+  plików (`[System.IO.File]::Open(...,'Open','ReadWrite','None')` w `try`,
+  `$locked += $_.Name` w `catch`) zwróciła poprawną liczbę wyników i same puste
+  nazwy: `Zablokowane pliki: , , , , , , , , ,`. Objaw mylący, bo licznik się
+  zgadzał — nie wyglądało to na błąd dostępu do zmiennej. Rozstrzygnięte drugą
+  sondą, nie czytaniem dokumentacji: przechwycenie `$n = $_.Name` **przed**
+  `try` dało od razu pełną listę (`03-01.mp3` … `04-06.mp3`), a ciągłość tego
+  bloku wskazała aplikację z wczytaną listą plików zamiast pojedynczego
+  podglądu.
+
+
 ## Rozwiązanie
 Gdy zachowanie PowerShell 5.1 jest niepewne albo zaskakujące (a zwłaszcza gdy dotyczy
 `$PSScriptRoot`, `ConvertFrom-Json`, `$ErrorActionPreference` z komendami natywnymi, albo

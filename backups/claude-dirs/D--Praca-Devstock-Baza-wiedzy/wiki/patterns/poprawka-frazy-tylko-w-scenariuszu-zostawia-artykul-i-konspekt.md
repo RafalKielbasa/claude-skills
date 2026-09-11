@@ -47,6 +47,23 @@ porównuje. Artykuł nie jest wtedy porównywany z niczym.
   metody opisana w [[rozjazd-scenariusza-z-konspektem-wykrywany-maszynowo]].
   Trzeci dzień tej samej frazy w obiegu.
 
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi (pamięć rozmowy w M02L01): **pierwsza sesja po
+  zaadresowaniu — wzorzec się nie powtórzył, to nie jest nawrót.** Trzy rundy
+  zmian w segmentach 8 i 9 (nowa sesja czatu przed powtórzonym pytaniem, potem
+  przepisanie narracji na odpowiedź z pamięci) za każdym razem poszły krokiem 7
+  do kompletu plików zależnych: `artykul.md` (Kroki 7 i 8),
+  `video/konspekt-nagrania.md` (kroki 32, 36, 39, 42 i „Uwaga o powtarzalności"),
+  `video/dane-do-nagrania.md` (wiersz kroku 31 i notatka o sesjach). `grep` po
+  starych brzmieniach (`31. W oknie czatu zadaj`, `zapisz przepływ i zadaj
+  w czacie to samo pytanie`, `Zapisuję i zadaję dokładnie to samo`) dał zero
+  trafień w czterech plikach. Osobno potwierdziło się też to, czego żaden
+  z tych mechanizmów nie łapie: krok 40 konspektu twierdzi, że „narracja
+  przewiduje jeden i drugi" wariant wyniku, a narracja segmentu 9 wariantu
+  „brak wywołania" nie pokrywa — rozjazd treści o tym, co się stanie, a nie
+  literalu do wpisania. Wyszło z czytania, nie z `validate` ani z planu
+  nagrania, i do końca sesji zostało jako decyzja dla Rafała.
+
+
 ## Rozwiązanie
 **Zaadresowane 2026-09-11 w `kurs-uwagi`** — decyzja Rafała: „skill kurs-uwagi
 powinien aktualizować wszystkie treści które są zależne, czyli artykuł,
