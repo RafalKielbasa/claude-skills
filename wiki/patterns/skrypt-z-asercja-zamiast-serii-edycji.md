@@ -74,6 +74,8 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
 
 - 2026-09-11, sesja session_01Ed5FeuzWuuXgE2NexUX3pe: piec wstawek do piatki plikow (`struktura-lekcji.md`, dwa `SKILL.md`, `PURPOSE.md`, `dane-do-nagrania.md`) zrobionych bez narzedzia `Edit` - `awk` po numerze linii i `python` z asercja `s.count(anchor) == 1`. Trzy bloki do wklejenia w sciagu klawiaturowa lekcji 2.1 nie byly przepisywane recznie, tylko wyciete z `artykul.md` przez `sed -n` w tym samym skrypcie, ktory sklada plik - dzieki temu brzmienie w sciadze zgadza sie z artykulem co do znaku z definicji, a nie przez porownanie po fakcie. Wariant wart zapamietania: gdy dokument ma cytowac inny dokument, cytat generuj, nie przepisuj.
 
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi (redakcja M02L01): dziewiąty dowód, w wariancie "jeden skrypt, wiele fragmentów". Cztery skrypty tej sesji (10 podmian rozjazdów w artykule, 6 miejsc reguły w dwóch plikach, 5 miejsc przy zacieśnianiu reguły, wstawka do dziennika) budowały regex z wzorca pisanego zwykłymi spacjami i dopuszczały w nim twardą spację, a każda podmiana miała asercję "dokładnie jedno trafienie" z przerwaniem całego skryptu przy innej liczbie. Żadna nie chybiła. Przy wstawce do dziennika asercja była potrójna: nagłówek znaleziony w świeżym odczycie, brak własnego wpisu w pliku, liczba linii przed i po.
+
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:
 asercja na stan wejściowy zatrzymuje zapis, gdy plik zmienił się od czasu

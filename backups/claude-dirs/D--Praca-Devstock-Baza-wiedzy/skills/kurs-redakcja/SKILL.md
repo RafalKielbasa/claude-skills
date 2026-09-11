@@ -17,8 +17,11 @@ z modelem i effortem wybranym przez Rafała na starcie.
    `artykul.md`, `video/scenariusz.md`, `video/prezentacja.yaml`, `quiz.json`,
    `cwiczenia/*.json`. Redagujesz wyłącznie istniejące pliki — nic nie
    generujesz od zera (od tego są `/kurs-lekcja` i `/kurs-zadania`). Jeśli nie
-   istnieje żaden — przerwij i skieruj na `/kurs-lekcja`. Zanotuj
-   `status.video` z `lekcja.yaml` (potrzebny w krokach 3 i 6). Jeśli w zestawie
+   istnieje żaden — przerwij i skieruj na `/kurs-lekcja`. Osobno wypisz pliki
+   ZALEŻNE, których redakcja nie dotyka, ale które powtarzają tę samą treść
+   i muszą za nią nadążyć (krok 6): `video/konspekt-nagrania.md`
+   i `video/dane-do-nagrania.md` przy `typ_video: demo`. Zanotuj
+   `status.video` i `typ_video` z `lekcja.yaml` (potrzebne w krokach 3, 6, 7 i 9). Jeśli w zestawie
    jest `video/scenariusz.md`, ustal listę wymowy kursu `kursy/<slug>/wymowa.md`
    — gdy pliku nie ma, utwórz go z `kursy/_wspolne/szablony/wymowa.md`
    (podmień `<nazwa kursu>`, przykładowy wiersz zostaw do czasu pierwszego
@@ -123,7 +126,8 @@ z modelem i effortem wybranym przez Rafała na starcie.
      Po przepisaniu sekcji sprawdź, czy reszta artykułu nie odwołuje się
      jeszcze do starej tezy. Potem sprawdź, czy poprawki
      w artykule nie rozjechały quizu i ćwiczeń — grupa C czytała artykuł
-     sprzed naprawy,
+     sprzed naprawy. Literały wpisywane na ekranie, które przy tej okazji
+     zmieniłeś, idą dalej: krok 6,
    - prezentacja.yaml: liczba i kolejność slajdów, `id` i `uklad` bez zmian,
      zero HTML w treści,
    - artykuł: callouty 🎬 na miejscach, ≥1 blok bez calloutu; każdy obrazek ma
@@ -134,15 +138,67 @@ z modelem i effortem wybranym przez Rafała na starcie.
      te same,
    - merytoryka: diff nie dodaje ani nie gubi faktów, liczb, cen, nazw.
    Naruszenia napraw od ręki.
-6. **Status video i walidacja.** Jeśli dotyczy (krok 3), ustaw
+6. **Propagacja na pliki zależne.** Lekcja mówi to samo w kilku plikach,
+   a redakcja rusza tylko część z nich. Zmiana, która wylądowała wyłącznie
+   w zredagowanym pliku, jest rozjazdem — wychodzi przy nagraniu, po bramce
+   treści, kiedy Rafał już klika. Przejdź `git diff` zredagowanych plików
+   i dla każdej zmiany dotykającej treści widocznej poza tym plikiem
+   doprowadź odpowiedniki do zgodności:
+
+   | co się zmieniło | gdzie to samo jeszcze żyje |
+   |---|---|
+   | literał wpisywany albo wklejany na ekranie: pytanie do czatu, nazwa węzła / credentiala / arkusza / pola, wartość pola | `artykul.md`, `video/konspekt-nagrania.md` (numerowany krok), `video/dane-do-nagrania.md` (tabela "Do wklejenia i wpisania na ekranie" i bloki pod nią) |
+   | linia `[AKCJA: ...]`: co jest klikane, otwierane, pokazywane i w jakiej kolejności | `video/konspekt-nagrania.md`, a w `artykul.md` tam, gdzie artykuł prowadzi to samo kliknięcie |
+   | twierdzenie o interfejsie: pole niewidoczne w danym trybie, ostrzeżenie, którego nie ma, nazwa sekcji albo zakładki | `artykul.md`, `video/konspekt-nagrania.md` |
+   | wynik albo puenta beatu demo | `artykul.md` (odpowiadająca sekcja `### Krok N`) |
+   | brzmienie narracji bez odpowiednika na ekranie i w artykule | nic — koniec |
+
+   Cztery reguły samej propagacji:
+   - **Jeden kierunek.** Źródłem prawdy jest `video/scenariusz.md` (redakcja.md
+     → "Scenariusz jest źródłem prawdy"), bo to jego Rafał weryfikuje klikając
+     w produkcie. Pozostałe pliki idą za nim, nigdy odwrotnie.
+   - **Pisownię tłumaczysz, nie kopiujesz.** Narracja niesie nazwy
+     w cudzysłowie i fonetycznie (`"Get Meni"`, `"en osiem en"`,
+     `"Google Szits"`); artykuł, konspekt, dane do nagrania i
+     `prezentacja.yaml` mają oryginalną pisownię (`Get Many`, `n8n`,
+     `Google Sheets`). Przenosisz znaczenie, nie string.
+   - **Szukasz, nie zakładasz.** Dla każdego zmienionego literału zrób `grep`
+     po STARYM brzmieniu we wszystkich plikach zależnych i popraw każde
+     trafienie. Te pliki mają twarde spacje po jednoliterowych słowach, więc
+     wzorzec z ` i `, ` w `, ` z ` zwróci zero na tekście, który tam na
+     pewno jest — kotwicz się na fragmencie bez nich albo dopuszczaj oba znaki
+     spacji. Liczniki `grep` cytujesz w raporcie; "sprawdziłem" bez liczby
+     nie jest kontrolą.
+   - **Chirurgicznie także tam.** W pliku zależnym zmieniasz wyłącznie to,
+     czego wymaga propagacja. Jeśli odpowiednika nie da się naprawić bez
+     przepisania całej sekcji — przepisujesz, ale w raporcie idzie to osobną
+     linią, oznaczone jako przepisanie.
+
+   `video/plan-nagrania.md` jest generowany, nie edytowany ręcznie —
+   odświeża się w kroku 7.
+7. **Status video, plan nagrania i walidacja.** Jeśli dotyczy (krok 3), ustaw
    `status.video: brak` w `lekcja.yaml`; statusów `tresc`/`zadania` nie
-   ruszaj. Potem `cd tools/course-pipeline && npm run validate --
+   ruszaj.
+   Potem, gdy lekcja ma `typ_video: demo` przy `status.tresc: zatwierdzona`,
+   a redakcja albo propagacja ruszyła `video/scenariusz.md` lub
+   `video/konspekt-nagrania.md` — przegeneruj plan nagrania:
+   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`. Robisz to
+   PRZED walidacją, bo inaczej bramka zobaczy ostrzeżenie o nieaktualnym
+   `video/plan-nagrania.md`. Przeczytaj ostrzeżenia generatora i porównaj je
+   z przebiegiem sprzed redakcji: krok, który dopiero teraz paruje się
+   "po kolejności", to rozjazd nazewnictwa, który sam wprowadziłeś. Przy
+   `szkic` albo `do_review` planu nie generujesz — `generateRecordingPlan`
+   odmawia treści niezatwierdzonej; napisz w raporcie, że plan odświeży się
+   przy zatwierdzeniu.
+   Na koniec `cd tools/course-pipeline && npm run validate --
    ../../kursy/<slug>/<modul>/<lekcja>` (katalog lekcji, nie kursu — błędy
    z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
-7. **BRAMKA: raport dla Rafała.** Pokaż: per plik 3–5 charakterystycznych
+8. **BRAMKA: raport dla Rafała.** Pokaż: per plik 3–5 charakterystycznych
    zmian "przed → po", łączną skalę zmian, listę naprawionych rozjazdów
    artykuł vs scenariusz (osobno oznaczone te, przy których przepisałeś tezę
    sekcji — te Rafał czyta w pierwszej kolejności),
+   tabelę propagacji na pliki zależne (co się zmieniło → jakie pliki
+   zaktualizowane → `plik:linia`) wraz z licznikami `grep` z kroku 6,
    listę wątpliwości merytorycznych od agentów, pozycje dopisane
    do `wymowa.md` (jeśli redagowałeś scenariusz),
    zmiany statusów (w tym `video → brak`, jeśli zaszło),
@@ -150,15 +206,14 @@ z modelem i effortem wybranym przez Rafała na starcie.
    od ręki (w głównej sesji, bez ponownego Workflow) i iteruj. Rafał może też
    wpisać je wprost do `video/scenariusz.md` jako linie `[UWAGA: ...]` — wtedy
    nanosi je `/kurs-uwagi`, a nie ta procedura.
-8. **Po zatwierdzeniu przez Rafała:** jeśli nanosiłeś poprawki po uwagach,
+9. **Po zatwierdzeniu przez Rafała:** jeśli nanosiłeś poprawki po uwagach,
    uruchom walidację ponownie. `video` zostaje `brak` do decyzji
    o re-renderze. Zmiany zostają niezacommitowane — commit robi Rafał.
    Jeśli Rafał przerwie bramkę bez decyzji, powiedz wprost w podsumowaniu,
    że pliki w drzewie są po redakcji, ale bez akceptacji.
-   Jeśli lekcja ma `typ_video: demo`, a redakcja objęła grupę B
-   (`video/scenariusz.md`), przegeneruj plan nagrania:
-   `npm run plan-nagrania -- <lekcja>`. Bez tego `npm run validate` zgłosi
-   ostrzeżenie o nieaktualnym `video/plan-nagrania.md`.
+   Jeśli poprawki po uwagach ruszyły `video/scenariusz.md` albo
+   `video/konspekt-nagrania.md`, przegeneruj plan nagrania jeszcze raz
+   (warunki i komenda — krok 7) i dopiero potem uruchom walidację.
 
 ## Zasady
 
@@ -169,6 +224,12 @@ z modelem i effortem wybranym przez Rafała na starcie.
   KAŻDY, po stronie artykułu, w tej redakcji — także taki, który wymaga
   przepisania tezy całej sekcji. Artykuł ma wyjść z redakcji zgodny ze
   scenariuszem; `/kurs-lekcja` nie jest miejscem na rozjazdy.
+- **Redakcja naniesiona tylko w zredagowanym pliku jest naniesiona w połowie.**
+  Lekcja to jeden dokument rozbity na kilka plików; to, co widz zobaczy na
+  ekranie, musi brzmieć tak samo w każdym z nich. Ani `npm run validate`, ani
+  `npm run plan-nagrania` tego nie złapią — walidator nigdy nie porównuje
+  plików między sobą, a plan paruje kroki po podobieństwie całego kroku, więc
+  para różniąca się jednym słowem paruje się czysto i nie ostrzega o niczym.
 - NIE renderuj video, NIE generuj nowych treści ani zadań — to
   `/kurs-video`, `/kurs-lekcja`, `/kurs-zadania`.
 - Najtaniej redagować PRZED `/kurs-video` — redakcja scenariusza lub slajdów

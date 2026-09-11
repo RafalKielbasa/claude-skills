@@ -25,6 +25,16 @@ poprawiania wzorca zamiast sposobu jego uruchomienia.
   które wcześniej przechodziły. Ten sam wzorzec zapisany do pliku `.mjs` i uruchomiony przez
   `node plik.mjs` dał 24/24 OK. Różnicą było wyłącznie przejście przez string powłoki.
 
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi (redakcja M02L01): skrypt
+  naprawiający frazy w artykule budował regex z literału i escapował go przez
+  `node -e` w Bashu; wynik: `SyntaxError: Invalid regular expression: missing /`,
+  bo klasa `[.*+?^${}()|[\]\\]` dotarła do silnika okrojona. Tym razem awaria
+  była głośna, nie cicha — literał rozpadł się na niepoprawną składnię zamiast
+  na poprawną, ale inną. Naprawa zgodna z tą stroną: ten sam skrypt zapisany
+  do pliku `.mjs` w katalogu zadania i uruchomiony przez `node plik.mjs`
+  przeszedł za pierwszym razem, dziesięć podmian trafionych po jednym razie
+  każda. Cztery kolejne skrypty tej sesji powstały już wyłącznie jako pliki.
+
 ## Rozwiązanie
 
 Regexu nie przepuszczać przez `-e` w stringu powłoki. Zapisać skrypt do pliku `.mjs` w katalogu

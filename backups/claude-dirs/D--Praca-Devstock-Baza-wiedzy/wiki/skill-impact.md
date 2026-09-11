@@ -270,3 +270,338 @@ index 1fcda34..4fecf0a 100644
 ```
 
 **Domknięcie wątku:** po tych trzech wpisach żaden skill w `.claude/skills/` nie każe Claude'owi commitować. Stan sprawdzony `grep -rn "commit" .claude/skills/ --include=SKILL.md`: zostały wyłącznie zdania „commit robi Rafał", sygnał aktywności repo w agendzie `spotkanie` (`:38`), zakaz commitowania transkryptów (`spotkanie:213`) oraz opisy okna commitów w `knowledge-base-update`, który od początku miał regułę „Nie commitujesz" (`:20`).
+
+## 2026-09-11 — kurs-uwagi — zaakceptowana
+- **Wzorce:** poprawka-frazy-tylko-w-scenariuszu-zostawia-artykul-i-konspekt, naniesienie-uwagi-siega-poza-akapit-znacznika
+- **Zmiana:** Nowy krok 7 „Propagate to every file the change touches": tabela rodzajów zmiany w scenariuszu i ich odpowiedników w `artykul.md`, `video/konspekt-nagrania.md`, `video/dane-do-nagrania.md` i `video/prezentacja.yaml`, plus cztery reguły propagacji (jeden kierunek — scenariusz źródłem prawdy; pisownia tłumaczona, nie kopiowana; `grep` po STARYM brzmieniu zamiast założeń, z ostrzeżeniem o twardych spacjach; chirurgiczność także w pliku zależnym). Krok 1 inwentaryzuje pliki zależne i `typ_video`; krok 8 wymaga zacytowania liczników `grep`; krok 10 raportuje tabelę propagacji z `plik:linia`; „Zasady" nazywają uwagę naniesioną tylko w scenariuszu naniesioną w połowie i wyjaśniają, dlaczego ani `validate`, ani `plan-nagrania` tego nie łapią. Kroki 7–11 to renumeracja dawnych 7–10.
+- **Powód decyzji:** decyzja Rafała wprost, po raporcie z sesji, w którym zgłosiłem żywy rozjazd — `konspekt-nagrania.md:101,126,147` z „dziś" przy scenariuszu mówiącym „wczoraj": „skill kurs-uwagi powinien aktualizować wszystke treści które są zależne, czyli artykuł, scenariusz, konspekt, i dane do nagrania, w innym wypadku zawsze będzie rozjazd". Zmiana wprowadzona poza ścieżką `evolve-skill`, wpis dopisany ręcznie w tej samej sesji, żeby rejestr był kompletny. Rozszerzenie o `prezentacja.yaml` (tor A) nie padło w zdaniu Rafała — dołożone jako ta sama reguła dla drugiego toru i zgłoszone mu wprost w raporcie do ewentualnego wycofania.
+
+```diff
+diff --git a/.claude/skills/kurs-uwagi/SKILL.md b/.claude/skills/kurs-uwagi/SKILL.md
+index 721ad8d..f646b84 100644
+--- a/.claude/skills/kurs-uwagi/SKILL.md
++++ b/.claude/skills/kurs-uwagi/SKILL.md
+@@ -1,26 +1,32 @@
+ ---
+ name: kurs-uwagi
+-description: Applies Rafał's inline remarks — `[UWAGA: ...]` lines written straight into video/scenariusz.md — one at a time, then deletes the ones it applied. Use when Rafał says "nanieś uwagi", "przejdź przez uwagi", "poprawki ze scenariusza", or points at a scenariusz that contains [UWAGA: ...] markers.
++description: Applies Rafał's inline remarks — `[UWAGA: ...]` lines written straight into video/scenariusz.md — one at a time, propagates each applied change to every dependent lesson file, then deletes the markers it applied. Use when Rafał says "nanieś uwagi", "przejdź przez uwagi", "poprawki ze scenariusza", or points at a scenariusz that contains [UWAGA: ...] markers.
+ ---
+ 
+ # /kurs-uwagi — apply inline remarks from a scenariusz
+ 
+ Input: a lesson path, e.g. `kursy/<slug>/modul-01-x/lekcja-02-y`.
+-Output: `video/scenariusz.md` edited only where the remarks point, plus a report at a review
+-gate. Everything runs in the main session — no subagents, no Workflow.
++Output: `video/scenariusz.md` edited only where the remarks point, **every dependent lesson
++file brought into line with those edits**, plus a report at a review gate. Everything runs in
++the main session — no subagents, no Workflow.
+ 
+ Talk to Rafał in Polish; this file is in English only because `CLAUDE.md` requires it of
+ skills. The marker, the file paths and the report labels stay Polish.
+ 
+-**This is not `/kurs-redakcja`.** Redakcja rewrites the whole file for style and invalidates
+-every segment's TTS cache. This skill touches only what a marker points at, so a lesson that
+-is already rendered pays only for the segments that actually changed.
++**This is not `/kurs-redakcja`.** Redakcja rewrites whole files for style and invalidates
++every segment's TTS cache. This skill touches only what a marker points at — in the scenariusz
++and in the files that repeat the same thing — so a lesson that is already rendered pays only
++for the segments that actually changed.
+ 
+ ## Procedure
+ 
+-1. **Entry gate.** `video/scenariusz.md` must exist and contain at least one `[UWAGA: ...]`
+-   line. Zero markers → stop and say so plainly. Do not offer `/kurs-redakcja` as a
+-   substitute; the user asked for remarks, not for a style pass.
++1. **Entry gate and inventory of dependants.** `video/scenariusz.md` must exist and contain at
++   least one `[UWAGA: ...]` line. Zero markers → stop and say so plainly. Do not offer
++   `/kurs-redakcja` as a substitute; the user asked for remarks, not for a style pass.
++   Then list which dependent files exist, because step 7 needs them: `artykul.md`,
++   `video/konspekt-nagrania.md`, `video/dane-do-nagrania.md` (both only for
++   `typ_video: demo`), `video/prezentacja.yaml` (only for `typ_video: prezentacja`).
++   Note `typ_video` and `status.tresc` from `lekcja.yaml` — steps 7, 9 and 10 branch on them.
+ 2. **Inventory.** Read the whole scenariusz. Show a table before changing anything:
+    number, segment (`NN — tytuł`, or `cały scenariusz` for a marker before the first
+    heading), the sentence directly above the marker, and the remark text. Rafał must see
+@@ -33,11 +39,12 @@ is already rendered pays only for the segments that actually changed.
+    - remarks whose application would override a course rule (see step 5).
+    Wait for the answer. A timeout, or a hint to "proceed using your best judgment", is NOT
+    consent — say you are waiting and ask again.
+-4. **Apply surgically.** Edit only the places the remarks point at. Outside those places the
+-   file stays byte-identical: no reflowing, no re-punctuating, no "while I'm here" fixes.
+-   Scope of an edit: narration text and `[AKCJA: ...]` lines. Segment count, order, screen
+-   types and the frontmatter `typ:` never change — a remark asking for that belongs to
+-   `/kurs-lekcja`, and you say so instead of doing it.
++4. **Apply surgically in the scenariusz.** Edit only the places the remarks point at. Outside
++   those places the file stays byte-identical: no reflowing, no re-punctuating, no "while I'm
++   here" fixes. Scope inside this file: narration text and `[AKCJA: ...]` lines. Segment
++   count, order, screen types and the frontmatter `typ:` never change — a remark asking for
++   that belongs to `/kurs-lekcja`, and you say so instead of doing it. The other lesson files
++   are not touched yet; they are step 7, after every remark has landed here.
+ 5. **Rafał's remark outranks a course rule, but never silently.** If applying a remark
+    contradicts `kursy/<slug>/wymowa.md` or the "Nietykalne" section of
+    `kursy/_wspolne/redakcja.md`, apply it and name the overridden rule in the report. A
+@@ -47,36 +54,75 @@ is already rendered pays only for the segments that actually changed.
+    A remark you did not apply — disputed, needing Rafał's decision, or rejected — keeps its
+    line and goes into the report with the reason. Deleting a marker without making the change
+    is a silent rejection and is forbidden.
+-7. **Self-check.** Before the gate, verify yourself:
++7. **Propagate to every file the change touches.** A lesson says the same thing in up to four
++   places. A change that lands in the scenariusz alone is a rozjazd, and it surfaces at
++   recording time — after the content gate, when Rafał is already clicking. Walk every applied
++   change and bring its counterparts into line:
++
++   | what changed in the scenariusz | where the same thing also lives |
++   |---|---|
++   | a literal typed or pasted on screen: chat question, node / credential / sheet / field name, field value | `artykul.md` (the step telling the reader to type it), `video/konspekt-nagrania.md` (the numbered step), `video/dane-do-nagrania.md` (the "Do wklejenia i wpisania na ekranie" table and the blocks under it) |
++   | an `[AKCJA: ...]` line: what is clicked, opened or shown, and in what order | `video/konspekt-nagrania.md` (the numbered step), and `artykul.md` where the article walks the same click |
++   | a claim about the interface: a field invisible in some mode, a warning that does not appear, the name of a section or tab | `artykul.md`, `video/konspekt-nagrania.md` |
++   | the outcome of a demo beat, or the point the beat is making | `artykul.md` (the matching `### Krok N` section) |
++   | a slide's wording, for `typ_video: prezentacja` | `video/prezentacja.yaml` |
++   | narration wording with no counterpart on screen or in the article | nothing — stop here |
++
++   Four rules for the propagation itself:
++   - **One direction only.** The scenariusz is the source of truth (`redakcja.md` →
++     "Scenariusz jest źródłem prawdy") because it is the file Rafał verifies by clicking
++     through the product. The other files follow it. Never edit the scenariusz to match them.
++   - **Spelling is translated, not copied.** Narration carries names quoted and phonetic
++     (`"Get Meni"`, `"en osiem en"`, `"Google Szits"`); `artykul.md`, the konspekt, the cheat
++     sheet and `prezentacja.yaml` carry the original spelling (`Get Many`, `n8n`,
++     `Google Sheets`). Carry the meaning across, not the string — see "Nazwy w scenariuszu"
++     in `redakcja.md`.
++   - **Search, never assume.** For every literal that changed, grep the OLD wording across all
++     dependent files and fix every hit. These files use U+00A0 after one-letter words, so a
++     pattern containing ` i `, ` w `, ` z ` can return zero on text that is certainly there —
++     anchor on a fragment without one-letter words, or allow both space characters.
++   - **Surgical there too.** In a dependent file you change only what the propagation
++     requires. If a counterpart cannot be fixed without rewriting a whole section, that is
++     still yours to do, but it goes into the report as a separate line, flagged as a rewrite.
++   `video/plan-nagrania.md` is generated, never edited by hand: it refreshes in step 9.
++8. **Self-check.** Before the gate, verify yourself:
+    - segment count, order and screen types unchanged; frontmatter `typ:` unchanged,
+    - proper names in narration follow `kursy/<slug>/wymowa.md`; any new phonetic spelling is
+      appended to that list,
+    - `[AKCJA: ...]` lines and segment titles keep names in their original spelling, per
+      "Nazwy w scenariuszu" in `kursy/_wspolne/redakcja.md`,
+-   - no remark text leaked into narration.
+-8. **Statuses.** If the scenariusz changed and `status.video` is `wyrenderowane` or
+-   `zaakceptowane`, set it to `brak` in `lekcja.yaml` — the render is now out of date, and a
+-   fresh `/kurs-video` costs TTS and HeyGen (for a demo lesson, also Rafał's manual edit).
+-   Say this out loud. `status.tresc` is not touched. The skill runs at any `status.tresc`,
+-   `zatwierdzona` included — a remark on an approved, rendered lesson is the main case this
+-   exists for.
+-9. **Validate.** `cd tools/course-pipeline && npm run validate -- ../../kursy/<slug>/<modul>/<lekcja>`
++   - no remark text leaked into narration,
++   - **zero leftovers of the propagation:** for every literal you changed, grep its OLD form
++     across `artykul.md`, `video/konspekt-nagrania.md`, `video/dane-do-nagrania.md` and
++     `video/prezentacja.yaml`. A single hit means the job is half done. Quote the grep and its
++     count in the report — "sprawdziłem" without a number is not a check.
++9. **Statuses and validation.** If the scenariusz changed and `status.video` is
++   `wyrenderowane` or `zaakceptowane`, set it to `brak` in `lekcja.yaml` — the render is now
++   out of date, and a fresh `/kurs-video` costs TTS and HeyGen (for a demo lesson, also
++   Rafał's manual edit). Say this out loud. `status.tresc` is not touched. The skill runs at
++   any `status.tresc`, `zatwierdzona` included — a remark on an approved, rendered lesson is
++   the main case this exists for.
++   Then `cd tools/course-pipeline && npm run validate -- ../../kursy/<slug>/<modul>/<lekcja>`
+    (the lesson directory, not the course — errors from other lessons do not belong in this
+    gate). Fix every ERROR **with one exception**: when you deliberately left a remark
+    unapplied on a lesson at `status.tresc: zatwierdzona`, the validator reports
+-   `nienaniesione uwagi przy status.tresc zatwierdzona`. That error is the expected consequence of step 6,
+-   not a defect — do not "fix" it by deleting the marker. Quote it in the report and say which
+-   remark keeps it alive; it clears when Rafał decides that remark. Every other ERROR you fix.
++   `nienaniesione uwagi przy status.tresc zatwierdzona`. That error is the expected
++   consequence of step 6, not a defect — do not "fix" it by deleting the marker. Quote it in
++   the report and say which remark keeps it alive; it clears when Rafał decides that remark.
++   Every other ERROR you fix.
+    For `typ_video: demo` **at `status.tresc: zatwierdzona`**, regenerate the recording plan:
+-   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`; narration changed, so the
+-   plan is genuinely stale. At `szkic` or `do_review` do not run it — `generateRecordingPlan`
+-   refuses anything but approved content. Say in the report that the plan regenerates on
+-   approval instead.
+-10. **GATE: report for Rafał.** A table — remark → what you did → segment. Then: remarks left
+-    unapplied with reasons; rules overridden; the list of segments whose narration changed
+-    (exactly the set that will be re-synthesised; every other segment keeps its cached audio
+-    and avatar); status changes. Remind him the full diff is in the working tree. Apply his
+-    follow-up remarks directly and iterate.
++   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`; narration and konspekt both
++   changed, so the plan is genuinely stale. Read its warnings — a step that suddenly pairs
++   "po kolejności" is a naming rozjazd you introduced. At `szkic` or `do_review` do not run it
++   — `generateRecordingPlan` refuses anything but approved content. Say in the report that the
++   plan regenerates on approval instead.
++10. **GATE: report for Rafał.** A table — remark → what you did → segment. Then: the
++    propagation table (change → files updated → `plik:linia`), with any counterpart rewrite
++    flagged separately; the grep counts from step 8; remarks left unapplied with reasons;
++    rules overridden; the list of segments whose narration changed (exactly the set that will
++    be re-synthesised; every other segment keeps its cached audio and avatar); status changes.
++    Remind him the full diff is in the working tree. Apply his follow-up remarks directly and
++    iterate.
+ 11. **After Rafał approves.** If you made further edits, run validation again. Changes stay
+     uncommitted — Rafał commits. Offer a Conventional Commits message, e.g.
+     `kurs(<slug>): uwagi do scenariusza lekcji NN-y`.
+@@ -85,10 +131,18 @@ is already rendered pays only for the segments that actually changed.
+ 
+ - A remark is an instruction about a place, not a licence to edit the file. If you cannot tell
+   which sentence a remark is about, that is a question for step 3, not a guess.
++- **A remark applied only in the scenariusz is not applied, it is half applied.** The lesson is
++  one document split across four files; whatever the viewer sees on screen has to say the same
++  thing in every one of them. Propagation is not an optional extra step — leaving it out
++  guarantees a rozjazd, and the rozjazd is found by Rafał at the recording, not by the
++  validator.
+ - NEVER render video, generate content, or write quizzes — those are `/kurs-video`,
+   `/kurs-lekcja`, `/kurs-zadania`.
+ - The pipeline blocks a forgotten marker in two places: `npm run validate` errors when markers
+   survive at `status.tresc: zatwierdzona`, and `npm run video` refuses to start before its
+-  first paid API call. Neither is a substitute for finishing the job here.
++  first paid API call. Neither is a substitute for finishing the job here, and neither catches
++  a missed propagation — `validate` never compares files against each other, and
++  `plan-nagrania` pairs steps by whole-step similarity, so a pair differing by one word pairs
++  cleanly and warns about nothing.
+ - If Rafał wants the whole file reworked rather than these specific places, that is
+   `/kurs-redakcja`. Say so instead of quietly widening the scope.
+```
+
+## 2026-09-11 — kurs-redakcja — zaakceptowana (propagacja)
+- **Wzorce:** poprawka-frazy-tylko-w-scenariuszu-zostawia-artykul-i-konspekt, agent-redakcji-naprawia-rozjazd-zamiast-go-zglosic
+- **Zmiana:** Ta sama reguła propagacji, którą tego dnia dostał `kurs-uwagi`, przeniesiona do `kurs-redakcja` jako nowy krok 6 „Propagacja na pliki zależne" (tabela odpowiedników + cztery reguły: jeden kierunek ze scenariusza, pisownia tłumaczona a nie kopiowana, `grep` po STARYM brzmieniu z ostrzeżeniem o twardych spacjach, chirurgiczność w pliku zależnym). Krok 1 inwentaryzuje pliki zależne i `typ_video`; krok 5 odsyła zmienione literały do kroku 6; krok 8 raportuje tabelę propagacji z licznikami `grep`; „Zasady" nazywają redakcję naniesioną tylko w zredagowanym pliku naniesioną w połowie. Przy okazji naprawiona kolejność, którą propagacja pogłębiała: regeneracja `plan-nagrania.md` przeniesiona z kroku 9 do kroku 7, PRZED walidację (dotąd bramka zawsze widziała ostrzeżenie o nieaktualnym planie, bo plan odświeżał się dopiero po zatwierdzeniu), z poleceniem porównania ostrzeżeń generatora z przebiegiem sprzed redakcji. Kroki 6–9 to renumeracja dawnych 5–8 od nowego kroku 6 w dół.
+- **Powód decyzji:** decyzja Rafała wprost — „napraw konspekt i przenieś tę regułę do kurs-redakcja" — po tym, jak w raporcie ze zmiany `kurs-uwagi` wskazałem, że `kurs-redakcja` ma identyczną dziurę i że to właśnie nią powstał dzisiejszy rozjazd „dziś/wczoraj". Zmiana poza ścieżką `evolve-skill`, wpis dopisany ręcznie w tej samej sesji.
+
+```diff
+commit 0c5593deff17c950168c1cacdff85ba2cc296163
+Author: RafalKielbasa <kielbasarafal92@gmail.com>
+Date:   Fri Sep 11 13:38:03 2026 +0200
+
+    docs: wiki update
+
+diff --git a/.claude/skills/kurs-redakcja/SKILL.md b/.claude/skills/kurs-redakcja/SKILL.md
+index c697060..4519540 100644
+--- a/.claude/skills/kurs-redakcja/SKILL.md
++++ b/.claude/skills/kurs-redakcja/SKILL.md
+@@ -17,8 +17,11 @@ z modelem i effortem wybranym przez Rafała na starcie.
+    `artykul.md`, `video/scenariusz.md`, `video/prezentacja.yaml`, `quiz.json`,
+    `cwiczenia/*.json`. Redagujesz wyłącznie istniejące pliki — nic nie
+    generujesz od zera (od tego są `/kurs-lekcja` i `/kurs-zadania`). Jeśli nie
+-   istnieje żaden — przerwij i skieruj na `/kurs-lekcja`. Zanotuj
+-   `status.video` z `lekcja.yaml` (potrzebny w krokach 3 i 6). Jeśli w zestawie
++   istnieje żaden — przerwij i skieruj na `/kurs-lekcja`. Osobno wypisz pliki
++   ZALEŻNE, których redakcja nie dotyka, ale które powtarzają tę samą treść
++   i muszą za nią nadążyć (krok 6): `video/konspekt-nagrania.md`
++   i `video/dane-do-nagrania.md` przy `typ_video: demo`. Zanotuj
++   `status.video` i `typ_video` z `lekcja.yaml` (potrzebne w krokach 3, 6, 7 i 9). Jeśli w zestawie
+    jest `video/scenariusz.md`, ustal listę wymowy kursu `kursy/<slug>/wymowa.md`
+    — gdy pliku nie ma, utwórz go z `kursy/_wspolne/szablony/wymowa.md`
+    (podmień `<nazwa kursu>`, przykładowy wiersz zostaw do czasu pierwszego
+@@ -123,7 +126,8 @@ z modelem i effortem wybranym przez Rafała na starcie.
+      Po przepisaniu sekcji sprawdź, czy reszta artykułu nie odwołuje się
+      jeszcze do starej tezy. Potem sprawdź, czy poprawki
+      w artykule nie rozjechały quizu i ćwiczeń — grupa C czytała artykuł
+-     sprzed naprawy,
++     sprzed naprawy. Literały wpisywane na ekranie, które przy tej okazji
++     zmieniłeś, idą dalej: krok 6,
+    - prezentacja.yaml: liczba i kolejność slajdów, `id` i `uklad` bez zmian,
+      zero HTML w treści,
+    - artykuł: callouty 🎬 na miejscach, ≥1 blok bez calloutu; każdy obrazek ma
+@@ -134,15 +138,67 @@ z modelem i effortem wybranym przez Rafała na starcie.
+      te same,
+    - merytoryka: diff nie dodaje ani nie gubi faktów, liczb, cen, nazw.
+    Naruszenia napraw od ręki.
+-6. **Status video i walidacja.** Jeśli dotyczy (krok 3), ustaw
++6. **Propagacja na pliki zależne.** Lekcja mówi to samo w kilku plikach,
++   a redakcja rusza tylko część z nich. Zmiana, która wylądowała wyłącznie
++   w zredagowanym pliku, jest rozjazdem — wychodzi przy nagraniu, po bramce
++   treści, kiedy Rafał już klika. Przejdź `git diff` zredagowanych plików
++   i dla każdej zmiany dotykającej treści widocznej poza tym plikiem
++   doprowadź odpowiedniki do zgodności:
++
++   | co się zmieniło | gdzie to samo jeszcze żyje |
++   |---|---|
++   | literał wpisywany albo wklejany na ekranie: pytanie do czatu, nazwa węzła / credentiala / arkusza / pola, wartość pola | `artykul.md`, `video/konspekt-nagrania.md` (numerowany krok), `video/dane-do-nagrania.md` (tabela "Do wklejenia i wpisania na ekranie" i bloki pod nią) |
++   | linia `[AKCJA: ...]`: co jest klikane, otwierane, pokazywane i w jakiej kolejności | `video/konspekt-nagrania.md`, a w `artykul.md` tam, gdzie artykuł prowadzi to samo kliknięcie |
++   | twierdzenie o interfejsie: pole niewidoczne w danym trybie, ostrzeżenie, którego nie ma, nazwa sekcji albo zakładki | `artykul.md`, `video/konspekt-nagrania.md` |
++   | wynik albo puenta beatu demo | `artykul.md` (odpowiadająca sekcja `### Krok N`) |
++   | brzmienie narracji bez odpowiednika na ekranie i w artykule | nic — koniec |
++
++   Cztery reguły samej propagacji:
++   - **Jeden kierunek.** Źródłem prawdy jest `video/scenariusz.md` (redakcja.md
++     → "Scenariusz jest źródłem prawdy"), bo to jego Rafał weryfikuje klikając
++     w produkcie. Pozostałe pliki idą za nim, nigdy odwrotnie.
++   - **Pisownię tłumaczysz, nie kopiujesz.** Narracja niesie nazwy
++     w cudzysłowie i fonetycznie (`"Get Meni"`, `"en osiem en"`,
++     `"Google Szits"`); artykuł, konspekt, dane do nagrania i
++     `prezentacja.yaml` mają oryginalną pisownię (`Get Many`, `n8n`,
++     `Google Sheets`). Przenosisz znaczenie, nie string.
++   - **Szukasz, nie zakładasz.** Dla każdego zmienionego literału zrób `grep`
++     po STARYM brzmieniu we wszystkich plikach zależnych i popraw każde
++     trafienie. Te pliki mają twarde spacje po jednoliterowych słowach, więc
++     wzorzec z ` i `, ` w `, ` z ` zwróci zero na tekście, który tam na
++     pewno jest — kotwicz się na fragmencie bez nich albo dopuszczaj oba znaki
++     spacji. Liczniki `grep` cytujesz w raporcie; "sprawdziłem" bez liczby
++     nie jest kontrolą.
++   - **Chirurgicznie także tam.** W pliku zależnym zmieniasz wyłącznie to,
++     czego wymaga propagacja. Jeśli odpowiednika nie da się naprawić bez
++     przepisania całej sekcji — przepisujesz, ale w raporcie idzie to osobną
++     linią, oznaczone jako przepisanie.
++
++   `video/plan-nagrania.md` jest generowany, nie edytowany ręcznie —
++   odświeża się w kroku 7.
++7. **Status video, plan nagrania i walidacja.** Jeśli dotyczy (krok 3), ustaw
+    `status.video: brak` w `lekcja.yaml`; statusów `tresc`/`zadania` nie
+-   ruszaj. Potem `cd tools/course-pipeline && npm run validate --
++   ruszaj.
++   Potem, gdy lekcja ma `typ_video: demo` przy `status.tresc: zatwierdzona`,
++   a redakcja albo propagacja ruszyła `video/scenariusz.md` lub
++   `video/konspekt-nagrania.md` — przegeneruj plan nagrania:
++   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`. Robisz to
++   PRZED walidacją, bo inaczej bramka zobaczy ostrzeżenie o nieaktualnym
++   `video/plan-nagrania.md`. Przeczytaj ostrzeżenia generatora i porównaj je
++   z przebiegiem sprzed redakcji: krok, który dopiero teraz paruje się
++   "po kolejności", to rozjazd nazewnictwa, który sam wprowadziłeś. Przy
++   `szkic` albo `do_review` planu nie generujesz — `generateRecordingPlan`
++   odmawia treści niezatwierdzonej; napisz w raporcie, że plan odświeży się
++   przy zatwierdzeniu.
++   Na koniec `cd tools/course-pipeline && npm run validate --
+    ../../kursy/<slug>/<modul>/<lekcja>` (katalog lekcji, nie kursu — błędy
+    z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
+-7. **BRAMKA: raport dla Rafała.** Pokaż: per plik 3–5 charakterystycznych
++8. **BRAMKA: raport dla Rafała.** Pokaż: per plik 3–5 charakterystycznych
+    zmian "przed → po", łączną skalę zmian, listę naprawionych rozjazdów
+    artykuł vs scenariusz (osobno oznaczone te, przy których przepisałeś tezę
+    sekcji — te Rafał czyta w pierwszej kolejności),
++   tabelę propagacji na pliki zależne (co się zmieniło → jakie pliki
++   zaktualizowane → `plik:linia`) wraz z licznikami `grep` z kroku 6,
+    listę wątpliwości merytorycznych od agentów, pozycje dopisane
+    do `wymowa.md` (jeśli redagowałeś scenariusz),
+    zmiany statusów (w tym `video → brak`, jeśli zaszło),
+@@ -150,15 +206,14 @@ z modelem i effortem wybranym przez Rafała na starcie.
+    od ręki (w głównej sesji, bez ponownego Workflow) i iteruj. Rafał może też
+    wpisać je wprost do `video/scenariusz.md` jako linie `[UWAGA: ...]` — wtedy
+    nanosi je `/kurs-uwagi`, a nie ta procedura.
+-8. **Po zatwierdzeniu przez Rafała:** jeśli nanosiłeś poprawki po uwagach,
++9. **Po zatwierdzeniu przez Rafała:** jeśli nanosiłeś poprawki po uwagach,
+    uruchom walidację ponownie. `video` zostaje `brak` do decyzji
+    o re-renderze. Zmiany zostają niezacommitowane — commit robi Rafał.
+    Jeśli Rafał przerwie bramkę bez decyzji, powiedz wprost w podsumowaniu,
+    że pliki w drzewie są po redakcji, ale bez akceptacji.
+-   Jeśli lekcja ma `typ_video: demo`, a redakcja objęła grupę B
+-   (`video/scenariusz.md`), przegeneruj plan nagrania:
+-   `npm run plan-nagrania -- <lekcja>`. Bez tego `npm run validate` zgłosi
+-   ostrzeżenie o nieaktualnym `video/plan-nagrania.md`.
++   Jeśli poprawki po uwagach ruszyły `video/scenariusz.md` albo
++   `video/konspekt-nagrania.md`, przegeneruj plan nagrania jeszcze raz
++   (warunki i komenda — krok 7) i dopiero potem uruchom walidację.
+ 
+ ## Zasady
+ 
+@@ -169,6 +224,12 @@ z modelem i effortem wybranym przez Rafała na starcie.
+   KAŻDY, po stronie artykułu, w tej redakcji — także taki, który wymaga
+   przepisania tezy całej sekcji. Artykuł ma wyjść z redakcji zgodny ze
+   scenariuszem; `/kurs-lekcja` nie jest miejscem na rozjazdy.
++- **Redakcja naniesiona tylko w zredagowanym pliku jest naniesiona w połowie.**
++  Lekcja to jeden dokument rozbity na kilka plików; to, co widz zobaczy na
++  ekranie, musi brzmieć tak samo w każdym z nich. Ani `npm run validate`, ani
++  `npm run plan-nagrania` tego nie złapią — walidator nigdy nie porównuje
++  plików między sobą, a plan paruje kroki po podobieństwie całego kroku, więc
++  para różniąca się jednym słowem paruje się czysto i nie ostrzega o niczym.
+ - NIE renderuj video, NIE generuj nowych treści ani zadań — to
+   `/kurs-video`, `/kurs-lekcja`, `/kurs-zadania`.
+ - Najtaniej redagować PRZED `/kurs-video` — redakcja scenariusza lub slajdów
+```

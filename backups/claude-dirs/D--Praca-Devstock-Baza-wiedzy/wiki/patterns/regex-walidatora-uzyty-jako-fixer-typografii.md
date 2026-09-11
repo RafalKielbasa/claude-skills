@@ -1,6 +1,6 @@
 # regex-walidatora-uzyty-jako-fixer-typografii
 
-- **Skill:** kurs-lekcja (krok 4/5), dotyczy wszystkich skilli `kurs-*` piszących treść
+- **Skill:** kurs-lekcja (krok 4/5) i kurs-redakcja (krok 5); dotyczy wszystkich skilli `kurs-*` piszących treść
 - **Typ:** porażka
 - **Status:** otwarty
 
@@ -36,6 +36,19 @@ popełnienia od zera.
   — czyli odczytał defekt jako dowód poprawności. Naprawa: `s.replace('  ',
   ' ')` na 292 wystąpieniach i zmiana regexu skryptu na konsumujący
   (`([aiouwzAIOUWZ]) `).
+
+- 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: ten sam błąd dzień
+  później, w innym skillcie i w skrypcie pisanym od zera. Funkcja `nbsp`
+  w skrypcie naprawiającym rozjazdy artykułu M02L01: `s.replace(SIEROTKA,
+  '$1\u00A0')` z regexem `(?<![\p{L}\p{N}])([aiouwzAIOUWZ])(?=[^\S\u00A0])`
+  przepisanym z `src/typografia.js` — lookahead znowu niekonsumujący. Wynik:
+  29 sekwencji `U+00A0` + zwykła spacja w dziesięciu naprawionych zdaniach,
+  `npm run validate` → „walidacja czysta (ostrzeżeń: 0)". Defekt zobaczyłem
+  oczami, czytając wyjście `grep` („Z  listy w  panelu bocznym"), nie przez
+  kontrolę. Naprawa: `t.replace(/\u00A0 /g, '\u00A0')` i porównanie licznika
+  z wersją z HEAD (0 przed, 29 po). Asercja zalecana przez tę stronę od
+  2026-09-10 nie powstała, bo reguła mieszka wyłącznie w wiki — nie ma jej
+  w żadnym skillcie `kurs-*` ani w `course-pipeline`.
 
 ## Rozwiązanie
 Regex z walidatora kopiuj do skryptu naprawczego, ale **przepisz lookahead na
