@@ -33,14 +33,18 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
 3. **Generowanie:**
    a. `quiz.json` — zawsze. 5–6 pytań (5 to minimum platformy, mniejszy quiz jest odrzucany), mix `single`/`multi`, dystraktory
       wiarygodne (typowe pomyłki, nie absurdy), każda poprawna odpowiedź
-      weryfikowalna w `artykul.md`. Trzy twarde reguły formy:
+      weryfikowalna w `artykul.md`. Cztery twarde reguły formy:
       - `czas_min` = liczba pytań (minuta na pytanie): 5 pytań → `5`,
         8 pytań → `8`. Walidator to sprawdza.
       - Treść pytania `multi` NIE zapowiada wielokrotnego wyboru — zero
         dopisków "(zaznacz wszystkie pasujące)" i wariantów; tryb pytania
         pokazuje platforma.
+      - Treść pytania (`tresc`) ≤ 185 znaków — CMS nie przyjmuje dłuższej
+        (`kursy/_wspolne/uwagi.md`). Walidator to sprawdza. Nie mieści się?
+        Utnij tło i przykłady z pytania, zostaw samo pytanie — kontekst
+        kursant ma z lekcji.
       - Każda odpowiedź ≤ 69 znaków (platforma odrzuca 70 i więcej). Nie mieści się? Przenieś kontekst do
-        treści pytania, nie rozpychaj odpowiedzi.
+        treści pytania (pilnując limitu 185), nie rozpychaj odpowiedzi.
    b. Oceń charakter sekcji "Praktyka krok po kroku" artykułu i wybierz **co
       najwyżej jeden** pasujący rodzaj ćwiczenia (struktura-zadania.md ma
       pełny schemat każdego):
@@ -65,7 +69,8 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
 4. **Samokontrola.** Sprawdź checklistę jakości ze `struktura-zadania.md` dla
    quizu i wybranego rodzaju ćwiczenia. Dla quizu policz osobno: `czas_min`
    równy liczbie pytań, żadna treść pytania nie zapowiada wielokrotnego
-   wyboru, żadna odpowiedź nie przekracza 69 znaków, pytań jest 5–6. Osobno przejdź
+   wyboru, żadna treść pytania nie przekracza 185 znaków, żadna odpowiedź
+   nie przekracza 69 znaków, pytań jest 5–6. Osobno przejdź
    typografię: zero pauz (—) i półpauz (–) w roli myślnika (dywiz `-` ze
    spacjami), tylko proste cudzysłowy `"` i `'`, twarda spacja U+00A0 po
    jednoliterowych słowach (`a i o u w z`) w polach widocznych dla kursanta —
@@ -96,7 +101,7 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
 ## Zasady
 
 - NIE publikuje do CMS ani nie zakłada kont zewnętrznych API — to
-  `/kurs-publikuj` (kolejny etap).
+  `/kurs-publikuj`.
 - Obsługiwane rodzaje ćwiczeń: `automatyzacja`, `prompt`, `dopasowanie`
   (patrz `struktura-zadania.md`). Inne typy platformy (kod, sandbox) są poza
   zakresem — kurs ma zasadę "bariera kodu", kursant nie pisze kodu.

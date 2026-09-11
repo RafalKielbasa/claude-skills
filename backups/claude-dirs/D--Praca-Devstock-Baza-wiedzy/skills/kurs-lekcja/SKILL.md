@@ -104,7 +104,9 @@ przedstawione Rafałowi do bramki review.
    kroki 5–6 (max 2 iteracje); problemy niezasadne → odnotuj dlaczego.
 7. **BRAMKA: prezentacja Rafałowi.** Pokaż: ścieżki plików, streszczenie
    lekcji (3–5 zdań), werdykt z review-ai.md + co poprawiono, liczbę
-   segmentów avatar. Uwagi Rafała nanoś od ręki i iteruj.
+   segmentów avatar. Uwagi Rafała nanoś od ręki i iteruj. Rafał może też
+   wpisać je wprost do `video/scenariusz.md` jako linie `[UWAGA: ...]` — wtedy
+   nanosi je `/kurs-uwagi`, a nie ta procedura.
 8. **Po zatwierdzeniu przez Rafała:** ustaw `status.tresc: zatwierdzona`,
    uruchom walidację ponownie. Zmiany zostają niezacommitowane — commit robi
    Rafał.

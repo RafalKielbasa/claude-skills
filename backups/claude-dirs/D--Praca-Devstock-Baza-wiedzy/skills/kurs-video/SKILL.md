@@ -25,6 +25,8 @@ przedstawione Rafałowi do bramki akceptacji.
    - `status.tresc != zatwierdzona` → przerwij i skieruj na dokończenie
      `/kurs-lekcja` (bramka Rafała dla treści) najpierw — rendering to
      kosztowne API (ElevenLabs, HeyGen), tylko dla zatwierdzonej treści.
+   - `video/scenariusz.md` nie może zawierać linii `[UWAGA: ...]` — `npm run video` zatrzyma
+     się przed pierwszym płatnym wywołaniem. Nienaniesione uwagi nanieś przez `/kurs-uwagi`.
    - **Dla `typ_video: demo` dodatkowo:** układ scenariusza musi być avatar →
      screencasty → avatar (waliduje render). Etap renderu zależy od
      `video/nagranie-z-lektorem.mp4`: brak pliku = etap materiałów (paczka

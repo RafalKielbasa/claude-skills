@@ -123,7 +123,9 @@ z modelem i effortem wybranym przez Rafała na starcie.
    od agentów, pozycje dopisane do `wymowa.md` (jeśli redagowałeś scenariusz),
    zmiany statusów (w tym `video → brak`, jeśli zaszło),
    przypomnienie, że pełny diff czeka w drzewie roboczym. Uwagi Rafała nanoś
-   od ręki (w głównej sesji, bez ponownego Workflow) i iteruj.
+   od ręki (w głównej sesji, bez ponownego Workflow) i iteruj. Rafał może też
+   wpisać je wprost do `video/scenariusz.md` jako linie `[UWAGA: ...]` — wtedy
+   nanosi je `/kurs-uwagi`, a nie ta procedura.
 8. **Po zatwierdzeniu przez Rafała:** jeśli nanosiłeś poprawki po uwagach,
    uruchom walidację ponownie. `video` zostaje `brak` do decyzji
    o re-renderze. Zmiany zostają niezacommitowane — commit robi Rafał.
