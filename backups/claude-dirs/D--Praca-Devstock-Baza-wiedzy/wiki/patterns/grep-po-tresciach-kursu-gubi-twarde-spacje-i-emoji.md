@@ -1,7 +1,8 @@
 # grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji
 
-- **Skill:** kurs-lekcja (krok 4, reguła wpisana 2026-09-10); dotyczy wszystkich
-  skilli `kurs-*`, a `kurs-redakcja` i `kurs-zadania` reguły jeszcze nie mają
+- **Skill:** kurs-lekcja (krok 4, reguła wpisana 2026-09-10), kurs-redakcja
+  (krok 5, 2026-09-11) i kurs-zadania (krok 4, 2026-09-11); `kurs-uwagi` ma
+  odpowiednik reguły w kroku 7 (propagacja) — rodzina `kurs-*` domknięta
 - **Typ:** porażka
 - **Status:** nawrót (2026-09-11) — wpisany 2026-09-10 do `kurs-lekcja`, złamany 2026-09-11 w sesji prowadzonej tym skillem
 
@@ -111,3 +112,18 @@ gdzie prawdziwych jest zero. Wniosek z takiego wyniku jest równie fałszywy jak
 z zera, tylko brzmi groźniej. Przy kontrolach na krótkich akronimach kotwiczyć
 na granicy słowa (`\bAPI\b`) albo czytać trafienia z kontekstem, zanim
 wejdą do raportu.
+
+**Pokrycie rodziny domknięte 2026-09-11** (`/evolve-skill kurs-redakcja`
+i `/evolve-skill kurs-zadania`, obie propozycje przyjęte w wariancie pełnym).
+Reguła stoi teraz w `kurs-lekcja` krok 4, `kurs-redakcja` krok 5,
+`kurs-zadania` krok 4 i — jako reguła propagacyjna — w `kurs-uwagi` krok 7.
+Obie dzisiejsze zmiany wniosły też drugą połowę pułapki, ciche „za dużo" przy
+krótkich akronimach (`\bAPI\b`), której nie miał dotąd żaden skill rodziny.
+
+**Status zostaje `nawrót`, a nie `zaadresowany`.** Nawrót z 2026-09-11 wydarzył
+się w `kurs-lekcja`, gdzie reguła już stała, więc dopisanie jej do dwóch innych
+skilli go nie adresuje — adresuje wyłącznie brak pokrycia rodziny. Nawrót
+zamknie dopiero przeniesienie reguły w `kurs-lekcja` z kroku 4 (samokontrola,
+czytana później) do kroku 3 (pisanie treści, moment szkody) albo związanie jej
+ze skryptem sierotek. Rafał odłożył tę zmianę słowem „Nie teraz" przy tym samym
+wywołaniu — to jest następny krok dla tego wzorca.

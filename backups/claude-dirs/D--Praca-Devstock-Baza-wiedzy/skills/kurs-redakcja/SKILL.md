@@ -137,6 +137,16 @@ z modelem i effortem wybranym przez Rafała na starcie.
    - quiz/ćwiczenia: JSON się parsuje, pola bez zmian, poprawne odpowiedzi
      te same,
    - merytoryka: diff nie dodaje ani nie gubi faktów, liczb, cen, nazw.
+   **Kontrole z tej listy rób odczytem pliku, nie `grep`-em po frazie z treści.**
+   Po redakcji `w wideo`, `z inwestycji` i `U Ciebie` mają w środku U+00A0,
+   a emoji jako pattern w Git Bash nie trafia — oba przypadki dają ciche "0",
+   nie błąd. Kotwicz na fragmencie bez jednoliterowego słowa (`wideo**`,
+   `Ciebie (`, `^> `). Odwrotna pułapka jest równie cicha: `grep -i` po krótkim
+   akronimie (`API`) trafia w podciągi polskich słów („napisze", „zapisz") —
+   kotwicz na granicy słowa (`\bAPI\b`) albo czytaj trafienia z kontekstem.
+   "0 trafień" i "kilkanaście trafień" na pliku, który właśnie przeczytałeś, to
+   wynik wzorca, a nie fakt — tak samo odbite `old_string` w `Edit` i licznik
+   z własnego skryptu kontrolnego. Reguła obowiązuje też `grep`-y z kroku 6.
    Naruszenia napraw od ręki.
 6. **Propagacja na pliki zależne.** Lekcja mówi to samo w kilku plikach,
    a redakcja rusza tylko część z nich. Zmiana, która wylądowała wyłącznie

@@ -605,3 +605,58 @@ index c697060..4519540 100644
    `/kurs-video`, `/kurs-lekcja`, `/kurs-zadania`.
  - Najtaniej redagować PRZED `/kurs-video` — redakcja scenariusza lub slajdów
 ```
+
+## 2026-09-11 — kurs-redakcja — zaakceptowana (kontrole odczytem)
+- **Wzorce:** grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji (5 dowodów, status `nawrót (2026-09-11)`)
+- **Zmiana:** Krok 5 („Kontrola strukturalna") dostaje regułę kotwiczenia kontroli: checklistę sprawdza się odczytem pliku, nie `grep`-em po frazie z treści; wzorzec kotwiczy się na fragmencie bez jednoliterowego słowa i bez emoji, a przy krótkich akronimach na granicy słowa (`\bAPI\b`); „0 trafień" i „kilkanaście trafień" na pliku właśnie przeczytanym to wynik wzorca, nie fakt — tak samo odbite `old_string` w `Edit` i licznik własnego skryptu. Ostatnie zdanie rozciąga regułę na `grep`-y propagacyjne z kroku 6.
+- **Powód decyzji:** propozycja z `/evolve-skill kurs-redakcja`, zaakceptowana przez Rafała słowem „Akceptuję" (wariant pełny, razem z częścią o akronimach). Krok 6 tego skilla miał od 2026-09-11 połowę reguły — o twardych spacjach w `grep`-ach propagacyjnych — ale krok 5 to inne kontrole (callouty 🎬, numeracja ilustracji, merytoryka), czyli dokładnie te, w których wzorzec ma cztery z pięciu dowodów. Połowy o krótkich akronimach (`grep -i "API"` trafiające w „napisze"/„zapisz") nie miał dotąd żaden skill rodziny.
+- **Zakres świadomie pominięty:** `kurs-lekcja` — to tam wzorzec ma status `nawrót` i to tam jego strona proponuje przeniesienie reguły z kroku 4 (samokontrola) do kroku 3 (pisanie treści); Rafał odłożył tę zmianę („Nie teraz") przy tym samym wywołaniu. Nie zakładano też `npm run sierotki` w `course-pipeline`, o którym mówi sekcja Rozwiązanie wzorca `regex-walidatora-uzyty-jako-fixer-typografii`.
+
+```diff
+--- a/.claude/skills/kurs-redakcja/SKILL.md
++++ b/.claude/skills/kurs-redakcja/SKILL.md
+@@ -137,6 +137,16 @@
+    - quiz/ćwiczenia: JSON się parsuje, pola bez zmian, poprawne odpowiedzi
+      te same,
+    - merytoryka: diff nie dodaje ani nie gubi faktów, liczb, cen, nazw.
++   **Kontrole z tej listy rób odczytem pliku, nie `grep`-em po frazie z treści.**
++   Po redakcji `w wideo`, `z inwestycji` i `U Ciebie` mają w środku U+00A0,
++   a emoji jako pattern w Git Bash nie trafia — oba przypadki dają ciche "0",
++   nie błąd. Kotwicz na fragmencie bez jednoliterowego słowa (`wideo**`,
++   `Ciebie (`, `^> `). Odwrotna pułapka jest równie cicha: `grep -i` po krótkim
++   akronimie (`API`) trafia w podciągi polskich słów („napisze", „zapisz") —
++   kotwicz na granicy słowa (`\bAPI\b`) albo czytaj trafienia z kontekstem.
++   "0 trafień" i "kilkanaście trafień" na pliku, który właśnie przeczytałeś, to
++   wynik wzorca, a nie fakt — tak samo odbite `old_string` w `Edit` i licznik
++   z własnego skryptu kontrolnego. Reguła obowiązuje też `grep`-y z kroku 6.
+    Naruszenia napraw od ręki.
+ 6. **Propagacja na pliki zależne.** Lekcja mówi to samo w kilku plikach,
+```
+
+## 2026-09-11 — kurs-zadania — zaakceptowana (kontrole odczytem)
+- **Wzorce:** grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji (5 dowodów, status `nawrót (2026-09-11)`)
+- **Zmiana:** Krok 4 („Samokontrola") dostaje tę samą regułę, przełożoną na pola quizu i ćwiczeń: po wstawieniu twardych spacji `opis`, `wskazowki` i treści pytań mają U+00A0 w środku `a i o u w z`, więc wzorzec ze zwykłą spacją daje ciche „0"; `grep -i` po krótkim akronimie trafia w podciągi polskich słów. Kotwica na fragmencie bez jednoliterowego słowa albo na granicy słowa (`\bAPI\b`). Wstawka idzie zaraz po zdaniu o typografii, przed zdaniem o grywalizacji.
+- **Powód decyzji:** propozycja z `/evolve-skill kurs-zadania`, zaakceptowana przez Rafała słowem „Akceptuję" (wariant pełny). To realizacja decyzji odłożonej 2026-09-10: wpis z tamtego dnia mówi wprost, że regułę pominięto, bo wzorzec miał wtedy status `zaadresowany` i Krok 2 `evolve-skill` kazał go pominąć — „zgłoszone Rafałowi jako skutek uboczny tamtego statusu, do osobnej decyzji". Status `nawrót` tę blokadę zdejmuje. Krok 4 już wcześniej kazał wstawiać U+00A0 w pola widoczne dla kursanta, a nie mówił nic o tym, jak potem te pola kontrolować.
+- **Zakres świadomie pominięty:** krok 2 (lektura kontekstu) i krok 5 (tasowanie i walidacja); checklista w `struktura-zadania.md` bez zmian.
+
+```diff
+--- a/.claude/skills/kurs-zadania/SKILL.md
++++ b/.claude/skills/kurs-zadania/SKILL.md
+@@ -75,7 +75,16 @@
+    spacjami), tylko proste cudzysłowy `"` i `'`, twarda spacja U+00A0 po
+    jednoliterowych słowach (`a i o u w z`) w polach widocznych dla kursanta —
+    `tytul`, `opis`, treści i odpowiedzi pytań, `wskazowki`, `elementy`,
+-   `cele`. Zero grywalizacji: pytanie ani ćwiczenie nie obiecuje odznaki,
++   `cele`.
++   **Kontrole tej checklisty rób odczytem pliku, nie `grep`-em po frazie
++   z treści.** Po wstawieniu twardych spacji pola `opis`, `wskazowki` i treści
++   pytań mają U+00A0 w środku `a i o u w z`, więc wzorzec ze zwykłą spacją
++   zwróci ciche "0" na tekście, który tam na pewno jest; `grep -i` po krótkim
++   akronimie (`API`) trafia z kolei w podciągi polskich słów („napisze").
++   Kotwicz na fragmencie bez jednoliterowego słowa albo na granicy słowa
++   (`\bAPI\b`). "0 trafień" na pliku, który właśnie napisałeś, to błąd wzorca,
++   nie fakt — tak samo odbite `old_string` w `Edit`.
++   Zero grywalizacji: pytanie ani ćwiczenie nie obiecuje odznaki,
+    rangi, punktów ani awansu — nagrody pokazuje platforma, treść o nich
+    milczy. Dla ćwiczenia `dopasowanie` sprawdź osobno, czy zadania da się
+```

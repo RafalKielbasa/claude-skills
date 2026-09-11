@@ -75,7 +75,16 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
    spacjami), tylko proste cudzysłowy `"` i `'`, twarda spacja U+00A0 po
    jednoliterowych słowach (`a i o u w z`) w polach widocznych dla kursanta —
    `tytul`, `opis`, treści i odpowiedzi pytań, `wskazowki`, `elementy`,
-   `cele`. Zero grywalizacji: pytanie ani ćwiczenie nie obiecuje odznaki,
+   `cele`.
+   **Kontrole tej checklisty rób odczytem pliku, nie `grep`-em po frazie
+   z treści.** Po wstawieniu twardych spacji pola `opis`, `wskazowki` i treści
+   pytań mają U+00A0 w środku `a i o u w z`, więc wzorzec ze zwykłą spacją
+   zwróci ciche "0" na tekście, który tam na pewno jest; `grep -i` po krótkim
+   akronimie (`API`) trafia z kolei w podciągi polskich słów („napisze").
+   Kotwicz na fragmencie bez jednoliterowego słowa albo na granicy słowa
+   (`\bAPI\b`). "0 trafień" na pliku, który właśnie napisałeś, to błąd wzorca,
+   nie fakt — tak samo odbite `old_string` w `Edit`.
+   Zero grywalizacji: pytanie ani ćwiczenie nie obiecuje odznaki,
    rangi, punktów ani awansu — nagrody pokazuje platforma, treść o nich
    milczy. Dla ćwiczenia `dopasowanie` sprawdź osobno, czy zadania da się
    rozwiązać bez wiedzy z lekcji: platforma renderuje obie listy w kolejności
