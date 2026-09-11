@@ -27,7 +27,10 @@ przedstawione Rafałowi do bramki review.
       (sugestia, nie limit: styleguide → Długość treści),
    b. `video/scenariusz.md` — TA SAMA treść w formie mówionej; frontmatter
       `typ:` musi być równy `typ_video` z lekcja.yaml; segmenty
-      `## [ekran: slajd|screencast|avatar] Tytuł`; avatar tylko powitanie /
+      `## [ekran: slajd|screencast|avatar] Segment N - Tytuł`, gdzie N to
+      pozycja segmentu liczona od 1 przez WSZYSTKIE segmenty, avatary
+      włącznie (ta sama numeracja, co nagłówki konspektu i pliki paczki
+      lektora); avatar tylko powitanie /
       przejścia / podsumowanie; segment orientacyjnie 140–420 słów
       (sugestia, nie limit — segment niosący jeden spójny wątek zostaje
       w całości, choćby był dłuższy),

@@ -92,8 +92,8 @@ z modelem i effortem wybranym przez Rafała na starcie.
    ```
 
 5. **Kontrola strukturalna.** Przejrzyj `git diff` i sprawdź sam:
-   - scenariusz: liczba, kolejność i typy segmentów `## [ekran: ...]` bez
-     zmian, frontmatter `typ:` bez zmian, avatar ≤ 3. Objętości NIE
+   - scenariusz: liczba, kolejność, typy i numery segmentów
+     `## [ekran: ...] Segment N - Tytuł` bez zmian, frontmatter `typ:` bez zmian, avatar ≤ 3. Objętości NIE
      egzekwujesz — widełki 140–420 słów są sugestią; segment krótszy po
      redakcji o więcej niż ~15% sprawdź, czy nie zgubił treści,
    - nazwy w scenariuszu: w tekście lektora żadna nazwa własna nie została bez
