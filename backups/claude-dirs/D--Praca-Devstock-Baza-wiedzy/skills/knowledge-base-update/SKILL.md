@@ -124,7 +124,7 @@ Krok 1 — ścieżka zmiany w tym repo → miejsce w bazie wiedzy:
 | zmiana w | obszar | kategoria `kb-client` |
 |---|---|---|
 | `kursy/` | `knowledge-base/product/` | `product` |
-| `demo/` | `knowledge-base/marketing/` | `marketing` |
+| `live-events/` | `knowledge-base/marketing/` | `marketing` |
 | `tools/` | `knowledge-base/dev/` | `dev` |
 | `.claude/skills/`, `.claude/agents/`, `docs/superpowers/` | `knowledge-base/dev/baza-wiedzy-repo/` | `dev` |
 | `planning/` | **pomijasz** — obsługuje `/spotkanie` | — |
@@ -193,7 +193,7 @@ drzewo robocze: tak
 korzeń bazy wiedzy: <korzeń tego repo>
 mapa:
 - kursy/ -> knowledge-base/product/
-- demo/ -> knowledge-base/marketing/
+- live-events/ -> knowledge-base/marketing/
 - tools/ -> knowledge-base/dev/
 - .claude/skills/, .claude/agents/, docs/superpowers/ -> knowledge-base/dev/baza-wiedzy-repo/
 kontekst: <jedno zdanie o tym, czego szukamy w tym przebiegu>
