@@ -53,6 +53,14 @@ niepowodzenie całej operacji.
   wywołania w sesji szły z `PYTHONIOENCODING=utf-8`.
 
 
+- 2026-09-14, sesja session_01EBknRAiTAR3Phdk3gLiwNP: czwarty dowod, czwarta sesja. `python -c`
+  drukujacy `repr()` dwoch linii `artykul.md` padl na
+  `UnicodeEncodeError: can't encode character '\u017a'` - na literze "z" z kreska
+  w slowie "Najedz". Skrypt nic jeszcze nie zapisywal, wiec koszt byl zerowy, ale
+  diagnostyka wygladala na pusta. Wszystkie kolejne wywolania tej sesji szly
+  z `PYTHONIOENCODING=utf-8` i zadne nie padlo. Reguła ze strony dziala; problemem
+  jest to, ze pierwsze wywolanie w sesji regularnie idzie bez prefiksu.
+
 ## Rozwiązanie
 Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie
 poprzedzaj `PYTHONIOENCODING=utf-8`, jeśli cokolwiek drukuje treść inną niż

@@ -1,0 +1,101 @@
+# Mapa prezentacji na plansze live'a — przykład wypełniony, nie szkielet.
+#
+# Skopiuj ten plik do `<event>/plansze/prezentacja.yaml` i zastąp każdy slajd
+# treścią WYNIKAJĄCĄ z listy plansz potwierdzonej w kroku "Wyodrębnij i
+# potwierdź" skilla (SKILL.md, sekcja 6) — ten plik pokazuje tylko cztery
+# układy, których live faktycznie potrzebuje (tytuł, porównanie, oferta,
+# oferta w rogu), nie docelową liczbę ani kolejność slajdów.
+#
+# Pola zweryfikowane względem `tools/course-pipeline/src/deck.js` (kontrakt,
+# nie spec):
+#   - poziom decku: tytul (wymagane), motyw (wymagane), proporcje (opcjonalne,
+#     domyślnie 16:9), slajdy (wymagane, lista niepusta);
+#   - poziom slajdu: id (unikalny, wzorzec [a-z0-9-]+), uklad (wymagane);
+#   - układ "tytul": naglowek (wymagane), podtytul/grafika/postac (opcjonalne);
+#   - układ "dwie-kolumny": naglowek, lewa, prawa (wymagane), lead/grafika/
+#     postac (opcjonalne); "lewa"/"prawa" to typ kolumna: naglowek (opc.),
+#     dokładnie jedno z punkty|tresc, akcent (opc.: neutralny/drugi/emfaza);
+#   - układ "punkty": naglowek, punkty (wymagane, 2-6 pozycji), lead/grafika/
+#     postac (opcjonalne);
+#   - układ "liczba": liczba, podpis (wymagane — "liczba" MUSI być tekstem,
+#     inaczej "1470 zł" traci jednostkę), lead/postac (opcjonalne).
+#
+# Pole "cues" na każdym slajdzie NIE jest częścią kontraktu generatora —
+# deck.js go nie czyta, nie waliduje i nie renderuje. To wyłącznie
+# ewidencja /live-boards: lista pozycji na zegarze, w których dany [CUE]
+# scenariusza nazywa tę planszę (SKILL.md, sekcja "Kontrakt cue -> plansza").
+# Plansza bez własnego cue (nakładka stała) ma "cues: []" i komentarz, pod
+# którym blokiem chodzi — SKILL.md wymaga wtedy potwierdzenia od Rafała,
+# ten plik sam z siebie niczego takiego nie zgaduje.
+#
+# Znana luka generatora: brak trybu przezroczystego tła. Każda plansza
+# poniżej renderuje się jako pełnoekranowy, nieprzezroczysty slajd — użycie
+# "w rogu" (patrz oferta-rog) jest decyzją produkcyjną (kompozycja w OBS albo
+# miejsce w samodzielnym decku), nie funkcją tego pliku. Szczegóły: SKILL.md,
+# sekcja "## 9. Known gap: no transparent background".
+
+tytul: Live - Agent, który pilnuje kalendarza
+motyw: agenci-ai
+proporcje: 16:9
+
+slajdy:
+  # Plansza tytułowa. Wchodzi na [CUE] otwierające transmisję i schodzi,
+  # gdy program przechodzi do ramy/agendy — w scenariuszu ta sama rola,
+  # co "01-tytul" z live'a 27.08.2026.
+  - id: tytul
+    uklad: tytul
+    naglowek: Agent, który pilnuje kalendarza
+    # "podtytul" cytuje pole "promise" z live.yaml DOSŁOWNIE — nie parafrazuj.
+    # Poniższy tekst jest przykładem, nie realnym "promise" żadnego eventu.
+    podtytul: Widzicie system, który czyta maila, znajduje termin oraz sam dopisuje go do kalendarza.
+    cues:
+      - "0:00"
+
+  # Plansza porównawcza. Odpowiednik "02-agent-vs-chatbot" z 27.08.2026,
+  # tam zrobiony jako dwa słupki — tu ten sam pomysł w układzie kontraktowym
+  # "dwie-kolumny", żeby zostać przenośnym na inną identyfikację.
+  - id: agent-vs-chatbot
+    uklad: dwie-kolumny
+    naglowek: Chatbot kontra agent
+    lead: Jedna różnica trzyma cały pokaz.
+    lewa:
+      naglowek: Odpowiada
+      punkty:
+        - Dajesz tekst
+        - Przenosisz go sam
+    prawa:
+      naglowek: Działa
+      akcent: emfaza
+      punkty:
+        - Wpisuje termin do kalendarza
+        - Zakłada zadanie
+        - Zapisuje notatkę
+    cues:
+      - "0:08"
+
+  # Plansza oferty, pełna wersja. Zostaje na ekranie do końca transmisji —
+  # tak samo jak "06-oferta" z 27.08.2026, wprowadzona w bloku oferty i już
+  # nieusuwana.
+  - id: oferta
+    uklad: punkty
+    naglowek: Kurs Agenci AI - 1470 zł
+    lead: Cena regularna to 1990 zł. Bonusy tylko dzisiaj.
+    punkty:
+      - Automatyzacje po cenie katalogowej 990 zł
+      - Pierwsza Misja AI po cenie katalogowej 147 zł
+      - Link do koszyka trafia na czat
+    cues:
+      - "1:16"
+
+  # Plansza oferty, wersja w rogu. Odpowiednik "07-oferta-rog" z 27.08.2026:
+  # ta sama oferta, skrócona do jednej liczby i jednego zdania, wracająca
+  # dwukrotnie (Q&A i ostatnie CTA) — stąd DWIE pozycje w "cues", jeden wpis
+  # w mapie. To jest worked example klauzuli "dwa cue, jedna plansza"
+  # z SKILL.md, sekcja "Kontrakt cue -> plansza".
+  - id: oferta-rog
+    uklad: liczba
+    liczba: 1470 zł
+    podpis: Bonusy tylko do północy - kupujesz teraz
+    cues:
+      - "1:28"
+      - "1:41"

@@ -35,6 +35,17 @@ indeksu w trakcie sesji nie jest stabilny.
   wyglądało to jak utrata zmian — patrz wzorzec globalny
   [[git-diff-bez-head-gubi-wlasna-prace]].
 
+- 2026-09-14, sesja session_01EBknRAiTAR3Phdk3gLiwNP: drugi dowod, tym razem na plikach **trackowanych** -
+  i to rozszerza wzorzec. `artykul.md`, `video/scenariusz.md` i `wymowa.md` byly
+  w gicie, ale mialy niezacommitowane zmiany z wczesniejszego `/kurs-uwagi` tej samej
+  sesji, wiec `git diff HEAD` po powrocie agentow pokazywalby dwie warstwy naraz
+  i nie dalo sie na nim oprzec kontroli "czy segment nie zgubil tresci". Snapshot do
+  katalogu tymczasowego, zrobiony tuz po starcie Workflow, dal baze dla dwoch kontroli
+  niewykonalnych z gita: liczba slow per segment przed i po (najwiekszy spadek -6 slow
+  w segmencie 9) oraz porownanie 39 linii `[AKCJA: ...]` linia po linii (zero roznic).
+  Wniosek: baza porownania nie jest "plik nietrackowany", tylko "plik, ktorego stan
+  sprzed tego kroku nie stoi w zadnym commicie".
+
 ## Rozwiązanie
 W kroku 1, po inwentaryzacji plików, sprawdzić `git status` katalogu lekcji
 i każdy plik oznaczony `??` skopiować do katalogu tymczasowego zadania jako

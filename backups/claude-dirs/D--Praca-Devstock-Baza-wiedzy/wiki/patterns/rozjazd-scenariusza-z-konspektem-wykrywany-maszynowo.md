@@ -41,6 +41,19 @@ poprawia sie osobno, wiec rozbieznosc powstaje domyslnie, a kosztuje dopiero prz
   o treści narracji, parował się czysto przez całą sesję.
 
 
+- 2026-09-14, sesja session_01EBknRAiTAR3Phdk3gLiwNP: piaty dowod i pierwszy, w ktorym generator znalazl
+  defekt **starszy niz sesja**, a nie swiezo wprowadzony. Pierwsze uruchomienie na
+  M02L02 dalo 12 ostrzezen; dwa z nich ("Segment 2, krok 5: sparowany po kolejnosci"
+  oraz "akcja «otworz wezel Google Sheets i pokaz pola Document i Sheet» bez kroku
+  w konspekcie") mialy wspolna przyczyne: konspekt zlal dwa beaty scenariusza w jeden
+  krok i opisal inny panel, niz mowi narracja. W wygenerowanym planie widac to bylo
+  jako wiersz z narracja `#7` i **pusta komorka ekranu** - narracja bez kadru do
+  nagrania. Po poprawieniu kroku 5 i dolozeniu kroku 6 ostrzezen zostalo 10
+  i wszystkie okazaly sie nieszkodliwe (parowanie po kolejnosci x6, brak narracji x4,
+  kazde przejrzane para po parze w pliku). Wniosek metodyczny: pusta komorka ekranu
+  przy narracji, ktora nie jest zdaniem otwierajacym segment, jest mocniejszym
+  sygnalem niz samo ostrzezenie - warto ja liczyc osobno.
+
 ## Rozwiazanie
 Po kazdej redakcji scenariusza lekcji demo przegenerowac plan nagrania i przeczytac ostrzezenia,
 zanim lekcja pojdzie do nagrania. Konspekt i scenariusz maja nazywac ten sam kadr tymi samymi

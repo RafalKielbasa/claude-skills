@@ -76,6 +76,15 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `~/.claude/CLAUDE.md`, nie wiki.
 
 
+- 2026-09-14, sesja session_01EBknRAiTAR3Phdk3gLiwNP: dziewiaty dowod, osma sesja. Osiem komunikatow
+  "Environment update" o zmianie katalogu roboczego, znowu bez ani jednego uzycia
+  podpowloki `( cd ... && ... )`. Katalog wedrowal miedzy `kursy/`, `kursy/_wspolne`,
+  `kursy/agenty-ai`, katalogiem lekcji, katalogiem sasiedniej lekcji
+  i `tools/course-pipeline`, a kazde `npm run validate` przestawialo go z powrotem
+  na `tools/course-pipeline`. Szkody nie bylo, bo wszystkie sciezki w skryptach byly
+  bezwzgledne albo liczone od jawnego `cd` w tej samej komendzie - ale dwa razy
+  musialem sprawdzic, gdzie stoje, zanim napisalem kolejna komende.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:

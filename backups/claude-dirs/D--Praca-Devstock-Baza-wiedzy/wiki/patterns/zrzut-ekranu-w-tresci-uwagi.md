@@ -28,6 +28,16 @@ zamiast niej. Zrzut ekranu niesie dokładnie tę informację, a znacznik jest zw
   siedzą pod `"Action in an app"`. Bez otwarcia tych plików każda z tych uwag poszłaby do pytań na
   bramce jako sygnał bez wskazanej naprawy.
 
+- 2026-09-14, sesja session_01EBknRAiTAR3Phdk3gLiwNP: drugi dowod, ten sam ksztalt na M02L02. Uwaga
+  "Nie musze najechac na koniec pola, gwiazdka jest zawsze widoczne" niosla sciezke
+  do zrzutu w `Downloads`. Obraz pokazal ikone gwiazdki stojaca na stale przy polach
+  "Document" i "Sheet" oraz pole "Value" juz w stanie "Defined automatically by the
+  model". Z samego tekstu nie dalo sie rozstrzygnac, czy najezdzanie znika calkiem,
+  czy zostaje po to, zeby wyskoczyla podpowiedz - zrzut rozstrzygnal, ze zostaje,
+  wiec naniesienie poszlo bez pytania. Druga uwaga tej samej sesji, bez zrzutu
+  i sprzeczna z decyzja zapisana w `dane-do-nagrania.md` tego samego dnia, poszla
+  do bramki - kontrast miedzy tymi dwiema uwagami jest dokladnie tym, co strona opisuje.
+
 ## Rozwiązanie
 
 W kroku 2 (inwentarz) wykrywać w treści uwagi ścieżkę do pliku graficznego i otworzyć ją przed
