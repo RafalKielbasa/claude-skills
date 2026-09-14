@@ -24,10 +24,10 @@
     "figma@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\figma\\2.2.107",
-        "version": "2.2.107",
+        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\figma\\2.2.111",
+        "version": "2.2.111",
         "installedAt": "2026-06-05T07:34:24.064Z",
-        "lastUpdated": "2026-09-02T19:52:10.612Z",
+        "lastUpdated": "2026-09-14T06:06:19.500Z",
         "gitCommitSha": "a742f0a700a7772ff5ed85f7c9fc1dad5afa9fcc"
       }
     ],
