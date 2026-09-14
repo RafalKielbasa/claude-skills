@@ -70,8 +70,10 @@ przedstawione Rafałowi do bramki akceptacji.
      `cd tools/course-pipeline && npm run video -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
    - **Silnik `mcp`:**
      a. `npm run video -- <lekcja> --plan-avatara` — wypisze JSON
-        `[{numer, hasz, audio, cel}]` (TTS segmentów avatarowych już
-        wygenerowany, z cache).
+        `[{numer, hasz, audio, cel}]` (TTS chunków avatarowych już
+        wygenerowany; ten tryb generuje tylko avatary, więc pełny render po
+        nim policzy łańcuch lekcji od nowa — to zamierzone, avatary HeyGen
+        idą za `cel` i przeżywają).
      b. Dla każdej pozycji planu, której plik `cel` **nie istnieje** (istniejący
         = cache, pomiń): przez narzędzia MCP `heygen` (nazwy odkryj w sesji —
         HeyGen może je zmieniać): wgraj `audio` jako asset → utwórz video
@@ -82,20 +84,31 @@ przedstawione Rafałowi do bramki akceptacji.
      c. `npm run video -- <lekcja> --avatar=mcp` — pełny render; flaga to
         bezpiecznik: brak pliku avatara = twardy błąd, nie ciche zejście na
         API.
-   Kroki wewnętrzne (slajdy Marp → PNG dla toru A, TTS per segment, avatar
-   dla segmentów `[ekran: avatar]`, montaż ffmpeg) mają cache po istnieniu
-   pliku — przerwany proces można bezpiecznie uruchomić ponownie, gotowe
-   pliki się nie regenerują. **Nazwa pliku audio zawiera odcisk całego
-   żądania TTS** (tekst + model + `voice_settings`), więc zmiana brzmienia
-   lektora — `ELEVENLABS_VOICE_SETTINGS` w `src/config.js` albo nadpisania
-   `ELEVENLABS_*` w `.env` — unieważnia cache całej lekcji: kolejny render
-   generuje audio od nowa (i avatary, bo idą za haszem audio). To realny
-   koszt API; uprzedź Rafała, zanim odpalisz render po zmianie ustawień.
+   Narracja całej lekcji idzie **jednym łańcuchem 4-6 żądań TTS** (chunki:
+   tor A — chunk na segment, tor B — screencasty sklejone do budżetu znaków,
+   avatar zawsze osobno), każde żądanie kondycjonowane poprzednimi, żeby
+   głos trzymał jedno tempo przez całą lekcję. Pliki audio to
+   `video/audio/NN.mp3` (NN = numer chunku), a **cache jest per lekcja**
+   (`video/audio/.lesson-cache`), nie per plik: zmiana treści narracji,
+   modelu, `ELEVENLABS_VOICE_SETTINGS` w `src/config.js`, nadpisań
+   `ELEVENLABS_*` w `.env` albo stałych pauz akapitowych regeneruje audio
+   **całej lekcji** — sklejonego łańcucha nie da się odbudować od środka.
+   To realny koszt API (~13 600 znaków, ok. 1,4 $ za lekcję); uprzedź
+   Rafała, zanim odpalisz render po zmianie ustawień. Slajdy Marp → PNG,
+   avatary HeyGen i montaż ffmpeg mają nadal cache po istnieniu pliku;
+   nazwa avatara (`video/avatar/NN-<hasz>.mp4`, NN = numer segmentu)
+   niesie odcisk tekstu avatara i profilu głosu, więc render HeyGen
+   przeżywa zmiany narracji w innych segmentach.
    **Tor B — dwa etapy:** pierwszy `npm run video` kończy się komunikatem z
-   paczką lektora (`video/lektor/spis.md` — pliki NN-FF.mp3 z długościami).
-   Przekaż Rafałowi ścieżkę spisu; Rafał montuje lektora z nagraniem w
-   edytorze, eksportuje `video/nagranie-z-lektorem.mp4` i wtedy ponowny
-   `npm run video` spina final. Po zmianie treści scenariusza przypomnij
+   paczką lektora (`video/lektor/`): **jeden plik `NN.mp3` na chunk
+   narracji** (avatary nie wchodzą do paczki) i `spis.md` z **timecodem
+   startu każdego akapitu** (kolumny: start, segment, akapit, po akcji,
+   początek akapitu). Akapity w chunku rozdziela pauza ok. 2,3 s — to
+   jedyne pauzy w pliku dłuższe niż 1,5 s, więc chunk tnie się dokładnie
+   na nich, pod timecody ze spisu. Przekaż Rafałowi ścieżkę spisu; Rafał
+   montuje lektora z nagraniem w edytorze, eksportuje
+   `video/nagranie-z-lektorem.mp4` i wtedy ponowny `npm run video` spina
+   final. Po zmianie treści scenariusza przypomnij
    Rafałowi, że zmontowany materiał trzeba zaktualizować ręcznie — pipeline
    tego nie wykryje.
 5. **BRAMKA: Rafał ogląda `video/final.mp4`** (lokalnie — plik nie trafia do
