@@ -110,13 +110,8 @@ przedstawione Rafałowi do bramki review.
 8. **Po zatwierdzeniu przez Rafała:** ustaw `status.tresc: zatwierdzona`,
    uruchom walidację ponownie. Zmiany zostają niezacommitowane — commit robi
    Rafał.
-   Dla `typ_video: demo` wygeneruj plan nagrania:
-   `npm run plan-nagrania -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
-   Ostrzeżenia o rozjeździe scenariusza z konspektem pokaż Rafałowi razem ze
-   ścieżką pliku. Plan powstaje WYŁĄCZNIE tutaj, po zatwierdzeniu — nigdy
-   w krokach 3-7.
-   Zaraz po planie napisz albo odśwież `video/dane-do-nagrania.md` — ściągę
-   klawiaturową nagrania. Kontrakt sekcji jest w struktura-lekcji.md
+   Dla `typ_video: demo` najpierw napisz albo odśwież `video/dane-do-nagrania.md`
+   — ściągę klawiaturową nagrania. Kontrakt sekcji jest w struktura-lekcji.md
    („Czwarty artefakt"); procedura: przejdź `konspekt-nagrania.md` krok po
    kroku (to jedyne miejsce z numeracją) i przy każdym kroku rozstrzygnij, czy
    coś w nim idzie z klawiatury — sygnały to czasowniki „wpisz", „wklej",
@@ -126,7 +121,16 @@ przedstawione Rafałowi do bramki review.
    artykułem a scenariuszem nie rozstrzygaj sam: wpisz wersję z konspektu
    i opisz rozjazd pod tabelą, ze wskazaniem `plik:linia`. Sekcja stoi
    w pliku pierwsza i powstaje dla KAŻDEJ lekcji `demo`, także takiej, która
-   nie wymaga żadnych danych środowiska. Ten plik też powstaje wyłącznie tutaj.
+   nie wymaga żadnych danych środowiska. Ten plik powstaje wyłącznie tutaj.
+   Dopiero potem wygeneruj plan nagrania:
+   `npm run plan-nagrania -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
+   Generator czyta ściągę i wkleja jej treść do planu (kolumna „Do wpisania"
+   i bloki pod tabelami segmentów), dlatego ściąga musi być gotowa wcześniej.
+   Ostrzeżenia generatora pokaż Rafałowi razem ze ścieżką pliku — zarówno
+   o rozjeździe scenariusza z konspektem, jak i o ściądze (krok spoza
+   konspektu, `(blok → niżej)` bez nagłówka `### Krok NN`, nagłówek bez
+   wiersza). Plan powstaje WYŁĄCZNIE tutaj, po zatwierdzeniu — nigdy
+   w krokach 3-7.
 
 ## Zasady
 

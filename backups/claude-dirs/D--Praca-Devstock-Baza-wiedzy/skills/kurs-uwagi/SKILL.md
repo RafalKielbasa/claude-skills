@@ -111,8 +111,10 @@ for the segments that actually changed.
    the report and say which remark keeps it alive; it clears when Rafał decides that remark.
    Every other ERROR you fix.
    For `typ_video: demo` **at `status.tresc: zatwierdzona`**, regenerate the recording plan:
-   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`; narration and konspekt both
-   changed, so the plan is genuinely stale. Read its warnings — a step that suddenly pairs
+   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`; narration, konspekt and the
+   cheat sheet (`video/dane-do-nagrania.md`, copied into the plan's "Do wpisania" column and the
+   blocks under each segment table) are all plan sources, so the plan is genuinely stale after
+   any of them changed. Read its warnings — a step that suddenly pairs
    "po kolejności" is a naming rozjazd you introduced. At `szkic` or `do_review` do not run it
    — `generateRecordingPlan` refuses anything but approved content. Say in the report that the
    plan regenerates on approval instead.

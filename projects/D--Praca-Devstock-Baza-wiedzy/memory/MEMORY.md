@@ -15,3 +15,4 @@
 - [Wymowa n8n i JSON — zmiana po odsłuchu](wymowa-n8n-json-odsluch.md) — `"en osiem en"` i `dżejson` od 2026-09-09; podmienione tylko M00L02, siedem starszych scenariuszy nadal ze starym zapisem (moduł 1 = re-render).
 - [Podpisy ilustracji w artykułach](ilustracje-podpis-w-artykulach.md) — format `**Ilustracja NR.** Podpis.` pod obrazkiem; zapisany w `/kurs-redakcja`, do `/kurs-lekcja` świadomie NIE dokładamy.
 - [ElevenLabs — klucz bez user_read](elevenlabs-klucz-bez-user-read.md) — limitu i zużycia kredytów NIE odczytasz z API (401 missing permission); stan planu tylko z dashboardu, koszty licz arytmetyką 1 znak = 1 kredyt.
+- [Bash tool halves doubled backslashes in heredocs](bash-heredoc-backslash-halved.md) — content with a doubled backslash (regex escapes, Windows paths) goes through Edit/Write, not heredoc or sed; verify with `cat -A`.

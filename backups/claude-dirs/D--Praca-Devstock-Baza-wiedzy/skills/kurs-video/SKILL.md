@@ -33,15 +33,17 @@ przedstawione Rafałowi do bramki akceptacji.
      lektora + avatary), plik jest = finalne spięcie. Surowe
      `video/nagranie.mp4` jest materiałem roboczym Rafała do edytora —
      pipeline go nie czyta.
-     Dokumentem do nagrywania jest `video/plan-nagrania.md` (kroki ekranu obok
-     narracji i nazw plików lektora). Jeśli go nie ma albo `npm run validate`
-     zgłasza, że jest nieaktualny — przegeneruj przed nagraniem:
-     `npm run plan-nagrania -- <lekcja>`.
-     Obok planu leży `video/dane-do-nagrania.md` — ściąga klawiaturowa (co
-     wpisujesz i wklejasz na ekranie, krok po kroku) plus dane środowiska do
-     przygotowania przed pierwszym kadrem. Brak tego pliku przy `demo` odeślij
-     do `/kurs-lekcja` krok 8: nagrywanie bez ściągi to szukanie kart
-     stanowiska i opisów narzędzi w `artykul.md` przy włączonym nagrywaniu.
+     Dokumentem do nagrywania jest `video/plan-nagrania.md` (kroki ekranu,
+     kolumna „Do wpisania" z tym, co przy kroku idzie z klawiatury, narracja
+     z nazwami plików lektora, a pod tabelą segmentu bloki do wklejenia).
+     Jeśli go nie ma albo `npm run validate` zgłasza, że jest nieaktualny —
+     przegeneruj przed nagraniem: `npm run plan-nagrania -- <lekcja>`.
+     Kolumna i bloki są kopią z `video/dane-do-nagrania.md` — ściągi
+     klawiaturowej, która poza tym trzyma dane środowiska do przygotowania
+     przed pierwszym kadrem. Brak tego pliku przy `demo` (generator ostrzega
+     „brak video/dane-do-nagrania.md") odeślij do `/kurs-lekcja` krok 8:
+     nagrywanie bez ściągi to szukanie kart stanowiska i opisów narzędzi
+     w `artykul.md` przy włączonym nagrywaniu.
 2. **BRAMKA: silnik avatara.** Jeśli Rafał wskazał silnik w komendzie („avatar
    przez MCP", „przez API") — honoruj wskazanie bez pytania. Jeśli **nie**
    wskazał — zapytaj **przed renderem** i **czekaj na odpowiedź**: plan
@@ -103,9 +105,11 @@ przedstawione Rafałowi do bramki akceptacji.
    paczką lektora (`video/lektor/`): **jeden plik `NN.mp3` na chunk
    narracji** (avatary nie wchodzą do paczki) i `spis.md` z **timecodem
    startu każdego akapitu** (kolumny: start, segment, akapit, po akcji,
-   początek akapitu). Akapity w chunku rozdziela pauza ok. 2,3 s — to
-   jedyne pauzy w pliku dłuższe niż 1,5 s, więc chunk tnie się dokładnie
-   na nich, pod timecody ze spisu. Przekaż Rafałowi ścieżkę spisu; Rafał
+   początek akapitu). Akapity w chunku rozdziela pauza ok. 1,1–1,5 s
+   (zamówione 1,0 s; skrócona o połowę 2026-09-15 po odsłuchu M02L02) —
+   długością nie odróżnia się pewnie od najdłuższych pauz naturalnych
+   (do ~1,6 s), więc chunk tnie się po timecodach ze spisu, nie po
+   długości ciszy. Przekaż Rafałowi ścieżkę spisu; Rafał
    montuje lektora z nagraniem w edytorze, eksportuje
    `video/nagranie-z-lektorem.mp4` i wtedy ponowny `npm run video` spina
    final. Po zmianie treści scenariusza przypomnij

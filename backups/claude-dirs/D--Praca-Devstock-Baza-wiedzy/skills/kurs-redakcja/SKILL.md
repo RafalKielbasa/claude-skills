@@ -190,8 +190,9 @@ z modelem i effortem wybranym przez Rafała na starcie.
    `status.video: brak` w `lekcja.yaml`; statusów `tresc`/`zadania` nie
    ruszaj.
    Potem, gdy lekcja ma `typ_video: demo` przy `status.tresc: zatwierdzona`,
-   a redakcja albo propagacja ruszyła `video/scenariusz.md` lub
-   `video/konspekt-nagrania.md` — przegeneruj plan nagrania:
+   a redakcja albo propagacja ruszyła `video/scenariusz.md`,
+   `video/konspekt-nagrania.md` lub `video/dane-do-nagrania.md` (plan kopiuje
+   z niej kolumnę „Do wpisania" i bloki) — przegeneruj plan nagrania:
    `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`. Robisz to
    PRZED walidacją, bo inaczej bramka zobaczy ostrzeżenie o nieaktualnym
    `video/plan-nagrania.md`. Przeczytaj ostrzeżenia generatora i porównaj je
