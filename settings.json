@@ -39,5 +39,39 @@
   "askUserQuestionTimeout": "60s",
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
-  "skipWorkflowUsageWarning": true
+  "skipWorkflowUsageWarning": true,
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: Devstock — GitHub org `devstock-org` (this repo's remote); repos under `kodozercy` and `Devstock-Academy` appear only as documentation cross-references in CLAUDE.md and were not independently verified (sibling-repo docs NOT GATHERED)",
+      "**Cloud provider(s)**: GCP (evidenced by `~/.claude/CLAUDE.md` GCP-operations rules: `gcloud`, `gsutil`, `bq`, `terraform apply`) — read-only GCP commands (list/describe/config list) are treated as routine per that file, but this is a user-authored global doc, not usage-corroborated, so kept informational only",
+      "**Repository visibility**: internal (devstock-org/devstock-team, via gh) — treat as non-public; do not publish to public hosts",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: `.env` files under `tools/course-pipeline/`, `tools/kb-client/`, `tools/notion-import/` (with `.env.example` counterparts) hold service credentials (CodeBusters API secrets, kb-client webhook auth, Notion import tokens) — never print or upload their contents",
+      "**Default / protected branches**: `main` is the default branch and is protected via ruleset `main-delete` (active), per gh — treat direct pushes/force-pushes to `main` as blocked regardless of local git config",
+      "**CI/CD deploy targets**: CodeBusters platform (staging and prod environments) via `tools/course-pipeline` publish command — prod deploys require Rafał's explicit \"na prod\" per repo skill docs",
+      "**Network posture**: None configured",
+      "**Host containment**: None configured — assume Claude Code runs on an ordinary developer machine with open internet",
+      "### Source control",
+      "**Trusted internal domains**: docs.n8n.io (5 hits in usage), api.github.com, api.elevenlabs.io, files2.heygen.ai, heygen-resources-prod.s3-accelerate.amazonaws.com — all observed as contacted hosts in this project's transcripts; treat as read/API destinations, not upload targets by default",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: pgvector knowledge-base service accessed exclusively via `tools/kb-client` CLI over n8n webhooks (per `.claude/skills/baza-wiedzy/SKILL.md`) — direct DB/webhook access is explicitly disallowed by that skill's own rules; CodeBusters CMS/API (staging & prod) via `tools/course-pipeline`",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: `.env` files listed above (credentials); knowledge-base vector store categories `dev`, `marketing`, `product`, `sales`, `company`, `other`, `interns` hold internal company knowledge — company/HR/finance content (`company` category) and vector DB deletions are sensitive and gated on Rafał's explicit confirmation per repo skill docs",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace/host/container with `prod` or `production` as a whole word/segment — includes CodeBusters prod environment (`CODEBUSTERS_PROD_URL`/`CODEBUSTERS_PROD_SECRET`) and `heygen-resources-prod` host observed in usage",
+      "**Protected deployment namespaces / environments**: CodeBusters `prod` environment — publishing there requires an explicit \"na prod\" instruction in-conversation per `.claude/skills/kurs-publikuj/SKILL.md`; staging is the default target",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production`; GCP state-changing commands (`gcloud`, `gsutil`, `bq`, `terraform apply`, IAM policy bindings, key creation) are called out in the user's global CLAUDE.md as commands to propose but never execute directly",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development and content-pipeline operations (course authoring, knowledge-base maintenance, live-event production) for Devstock",
+      "**Trusted repo**: this repo (`devstock-org/devstock-team`, internal visibility) and its `origin` remote only",
+      "**Org-specific CLIs**: `tools/kb-client` (knowledge-base vector DB CLI, wraps n8n webhooks), `tools/course-pipeline` (course validation, review-ai, publish, plan-nagrania)",
+      "**routine under this repo's tools/ prefix**: read-only kb-client operations (`ask`, `stats`, `list`, `export`) and course-pipeline validation/dry-run commands are routine per repo skill docs; `kb-client delete --yes` (whole-category wipe) and course-pipeline `publish --env=prod` are explicitly gated on Rafał's in-conversation confirmation and should not be auto-approved"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Bash(*kb-client* delete --yes*) in tools/kb-client — whole-category vector DB wipe, repo skill requires explicit per-session confirmation before running",
+      "Bash(*course-pipeline* publish* --env=prod*) in tools/course-pipeline — prod publish requires explicit \"na prod\" instruction per repo skill docs"
+    ]
+  }
 }
