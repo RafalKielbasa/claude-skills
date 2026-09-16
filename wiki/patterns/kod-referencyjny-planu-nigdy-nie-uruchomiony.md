@@ -86,6 +86,15 @@ wierność jest tym, o co się go prosi.
 - 2026-09-09, sesja session_017vpJFetLqZycH7sUkFH2XE: blok `parseKonspekt` z planu przepisany wiernie do `src/plan-nagrania.js`; flush pola `lead` w galezi kroku mial warunek `if (leadLines)`, prawdziwy dla PUSTEJ tablicy, wiec drugi krok segmentu nadpisywal `lead` pustym stringiem. Test z planu przechodzil, bo jego przyklad mial jeden krok. Review zadania 1 tego nie zobaczylo (kod zgadzal sie z briefem co do znaku); znalazl to dopiero implementer zadania 4, ktory uzyl tej funkcji na dwukrokowym przykladzie.
 - 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: plan `2026-09-10-kurs-uwagi` przypiął w Global Constraints regex usuwania jako "exact", a w Tasku 4 test, który przy tym regexie nie mógł przejść — dwa bloki kodu tego samego planu, wzajemnie sprzeczne, żaden nigdy nie uruchomiony. Sprzeczność wyszła dopiero u implementera Taska 4, po self-review planu i po review przez codex.
 
+- 2026-09-15, sesja session_01FP9aoLo5yuoCv411Gis6gR: ósmy dowód, ósma sesja. Plan toru
+  stacjonarnego (17 zadań, 4167 linii; kompletne moduły `konspekt-bloku.js`,
+  `validate-blok.js`, `zadania-sali.js`, `checklista-sali.js`, `paczka-sali.js` i ok. 40
+  testów vitest) oddany do przeczytania po self-review i review przez codex (4 uwagi,
+  wszystkie wcielone) — oba przeglądy czytały kod, żaden go nie uruchomił. Codex
+  potwierdził „sygnatury istniejącego kodu użyte poprawnie", co jest sprawdzeniem
+  statycznym, nie wykonaniem. `npx vitest run` na tymczasowym pliku z blokami zadania 1
+  kosztowałby minuty; „Rozwiązanie" tej strony, znane od siedmiu dowodów, nadal nieużyte.
+
 ## Rozwiązanie
 
 Zanim plan stanie się źródłem briefów, uruchom jego kod: dla każdego bloku,

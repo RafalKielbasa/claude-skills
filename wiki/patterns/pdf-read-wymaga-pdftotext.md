@@ -21,6 +21,15 @@ postaci. Dostępny jest za to `pdftotext` z pakietu mingw64.
   `pdftotext -layout <plik> <wyjście>` z mingw64, które poprawnie wydobyło
   tekst 28-stronicowego artykułu wraz z załącznikami.
 
+- 2026-09-15, sesja session_01FP9aoLo5yuoCv411Gis6gR: **dowód przeciwny — objaw nie
+  wystąpił.** `Read` na `kursy/_zrodla/Załącznik do zał. nr 1a - Szczegółowy program
+  Python Developer_N.pdf` (119 KB, 3 strony) zwrócił pełny tekst wszystkich stron razem
+  z wyrenderowanymi obrazami stron, bez błędu o `pdftoppm`. Ta sama maszyna (Windows, Git
+  Bash), inne repo niż w dowodzie z 2026-09-02. Albo renderer doszedł do środowiska
+  między tamtą sesją a dziś, albo brak dotyczył tylko tamtej ścieżki — „Rozwiązanie"
+  tej strony (omijać `Read`) traci uzasadnienie do czasu drugiego dowodu na błąd.
+  Wzorzec zostaje otwarty: jeden dowód za, jeden przeciw.
+
 ## Rozwiązanie
 Przy pliku PDF w tym środowisku nie zaczynać od `Read` — od razu użyć
 `pdftotext -layout <ścieżka.pdf> <plik-wyjściowy.txt>` i pracować na wyjściu

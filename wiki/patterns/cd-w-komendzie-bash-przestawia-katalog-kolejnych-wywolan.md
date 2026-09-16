@@ -85,6 +85,13 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   bezwzgledne albo liczone od jawnego `cd` w tej samej komendzie - ale dwa razy
   musialem sprawdzic, gdzie stoje, zanim napisalem kolejna komende.
 
+- 2026-09-15, sesja session_01FP9aoLo5yuoCv411Gis6gR: dziesiąty dowód, dziewiąta sesja,
+  znowu `tools/course-pipeline`. Trzy komunikaty „Environment update" i dwa „Shell cwd was
+  reset" — katalog wędrował między korzeniem repo, `tools/course-pipeline`, vaultem
+  `D:/Notatki/notatki` i `~/.claude/wiki`. Każda komenda zaczynała się od własnego
+  `cd "…" &&`, podpowłoka `( cd … && … )` nie użyta ani razu. Bez szkody, bo wszystkie
+  ścieżki były bezwzględne.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:
