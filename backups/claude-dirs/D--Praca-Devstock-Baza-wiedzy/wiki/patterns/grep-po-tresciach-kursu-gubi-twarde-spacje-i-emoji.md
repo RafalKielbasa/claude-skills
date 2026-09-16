@@ -1,10 +1,11 @@
 # grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji
 
-- **Skill:** kurs-lekcja (krok 4, reguła wpisana 2026-09-10), kurs-redakcja
+- **Skill:** kurs-lekcja (krok 4, reguła wpisana 2026-09-10; krok 3f, reguła
+  związana z przebiegiem wstawiającym, 2026-09-16), kurs-redakcja
   (krok 5, 2026-09-11) i kurs-zadania (krok 4, 2026-09-11); `kurs-uwagi` ma
   odpowiednik reguły w kroku 7 (propagacja) — rodzina `kurs-*` domknięta
 - **Typ:** porażka
-- **Status:** nawrót (2026-09-11) — wpisany 2026-09-10 do `kurs-lekcja`, złamany 2026-09-11 w sesji prowadzonej tym skillem
+- **Status:** zaadresowany (2026-09-16, kurs-lekcja) — nawrót z 2026-09-11 zamknięty podpunktem 3f, który wiąże regułę z przebiegiem wstawiającym twarde spacje zamiast zostawiać ją w checkliście kroku 4
 
 ## Opis
 Kontrolne `grep` po `artykul.md` zwracało 0 trafień dla fraz, które w pliku na
@@ -120,10 +121,29 @@ Reguła stoi teraz w `kurs-lekcja` krok 4, `kurs-redakcja` krok 5,
 Obie dzisiejsze zmiany wniosły też drugą połowę pułapki, ciche „za dużo" przy
 krótkich akronimach (`\bAPI\b`), której nie miał dotąd żaden skill rodziny.
 
-**Status zostaje `nawrót`, a nie `zaadresowany`.** Nawrót z 2026-09-11 wydarzył
-się w `kurs-lekcja`, gdzie reguła już stała, więc dopisanie jej do dwóch innych
-skilli go nie adresuje — adresuje wyłącznie brak pokrycia rodziny. Nawrót
-zamknie dopiero przeniesienie reguły w `kurs-lekcja` z kroku 4 (samokontrola,
-czytana później) do kroku 3 (pisanie treści, moment szkody) albo związanie jej
-ze skryptem sierotek. Rafał odłożył tę zmianę słowem „Nie teraz" przy tym samym
-wywołaniu — to jest następny krok dla tego wzorca.
+**Nawrót zamknięty 2026-09-16** (`/evolve-skill kurs-lekcja`, przyjęte
+w wariancie pełnym). Z dwóch wariantów nazwanych wyżej — przeniesienie reguły
+do kroku 3 albo związanie jej z przebiegiem — wszedł drugi. `kurs-lekcja` ma
+teraz podpunkt 3f: twarde spacje wstawia się na końcu kroku 3, a od tej chwili
+własny brudnopis jest nieaktualny wobec dysku, więc do końca lekcji KAŻDY
+`old_string`, pattern `grep` i wzorzec skryptu kontrolnego kotwiczy się bez
+jednoliterowego słowa ze spacją — nie tylko kontrole checklisty kroku 4, która
+zostaje na miejscu. Pierwszy wariant (przeniesienie) pozostaje nietknięty:
+Rafał odłożył go 2026-09-11 słowem „Nie teraz" i ta decyzja nie została
+cofnięta. Przy tej samej zmianie `kurs-lekcja` dostał wreszcie drugą połowę
+pułapki, ciche „za dużo" przy krótkich akronimach (`\bAPI\b`), w brzmieniu
+skopiowanym z `kurs-redakcja` krok 5 — czyli rodzina mówi teraz jednym głosem
+o obu twarzach.
+
+Sprawdzone przy tej zmianie: komendy naprawiającej sierotki w `course-pipeline`
+NIE MA (`typografia.js` to detektor, `sierotki` jest tam flagą walidacji, nie
+fixerem), więc przebieg wstawiający twarde spacje jest zawsze doraźnym skryptem
+— podpunkt 3f mówi o tym wprost, żeby reguła nie wyglądała na związaną
+z nieistniejącą komendą.
+
+**Czym będzie kolejny nawrót:** ciche „0" albo ciche „za dużo" w sesji
+prowadzonej `kurs-lekcja` po 2026-09-16. Wystąpienie w `kurs-redakcja`,
+`kurs-zadania` albo `kurs-uwagi` to nadal nie nawrót tego wpisu — reguła stoi
+tam od 2026-09-11 w wariancie z kroku 4, bez powiązania z przebiegiem
+wstawiającym. Gdyby padło właśnie tam, kandydatem jest przeniesienie wariantu
+3f do reszty rodziny, tym samym rytmem co poprzednio.
