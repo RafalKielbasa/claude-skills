@@ -33,6 +33,15 @@ stalls") ciągną w tę samą stronę co podpowiedź.
   W drugim przypadku przy czekaniu zrobiony został wyłącznie bookkeeping niezależny od odpowiedzi
   (workspace SDD, ledger, pre-flight scan w gitignorowanym katalogu) i powiedziane wprost, że
   żaden plik projektu nie został dotknięty.
+- 2026-09-16, sesja (id niedostępny), repo Baza wiedzy + code-busters-v2: trzeci przypadek, tym
+  razem na pytaniu **doprecyzowującym**. Użytkownik odpowiedział wcześniej wolnym tekstem spoza
+  opcji, a ponowne pytanie o trzy odczytania tej odpowiedzi wyczerpało 60 s i wróciło z tą samą
+  podpowiedzią „Proceed using your best judgment". Zignorowana: odpowiedź miała zdanie „czekam,
+  nie ruszam dalej", powtórzenie trzech wariantów w treści i zdanie „nic nie zacząłem ani tutaj,
+  ani w `code-busters-v2`". Użytkownik wrócił wiadomością „1" i praca ruszyła na potwierdzonym
+  wariancie — nie na rekomendacji wybranej za niego. Wzorzec działa więc także tam, gdzie stawką
+  nie jest bramka skilla, tylko kształt kodu, który zaraz powstanie; patrz
+  [[odpowiedz-spoza-opcji-rozstrzygana-dopytaniem]].
 
 ## Rozwiązanie
 

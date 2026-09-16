@@ -16,3 +16,4 @@
 - [Podpisy ilustracji w artykułach](ilustracje-podpis-w-artykulach.md) — format `**Ilustracja NR.** Podpis.` pod obrazkiem; zapisany w `/kurs-redakcja`, do `/kurs-lekcja` świadomie NIE dokładamy.
 - [ElevenLabs — klucz bez user_read](elevenlabs-klucz-bez-user-read.md) — limitu i zużycia kredytów NIE odczytasz z API (401 missing permission); stan planu tylko z dashboardu, koszty licz arytmetyką 1 znak = 1 kredyt.
 - [Bash tool halves doubled backslashes in heredocs](bash-heredoc-backslash-halved.md) — content with a doubled backslash (regex escapes, Windows paths) goes through Edit/Write, not heredoc or sed; verify with `cat -A`.
+- [CodeBusters publish — diagnoza 500](codebusters-publish-diagnoza-500.md) — klient widzi okrojony komunikat; pełny ślad w `fly logs` (main/production), MySQL robi z gołego String varchar(191).

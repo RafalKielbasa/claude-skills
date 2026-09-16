@@ -75,6 +75,20 @@ policzony wynik.
   i "zapisz" zawierają `api` jako podciąg. Wzorzec nie chybił - trafił za dużo,
   a wniosek "w artykule jest żargon API" byłby równie nieprawdziwy jak "nie ma
   calloutów".
+- 2026-09-16, sesja (id niedostępny): szósty dowód, pierwszy **poza jakimkolwiek
+  skillem `kurs-*`**. Zwykła praca na treści (usunięcie nagłówka H1 z czterech
+  artykułów modułu 2 po decyzji o krótszych tytułach): `Edit` odbił się trzy razy
+  z „String to replace not found", choć `old_string` był kopią tego, co przed
+  chwilą wypisał `head -6`. Powód pokazał dopiero `cat -A`: `i M-BM- pierwsze`,
+  czyli U+00A0 po jednoliterowym „i" w H1 lekcji 2.1 (tak samo 2.3 i 2.4);
+  przeszła jedynie lekcja 2.2, której nagłówek nie ma jednoliterowego słowa.
+  Naprawa poszła kanałem liniowym, nie tekstowym: `sed -i '1,2d'` z asercją
+  („linia 1 zaczyna się od `# `, linia 2 pusta") i wypisaniem wyniku per plik.
+  Wniosek dla umiejscowienia reguły: podpunkt 3f `kurs-lekcja` z 2026-09-16 wiąże
+  ją z przebiegiem wstawiającym twarde spacje **wewnątrz pracy nad lekcją**,
+  a ten przypadek przyszedł z zupełnie innej strony — z publikacji. Reguła
+  „`old_string` z pliku kursowego kotwicz bez jednoliterowego słowa ze spacją"
+  należy się każdej sesji dotykającej `kursy/`, nie tylko rodzinie `kurs-*`.
 
 ## Rozwiązanie
 W kontrolach treści kursu kotwiczyć pattern na fragmencie bez jednoliterowego

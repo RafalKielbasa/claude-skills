@@ -1,6 +1,6 @@
 ---
 name: kurs-publikuj
-description: Publikacja zatwierdzonych treści lekcji (artykuł, quiz, ćwiczenia) na platformę CodeBusters przez tools/course-pipeline publish — staging domyślnie, prod tylko na jawne "na prod". Używaj, gdy Rafał chce wdrożyć/opublikować kurs, moduł albo lekcję na CodeBusters ("opublikuj moduł 0", "wdróż lekcję na staging", "wyślij na CodeBusters"). NIE dla wideo (Vimeo) i NIE dla tworzenia kursu w CMS.
+description: Publikacja zatwierdzonych treści lekcji (artykuł, quiz, ćwiczenia) oraz aktywności wideo z ID Vimeo na platformę CodeBusters przez tools/course-pipeline publish — staging domyślnie, prod tylko na jawne "na prod". Używaj, gdy Rafał chce wdrożyć/opublikować kurs, moduł albo lekcję na CodeBusters ("opublikuj moduł 0", "wdróż lekcję na staging", "wyślij na CodeBusters"). NIE dla wgrywania plików na Vimeo i NIE dla tworzenia kursu w CMS.
 ---
 
 # /kurs-publikuj — publish approved lesson content to CodeBusters
@@ -53,8 +53,16 @@ Input: a course, module or lesson path (`kursy/<slug>`, `kursy/<slug>/modul-NN-x
 - `preview` is for testing the endpoint before it is merged to `main`. Say so when asked to use
   it, and remind that a preview deploy reseeds the database, so ids stored under
   `platformIds.preview` become stale after every deploy.
-- No video, no Vimeo, no `Course` creation, no deletions — the endpoint cannot delete, and the
-  skill does not ask it to.
+- No file ever goes to Vimeo from here, no `Course` creation, no deletions — the endpoint cannot
+  delete, and the skill does not ask it to. Rafał uploads the recording to Vimeo himself and
+  writes its id into `lekcja.yaml`.
+- **The video activity has no status gate**: `publish` sends it whenever `lekcja.yaml` carries
+  `vimeo: "<numeric id>"`, at position `N*10` — before the article. `status.video` stays a
+  production note. So the moment Rafał lets you run the command IS the decision to publish the
+  recording; if a lesson row says `video: create` and he did not expect it, stop and ask.
+- The video's `totalTime` comes from `video/final.mp4` in the lesson folder, when that file is
+  there. It is not in git, so on a fresh clone — and for every tor B lesson assembled by hand —
+  the video publishes without a duration. That is allowed, never a reason to block.
 - Never edit `platformIds` or `status.publikacja` by hand; the command owns them. The one
   exception is step 5's `409` case, and only after Rafał says yes.
 - Never print secrets. `.env` values are checked for presence only.
