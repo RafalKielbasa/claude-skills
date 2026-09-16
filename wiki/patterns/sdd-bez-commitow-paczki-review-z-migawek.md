@@ -32,6 +32,14 @@ odtwarzalny z `git log`. Diff jest jednak funkcja dwoch stanow plikow, nie dwoch
   wyszlaby pusta i recenzent zatwierdzilby kod, ktorego nie widzial. Ratunek: `git show 9a94b3e --
   <sciezki>`, mozliwy tylko dlatego, ze commit dalo sie zidentyfikowac po fakcie.
 - 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: siedem zadań i fala poprawek bez ani jednego commita, paczki z migawek `task-N-before/`. Konwencja obroniła się dwa razy: gdy Rafał zacommitował pliki Taska 1 w trakcie pracy implementera (paczkę trzeba było złożyć z `git show 9a94b3e --`, nie z `git diff`) i gdy pod koniec runu zastage'ował całe `tools/course-pipeline/`, co unieważniłoby każdą paczkę liczoną wobec indeksu.
+- 2026-09-16, sesja (id niedostępny), repo Baza wiedzy: ruling o migawkach zapisany w ledgerze
+  **przed** pierwszym dispatchem, dokładnie tak, jak każe „Rozwiazanie" niżej. Pre-flight scan nazwał
+  konflikt wprost — skill liczy diff z zakresu commitów, a Global Constraints planu zabraniają
+  commitów — i rozstrzygnął go migawkami `<workspace>/task-N/before/`, z kontrolą `git status
+  --short` przed i po zadaniu na wypadek plików, których plan nie wymienił. Egzekucja nie ruszyła
+  (zatrzymana na bramce zgody na pracę na `main`), więc to dowód na wzorzec jako regułę pre-flight,
+  nie na samo wykonanie: pierwszy raz zadziałał prewencyjnie, bez potykania się o brak commitów
+  w trakcie runu.
 
 ## Rozwiazanie
 W repo bez commitow per zadanie: na starcie zapisz ruling o migawkach w ledgerze, przed kazdym

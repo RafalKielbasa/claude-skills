@@ -68,6 +68,20 @@ przedstawione Rafałowi do bramki review.
       pierwsze wystąpienie w lekcji `> 🎬 **Też w wideo** - możesz przejrzeć pobieżnie, jeśli obejrzałeś.`,
       kolejne `> 🎬 **Też w wideo**`. Bloki tylko-artykułowe zostaw bez
       calloutu; ≥1 blok MUSI zostać nieoznaczony. Konwencja w struktura-lekcji.md.
+   f. **Twarde spacje wstaw na końcu kroku 3 — i od tej chwili traktuj własny
+      brudnopis jako nieaktualny.** Przebieg wstawiający U+00A0 po `a i o u w z`
+      przepisuje pliki, które już napisałeś, więc tekst, który masz w pamięci
+      i w brudnopisie, przestaje zgadzać się z dyskiem co do znaku — a Ty o tym
+      nie wiesz, bo pliku po przebiegu nie czytałeś. Od tego momentu do końca
+      lekcji, w KAŻDEJ czynności, nie tylko w kontrolach checklisty kroku 4:
+      `old_string` w `Edit`, pattern w `grep` i wzorzec we własnym skrypcie
+      kontrolnym kotwicz na fragmencie BEZ jednoliterowego słowa ze spacją
+      (`wideo**`, `Ciebie (`, `^> `). Odbite `old_string` na pliku, który sam
+      przed chwilą zapisałeś, i "0 trafień" na frazie, którą sam przed chwilą
+      napisałeś, to objaw twardej spacji, a nie dowód, że plik zmienił ktoś
+      inny — w obu wypadkach przeczytaj plik, zanim cokolwiek z tego wyniku
+      wywnioskujesz. Reguła obowiązuje także wtedy, gdy przebieg wstawiający
+      puściłeś ręcznie, poza jakąkolwiek komendą `course-pipeline`.
 4. **Samokontrola.** Sprawdź checklistę:
    - artykuł realizuje cel z lekcja.yaml i strukturę z struktura-lekcji.md,
    - artykuł pokrywa całą treść scenariusza; scenariusz jest nadrzędny, więc
@@ -91,9 +105,13 @@ przedstawione Rafałowi do bramki review.
      z treści.** Po wstawieniu twardych spacji `w wideo`, `z inwestycji`
      i `U Ciebie` mają w środku U+00A0, a emoji jako pattern w Git Bash nie
      trafia — oba przypadki dają ciche "0", nie błąd. Kotwicz na fragmencie
-     bez jednoliterowego słowa (`wideo**`, `Ciebie (`, `^> `). "0 trafień"
-     na pliku, który właśnie napisałeś, to błąd wzorca, nie fakt — tak samo
-     odbite `old_string` w `Edit` i licznik z własnego skryptu kontrolnego.
+     bez jednoliterowego słowa (`wideo**`, `Ciebie (`, `^> `). Odwrotna
+     pułapka jest równie cicha: `grep -i` po krótkim akronimie (`API`) trafia
+     w podciągi polskich słów („napisze", „zapisz") — kotwicz na granicy słowa
+     (`\bAPI\b`) albo czytaj trafienia z kontekstem. "0 trafień"
+     i "kilkanaście trafień" na pliku, który właśnie napisałeś, to wynik
+     wzorca, a nie fakt — tak samo odbite `old_string` w `Edit` i licznik
+     z własnego skryptu kontrolnego.
 5. **Walidacja.** Ustaw `status.tresc: do_review` w lekcja.yaml, potem
    `cd tools/course-pipeline && npm run validate --
    ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog lekcji, nie kursu —

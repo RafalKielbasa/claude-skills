@@ -33,6 +33,21 @@ trzy oceniają plan wobec specu, a nie wobec zastanego suite'u.
   `DONE_WITH_CONCERNS`), więc koszt został na poziomie zamieszania, nie defektu —
   ale w obu przypadkach rozstrzygnięcie „to nieaktualna asercja, nie mój błąd"
   podjął agent widzący tylko własne zadanie.
+- 2026-09-16, sesja (id niedostępny), repo Baza wiedzy: drugi raz, inny plan, inne repo — i
+  w ostrzejszym wariancie. Plan scalenia ściągi klawiaturowej z konspektem nagrania (8 zadań,
+  `tools/course-pipeline`) dodawał w Tasku 4 bramkę odrzucającą lekcję bez sekcji
+  „Do wklejenia i wpisania na ekranie". Self-review planu (pokrycie specu, placeholdery, spójność
+  typów) tego nie złapał; złapało dopiero niezależne review przez `codex`, dwiema uwagami naraz:
+  (1) `lekcjaDemo()` w `tests/plan-nagrania.test.js:648` domyślnie buduje lekcję z `KONSPEKT_DEMO`,
+  którego nowa bramka odrzuca, więc każdy test sukcesu w tym `describe` by padł; (2)
+  `tests/validate-lesson.test.js:354,365,379` zapisuje ten sam fixture, a dwa z tych testów wołają
+  `generateRecordingPlan`. Deklarowany w planie pełny zielony przebieg był nieosiągalny.
+  **Wzmocnienie wzorca:** najdroższy wariant to nie „istniejąca asercja o zmienianym zachowaniu",
+  tylko **fixture, którego nowa walidacja nie przepuszcza**. Taki fixture unieważnia wszystkie
+  testy, które go dotykają — także te, które o zmienianym zachowaniu nic nie mówią — więc `grep`
+  po nazwie funkcji ani po komunikacie błędu go nie znajdzie; szukać trzeba po nazwie fixture'u.
+  Naprawa wcielona do planu: przestawienie domyślnej wartości w helperze zamiast poprawiania
+  wywołań po kolei.
 
 ## Rozwiązanie
 

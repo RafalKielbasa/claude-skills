@@ -33,6 +33,24 @@ nie wie nic.
   wrocilo na swoje miejsce przypadkiem. To gorsze niz jawny rozjazd, bo maskuje
   skale problemu: wyrywkowe sprawdzenie trafia w odwolanie, ktore akurat sie zgadza.
 
+- 2026-09-16, sesja (id niedostępny): wzorzec doczekał się projektu strukturalnej naprawy.
+  Rafał zapytał, czy tor B musi mieć aż cztery pliki markdown; spec
+  `docs/superpowers/specs/2026-09-16-cheat-sheet-in-konspekt-design.md` i plan
+  `docs/superpowers/plans/2026-09-16-cheat-sheet-in-konspekt.md` likwidują rozdział dwóch plików —
+  ściąga staje się sekcją `## Do wklejenia i wpisania na ekranie` w `konspekt-nagrania.md`.
+  Dowód, że przyczyna jest realna, a nie hipotetyczna, leżał w samym pliku lekcji 2.3:
+  `dane-do-nagrania.md:5` wprost deklaruje, że jego sekcja 2 realizuje „Przygotowanie przed
+  nagraniem" z konspektu, a `:174` niesie datowany zapis rozjazdu rozstrzygniętego ręcznie tego
+  samego dnia (konspekt kazał wysłać komplet maili, ściąga kazała nic nie wysyłać). Wyszło też,
+  że sekcja 2 ściągi **nigdy nie trafia do `plan-nagrania.md`** (`plan-nagrania.js:113` — generator
+  czyta tylko pierwszą sekcję), więc tabela kontrolna stanu środowiska leży poza dokumentem, z
+  którego się nagrywa.
+  **Korekta do „Rozwiazania" niżej:** scalenie NIE kasuje kontroli numeracji. Tabela nadal adresuje
+  kroki samym numerem, więc przenumerowanie segmentu wciąż odczepia wiersze — zmienia się tyle, że
+  oba końce odwołania widać na jednym ekranie, a ostrzeżenia `plan-nagrania.js:330,339,341,348`
+  zostają w kodzie. Status pozostaje `otwarty`: plan nie jest zaimplementowany (egzekucja
+  zatrzymana na bramce zgody).
+
 ## Rozwiazanie
 Do tabeli propagacji w obu skillach (`kurs-uwagi` krok 7, `kurs-redakcja` krok 6)
 dopisac wiersz: "zmiana liczby albo kolejnosci krokow w `konspekt-nagrania.md`

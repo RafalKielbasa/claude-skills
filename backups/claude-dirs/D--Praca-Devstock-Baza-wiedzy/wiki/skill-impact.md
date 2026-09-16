@@ -660,3 +660,53 @@ index c697060..4519540 100644
     rangi, punktów ani awansu — nagrody pokazuje platforma, treść o nich
     milczy. Dla ćwiczenia `dopasowanie` sprawdź osobno, czy zadania da się
 ```
+
+## 2026-09-16 — kurs-lekcja — zaakceptowana (reguła związana z przebiegiem, nie z checklistą)
+- **Wzorce:** grep-po-tresciach-kursu-gubi-twarde-spacje-i-emoji (status `nawrót (2026-09-11)`, 5 dowodów z 5 sesji)
+- **Zmiana:** Krok 3 dostaje podpunkt `f`: twarde spacje wstawia się na końcu kroku 3, a od tej chwili własny brudnopis jest nieaktualny wobec dysku, więc do końca lekcji KAŻDY `old_string` w `Edit`, pattern w `grep` i wzorzec we własnym skrypcie kontrolnym kotwiczy się na fragmencie bez jednoliterowego słowa ze spacją. Odbita edycja i ciche "0" na pliku, który samemu przed chwilą zapisało się, to objaw twardej spacji, a nie dowód zmiany pliku przez kogoś innego — w obu wypadkach najpierw odczyt pliku. Reguła obowiązuje także przy przebiegu puszczonym ręcznie, poza komendą `course-pipeline`. Krok 4 zostaje nietknięty co do zasady, ale dostaje drugą połowę tej samej pułapki: `grep -i` po krótkim akronimie (`API`) trafia w podciągi polskich słów („napisze", „zapisz"), więc kotwica na granicy słowa albo czytanie trafień z kontekstem; brzmienie skopiowane z `kurs-redakcja` krok 5, żeby rodzina mówiła jednym głosem.
+- **Powód decyzji:** propozycja z `/evolve-skill kurs-lekcja`, zaakceptowana przez Rafała słowami „akceptuje, i dołóż tę drugą połowę z \bAPI\b". Wzorzec ma status `nawrót` od 2026-09-11 i 5 dowodów z 5 sesji — najwięcej w wiki repo. Nawrót wydarzył się w `kurs-lekcja`, gdzie reguła już stała w kroku 4: była przeczytana na starcie sesji i mimo to złamana dwa razy w jednej lekcji. Diagnoza ze strony wzorca: reguła jest trafna, ale stoi w złym miejscu — krok 4 to samokontrola czytana później, a szkoda dzieje się w kroku 3, tuż po przebiegu wstawiającym U+00A0, gdy o twardych spacjach najłatwiej zapomnieć, bo właśnie się je wstawiło. Sprawdzone w tej sesji: `grep -n "sierotk" tools/course-pipeline/package.json tools/course-pipeline/src/*.js` — komendy naprawiającej sierotki NIE MA, `typografia.js` to detektor, więc przebieg wstawiający jest zawsze doraźny; stąd ostatnie zdanie podpunktu `f`.
+- **Relacja do propozycji odłożonej 2026-09-11:** strona wzorca nazywa dwa warianty zamknięcia nawrotu — „przenieść regułę do kroku 3" ALBO „związać ją ze skryptem". Pierwszy Rafał odłożył słowem „Nie teraz" przy `/evolve-skill kurs-redakcja` 2026-09-11. Ta zmiana realizuje drugi i została przedstawiona Rafałowi z tym zastrzeżeniem na wierzchu, wraz z tabelą różnic (operacja: dopisanie vs przeniesienie; wyzwalacz: moment przebiegu vs moment czytania checklisty; zasięg: każda czynność do końca lekcji vs kontrole checklisty kroku 4; nowa treść: „twój brudnopis jest nieaktualny", czego krok 4 nie mówi w ogóle) i z ofertą zapisania jej jako odrzuconej, gdyby uznał to za przeformułowanie. Rafał przyjął.
+- **Zakres świadomie pominięty:** `regex-walidatora-uzyty-jako-fixer-typografii` (3 dowody, `otwarty`) — asercja „brak U+00A0 razem ze zwykłą spacją" w skrypcie wstawiającym oraz komenda naprawiająca sierotki w `course-pipeline`; to osobny wzorzec i w dużej części zadanie dla `tools/`, nie dla `SKILL.md`. Zostawione też sześć wzorców `kurs-lekcja` po jednym dowodzie: `lekcja-dopasowana-do-niezacommitowanej-zmiany-poprzedniej`, `review-ai-ocenia-zargon-bez-kontekstu-poprzednich-lekcji`, `twierdzenie-negatywne-o-narzedziu-bez-zrodla`, `format-scenariusza-skopiowany-z-sasiedniej-lekcji`, `scenariusz-screencastu-pisany-bez-otwarcia-produktu` oraz dwudowodowy `url-dokumentacji-n8n-przeniesiony-bez-przekierowania`.
+
+```diff
+--- a/.claude/skills/kurs-lekcja/SKILL.md
++++ b/.claude/skills/kurs-lekcja/SKILL.md
+@@ -68,6 +68,20 @@ przedstawione Rafałowi do bramki review.
+       pierwsze wystąpienie w lekcji `> 🎬 **Też w wideo** - możesz przejrzeć pobieżnie, jeśli obejrzałeś.`,
+       kolejne `> 🎬 **Też w wideo**`. Bloki tylko-artykułowe zostaw bez
+       calloutu; ≥1 blok MUSI zostać nieoznaczony. Konwencja w struktura-lekcji.md.
++   f. **Twarde spacje wstaw na końcu kroku 3 — i od tej chwili traktuj własny
++      brudnopis jako nieaktualny.** Przebieg wstawiający U+00A0 po `a i o u w z`
++      przepisuje pliki, które już napisałeś, więc tekst, który masz w pamięci
++      i w brudnopisie, przestaje zgadzać się z dyskiem co do znaku — a Ty o tym
++      nie wiesz, bo pliku po przebiegu nie czytałeś. Od tego momentu do końca
++      lekcji, w KAŻDEJ czynności, nie tylko w kontrolach checklisty kroku 4:
++      `old_string` w `Edit`, pattern w `grep` i wzorzec we własnym skrypcie
++      kontrolnym kotwicz na fragmencie BEZ jednoliterowego słowa ze spacją
++      (`wideo**`, `Ciebie (`, `^> `). Odbite `old_string` na pliku, który sam
++      przed chwilą zapisałeś, i "0 trafień" na frazie, którą sam przed chwilą
++      napisałeś, to objaw twardej spacji, a nie dowód, że plik zmienił ktoś
++      inny — w obu wypadkach przeczytaj plik, zanim cokolwiek z tego wyniku
++      wywnioskujesz. Reguła obowiązuje także wtedy, gdy przebieg wstawiający
++      puściłeś ręcznie, poza jakąkolwiek komendą `course-pipeline`.
+ 4. **Samokontrola.** Sprawdź checklistę:
+    - artykuł realizuje cel z lekcja.yaml i strukturę z struktura-lekcji.md,
+    - artykuł pokrywa całą treść scenariusza; scenariusz jest nadrzędny, więc
+@@ -91,9 +105,13 @@ przedstawione Rafałowi do bramki review.
+      z treści.** Po wstawieniu twardych spacji `w wideo`, `z inwestycji`
+      i `U Ciebie` mają w środku U+00A0, a emoji jako pattern w Git Bash nie
+      trafia — oba przypadki dają ciche "0", nie błąd. Kotwicz na fragmencie
+-     bez jednoliterowego słowa (`wideo**`, `Ciebie (`, `^> `). "0 trafień"
+-     na pliku, który właśnie napisałeś, to błąd wzorca, nie fakt — tak samo
+-     odbite `old_string` w `Edit` i licznik z własnego skryptu kontrolnego.
++     bez jednoliterowego słowa (`wideo**`, `Ciebie (`, `^> `). Odwrotna
++     pułapka jest równie cicha: `grep -i` po krótkim akronimie (`API`) trafia
++     w podciągi polskich słów („napisze", „zapisz") — kotwicz na granicy słowa
++     (`\bAPI\b`) albo czytaj trafienia z kontekstem. "0 trafień"
++     i "kilkanaście trafień" na pliku, który właśnie napisałeś, to wynik
++     wzorca, a nie fakt — tak samo odbite `old_string` w `Edit` i licznik
++     z własnego skryptu kontrolnego.
+ 5. **Walidacja.** Ustaw `status.tresc: do_review` w lekcja.yaml, potem
+    `cd tools/course-pipeline && npm run validate --
+    ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog lekcji, nie kursu —
+```

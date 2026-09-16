@@ -94,6 +94,15 @@ wierność jest tym, o co się go prosi.
   potwierdził „sygnatury istniejącego kodu użyte poprawnie", co jest sprawdzeniem
   statycznym, nie wykonaniem. `npx vitest run` na tymczasowym pliku z blokami zadania 1
   kosztowałby minuty; „Rozwiązanie" tej strony, znane od siedmiu dowodów, nadal nieużyte.
+- 2026-09-16, sesja (id niedostępny), repo Baza wiedzy: dziewiąty raz, dziewiąta sesja. Plan
+  scalenia ściągi klawiaturowej z konspektem (8 zadań, 46 kroków, komplet fragmentów
+  `plan-nagrania.js`, `validate-lesson.js` i ok. 15 bloków testowych) oddany po self-review
+  i review codexa — żaden blok nie uruchomiony. Tym razem koszt był policzalny: codex znalazł dwa
+  defekty, które `npx vitest run` pokazałby natychmiast (fixture `KONSPEKT_DEMO` odrzucany przez
+  nową bramkę w dwóch plikach testowych), a moja kontrola statyczna ich nie widziała. Baseline
+  suite'u uruchomiłem (121/121) — czyli dostęp do wykonania był, tylko nieużyty na kodzie
+  referencyjnym planu. Wart odnotowania wariant: uruchomienie **samego fixture'u** przez istniejący
+  suite jest tańsze niż uruchomienie bloków zadania i łapie dokładnie tę klasę defektu.
 
 ## Rozwiązanie
 
