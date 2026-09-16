@@ -1,5 +1,5 @@
 {
-  "model": "fable",
+  "model": "opus[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -41,6 +41,11 @@
   "tui": "fullscreen",
   "skipWorkflowUsageWarning": true,
   "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "Bash(*kb-client* delete --yes*) in tools/kb-client — whole-category vector DB wipe, repo skill requires explicit per-session confirmation before running",
+      "Bash(*course-pipeline* publish* --env=prod*) in tools/course-pipeline — prod publish requires explicit \"na prod\" instruction per repo skill docs"
+    ],
     "environment": [
       "### Org-wide",
       "**Organization**: Devstock — GitHub org `devstock-org` (this repo's remote); repos under `kodozercy` and `Devstock-Academy` appear only as documentation cross-references in CLAUDE.md and were not independently verified (sibling-repo docs NOT GATHERED)",
@@ -67,11 +72,6 @@
       "**Trusted repo**: this repo (`devstock-org/devstock-team`, internal visibility) and its `origin` remote only",
       "**Org-specific CLIs**: `tools/kb-client` (knowledge-base vector DB CLI, wraps n8n webhooks), `tools/course-pipeline` (course validation, review-ai, publish, plan-nagrania)",
       "**routine under this repo's tools/ prefix**: read-only kb-client operations (`ask`, `stats`, `list`, `export`) and course-pipeline validation/dry-run commands are routine per repo skill docs; `kb-client delete --yes` (whole-category wipe) and course-pipeline `publish --env=prod` are explicitly gated on Rafał's in-conversation confirmation and should not be auto-approved"
-    ],
-    "soft_deny": [
-      "$defaults",
-      "Bash(*kb-client* delete --yes*) in tools/kb-client — whole-category vector DB wipe, repo skill requires explicit per-session confirmation before running",
-      "Bash(*course-pipeline* publish* --env=prod*) in tools/course-pipeline — prod publish requires explicit \"na prod\" instruction per repo skill docs"
     ]
   }
 }
