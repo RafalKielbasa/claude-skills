@@ -92,8 +92,25 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `cd "…" &&`, podpowłoka `( cd … && … )` nie użyta ani razu. Bez szkody, bo wszystkie
   ścieżki były bezwzględne.
 
+- 2026-09-18, sesja fe0e2a4e (id claude.ai niedostępny): jedenasty dowód,
+  dziesiąta sesja, i PIERWSZY z realną szkodą zamiast samych komunikatów
+  „Environment update". `cd ".../prezent/out/.review/lektor" && ls` zostawiło
+  powłokę wewnątrz katalogu stagingu. Kilka wywołań później sprzątanie
+  `cp … && rm -rf out && …` padło na `rm: cannot remove 'out/.review/lektor':
+  Device or resource busy`, bo usuwany katalog był katalogiem roboczym sesji.
+  Łańcuch `&&` urwał się w połowie: pliki zostały skopiowane, ale staging
+  usunął się tylko częściowo (zniknęły `instrukcja.md`, `narracja.md`
+  i zawartość `lektor/`, został pusty katalog), a kolejne polecenia w tej samej
+  komendzie — aktualizacja `live.yaml` — w ogóle nie poszły. Naprawa: `cd` do
+  korzenia repo i powtórzenie `rm`, plus sprawdzenie rozmiarów skopiowanych
+  mp3 co do bajta, bo po częściowym `rm` nie było już z czym ich porównać.
+  Podpowłoka `( cd … && … )` znowu nie użyta ani razu.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:
 `( cd <katalog> && <komenda> )` — podpowłoka kończy się razem z komendą i cwd
-sesji zostaje nietknięte.
+sesji zostaje nietknięte. Przed `rm -rf <katalog>` sprawdź dodatkowo, gdzie
+stoi powłoka: katalog roboczy sesji leżący w usuwanym drzewie daje `Device or
+resource busy`, a łańcuch `&&` urywa się wtedy w połowie i zostawia stan
+częściowy.

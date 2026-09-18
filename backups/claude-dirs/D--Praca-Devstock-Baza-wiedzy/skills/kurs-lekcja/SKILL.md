@@ -12,7 +12,7 @@ przedstawione Rafałowi do bramki review.
 ## Procedura
 
 1. **Kontekst.** Przeczytaj W CAŁOŚCI:
-   - `kursy/_wspolne/styleguide.md` i `kursy/_wspolne/szablony/struktura-lekcji.md`,
+   - `kursy/_wspolne/styleguide.md`, `kursy/_wspolne/szablony/struktura-lekcji.md` i `kursy/_wspolne/profil-wypowiedzi.md` (profil czytasz przed pisaniem scenariusza; dotyczy wyłącznie tekstu lektora),
    - `kurs.yaml` kursu (miejsce lekcji w programie, cel modułu),
    - `lekcja.yaml` (cel, typ_video),
    - `zrodla.md` kursu,
@@ -34,6 +34,18 @@ przedstawione Rafałowi do bramki review.
       przejścia / podsumowanie; segment orientacyjnie 140–420 słów
       (sugestia, nie limit — segment niosący jeden spójny wątek zostaje
       w całości, choćby był dłuższy),
+
+      **Tekst lektora wg profilu wypowiedzi.** "TA SAMA treść w formie mówionej"
+      nie znaczy "artykuł w drugiej osobie": narrację piszesz ruchami z sekcji
+      "Rdzeń: ruchy" `profil-wypowiedzi.md` (pole "rób" każdego ruchu), w pasmach
+      z sekcji "Rytm: liczby" (mediana długości zdań, udział zdań krótkich,
+      pierwsza osoba, pytania), z markerami tempa w dawce z sekcji "Czego nie
+      odtwarzać" (ponad dawkę to szum, nie styl), z bankiem wzorców (sekcja 7)
+      jako wzorcem brzmienia. Ruchy treściowe (anegdota, własna wpadka) wolno pisać tylko
+      z prawdziwego źródła podanego przez Rafała - wymyślona anegdota to zmyślony
+      fakt. Reguły z `redakcja.md` zawieszone dla lektora są wymienione w jego
+      sekcji "Zawieszenia dla tekstu lektora"; nazwy, fonetyka (`wymowa.md`)
+      i typografia obowiązują bez zmian,
    c. `video/prezentacja.yaml` — dla typu prezentacja: mapa prezentacji,
       jeden slajd na segment `[ekran: slajd]`, w tej samej kolejności.
       Każdy slajd deklaruje `id`, `uklad` z kontraktu (tytul, punkty,
@@ -100,6 +112,10 @@ przedstawione Rafałowi do bramki review.
      twarda spacja U+00A0 po jednoliterowych słowach (`a i o u w z`) w artykule
      i na slajdach; scenariusz bez reguły sierotek, ale z regułą myślników
      i cudzysłowów,
+   - ostrzeżenia `npm run validate` z dopiskiem `(profil-wypowiedzi.md → Rytm)`
+     przeczytane i rozstrzygnięte: segment poprawiony albo w raporcie do bramki
+     stoi jedno zdanie, dlaczego zostaje (np. segment-instrukcja z krótkimi
+     zdaniami rozkazującymi). Ostrzeżenie przemilczane = nieprzeczytane,
    - liczba segmentów avatar ≤ 3,
    - **kontrole tej checklisty rób odczytem pliku, nie `grep`-em po frazie
      z treści.** Po wstawieniu twardych spacji `w wideo`, `z inwestycji`

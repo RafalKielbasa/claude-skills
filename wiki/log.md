@@ -300,3 +300,9 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Bez nowych wzorców globalnych.
 - Wzorce repo (`Baza wiedzy/.claude/wiki/`) dotknięte w tej sesji: nowy szkielet-workflowu-pomija-krok-ktorego-nie-da-sie-zapisac (live-demo, porażka, zaadresowany tego samego dnia); trzeci dowód w cytat-z-kodu-produktu-gdy-docs-milcza.
 - `zmiana-skilla-poza-evolve-skill-bez-sladu` bez nowego dowodu: `live-demo` zmieniony ręcznie na prośbę Rafała, ale wpis z pełnym diffem trafił do `skill-impact.md` repo w tej samej sesji.
+
+## 2026-09-18 (druga sesja) — sesja fe0e2a4e (id claude.ai niedostępny) (prezent na live 21.09; repo Baza wiedzy)
+- dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (jedenasty, dziesiąta sesja) — pierwszy raz z realną szkodą, nie samym komunikatem „Environment update": powłoka stała w `prezent/out/.review/lektor`, więc `rm -rf out` padło na `Device or resource busy`, łańcuch `&&` urwał się w połowie i staging usunął się częściowo, a aktualizacja `live.yaml` z tej samej komendy w ogóle nie poszła. Rozwiązanie na stronie rozszerzone o zdanie o kasowaniu katalogu, w którym stoi powłoka.
+- dopisano dowód: python-na-windows-drukuje-w-cp1252 (piąty, piąta sesja) — nowy wariant skutku: wyjątek na `print` w ŚRODKU skryptu wyciął jego drugą połowę, więc `SKILL.md` dostał nową regułę, a `templates/narration.md` został ze starą. Poprzednie dowody kończyły się na urwanym wypisie po wykonanej pracy.
+- Wzorce repo (`.claude/wiki/`) dotknięte w tej sesji: trzy nowe o `live-gift` (liczba-z-wlasnego-ekranu-podana-odbiorcy-jako-stala, logika-wezla-code-przetestowana-stubem, regula-skilla-zapisana-tylko-w-skill-md) i drugi dowód w scenariusz-screencastu-pisany-bez-otwarcia-produktu.
+- Sygnał globalny: bez nowych kandydatów do ewolucji — oba dotknięte wzorce są `otwarty` i dotyczą nawyku pisania komend, nie skilla.

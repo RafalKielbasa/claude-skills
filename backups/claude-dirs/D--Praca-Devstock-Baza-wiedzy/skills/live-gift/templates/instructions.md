@@ -19,6 +19,13 @@ Uruchomienie zajmuje około <X> minut i nie wymaga pisania ani jednej
 linijki kodu. Przechodzisz <N> kroków po kolei i po ostatnim automatyzacja
 działa już sama.
 
+**Wideo obok tej instrukcji pokazuje co innego niż ona.** <Dwa-trzy zdania:
+że na nagraniu importujemy plik i oglądamy automatyzację klocek po klocku,
+że zakładania konta i podłączania kont na nagraniu nie ma, bo to jest
+dokładnie ta część, którą widz przechodzi tutaj, w krokach <numery>, i że
+jedno i drugie da się oglądać osobno, w dowolnej kolejności. Ten akapit
+jest obowiązkowy — SKILL.md §6, para do zakazu z §7.>
+
 ---
 
 ## Co dokładnie dostaniesz

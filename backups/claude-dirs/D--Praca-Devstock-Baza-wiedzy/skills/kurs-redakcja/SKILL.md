@@ -52,7 +52,9 @@ z modelem i effortem wybranym przez Rafała na starcie.
    - polecenie przeczytania W CAŁOŚCI `kursy/_wspolne/redakcja.md`
      i `kursy/_wspolne/styleguide.md`, a ponadto: A i B —
      `kursy/_wspolne/szablony/struktura-lekcji.md`, B —
-     `kursy/_wspolne/szablony/scenariusz.md`, C —
+     `kursy/_wspolne/szablony/scenariusz.md` i `kursy/_wspolne/profil-wypowiedzi.md`
+     (W CAŁOŚCI, łącznie z bankiem wzorców; grupa A profilu NIE dostaje - artykuł
+     zostaje rzeczowy), C —
      `kursy/_wspolne/szablony/struktura-zadania.md`,
    - cel lekcji i `typ_video` z `lekcja.yaml`,
    - zakres: pełna redakcja językowa (wolno przepisywać zdania i akapity,
@@ -81,6 +83,14 @@ z modelem i effortem wybranym przez Rafała na starcie.
      z `redakcja.md`: w tekście lektora każda nazwa własna w cudzysłowie, nazwy
      trudne dla TTS zapisane fonetycznie, a linie `[AKCJA: ...]`, tytuły
      segmentów i `prezentacja.yaml` zachowują oryginalną pisownię nazw,
+   - dla B, tekst lektora: redagujesz wg `profil-wypowiedzi.md` - ruchy z "Rdzenia"
+     (pole "zamiast → rób"), pasma z "Rytm: liczby", sekcja "Zawieszenia dla tekstu
+     lektora" z `redakcja.md` obowiązuje (echo myśli, rekapitulacja, lista przez
+     anaforę nie są manierami w narracji). Stosujesz wyłącznie ruchy językowe;
+     ruchu treściowego (anegdota, własna wpadka, dygresja z nowym faktem) nie
+     dopisujesz - to fakt, a fakty są nietykalne. Wyjątek: beat, który już jest
+     w scenariuszu (błąd na ekranie, pułapka), wolno wypowiedzieć w pierwszej osobie
+     bez dopisywania faktów. Linie `[AKCJA: ...]`, numery i tytuły segmentów - bez zmian,
    - dla C: merytorycznym źródłem prawdy jest `artykul.md`; nie zmieniaj,
      które odpowiedzi są poprawne, ani pól technicznych JSON,
    - format odpowiedzi: per plik 3–5 najważniejszych zmian "przed → po"
@@ -89,7 +99,10 @@ z modelem i effortem wybranym przez Rafała na starcie.
      A dodatkowo: rozjazdy wobec scenariusza (co mówił artykuł → co mówi
      scenariusz → jak brzmi po naprawie), z osobnym oznaczeniem tych, przy
      których trzeba było przepisać tezę sekcji; B dodatkowo: pozycje dopisane
-     do `wymowa.md` (pisownia → zapis mówiony).
+     do `wymowa.md` (pisownia → zapis mówiony) oraz
+     lista segmentów, w których usunięto objaw skryptu, z nazwą ruchu profilu, który
+     wszedł w to miejsce (np. "Segment 4: formuła 'Werdykt? Agent.' → R3 pytanie
+     z własną odpowiedzią w jego rytmie").
    Uruchom przez Workflow (jedyny mechanizm z nadpisaniem modelu i effortu
    per agent):
 
@@ -111,6 +124,10 @@ z modelem i effortem wybranym przez Rafała na starcie.
      `## [ekran: ...] Segment N - Tytuł` bez zmian, frontmatter `typ:` bez zmian, avatar ≤ 3. Objętości NIE
      egzekwujesz — widełki 140–420 słów są sugestią; segment krótszy po
      redakcji o więcej niż ~15% sprawdź, czy nie zgubił treści,
+     segment DŁUŻSZY po redakcji o echo myśli albo powrót do pojęcia to skutek
+     profilu, nie błąd - nie skracaj go z powrotem; ostrzeżenia `npm run validate`
+     z dopiskiem `(profil-wypowiedzi.md → Rytm)` przeczytane, każde albo
+     poprawione, albo w raporcie z jednym zdaniem, dlaczego zostaje,
    - nazwy w scenariuszu: w tekście lektora żadna nazwa własna nie została bez
      cudzysłowu ani w pisowni sprzecznej z `wymowa.md`; każdy nowy zapis
      fonetyczny trafił na listę; linie `[AKCJA: ...]`, tytuły segmentów

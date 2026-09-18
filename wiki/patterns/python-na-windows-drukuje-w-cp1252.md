@@ -61,6 +61,18 @@ niepowodzenie całej operacji.
   z `PYTHONIOENCODING=utf-8` i zadne nie padlo. Reguła ze strony dziala; problemem
   jest to, ze pierwsze wywolanie w sesji regularnie idzie bez prefiksu.
 
+- 2026-09-18, sesja fe0e2a4e (id claude.ai niedostępny): piąty dowód,
+  piąta sesja, nowy wariant skutku. Skrypt aktualizował dwa pliki skilla
+  `live-gift` po kolei: zapisał `SKILL.md`, padł na `print('reguła ok')`
+  z `'charmap' codec can't encode character 'ł'`, a **cała druga połowa
+  skryptu — edycje `templates/narration.md` — nigdy się nie wykonała**.
+  Poprzednie dowody kończyły się na urwanym wypisie po wykonanej pracy; tu
+  wyjątek na `print` w środku skryptu wyciął resztę zadania i zostawił skill
+  w stanie pośrednim: proza SKILL.md mówiła już nową regułę, szablon nadal
+  starą. Naprawione powtórzeniem drugiej połowy z prefiksem
+  `PYTHONIOENCODING=utf-8`; od tej pory wszystkie wywołania w sesji miały ten
+  prefiks.
+
 ## Rozwiązanie
 Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie
 poprzedzaj `PYTHONIOENCODING=utf-8`, jeśli cokolwiek drukuje treść inną niż

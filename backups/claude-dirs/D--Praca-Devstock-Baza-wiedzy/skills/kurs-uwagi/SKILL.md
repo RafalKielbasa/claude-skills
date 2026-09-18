@@ -46,10 +46,12 @@ for the segments that actually changed.
    that belongs to `/kurs-lekcja`, and you say so instead of doing it. The other lesson files
    are not touched yet; they are step 7, after every remark has landed here.
 5. **Rafał's remark outranks a course rule, but never silently.** If applying a remark
-   contradicts `kursy/<slug>/wymowa.md` or the "Nietykalne" section of
-   `kursy/_wspolne/redakcja.md`, apply it and name the overridden rule in the report. A
-   quietly changed phonetic spelling comes back as inconsistent pronunciation in the next
-   lesson.
+   contradicts `kursy/<slug>/wymowa.md`, the "Nietykalne" section of
+   `kursy/_wspolne/redakcja.md`, or `kursy/_wspolne/profil-wypowiedzi.md`, apply it and name
+   the overridden rule in the report. Narration you rewrite because of a remark follows the
+   profile (its "Rdzeń: ruchy" and "Rytm: liczby" sections) - a remark changes what is said,
+   not how Bartek says it. A quietly changed phonetic spelling comes back as inconsistent
+   pronunciation in the next lesson.
 6. **Delete what you applied, keep what you did not.** An applied marker's line disappears.
    A remark you did not apply — disputed, needing Rafał's decision, or rejected — keeps its
    line and goes into the report with the reason. Deleting a marker without making the change

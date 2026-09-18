@@ -1,6 +1,6 @@
 # scenariusz-screencastu-pisany-bez-otwarcia-produktu
 
-- **Skill:** kurs-lekcja
+- **Skill:** kurs-lekcja, live-gift
 - **Typ:** porażka
 - **Status:** otwarty
 
@@ -27,6 +27,20 @@ gdy scenariusz jest już zatwierdzony i czasem wyrenderowany.
   dowód w interfejsie" — ostrzeżenia nie ma wcale, zrzut ekranu pokazuje czysty węzeł. Drugi:
   „Rozwijam ten wpis i widzę parametry, z jakimi narzędzie poszło" — panel wejścia pokazuje ładunek
   wyzwalacza czatu, a n8n wypisuje nad wynikiem wprost, że żadne pole nie jest wypełniane przez model.
+
+- 2026-09-18, sesja fe0e2a4e (id claude.ai niedostępny): drugi dowód, druga
+  sesja, i pierwszy poza `kurs-lekcja` — narracja prezentu na live 21.09
+  (`live-gift`). Cały segment „Czerwone trójkąty" opisywał zachowanie n8n,
+  którego nie widziałem: ile trójkątów widać po imporcie i że wejście w klocek
+  i wyjście z niego podstawia logowanie z konta. Prostował to Rafał, ze swojego
+  ekranu: „W moim przypadku jest 3 nody z czerwonym trójkątem… wystarczy, że
+  kliknę węzeł i z niego wyjdę. Wtedy kredensie się już podstawią". Tym samym
+  trybem powstały nazwy pól węzła Gmail w workflow (`Search`, `Simplify`,
+  `Execute Once`) — wypisane z pamięci o n8n i oznaczone w `prezent/README.md`
+  jako do sprawdzenia przy pierwszym imporcie. Różnica wobec dowodu z M02L01:
+  tu rozjazd wyszedł PRZED nagraniem, bo Rafał czytał narrację przed
+  generowaniem lektora — ale wyszedł z jego pamięci o produkcie, nie z żadnej
+  kontroli.
 
 ## Rozwiązanie
 

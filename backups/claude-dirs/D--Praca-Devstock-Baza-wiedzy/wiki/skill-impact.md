@@ -776,3 +776,214 @@ index 4cd2fe9..104f500 100644
    Rafał's own export out of n8n, after a rehearsal, produces one. Design
    mode writes `workflows/KONWENCJE.md` and nothing else under `workflows/`;
 ```
+
+## 2026-09-18 — live-gift — zaakceptowana
+- **Wzorce:** liczba-z-wlasnego-ekranu-podana-odbiorcy-jako-stala, regula-skilla-zapisana-tylko-w-skill-md, scenariusz-screencastu-pisany-bez-otwarcia-produktu
+- **Zmiana:** §7 przepisany na „a tour of the workflow, never a setup recording": nagranie startuje na pustym workflow, importuje JSON i zwiedza kanwę KURSOREM, bez otwierania węzłów, bez ustawień, nazw pól, stałych i tipów (te zostają wyłącznie w `instrukcja.md`); budżet 3000–4000 znaków lektora w ok. pięciu segmentach. Zdjęcie czerwonych trójkątów to osobny segment zaraz po imporcie i jedyny moment otwarcia klocka (dwuklik i zamknięcie, n8n samo podstawia logowanie, które konto ma); liczby trójkątów nie wpisuje się jako stałej. Przełącznik `Inactive → Active` przestawia się na wizji tylko przy czystej kanwie. §6 dostał wymóg akapitu „co pokazuje wideo" jako pary do zakazu z §7. Oba szablony (`templates/instructions.md`, `templates/narration.md`) przepisane pod tę samą regułę, wzorcem jest teraz narracja z 21.09, sierpniowa zdegradowana do wzoru kształtu segmentu.
+- **Powód decyzji:** jawna prośba Rafała w trakcie pracy nad prezentem („chcę żeby była to zasada respektowana przy generowaniu kolejnych live"), potem dwa uściślenia tej samej reguły: dołożenie kroku z gotowym credentialem i skrócenie zwiedzania do samego kursora.
+
+```diff
+diff --git a/.claude/skills/live-gift/SKILL.md b/.claude/skills/live-gift/SKILL.md
+index 5aa4f8f..38769a4 100644
+--- a/.claude/skills/live-gift/SKILL.md
++++ b/.claude/skills/live-gift/SKILL.md
+@@ -7,8 +7,8 @@ description: Produce the giveaway package for a live event — the step-by-step
+ 
+ Result: the event's `prezent/` — the setup instructions viewers read
+ (`prezent/instrukcja.md`, tracked as `documents.gift`), the screencast
+-narration that follows those same steps (`prezent/narracja.md`), and the
+-voice-over package generated from it with the course's own ElevenLabs voice
++narration that tours the imported workflow (`prezent/narracja.md`, §7), and
++the voice-over package generated from it with the course's own ElevenLabs voice
+ (`prezent/lektor/`, built by the `lektor` CLI subcommand —
+ `tools/course-pipeline/src/lektor-package.js`). Rafał builds the giveaway
+ itself in n8n and exports it into `prezent/` before this skill can do
+@@ -28,9 +28,10 @@ event's own `prezent/`:
+ | Voice-over package | `<event>/prezent/lektor/` (mp3s + `spis.md`) | not tracked at all — build output, regenerated from `narracja.md` on demand, the same way `plansze/out/` is build output for `live-boards`. `.gitignore` already excludes it (`live-events/**/prezent/lektor/`, plus `*.mp3`/`*.mp4` directly under `prezent/`) |
+ 
+ The instructions and the narration are always written together (like
+-`live-script`'s bundle, §1 there) — a narration that has drifted from the
+-instructions it's supposed to follow is worse than no narration, because
+-nobody would think to doubt it on the day.
++`live-script`'s bundle, §1 there). They split one job in two — the document
++teaches the setup, the recording tours the workflow (§7) — and each says so
++about the other. A pair that has drifted apart is worse than no narration,
++because nobody would think to doubt it on the day.
+ 
+ It never touches `status.concept`, `status.prework`, `status.demo`,
+ `status.script`, `status.boards` or `status.report`, and never writes to
+@@ -97,9 +98,10 @@ it as a workflow JSON into the event's `prezent/` — that JSON is §3's second
+ gate condition. This skill's whole job starts only once that export exists:
+ it writes the instructions that walk a viewer through importing and
+ configuring that exact export, the narration that walks a screen recording
+-through the same steps, and the voice-over spoken over that recording. It
+-never edits the exported JSON, never opens n8n on Rafał's behalf, and never
+-invents a step the export doesn't actually require.
++through the imported canvas block by block (§7), and the voice-over spoken
++over that recording. It never edits the exported JSON, never opens n8n on
++Rafał's behalf, and never invents a step the export doesn't actually
++require.
+ 
+ ## 5. Does gift material already exist
+ 
+@@ -129,7 +131,9 @@ Per the standing ruling on document paths, `documents.gift` is read from
+ 
+ ## 6. Instructions first
+ 
+-The narration in §7 follows the steps written here, so the steps have to be
++The instructions are the **only** place the viewer is taught to create an
++account, connect a credential or paste an API key — the screencast shows
++none of it (§7). That makes this document load-bearing on its own, so it is
+ settled before a single sentence of narration exists. Open the exported JSON
+ from §3 to see which nodes actually need a credential (a node with no
+ `credentials` filled in is exactly the "red triangle" the August instructions
+@@ -147,30 +151,105 @@ or key the viewer needs (and its honest cost — a free tier's time limit or
+ a card requirement, said now, not on day fifteen) goes in the "czego
+ potrzebujesz" table before step 1.
+ 
++Right after the opening promise, the instructions say in two or three
++sentences **what the video is and what it is not**: that it imports the file
++and tours the blocks, that connecting accounts is not on the recording
++because it is here, and that the two can be used in either order. This is the
++counterpart of §7's ban — the pair only works when both halves say so.
++
+ Do not show this to Rafał yet in isolation — §7 drafts the narration
+-against these same steps first, and §8 shows both together.
+-
+-## 7. Narration second
+-
+-From `templates/narration.md`, draft `<event>/prezent/narracja.md`: YAML
+-frontmatter (`typ: demo`), then one `## [ekran: screencast] <title>` per
+-instructions step that actually has something to show on screen, in the
+-same order as §6 — a step with nothing to screen-record (an account
+-signup that happens before recording starts, in the August instructions'
+-own step 1) gets no segment, and two adjacent steps that look like one
+-continuous action on screen may share a segment (the August narration
+-folds steps 3+4 into "Kalendarz i poczta" and steps 6+7 into "Godzina,
+-strefa i test"). `[AKCJA: ...]` lines direct the person recording and never
+-reach the voice-over; everything else in a segment is plain prose, spoken
+-aloud, quoting every proper noun and spelling every TTS-hostile name
+-phonetically per `kursy/_wspolne/redakcja.md` (`n8n` → `"en osiem en"`,
+-`JSON` → `dżejson`) — read only, this skill never writes to `kursy/`.
++against the imported canvas first, and §8 shows both together.
++
++## 7. Narration second — a tour of the workflow, never a setup recording
++
++**The screencast never shows a credential being created.** Not a login
++screen, not a consent dialog, not an API key being pasted. Creating accounts
++and credentials lives in `instrukcja.md` and nowhere else — Rafał's standing
++ruling of 18.09.2026, binding for every event from the 21.09 one onward.
++Two reasons it stays that way: a take that connects a real account cannot be
++re-cut without redoing it, and every such take exposes a piece of Rafał's own
++screen that has no business being in a giveaway.
++
++**Clearing the red triangles is its own segment, placed right after the
++import and before the tour** — the canvas has to be settled before anyone
++looks at it. It is also the one place a block is opened at all, and only for
++a second: Rafał double-clicks a red-triangled block and closes it again, and
++n8n fills in the credential it already holds on the account. No dropdown
++pick, no login screen, no consent, nothing typed. The `[AKCJA: ...]` line
++says so explicitly.
++
++**How many triangles there are is not a constant, and the narration must say
++so out loud.** On import n8n auto-maps whatever credentials that account
++already has; on the 21.09 recording Rafał's calendar and model mapped
++themselves and only the three Gmail blocks stayed red, while a viewer
++starting from nothing sees five. So the segment states the count on Rafał's
++own screen, says plainly that the viewer's will differ and why, and tells
++them what a triangle that survives the open-and-close means: that credential
++does not exist on their account yet, so they create it once per
++`instrukcja.md` and come back. Never write a fixed number into the narration
++as if it were everyone's.
++
++When the pass leaves the canvas clean, the `Inactive → Active` switch may be
++flipped on camera in the closing segment, said as what it is — "u mnie nie
++został ani jeden trójkąt, więc mogę". If any triangle survives on Rafał's
++own screen, the switch is pointed at and not flipped: activating a workflow
++whose blocks still lack credentials records a lie.
++
++What the recording does instead: start on an **empty workflow**, import the
++JSON, then move the cursor from block to block, left to right, and say in one
++or two sentences what each one does. **The blocks are not opened** — no
++double-click, no settings, no field names, no constants, no tips. The tour
++answers "what is this and what does it do"; the instructions answer "how do I
++run it at home", and every click, value and caveat belongs there.
++
++**The video is short and dead simple to record.** A whole narration is
++roughly 3000–4000 characters of voice-over across about five segments (the
++21.09 one: 3735) — a three-to-four-minute film shot in a couple of takes by
++hovering a cursor. If a draft runs past that, the excess is almost always instruction
++material that wandered into the narration; move it to `instrukcja.md` instead
++of trimming sentences. Anything the tour drops must be findable in the
++instructions — check that before showing the pair in §8.
++
++Draft `<event>/prezent/narracja.md` from `templates/narration.md`: YAML
++frontmatter (`typ: demo`), then `## [ekran: screencast] <title>` segments in
++**canvas order, not in `instrukcja.md` step order**:
++
++| Segment | Covers |
++|---|---|
++| first | the empty canvas, the import, a whole-canvas overview — what the automation does as one sentence — and one line sending the viewer to `instrukcja.md` for everything clickable |
++| second | the red triangles: how many there are here, why the viewer's number differs, the open-and-close pass that fills them in, and what a surviving triangle means |
++| middle | the blocks, cursor only, grouped by what they are for (where the data comes from / what happens to it), one or two sentences each, no segment far longer than its neighbours |
++| last | the `Inactive → Active` switch (see above) and the finished result, from an earlier run |
++
++The finished result is shown **from an earlier run**, never from a live
++`Test workflow`: blocks just imported have no credentials, so a test on
++camera fails by construction. Say that in the `[AKCJA: ...]` line, so
++whoever records it prepares that material beforehand.
++
++The file's **first `[AKCJA: ...]` line states both the starting state**
++(empty, freshly created workflow) **and the ban itself** — the person
++recording reads that line and nothing else about this rule.
++
++`instrukcja.md` carries the counterpart sentence (§6). Without it, the first
++viewer who watches before reading reports the video as incomplete.
++
++`[AKCJA: ...]` lines direct the person recording and never reach the
++voice-over; everything else in a segment is plain prose, spoken aloud,
++quoting every proper noun and spelling every TTS-hostile name phonetically
++per `kursy/_wspolne/redakcja.md` (`n8n` → `"en osiem en"`, `Gmail` →
++`dżimail`, `JSON` → `dżejson`) — read only, this skill never writes to
++`kursy/`.
+ 
+ This file is `lektor`'s literal input (§9) — the shape has to be exact, not
+ approximate. It parses under the same `parsujScenariusz` the `lektor`
+ command itself calls, and this skill's own `templates/narration.md` is
+ verified against that parser.
+ 
++**Worked example is `2026-09-21-mail-z-zalacznikiem/prezent/narracja.md`.**
++The August one (`2026-08-27-agenci-ai/prezent/narracja.md`) predates this
++ruling and walks the instruction's steps, credentials and all — use it for
++the shape of a segment, never for the structure.
++
+ ## 8. Show both drafts, then stage them
+ 
+ Show Rafał the drafted instructions and the drafted narration together in
+@@ -322,9 +401,22 @@ After a save (draft or approved):
+ - **This skill never builds, edits or invents the giveaway automation**
+   (§4). It writes only what explains and narrates an export Rafał already
+   made.
+-- **Instructions are settled before narration is drafted** (§6, §7) — the
+-  narration's segments and order are derived from the instructions' steps,
+-  never the other way around.
++- **Instructions are settled before narration is drafted** (§6, §7), because
++  they are the only place credentials are ever explained.
++- **The screencast shows no credential being created** — no login screen, no
++  consent dialog, no API key (§7). Clearing the red triangles by opening a
++  block and closing it, so n8n fills in a credential the account already has,
++  is allowed and expected: it gets its own segment right after the import and
++  is the only moment a block is opened at all. The number of triangles is
++  never written as a constant — it depends on what that account already had
++  and what n8n auto-mapped, and the narration says so.
++- **The tour is cursor-only and short** (§7) — no settings, no field names, no
++  tips, no constants; roughly 3000–4000 characters of voice-over in about five
++  segments. Whatever the tour drops has to be in `instrukcja.md`. The recording starts on an empty workflow, imports the
++  JSON and tours every block on the canvas; its segments follow the canvas,
++  not the instructions' steps. The finished result comes from an earlier run,
++  never from a live test. Standing ruling of 18.09.2026, binding for every
++  later event.
+ - **The voice check runs before any paid call, and stops on a
+   disagreement it shows in full** (§9). This skill never edits `.env`;
+   a manifest correction is the only file it may touch on that path, and
+```
