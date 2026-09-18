@@ -35,10 +35,18 @@ poprawiania wzorca zamiast sposobu jego uruchomienia.
   przeszedł za pierwszym razem, dziesięć podmian trafionych po jednym razie
   każda. Cztery kolejne skrypty tej sesji powstały już wyłącznie jako pliki.
 
+- 2026-09-18, sesja (id niedostępny), repo Baza wiedzy: ten sam defekt **w heredoku z cudzysłowionym
+  delimiterem** (`cat > plik.mjs << 'EOF'`), czyli tam, gdzie powłoka z definicji niczego nie
+  interpretuje. Podwojony ukośnik i tak został skrócony o połowę: `'# PROFIL-Z-DYSKU\\n'` wylądowało
+  w pliku jako literał z prawdziwym znakiem końca linii w środku stringu, a `split('\\n', 10)`
+  w `src/transcribe.js` — jako `split('` + nowa linia + `', 10)`. Dwa razy w jednej sesji, oba razy
+  wykryte dopiero `cat -A`. Wniosek rozszerza tę stronę: samo zapisanie skryptu do pliku nie
+  wystarcza, jeśli **plik powstaje heredokiem** — transport psuje treść, zanim node ją zobaczy.
+
 ## Rozwiązanie
 
 Regexu nie przepuszczać przez `-e` w stringu powłoki. Zapisać skrypt do pliku `.mjs` w katalogu
 tymczasowym zadania i uruchomić `node plik.mjs` — wtedy literał trafia do silnika dokładnie tak, jak
-został napisany, i nadaje się do porównania znak w znak z wersją w repo. Dotyczy tak samo `python -c`
+został napisany, i nadaje się do porównania znak w znak z wersją w repo. Plik twórz narzędziem Write, nie heredokiem: transport narzędzia Bash też skraca podwojony ukośnik, więc skrypt zapisany przez `cat > plik << EOF` bywa zepsuty, zanim node go otworzy (dowód z 2026-09-18). Kontrola po zapisie: `cat -A` na linii z ukośnikiem. Dotyczy tak samo `python -c`
 i `perl -e`. Sygnał ostrzegawczy: test sprawdzający wzorzec pada na przypadkach, które nie mają z jego
 zmianą nic wspólnego — wtedy najpierw sprawdzić, co naprawdę dostał interpreter, wypisując `RE.source`.

@@ -43,6 +43,17 @@ stalls") ciągną w tę samą stronę co podpowiedź.
   nie jest bramka skilla, tylko kształt kodu, który zaraz powstanie; patrz
   [[odpowiedz-spoza-opcji-rozstrzygana-dopytaniem]].
 
+- 2026-09-18, sesja (id niedostępny), repo Baza wiedzy: dwie kolejne bramki, obie obsłużone zgodnie
+  z tą stroną, obie przy stawce pieniężnej. (1) Bramka review profilu wypowiedzi plus dwie decyzje
+  techniczne — po dwóch timeoutach odpowiedź brzmiała „czekam na Twoją decyzję, nie ruszam dalej",
+  z powtórzeniem trzech pytań w treści i wypisaniem stanu planu; Rafał wrócił po przerwie z „1.
+  Zatwierdzam profil, 2. ok, 3. utnij" i praca poszła na potwierdzonych wariantach. (2) Bramka TTS
+  na 7 445 kredytów ElevenLabs — znowu dwa timeouty, znowu „czekam, nic nie renderuję", znowu
+  powrót z jednoznaczną odpowiedzią („3"). Odstępstwo od litery strony: za drugim razem pytanie
+  zostało powtórzone **kolejnym wywołaniem narzędzia**, nie tylko w treści, co odpaliło drugi
+  60-sekundowy timeout — strona ma rację, że to zapętla bramkę, i przy trzecim podejściu pytanie
+  poszło już wyłącznie tekstem.
+
 ## Rozwiązanie
 
 Wynik `AskUserQuestion` zawierający frazę „No response after" traktować jako **dane o braku

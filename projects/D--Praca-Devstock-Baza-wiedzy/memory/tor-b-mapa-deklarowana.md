@@ -27,4 +27,4 @@ Otwarte: kalibracja stałych ostrzeżeń (`TEMPO_ZNAKOW_NA_S=15`,
 `PROG_STOPKLATKI=1.5`, `MIN_ROZNICA_STOPKLATKI_S=3`) po pierwszym realnym
 użyciu; migracja lekcji agenty-ai 1.2 tylko przy ewentualnym re-renderze
 (stara mapa nieczytelna — `szkielet-mapy --force` + przepisanie czasów).
-W chwili zapisu zmiany niezacommitowane ([[nie-commituj-rafal-sam]]).
+W chwili zapisu zmiany niezacommitowane ([[tryb-commitow-per-repo]]).

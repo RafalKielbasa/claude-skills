@@ -28,4 +28,4 @@ konta Google, BotFather) robi Rafał ręcznie wg planu; Claude generuje
 artefakty repo i pomaga przy problemach. Scenariusz słowny live'a (hook,
 pitch) jest POZA planem — osobna praca merytoryczna.
 
-Powiązane: [[baza-wiedzy-wdrozenie-task-12]], [[nie-commituj-rafal-sam]].
+Powiązane: [[baza-wiedzy-wdrozenie-task-12]], [[tryb-commitow-per-repo]].

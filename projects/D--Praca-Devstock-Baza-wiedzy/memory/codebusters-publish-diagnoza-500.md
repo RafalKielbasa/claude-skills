@@ -24,4 +24,4 @@ tam mieszkają niespodzianki typu P2000. Pola z zapasem mają jawne `@mysql.VarC
 
 Rafał sam wkleja wynik `fly logs` — nie mam dostępu do Fly.
 
-Powiązane: [[nie-commituj-rafal-sam]]
+Powiązane: [[tryb-commitow-per-repo]]

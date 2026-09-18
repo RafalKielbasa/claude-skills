@@ -35,6 +35,15 @@ ale dopiero po fakcie i w calosci rekami kontrolera.
   niedomkniety: "artykul w Krok 4 nadal ma «co dzis przyszlo na skrzynke» (nie moj
   plik)".
 
+- 2026-09-18, sesja (id niedostepny), lekcja modul-03-badacz-deep-research/lekcja-01-nawigacja-pliki:
+  trzeci przypadek, skill nadal ma w kroku 4 `parallel` — czyli poprawka z tej strony nigdy nie
+  zostala wprowadzona. Tym razem bez szkody merytorycznej, bo grupa B robila wylacznie zmiany
+  jezykowe i zadnego faktu nie ruszyla (kontrola: z narracji zniklo 15 slow, wszystkie sluzbowe,
+  `archiwum` 1 do 1, `wiosna` 2 do 2). Agent A mimo to wyrownal artykul do wersji sprzed redakcji
+  B i cytowal w raporcie brzmienia, ktorych w scenariuszu juz nie ma. Brak szkody byl skutkiem
+  charakteru zadania, nie konstrukcji kroku — przy redakcji ruszajacej fakty wyscig zadzialalby
+  tak samo jak 2026-09-14.
+
 ## Rozwiazanie
 W kroku 4 nie puszczac grupy A rownolegle z B, gdy w zestawie jest
 `video/scenariusz.md`, ani grupy C rownolegle z A: `pipeline` B -> A -> C zamiast

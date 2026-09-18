@@ -8,12 +8,23 @@
       "Bash(node_modules/.bin/next --help)",
       "Bash(pnpm install *)",
       "Bash(grep -E \"\\\\.\\(env|json|yml|yaml\\)$|docker\")",
-      "Bash(git *)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
       "Bash(pnpm add *)",
       "Bash(pnpm build *)",
       "Bash(pnpm tsc *)",
       "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('tailwindcss:', p.dependencies?.tailwindcss || p.devDependencies?.tailwindcss\\)\")",
       "Bash(node -e \"const m = require\\('@base-ui/react'\\); console.log\\(Object.keys\\(m\\).filter\\(k => /menu|popup|popover|drop/i.test\\(k\\)\\)\\)\")"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "PowerShell(git commit:*)",
+      "PowerShell(git push:*)"
     ]
   }
 }

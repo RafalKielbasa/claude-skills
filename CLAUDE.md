@@ -25,15 +25,38 @@
 
 ## Git
 
-- **Nie commituj.** Zmieniaj pliki lokalnie i zostawiaj je w drzewie roboczym jako niezacommitowane zmiany. `git commit`, `git add`, `git push`, tworzenie PR-ów i tagów — robię sam.
-- Dotyczy to również subagentów i skilli: jeśli plan, skill albo instrukcja każą commitować, **pomiń ten krok** i powiedz o tym wprost w podsumowaniu, zamiast wykonywać commit.
-- Wyjątek wyłącznie wtedy, gdy w danej rozmowie poproszę o commit jawnie. Zgoda dotyczy tej jednej prośby, nie całej sesji.
+- **Tryb commitów ustala repo.** Domyślna dla repo bez własnej konfiguracji:
+  nie commituję i nie pushuję — zmiany zostają w drzewie roboczym jako
+  niezacommitowane. Repo, w którym jest inaczej, deklaruje to w swoim
+  `.claude/settings.json` albo `.claude/settings.local.json`:
+  - „Baza wiedzy" (`D:\Praca\Devstock\Baza wiedzy`) — **commituję sam, bez
+    pytania**, w całym repo łącznie z `tools/`.
+  - repo z kodem (devstock-team-agent, company-agent-chat, saas app,
+    code-busters-v2, code-busters-mobile) — **domyślnie nie commituję**;
+    commit ma tam regułę `ask`, więc gdy mi każesz, dostajesz prompt
+    uprawnień zamiast blokady.
+- **Pusha nie robię nigdy domyślnie**, w żadnym repo — także w „Bazie wiedzy".
+  Wykonuję go tylko po Twoim jawnym zdaniu w danej rozmowie („commituj
+  i wypychaj"); zgoda dotyczy tej prośby, nie całej sesji. `git push` ma
+  wszędzie regułę `ask`.
+- **Domyślną znosisz w rozmowie w obie strony** — „commituj" włącza commity
+  tam, gdzie są wyłączone, „nie commituj" wyłącza je tam, gdzie są domyślnie
+  włączone. Obowiązuje do końca tej rozmowy.
+- **Przed każdym commitem sprawdzam gałąź** (`git branch --show-current`)
+  i podaję ją w raporcie. Powód: working tree bywa współdzielony z drugą
+  sesją i commit potrafi wylądować na cudzej gałęzi.
+- Dotyczy to również subagentów i skilli: **idą za domyślną repo, ale nie
+  pushują nigdy**. Jeśli plan, skill albo instrukcja każą pushować, **pomiń
+  ten krok** i powiedz o tym wprost w podsumowaniu.
+- Tworzenie PR-ów i tagów robisz sam.
 - Operacje odwracalne na historii (`git reset`, `git revert`, `rebase`) tylko na wyraźną prośbę.
-- **Sugerowana treść commita przy bramce.** Gdy implementujemy inline (zadania
-  wykonuję sam w sesji) i zatrzymuję się na Twoje review, razem z prośbą o review
-  podaję od razu proponowaną treść commita w konwencji Conventional Commits
-  (`typ(zakres): opis`, np. `feat(CP-89): query cache foundation and providers`),
-  z krótkim body, gdy zmiana ma więcej niż jeden wątek. Commit i tak robisz sam.
+- **Sugerowana treść commita przy bramce.** W repo, gdzie commit jest
+  wyłączony: zatrzymując się na Twoje review, podaję od razu proponowaną treść
+  commita w konwencji Conventional Commits (`typ(zakres): opis`, np.
+  `feat(CP-89): query cache foundation and providers`), z krótkim body, gdy
+  zmiana ma więcej niż jeden wątek — commit robisz sam. W repo, gdzie commit
+  jest włączony: commituję sam w tej samej konwencji i podaję w raporcie hash
+  oraz gałąź.
 
 ## GCP i infrastruktura chmurowa
 

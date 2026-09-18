@@ -1,10 +1,14 @@
 {
   "includeGitInstructions": false,
   "permissions": {
-    "deny": [
+    "allow": [
+      "Bash(git add:*)",
       "Bash(git commit:*)",
+      "PowerShell(git add:*)",
+      "PowerShell(git commit:*)"
+    ],
+    "ask": [
       "Bash(git push:*)",
-      "PowerShell(git commit:*)",
       "PowerShell(git push:*)"
     ]
   }
