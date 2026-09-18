@@ -1,8 +1,8 @@
 {
-  "model": "claude-fable-5-1[1m]",
   "attribution": {
     "commit": ""
   },
+  "model": "claude-fable-5-1[1m]",
   "hooks": {
     "SessionStart": [
       {
