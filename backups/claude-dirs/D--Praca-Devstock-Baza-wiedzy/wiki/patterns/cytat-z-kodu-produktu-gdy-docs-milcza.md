@@ -1,6 +1,6 @@
 # cytat-z-kodu-produktu-gdy-docs-milcza
 
-- **Skill:** kurs-lekcja (krok 2, research)
+- **Skill:** kurs-lekcja (krok 2, research), live-demo
 - **Typ:** sukces
 - **Status:** otwarty
 
@@ -46,6 +46,22 @@ dokładnie ten tekst, który kursant zobaczy na ekranie.
   ze zdaniem "dokładna nazwa klucza bierze się z nazwy pola, więc u Ciebie może
   brzmieć nieco inaczej", a `konspekt-nagrania.md` dostał krok, który każe
   pokazać to pole w kadrze. Weryfikacja przeniesiona do nagrania, nie pominięta.
+
+- 2026-09-18, sesja 3aaf54dc (id claude.ai niedostępny): ten sam ruch poza
+  kursami, przy diagnozie i przy budowie węzła. Telegram odrzucał meldunek
+  z demo błędem `can't parse entities`, choć w węźle nie ustawiono żadnego
+  Parse Mode — `nodes/Telegram/GenericFunctions.ts:104` pokazał dlaczego:
+  `if (!additionalFields.parse_mode) additionalFields.parse_mode = 'Markdown'`,
+  a `:301`, że `createSendAndWaitMessageBody` ma `parse_mode: 'Markdown'` na
+  sztywno, więc bramki nie da się z tego wypiąć ustawieniem. Z pamięci
+  wychodziło, że domyślną wartością jest HTML — i to jest prawda, ale tylko
+  dla pola dodanego ręcznie (`Telegram.node.ts:1117`), nie dla pola pustego.
+  Drugi raz tego samego dnia przy pisaniu węzła Send and Wait: nazwy parametrów
+  (`responseType: 'approval'`, `approvalOptions.values.approvalType: 'double'`,
+  `options.limitWaitTime.values.{limitType,resumeAmount,resumeUnit}`) i postać
+  wyjścia po kliknięciu (`{ json: { data: { approved, respondedAt } } }`,
+  `utils/sendAndWait/utils.ts:492`) wzięte z kodu zamiast zgadywane — dzięki
+  temu warunek IF-a stoi na `data.approved`, a nie na wymyślonej ścieżce.
 
 ## Rozwiązanie
 Gdy lekcja opiera się na konkretnym polu, przycisku albo komunikacie

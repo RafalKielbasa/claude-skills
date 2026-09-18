@@ -274,6 +274,22 @@ credentials. Cover, at minimum:
   that were never a real gotowiec until a rehearsal produced a real export).
   This skill never writes workflow JSON itself, in either mode; §13
   confirms an export exists, it never creates one.
+- **Any workflow `.json` under `workflows/` mirrors the run of show, or it
+  does not ship.** This binds every file that lands there by any route —
+  an export, a scaffold written during plan execution, a file pasted in by
+  hand. Every moment the run of show asks the presenter to show or click
+  has a node in the file, named as the scenario names it. A node that
+  cannot be expressed reliably in JSON (an approval step, a human-review
+  connection) is **not** a licence to omit it: it appears in the file as a
+  disabled placeholder node carrying the scenario's own name, and as the
+  first, blocking line of that directory's README — never as a silent gap
+  in a file that otherwise looks finished. State this rule in
+  `workflows/KONWENCJE.md` too, in the event's own terms. The September
+  2026 event paid for it: the approval gate „Pyta Cię na Telegramie" was
+  left out of the scaffold as "cannot be saved reliably in JSON", nobody
+  noticed it was never built, and the hole surfaced three days before the
+  broadcast — with blocks 3, 4 and 5 of the run of show, half the airtime,
+  resting on a button that did not exist.
 
 ## 11. Gate: show, then write
 
@@ -346,7 +362,17 @@ first failure and reporting exactly which one fired:
    keys a real n8n export ever writes there). Either condition refuses the
    file by name and quotes the offending key path.
 
-Only if every `.json` file in `workflows/` clears all three checks does this
+4. **Every beat of the run of show has a node.** When `documents.script`
+   points at a run of show, read it and list every moment it puts on
+   screen: each `[CUE]`, each node the presenter is scripted to show, each
+   button press. Each one must exist in the export, under the name the
+   scenario uses. A beat with no node refuses the file by name, quotes the
+   scenario line as `<file>:<line>` and names what is missing. An export
+   that omits a beat is not "a scaffold to finish by hand" — it is a file
+   that cannot run the demo the script sells, and `status.demo` stays
+   `draft` until it can.
+
+Only if every `.json` file in `workflows/` clears all four checks does this
 section end cleanly. Report to Rafał, plainly: which file(s) were found,
 that they parse, the node names and credential names referenced inside (by
 name only — never print a credential's `id` value or any other field as if
@@ -411,6 +437,11 @@ After any write, in either mode:
   an existing spec goes through `documents.demo` (§3); a newly minted path
   is written back into `documents.demo` in the same write that changes
   `status.demo` (§11).
+- **A workflow `.json` is a faithful implementation of the run of show or it
+  is a defect** (§10, §13 check 4). Whatever wrote it, every scripted beat
+  has a node under the scenario's own name; a step that JSON cannot carry
+  reliably goes in as a disabled placeholder node plus a blocking line in
+  the README, never as a silent omission.
 - **This skill never writes a workflow `.json` file, in either mode.** Only
   Rafał's own export out of n8n, after a rehearsal, produces one. Design
   mode writes `workflows/KONWENCJE.md` and nothing else under `workflows/`;
