@@ -54,6 +54,12 @@ says so. Lines marked with a date came from a finding on that date.
 - [ ] **(2026-09-09)** A criterion asking for no regression names the scenario to
       re-run. "X behaves as before" is not checkable without asking the author
       what "before" covered.
+- [ ] **(2026-09-20)** A sentence that restates a rule from the spec or another
+      governing document (a gate, a deadline, a disqualifier, a threshold) keeps
+      the rule's exact condition. Compare the condition word by word with the
+      source: "no accepted plan" is a different rule from "no submitted plan",
+      and a ticket that tightens or loosens a rule contradicts the document it
+      points at.
 
 ## Per batch
 
