@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Makieta konsultacji Kodożercy</title>
+  <style>
+    /* Wartości startowe z platforma/design/obecny-design.md — do weryfikacji.
+       Parametry --demo-* służą wyłącznie testowi renderu, nie są tokenami UI.
+       Przed konceptem wypełnij zmienne odczytem stylów/tokenów i osadź font. */
+    :root {
+      --page-bg: #11151d; --panel-bg: #161b25; --panel-alt: #22252f;
+      --border: #232937; --text: #ffffff; --muted: #8b93a5;
+      --cta: #f7860b; --link: #4f8ef7; --coin: #e0a53a; --card: #7c3aed;
+      --font: Poppins, sans-serif; --heading-weight: 600;
+      --panel-radius: 12px; --button-radius: 8px;
+      --section-spacing: 2px; --button-height: 48px;
+      --secondary-border: #3a3f52;
+      --demo-canvas: 960px; --demo-gap: 24px; --demo-padding: 32px;
+      --demo-body-size: 16px; --demo-heading-size: 28px;
+      --annotation: #00ffff; /* Kolor roboczy; sprawdź, że jest spoza palety UI. */
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page-bg); color: var(--text);
+      font: var(--demo-body-size)/1.5 var(--font); }
+    main { max-width: var(--demo-canvas); padding: var(--demo-padding); margin: auto; }
+    .panel { position: relative; background: var(--panel-bg); border: 1px solid var(--border);
+      border-radius: var(--panel-radius); padding: var(--demo-padding); }
+    h1 { font-size: var(--demo-heading-size); font-weight: var(--heading-weight); margin-top: 0; }
+    .label { text-transform: uppercase; letter-spacing: var(--section-spacing); color: var(--muted); }
+    .muted, figcaption { color: var(--muted); }
+    .stack > * + * { margin-top: var(--demo-gap); }
+    button { min-height: var(--button-height); border-radius: var(--button-radius);
+      padding: 0 var(--demo-gap); font: inherit; }
+    .primary { background: var(--cta); color: var(--page-bg); border: 0; }
+    .secondary { background: transparent; color: var(--text); border: 1px solid var(--secondary-border); }
+    /* Kolor tekstu CTA w teście jest technicznym przybliżeniem. Odczytaj przed użyciem. */
+    figure { margin: 0; } img { display: block; max-width: 100%; }
+    [data-crop][hidden] { display: none; }
+    .marker { position: absolute; top: 12px; right: 12px; background: var(--annotation);
+      color: #000; border-radius: 50%; padding: 2px 9px; }
+    body:not(.with-markers) .marker { display: none; }
+  </style>
+</head>
+<body>
+  <main class="stack">
+    <p class="muted">Szkielet techniczny — wartości designu do weryfikacji. To nie jest zrzut platformy.</p>
+    <section class="panel stack" aria-label="Podgląd panelu">
+      <span class="marker" aria-label="Zmiana 1">1</span>
+      <p class="label">Konsultacja UX</p>
+      <h1>Propozycja zmiany</h1>
+      <p>W tym miejscu umieść treść wybranego konceptu, zgodną z dokumentem.</p>
+      <figure data-crop hidden>
+        <!-- Wstaw img z data URI zanonimizowanego wycinka; usuń hidden.
+             Zapisz tu źródło i współrzędne wyznaczone z profili jasności. -->
+        <figcaption>Podpis wycinka obecnego interfejsu.</figcaption>
+      </figure>
+      <div><button class="primary" type="button">Zobacz propozycję</button>
+        <button class="secondary" type="button">Wróć do opisu</button></div>
+    </section>
+    <p id="font-status" class="muted">Poppins wymaga lokalnej weryfikacji lub osadzenia przed właściwym konceptem.</p>
+    <p class="muted">Podpis grafiki: opisz konkretną zmianę. Dodaj klasę with-markers do body wyłącznie dla wersji ze znacznikami.</p>
+  </main>
+</body>
+</html>
