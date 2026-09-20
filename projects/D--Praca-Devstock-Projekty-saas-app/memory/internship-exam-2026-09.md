@@ -5,13 +5,15 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-09-20T13:01:58.535Z
+  modified: 2026-09-20T16:04:56.221Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
 Dokumenty w repo: `docs/exams/2026-09-internship-exam/` (README PL, CP-106, CP-107, rubric, plans/README)
-i spec EN `docs/superpowers/specs/2026-09-20-internship-exam-design.md`. Na 2026-09-20 NIEZACOMMITOWANE,
-issues CP-106/CP-107 NIE założone (czekają na „tak" Rafała po review dokumentów; skill `github-tickets`).
+i spec EN `docs/superpowers/specs/2026-09-20-internship-exam-design.md`. Zacommitowane 2026-09-20 na `main`
+jako 4753cd9 (na prośbę Rafała), NIE wypchnięte. Issues CP-106/CP-107: drafty w
+`docs/superpowers/plans/tickets/2026-09-20-internship-exam/` (epic.md, CP-106.md, CP-107.md), self-check
+i codex review zrobione, czekają na „wyślij" Rafała (bramka 2 skilla `github-tickets`).
 
 Kluczowe decyzje: prawdziwe funkcje do `main`; tylko egzamin przez miesiąc; AI dozwolone + obrona 60 min;
 koncept produktowy bez kontraktów; przydział poza strefę komfortu (Konrad → BE-ciężkie ogłoszenia,
