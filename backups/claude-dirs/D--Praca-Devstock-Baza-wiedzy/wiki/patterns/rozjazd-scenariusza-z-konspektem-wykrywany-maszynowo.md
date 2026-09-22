@@ -54,6 +54,19 @@ poprawia sie osobno, wiec rozbieznosc powstaje domyslnie, a kosztuje dopiero prz
   przy narracji, ktora nie jest zdaniem otwierajacym segment, jest mocniejszym
   sygnalem niz samo ostrzezenie - warto ja liczyc osobno.
 
+
+- 2026-09-22, sesja (id niedostępny), lekcja `agenty-ai` 3.1: pierwsze
+  uruchomienie generatora na tej lekcji dało dziesięć ostrzeżeń — dwa o braku
+  narracji dla kroków 3 i 5 segmentu 2, pięć o akcjach bez kroku w konspekcie
+  (segmenty 3, 4 dwukrotnie, 5, 6), dwa o parowaniu po kolejności zamiast po
+  treści (segment 4 krok 20, segment 8 krok 47) i jedno o braku ściągi. Tym
+  razem ostrzeżenia nie zostały w wygenerowanym pliku: poszły do raportu
+  z renderu jako osobna tabela i do punktu 2 listy „następny krok", czyli
+  przed nagrywanie — dokładnie tam, gdzie dowód z 2026-09-11 zgłaszał lukę.
+  Granica z tamtego dowodu nadal obowiązuje: zadziałało z uznania piszącego
+  raport, nie z kroku procedury — `kurs-video` wciąż nie ma punktu „przejdź
+  ostrzeżenia planu przed nagraniem".
+
 ## Rozwiazanie
 Po kazdej redakcji scenariusza lekcji demo przegenerowac plan nagrania i przeczytac ostrzezenia,
 zanim lekcja pojdzie do nagrania. Konspekt i scenariusz maja nazywac ten sam kadr tymi samymi

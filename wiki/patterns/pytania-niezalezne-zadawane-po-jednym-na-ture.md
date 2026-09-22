@@ -29,6 +29,16 @@ preferencja użytkownika idzie w drugą stronę niż instrukcja skilla.
   trzeciego pytania, które były przygotowane wcześniej. Mimo to poszły w trzech
   osobnych turach, bo skill zakazuje więcej niż jednego pytania na wiadomość.
 
+- 2026-09-22, sesja (id niedostępny), skill `kurs-video`: drugi dowód, druga
+  sesja, **pierwszy raz z zastosowanym rozwiązaniem ze strony**. Dwie niezależne
+  decyzje — silnik avatara (`mcp` czy `api`, obowiązkowa bramka kroku 2 skilla)
+  i co zrobić z brakującą ściągą `video/dane-do-nagrania.md` — poszły w jednym
+  wywołaniu `AskUserQuestion`. Zależność rozstrzygnięta przed pytaniem:
+  odpowiedź na żadne nie zmieniała opcji drugiego, bo silnik dotyczy segmentów
+  avatarowych, a ściąga etapu nagrywania. Rafał odpowiedział na oba naraz
+  („MCP (plan konta)", „Renderuj teraz, ściąga potem") i render ruszył po
+  jednej rundzie zamiast dwóch, przy płatnym API po obu stronach.
+
 ## Rozwiązanie
 Przed zadaniem pytań rozstrzygnąć, czy odpowiedź na którekolwiek zmienia
 brzmienie albo opcje pozostałych. Pytania zależne zadawać po jednym, zgodnie

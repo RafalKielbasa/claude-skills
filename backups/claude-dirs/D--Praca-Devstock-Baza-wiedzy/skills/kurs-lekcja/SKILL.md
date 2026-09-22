@@ -70,6 +70,10 @@ przedstawione Rafałowi do bramki review.
         przestaje cokolwiek znaczyć po trzeciej lekcji.
    d. `video/konspekt-nagrania.md` — dla typu demo: numerowana lista kroków
       do pokazania na ekranie, w kolejności segmentów `[ekran: screencast]`.
+      Plik zaczyna się sekcją `## Przygotowanie przed nagraniem` - tabelą
+      `Co sprawdzić | Ma być | Dlaczego`, jeden wiersz na każdy punkt ze
+      stanem, który da się odhaczyć; kolumna "Dlaczego" nazywa krok albo kadr,
+      który od tego punktu zależy.
       Nagrywanie **bez mówienia**; spokojne tempo; po każdej akcji krótkie
       zatrzymanie (lektor ma gdzie zmieścić narrację przy montażu);
       nieudany dubel = powtórz czynność, śmieci nie wycina na bieżąco —
@@ -142,29 +146,57 @@ przedstawione Rafałowi do bramki review.
    wpisać je wprost do `video/scenariusz.md` jako linie `[UWAGA: ...]` — wtedy
    nanosi je `/kurs-uwagi`, a nie ta procedura.
 8. **Po zatwierdzeniu przez Rafała:** ustaw `status.tresc: zatwierdzona`,
-   uruchom walidację ponownie. Zmiany zostają niezacommitowane — commit robi
+   uruchom walidację ponownie. Zmiany zostają niezacommitowane - commit robi
    Rafał.
-   Dla `typ_video: demo` najpierw napisz albo odśwież `video/dane-do-nagrania.md`
-   — ściągę klawiaturową nagrania. Kontrakt sekcji jest w struktura-lekcji.md
-   („Czwarty artefakt"); procedura: przejdź `konspekt-nagrania.md` krok po
-   kroku (to jedyne miejsce z numeracją) i przy każdym kroku rozstrzygnij, czy
-   coś w nim idzie z klawiatury — sygnały to czasowniki „wpisz", „wklej",
-   „nazwij", „ustaw pole", „zadaj pytanie" oraz treść w odwrotnych
-   apostrofach. Literalne brzmienie bierz z `artykul.md`, a gdy tam go nie ma
-   — z kroku konspektu albo linii `[AKCJA: ...]` w scenariuszu. Rozjazdu między
-   artykułem a scenariuszem nie rozstrzygaj sam: wpisz wersję z konspektu
-   i opisz rozjazd pod tabelą, ze wskazaniem `plik:linia`. Sekcja stoi
-   w pliku pierwsza i powstaje dla KAŻDEJ lekcji `demo`, także takiej, która
-   nie wymaga żadnych danych środowiska. Ten plik powstaje wyłącznie tutaj.
-   Dopiero potem wygeneruj plan nagrania:
-   `npm run plan-nagrania -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
-   Generator czyta ściągę i wkleja jej treść do planu (kolumna „Do wpisania"
-   i bloki pod tabelami segmentów), dlatego ściąga musi być gotowa wcześniej.
-   Ostrzeżenia generatora pokaż Rafałowi razem ze ścieżką pliku — zarówno
-   o rozjeździe scenariusza z konspektem, jak i o ściądze (krok spoza
-   konspektu, `(blok → niżej)` bez nagłówka `### Krok NN`, nagłówek bez
-   wiersza). Plan powstaje WYŁĄCZNIE tutaj, po zatwierdzeniu — nigdy
-   w krokach 3-7.
+   Dla `typ_video: demo` dopisz do `video/konspekt-nagrania.md` sekcję
+   `## Do wklejenia i wpisania na ekranie`, między `## Przygotowanie przed
+   nagraniem` a pierwszym nagłówkiem `## Segment N`. Procedura wypełniania
+   się nie zmienia: przejdź kroki konspektu krok po kroku (to jedyne miejsce
+   z numeracją) i przy każdym kroku rozstrzygnij, czy coś w nim idzie
+   z klawiatury - sygnały to czasowniki "wpisz", "wklej", "nazwij", "ustaw
+   pole", "zadaj pytanie" oraz treść w odwrotnych apostrofach. Literalne
+   brzmienie bierz z `artykul.md`; gdy treści nie ma nigdzie w lekcji, wiersz
+   dostaje `(do ustalenia przed nagraniem)`. Gdy artykuł i scenariusz brzmią
+   różnie, nie rozstrzygaj sam: wpisz do tabeli wersję z konspektu i opisz
+   rozjazd pod tabelą, ze wskazaniem `plik:linia`. Sekcja jest obowiązkowa
+   dla KAŻDEJ lekcji `demo`, także takiej, która nic nie wpisuje
+   z klawiatury - wtedy tabela zostaje pusta. Opcjonalnie dopisz na końcu
+   konspektu `## Czego świadomie nie ma`. Przy tej samej okazji odśwież
+   `## Przygotowanie przed nagraniem` - numery kroków, na które się powołuje,
+   mogły przesunąć się podczas `/kurs-uwagi` i `/kurs-redakcja`.
+   Dopiero teraz uruchom plan nagrania:
+   `npm run plan-nagrania -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`
+   i pokaż Rafałowi ostrzeżenia generatora razem ze ścieżką pliku. Plan
+   powstaje WYŁĄCZNIE tutaj, po zatwierdzeniu - nigdy w krokach 3-7.
+
+## Migracja lekcji ze starego układu
+
+`npm run plan-nagrania` odmawia dla lekcji napisanej przed 2026-09-16,
+komunikatem nazywającym stary układ. To nie jest coś, co rozwiązujesz sam.
+
+**Zatrzymaj się i zgłoś Rafałowi**: którą lekcję, który z dwóch komunikatów,
+i że przegenerowanie jej planu wymaga jednorazowej migracji. Czekaj na
+odpowiedź. Nie migruj lekcji z własnej inicjatywy i nie migruj drugiej
+lekcji tylko dlatego, że przed chwilą zmigrowałeś pierwszą.
+
+Po zgodzie Rafała, wyłącznie dla tej jednej lekcji:
+
+1. Przenieś sekcję 1 z `video/dane-do-nagrania.md` do
+   `video/konspekt-nagrania.md`, treść bez zmian, jako `## Do wklejenia
+   i wpisania na ekranie` między `## Przygotowanie przed nagraniem`
+   a pierwszym nagłówkiem `## Segment N`. Lekcja bez takiego pliku pomija ten
+   krok i pisze sekcję od zera wg kroku 8.
+2. Przepisz `## Przygotowanie przed nagraniem` z prozy na tabelę
+   `Co sprawdzić | Ma być | Dlaczego`, wciągając sekcję 2 ściągi. Zachowaj
+   każdy punkt; to, co nie ma stanu do odhaczenia, wpisz z kolumną "Ma być"
+   opisującą oczekiwany stan.
+3. Przenieś sekcję z uzasadnieniem na koniec konspektu, pod nazwą
+   `## Czego świadomie nie ma`.
+4. Usuń `video/dane-do-nagrania.md`.
+5. `cd tools/course-pipeline && npm run plan-nagrania --
+   ../../kursy/<slug>/<modul>/<lekcja>`.
+6. Pokaż Rafałowi ostrzeżenia generatora razem ze ścieżkami obu zmienionych
+   plików. Zmiany zostają niezacommitowane.
 
 ## Zasady
 

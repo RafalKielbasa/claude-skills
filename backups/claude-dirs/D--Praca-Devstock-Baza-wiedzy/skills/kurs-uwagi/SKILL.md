@@ -24,8 +24,8 @@ for the segments that actually changed.
    least one `[UWAGA: ...]` line. Zero markers → stop and say so plainly. Do not offer
    `/kurs-redakcja` as a substitute; the user asked for remarks, not for a style pass.
    Then list which dependent files exist, because step 7 needs them: `artykul.md`,
-   `video/konspekt-nagrania.md`, `video/dane-do-nagrania.md` (both only for
-   `typ_video: demo`), `video/prezentacja.yaml` (only for `typ_video: prezentacja`).
+   `video/konspekt-nagrania.md` (only for `typ_video: demo`), `video/prezentacja.yaml`
+   (only for `typ_video: prezentacja`).
    Note `typ_video` and `status.tresc` from `lekcja.yaml` — steps 7, 9 and 10 branch on them.
 2. **Inventory.** Read the whole scenariusz. Show a table before changing anything:
    number, segment (`NN — tytuł`, or `cały scenariusz` for a marker before the first
@@ -63,7 +63,7 @@ for the segments that actually changed.
 
    | what changed in the scenariusz | where the same thing also lives |
    |---|---|
-   | a literal typed or pasted on screen: chat question, node / credential / sheet / field name, field value | `artykul.md` (the step telling the reader to type it), `video/konspekt-nagrania.md` (the numbered step), `video/dane-do-nagrania.md` (the "Do wklejenia i wpisania na ekranie" table and the blocks under it) |
+   | a literal typed or pasted on screen: chat question, node / credential / sheet / field name, field value | `artykul.md` (the step telling the reader to type it), `video/konspekt-nagrania.md` (the numbered step, and its "Do wklejenia i wpisania na ekranie" section - the table and the blocks under it) |
    | an `[AKCJA: ...]` line: what is clicked, opened or shown, and in what order | `video/konspekt-nagrania.md` (the numbered step), and `artykul.md` where the article walks the same click |
    | a claim about the interface: a field invisible in some mode, a warning that does not appear, the name of a section or tab | `artykul.md`, `video/konspekt-nagrania.md` |
    | the outcome of a demo beat, or the point the beat is making | `artykul.md` (the matching `### Krok N` section) |
@@ -95,9 +95,9 @@ for the segments that actually changed.
      "Nazwy w scenariuszu" in `kursy/_wspolne/redakcja.md`,
    - no remark text leaked into narration,
    - **zero leftovers of the propagation:** for every literal you changed, grep its OLD form
-     across `artykul.md`, `video/konspekt-nagrania.md`, `video/dane-do-nagrania.md` and
-     `video/prezentacja.yaml`. A single hit means the job is half done. Quote the grep and its
-     count in the report — "sprawdziłem" without a number is not a check.
+     across `artykul.md`, `video/konspekt-nagrania.md` and `video/prezentacja.yaml`. A single
+     hit means the job is half done. Quote the grep and its count in the report —
+     "sprawdziłem" without a number is not a check.
 9. **Statuses and validation.** If the scenariusz changed and `status.video` is
    `wyrenderowane` or `zaakceptowane`, set it to `brak` in `lekcja.yaml` — the render is now
    out of date, and a fresh `/kurs-video` costs TTS and HeyGen (for a demo lesson, also
@@ -113,10 +113,12 @@ for the segments that actually changed.
    the report and say which remark keeps it alive; it clears when Rafał decides that remark.
    Every other ERROR you fix.
    For `typ_video: demo` **at `status.tresc: zatwierdzona`**, regenerate the recording plan:
-   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`; narration, konspekt and the
-   cheat sheet (`video/dane-do-nagrania.md`, copied into the plan's "Do wpisania" column and the
-   blocks under each segment table) are all plan sources, so the plan is genuinely stale after
-   any of them changed. Read its warnings — a step that suddenly pairs
+   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`; narration and konspekt are the
+   plan's two sources - the konspekt's "Do wklejenia i wpisania na ekranie" section is copied
+   into the plan's "Do wpisania" column and the blocks under each segment table - so the plan is
+   genuinely stale after either changed. If the generator refuses with a message naming the old
+   layout, stop and follow `/kurs-lekcja`, `Migracja lekcji ze starego układu` - do not convert
+   the lesson inside this skill. Read its warnings — a step that suddenly pairs
    "po kolejności" is a naming rozjazd you introduced. At `szkic` or `do_review` do not run it
    — `generateRecordingPlan` refuses anything but approved content. Say in the report that the
    plan regenerates on approval instead.

@@ -106,6 +106,19 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   mp3 co do bajta, bo po częściowym `rm` nie było już z czym ich porównać.
   Podpowłoka `( cd … && … )` znowu nie użyta ani razu.
 
+
+- 2026-09-22, sesja (id niedostępny): dwunasty dowód, jedenasta sesja, szósty
+  raz z rzędu ten sam konkretny przypadek `tools/course-pipeline`. Katalog
+  wędrował między korzeniem repo, katalogiem lekcji `agenty-ai` 3.1,
+  `tools/course-pipeline`, `video/` i `video/audio` — harness zgłosił to
+  komunikatem „Environment update" co najmniej dziesięć razy, plus dwa „Shell
+  cwd was reset". Podpowłoka `( cd … && … )` znowu nie użyta ani razu; stronę
+  wzorca przeczytałem dopiero w kroku 5 podsumowania, czyli po wszystkich
+  wywołaniach. Bez szkody, bo każda komenda zaczynała się od własnego `cd` ze
+  ścieżką bezwzględną — znowu obejście, nie poprawka. Dwanaście dowodów i
+  zero użyć rozwiązania potwierdza wniosek z ósmego: miejscem tej reguły jest
+  `~/.claude/CLAUDE.md`, nie strona wzorca.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:
