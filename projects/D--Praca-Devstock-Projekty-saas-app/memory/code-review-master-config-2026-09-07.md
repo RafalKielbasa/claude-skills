@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-09-07T11:48:55.448Z
+  modified: 2026-09-22T13:39:14.343Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -23,6 +23,12 @@ Pułapka: tryb `pr` wymaga `gh` z polem `baseRefOid` w `pr view --json` — `gh 
 padał z „Unknown JSON field", Rafał kazał zaktualizować przez winget do `2.100.0`
 (nocny VM może mieć to samo). Tryb `pr` czyta pliki z drzewa roboczego, więc gałąź PR-a
 musi być wymeldowana i mieć `config.md` (PR sprzed configu → merge `main` do gałęzi).
+
+Drugi przebieg `pr`: 2026-09-22 `pr 192` (CP-82, run `20260922-085058-a4az`, 11 agentów,
+10 znalezisk, 0 blokujących, 10/10 codex potwierdza, exit 0); `send` poszedł bez 422
+jako review 5278850435 (`COMMENTED`, 10 komentarzy inline). Pułapka weryfikacji:
+`gh api pulls/<n>/reviews/<id>/comments` zwraca `line: null` (stare pola `position`);
+numery linii daje `gh api pulls/<n>/comments`.
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)
