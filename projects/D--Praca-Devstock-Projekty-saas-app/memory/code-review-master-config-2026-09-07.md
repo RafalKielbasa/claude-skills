@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-09-22T13:39:14.343Z
+  modified: 2026-10-05T07:58:32.359Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -29,6 +29,14 @@ Drugi przebieg `pr`: 2026-09-22 `pr 192` (CP-82, run `20260922-085058-a4az`, 11 
 jako review 5278850435 (`COMMENTED`, 10 komentarzy inline). Pułapka weryfikacji:
 `gh api pulls/<n>/reviews/<id>/comments` zwraca `line: null` (stare pola `position`);
 numery linii daje `gh api pulls/<n>/comments`.
+
+Trzeci przebieg `pr`: 2026-10-05 `pr 193` (CP-45, run `20261005-045931-erc0`, 11 agentów,
+7 znalezisk, 0 blokujących, codex 6/7). f-03 to fałszywy alarm: agent web porównał fixture
+z gitignorowanym, nieaktualnym `plan-5`, a wiążący kontrakt stoi w issue #125. Rafał kazał
+wysłać z `REQUEST_CHANGES` mimo braku blokujących („dużo uwag łamiących konwencje”), plus
+dodatkowy komentarz spoza przebiegu (`kpi.tsx:11`, Blocking). Poszło jako review
+5411524170, 7 komentarzy inline, bez błędu 422. Pułapka: `crm artifact --repo .` daje
+`<title>Review .</title>`, więc trzeba podać pełną ścieżkę repo.
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)
