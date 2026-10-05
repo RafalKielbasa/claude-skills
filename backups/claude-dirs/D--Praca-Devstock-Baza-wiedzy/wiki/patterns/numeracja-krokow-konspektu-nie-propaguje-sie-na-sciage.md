@@ -2,7 +2,7 @@
 
 - **Skill:** kurs-uwagi, kurs-redakcja
 - **Typ:** porazka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-09-22, kurs-lekcja)
 
 ## Opis
 `video/dane-do-nagrania.md` adresuje swoje bloki numerami krokow

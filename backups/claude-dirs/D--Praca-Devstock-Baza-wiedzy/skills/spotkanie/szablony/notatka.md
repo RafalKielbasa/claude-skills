@@ -2,6 +2,7 @@
 
 > **Data:** {{DATA}} · **Obecni:** {{OSOBY}}
 > **Agenda:** {{DATA}}-agenda.md
+> **Źródła:** {{TRANSKRYPTY}}
 > **Status:** szkic
 
 ## Ustalenia

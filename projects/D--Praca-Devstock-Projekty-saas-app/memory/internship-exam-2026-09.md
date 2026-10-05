@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-09-20T16:04:56.221Z
+  modified: 2026-09-26T14:11:14.791Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -27,6 +27,14 @@ zmiana wymagań + cross-review 12–16.10; ostatni commit nd 25.10; obrony czw 2
 Materiały sprawdzające (NIE dla kandydatów) w vaulcie: `D:\Notatki\notatki\praca\projekty\edu-saas\egzamin-praktyki-2026-09\`
 (README z checklistą bramek, pytania-obrona-konrad/milosz, zmiana-wymagan, karta-oceny-*, dziennik-review, statusy);
 utworzone 2026-09-20, niezacommitowane w vaulcie. Codex review dokumentów wcielony 2026-09-20 (24 uwagi, sekcja w specu).
+
+Bramka 1, stan na 2026-09-26: plany v1 obu kandydatów wysłane w terminie jako draft PR-y — Konrad PR #199
+(`plans/konrad.md`, commit `c372f32` z 24.09 17:33) i Miłosz PR #200 (`plans/milosz.md` + 12 makiet PNG
+w `plans/milosz-assets/`, commit `56f7ec3`). Oba zrecenzowane i skomentowane 2026-09-26 z konta Rafała:
+#199 → 17 braków (issuecomment-5846215345), #200 → 5 braków (issuecomment-5846484184). Akceptacji
+(„Plan zaakceptowany") jeszcze NIE ma — termin śr 30.09. Jakość: plan Miłosza kompletny, 15 twierdzeń
+o repo sprawdzonych i wszystkie trafione; plan Konrada ma poza brakami 2 błędy merytoryczne i 4
+sprzeczności wewnętrzne, których Rafał świadomie nie wysłał.
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.

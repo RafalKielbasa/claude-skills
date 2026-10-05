@@ -19,8 +19,8 @@ z modelem i effortem wybranym przez Rafała na starcie.
    generujesz od zera (od tego są `/kurs-lekcja` i `/kurs-zadania`). Jeśli nie
    istnieje żaden — przerwij i skieruj na `/kurs-lekcja`. Osobno wypisz pliki
    ZALEŻNE, których redakcja nie dotyka, ale które powtarzają tę samą treść
-   i muszą za nią nadążyć (krok 6): `video/konspekt-nagrania.md`
-   i `video/dane-do-nagrania.md` przy `typ_video: demo`. Zanotuj
+   i muszą za nią nadążyć (krok 6): `video/konspekt-nagrania.md` przy
+   `typ_video: demo`. Zanotuj
    `status.video` i `typ_video` z `lekcja.yaml` (potrzebne w krokach 3, 6, 7 i 9). Jeśli w zestawie
    jest `video/scenariusz.md`, ustal listę wymowy kursu `kursy/<slug>/wymowa.md`
    — gdy pliku nie ma, utwórz go z `kursy/_wspolne/szablony/wymowa.md`
@@ -174,7 +174,7 @@ z modelem i effortem wybranym przez Rafała na starcie.
 
    | co się zmieniło | gdzie to samo jeszcze żyje |
    |---|---|
-   | literał wpisywany albo wklejany na ekranie: pytanie do czatu, nazwa węzła / credentiala / arkusza / pola, wartość pola | `artykul.md`, `video/konspekt-nagrania.md` (numerowany krok), `video/dane-do-nagrania.md` (tabela "Do wklejenia i wpisania na ekranie" i bloki pod nią) |
+   | literał wpisywany albo wklejany na ekranie: pytanie do czatu, nazwa węzła / credentiala / arkusza / pola, wartość pola | `artykul.md`, `video/konspekt-nagrania.md` (numerowany krok, a w sekcji "Do wklejenia i wpisania na ekranie" - tabela i bloki pod nią) |
    | linia `[AKCJA: ...]`: co jest klikane, otwierane, pokazywane i w jakiej kolejności | `video/konspekt-nagrania.md`, a w `artykul.md` tam, gdzie artykuł prowadzi to samo kliknięcie |
    | twierdzenie o interfejsie: pole niewidoczne w danym trybie, ostrzeżenie, którego nie ma, nazwa sekcji albo zakładki | `artykul.md`, `video/konspekt-nagrania.md` |
    | wynik albo puenta beatu demo | `artykul.md` (odpowiadająca sekcja `### Krok N`) |
@@ -186,9 +186,9 @@ z modelem i effortem wybranym przez Rafała na starcie.
      w produkcie. Pozostałe pliki idą za nim, nigdy odwrotnie.
    - **Pisownię tłumaczysz, nie kopiujesz.** Narracja niesie nazwy
      w cudzysłowie i fonetycznie (`"Get Meni"`, `"en osiem en"`,
-     `"Google Szits"`); artykuł, konspekt, dane do nagrania i
-     `prezentacja.yaml` mają oryginalną pisownię (`Get Many`, `n8n`,
-     `Google Sheets`). Przenosisz znaczenie, nie string.
+     `"Google Szits"`); artykuł, konspekt i `prezentacja.yaml` mają
+     oryginalną pisownię (`Get Many`, `n8n`, `Google Sheets`). Przenosisz
+     znaczenie, nie string.
    - **Szukasz, nie zakładasz.** Dla każdego zmienionego literału zrób `grep`
      po STARYM brzmieniu we wszystkich plikach zależnych i popraw każde
      trafienie. Te pliki mają twarde spacje po jednoliterowych słowach, więc
@@ -207,15 +207,18 @@ z modelem i effortem wybranym przez Rafała na starcie.
    `status.video: brak` w `lekcja.yaml`; statusów `tresc`/`zadania` nie
    ruszaj.
    Potem, gdy lekcja ma `typ_video: demo` przy `status.tresc: zatwierdzona`,
-   a redakcja albo propagacja ruszyła `video/scenariusz.md`,
-   `video/konspekt-nagrania.md` lub `video/dane-do-nagrania.md` (plan kopiuje
-   z niej kolumnę „Do wpisania" i bloki) — przegeneruj plan nagrania:
-   `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`. Robisz to
-   PRZED walidacją, bo inaczej bramka zobaczy ostrzeżenie o nieaktualnym
-   `video/plan-nagrania.md`. Przeczytaj ostrzeżenia generatora i porównaj je
+   a redakcja albo propagacja ruszyła `video/scenariusz.md` lub
+   `video/konspekt-nagrania.md` (jego sekcja "Do wklejenia i wpisania na
+   ekranie" trafia do kolumny „Do wpisania" i bloków planu) - przegeneruj
+   plan nagrania: `npm run plan-nagrania -- ../../kursy/<slug>/<modul>/<lekcja>`.
+   Robisz to PRZED walidacją, bo inaczej bramka zobaczy ostrzeżenie
+   o nieaktualnym `video/plan-nagrania.md`. Jeśli generator odmówi
+   komunikatem nazywającym stary układ, zatrzymaj się i skieruj na
+   `/kurs-lekcja`, `Migracja lekcji ze starego układu` - nie migruj lekcji
+   w tym skillu. Przeczytaj ostrzeżenia generatora i porównaj je
    z przebiegiem sprzed redakcji: krok, który dopiero teraz paruje się
    "po kolejności", to rozjazd nazewnictwa, który sam wprowadziłeś. Przy
-   `szkic` albo `do_review` planu nie generujesz — `generateRecordingPlan`
+   `szkic` albo `do_review` planu nie generujesz - `generateRecordingPlan`
    odmawia treści niezatwierdzonej; napisz w raporcie, że plan odświeży się
    przy zatwierdzeniu.
    Na koniec `cd tools/course-pipeline && npm run validate --

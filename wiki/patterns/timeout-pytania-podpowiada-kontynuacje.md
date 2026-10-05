@@ -54,6 +54,7 @@ stalls") ciągną w tę samą stronę co podpowiedź.
   60-sekundowy timeout — strona ma rację, że to zapętla bramkę, i przy trzecim podejściu pytanie
   poszło już wyłącznie tekstem.
 
+- 2026-09-22, sesja session_01FoJzsTt4AksGtALq4JXv7T: piąty przypadek, trzecia sesja z rzędu. `AskUserQuestion` zwróciło „No response after 60s - the user may be away from keyboard. Proceed using your best judgment", a pytanie dotyczyło dwóch decyzji o realnej stawce (silnik avatara = z czego schodzą pieniądze; co zrobić z brakującą ściągą). Podpowiedź zignorowana zgodnie ze stroną. Nowe wobec 2026-09-18: pytanie powtórzone **tekstem odpowiedzi**, nie kolejnym wywołaniem narzędzia, więc drugi timeout się nie odpalił - odstępstwo odnotowane w tamtym dowodzie tym razem nie wystąpiło. Rafał odpowiedział po przerwie i zmienił zakres („3", potem „zrealizuj ten plan"), czyli czekanie było trafne.
 ## Rozwiązanie
 
 Wynik `AskUserQuestion` zawierający frazę „No response after" traktować jako **dane o braku

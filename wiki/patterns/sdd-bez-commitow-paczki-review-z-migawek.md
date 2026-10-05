@@ -41,6 +41,7 @@ odtwarzalny z `git log`. Diff jest jednak funkcja dwoch stanow plikow, nie dwoch
   nie na samo wykonanie: pierwszy raz zadziałał prewencyjnie, bez potykania się o brak commitów
   w trakcie runu.
 
+- 2026-09-22, sesja session_01FoJzsTt4AksGtALq4JXv7T: ten sam plan wznowiony po sześciu dniach, ruling o migawkach **uchylony**. Globalne zasady użytkownika zmieniły się 2026-09-18 i to repo commituje bez pytania, więc paczki review poszły z prawdziwych zakresów `BASE..HEAD`, a obejście z `diff -u` na kopiach okazało się niepotrzebne. Wniosek na przyszłość: „No commits" w Global Constraints planu to zapis polityki repo **z dnia pisania planu**, nie wymaganie zadania - przy wznowieniu planu po przerwie sprawdzić tę pozycję (i zapisany baseline testów, tu 121 wobec faktycznych 128) wobec aktualnego CLAUDE.md, zanim się ją wykona.
 ## Rozwiazanie
 W repo bez commitow per zadanie: na starcie zapisz ruling o migawkach w ledgerze, przed kazdym
 dispatchem kopiuj pliki zadania do katalogu roboczego planu, a paczke review buduj jako `diff -u`

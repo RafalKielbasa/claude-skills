@@ -149,8 +149,8 @@ przedstawione Rafałowi do bramki review.
    uruchom walidację ponownie. Zmiany zostają niezacommitowane - commit robi
    Rafał.
    Dla `typ_video: demo` dopisz do `video/konspekt-nagrania.md` sekcję
-   `## Do wklejenia i wpisania na ekranie`, między `## Przygotowanie przed
-   nagraniem` a pierwszym nagłówkiem `## Segment N`. Procedura wypełniania
+   `## Do wklejenia i wpisania na ekranie`, między
+   `## Przygotowanie przed nagraniem` a pierwszym nagłówkiem `## Segment N`. Procedura wypełniania
    się nie zmienia: przejdź kroki konspektu krok po kroku (to jedyne miejsce
    z numeracją) i przy każdym kroku rozstrzygnij, czy coś w nim idzie
    z klawiatury - sygnały to czasowniki "wpisz", "wklej", "nazwij", "ustaw
@@ -182,14 +182,15 @@ lekcji tylko dlatego, że przed chwilą zmigrowałeś pierwszą.
 Po zgodzie Rafała, wyłącznie dla tej jednej lekcji:
 
 1. Przenieś sekcję 1 z `video/dane-do-nagrania.md` do
-   `video/konspekt-nagrania.md`, treść bez zmian, jako `## Do wklejenia
-   i wpisania na ekranie` między `## Przygotowanie przed nagraniem`
+   `video/konspekt-nagrania.md`, treść bez zmian, jako
+   `## Do wklejenia i wpisania na ekranie` między `## Przygotowanie przed nagraniem`
    a pierwszym nagłówkiem `## Segment N`. Lekcja bez takiego pliku pomija ten
    krok i pisze sekcję od zera wg kroku 8.
 2. Przepisz `## Przygotowanie przed nagraniem` z prozy na tabelę
-   `Co sprawdzić | Ma być | Dlaczego`, wciągając sekcję 2 ściągi. Zachowaj
-   każdy punkt; to, co nie ma stanu do odhaczenia, wpisz z kolumną "Ma być"
-   opisującą oczekiwany stan.
+   `Co sprawdzić | Ma być | Dlaczego`, wciągając sekcję 2 ściągi. Lekcja bez
+   pliku ściągi pomija to wciąganie - buduje tabelę wyłącznie z istniejącej
+   prozy. Zachowaj każdy punkt; to, co nie ma stanu do odhaczenia, wpisz
+   z kolumną "Ma być" opisującą oczekiwany stan.
 3. Przenieś sekcję z uzasadnieniem na koniec konspektu, pod nazwą
    `## Czego świadomie nie ma`.
 4. Usuń `video/dane-do-nagrania.md`.

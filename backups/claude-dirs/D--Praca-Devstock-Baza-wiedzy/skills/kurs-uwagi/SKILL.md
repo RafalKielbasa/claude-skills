@@ -56,7 +56,7 @@ for the segments that actually changed.
    A remark you did not apply — disputed, needing Rafał's decision, or rejected — keeps its
    line and goes into the report with the reason. Deleting a marker without making the change
    is a silent rejection and is forbidden.
-7. **Propagate to every file the change touches.** A lesson says the same thing in up to four
+7. **Propagate to every file the change touches.** A lesson says the same thing in up to three
    places. A change that lands in the scenariusz alone is a rozjazd, and it surfaces at
    recording time — after the content gate, when Rafał is already clicking. Walk every applied
    change and bring its counterparts into line:

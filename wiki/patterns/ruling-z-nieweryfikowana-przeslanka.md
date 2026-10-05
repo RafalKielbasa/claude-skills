@@ -33,6 +33,7 @@ zacytowana w kolejnych dispatchach jako ustalenie.
   klucz w obiekcie opcji z wartością domyślną, bez zmiany sygnatury.
 - 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: ruling "zbiory plików tego planu i równoległej sesji są parami rozłączne" uzasadniał decyzję o kontynuowaniu pracy w dzielonym drzewie i był fałszywy — `tools/course-pipeline/README.md` dotykały obie prace. Wyszło dopiero w review całości. Nic nie zginęło, ale przesłankę dało się sprawdzić jednym `git status` zestawionym z listą plików planu, w momencie jej zapisywania.
 
+- 2026-09-22, sesja session_01FoJzsTt4AksGtALq4JXv7T: ruling „zostawiamy zanieczyszczony commit jak jest" uzasadniony przesłanką „wszystko jest lokalne, origin stoi na `20c9efd`" - prawdziwą w chwili zapisu (ok. 15:30) i fałszywą trzy godziny później, bo druga sesja wypchnęła gałąź o 16:07 i 16:37. Przesłanka nie była błędna, tylko **nietrwała**: opisywała stan współdzielonego zasobu, który zmienia ktoś inny, a ruling zapisał ją jako fakt bez daty ważności. Wykryło to dopiero review końcowe, czytając `git reflog show origin/<branch>`. Decyzja Rafała pozostała słuszna, ale jej zapisane uzasadnienie nie nadaje się do ponownego użycia. Wniosek dodatkowy: przesłanka o stanie zdalnym ma być sprawdzana w momencie, w którym ktoś się na ruling powołuje, nie tylko w momencie jego zapisu.
 ## Rozwiązanie
 Gdy uzasadnienie rulingu zawiera twierdzenie faktyczne o kodzie — „X zależy od Y",
 „poprawka wymagałaby Z", „nic tego nie wywołuje" — potwierdź je najtańszą sondą

@@ -2,7 +2,7 @@
 
 - **Skill:** kurs-video
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-09-22, kurs-video)
 
 ## Opis
 Bramka wejścia `/kurs-video` przy `typ_video: demo` każe odesłać do

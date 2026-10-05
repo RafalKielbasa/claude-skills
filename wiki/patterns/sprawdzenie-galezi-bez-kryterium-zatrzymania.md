@@ -30,6 +30,7 @@ odrzucenia nie zmienia decyzji, tylko ją dokumentuje.
   nie pracuje na tej gałęzi świadomie przez cały dzień — wtedy commit jest
   w porządku, a problemem zostaje sama kolejność (commit przed rozpoznaniem).
 
+- 2026-09-22, sesja session_01FoJzsTt4AksGtALq4JXv7T: druga część tej samej doby, i rozstrzyga niepewność zapisaną w dowodzie wyżej („nie wiem, czy Rafał nie pracuje na tej gałęzi świadomie"). Przed startem planu zapytałem wprost, gdzie ma powstać praca - worktree od `main`, nowa gałąź w miejscu, czy w miejscu na `feature/tor-stacjonarny` - z kolizją plików rozpisaną dla każdego wariantu. Rafał wybrał trzeci: „3". Czyli praca na gałęzi nazwanej od innego zadania bywa świadoma i kryterium zatrzymania nie brzmi „gałąź nie pasuje do zadania", tylko „nie zapytałem o nią przed pierwszym commitem". Pytanie kosztowało jedną turę i zdjęło problem z całej reszty sesji.
 ## Rozwiązanie
 Gdy temat gałęzi nie pokrywa się ani z katalogiem zmienianych plików, ani
 z tematem sesji — nie commitować. Zatrzymać się, podać gałąź, nazwać

@@ -36,14 +36,18 @@ przedstawione Rafałowi do bramki akceptacji.
      Dokumentem do nagrywania jest `video/plan-nagrania.md` (kroki ekranu,
      kolumna „Do wpisania" z tym, co przy kroku idzie z klawiatury, narracja
      z nazwami plików lektora, a pod tabelą segmentu bloki do wklejenia).
-     Jeśli go nie ma albo `npm run validate` zgłasza, że jest nieaktualny —
-     przegeneruj przed nagraniem: `npm run plan-nagrania -- <lekcja>`.
-     Kolumna i bloki są kopią z `video/dane-do-nagrania.md` — ściągi
-     klawiaturowej, która poza tym trzyma dane środowiska do przygotowania
-     przed pierwszym kadrem. Brak tego pliku przy `demo` (generator ostrzega
-     „brak video/dane-do-nagrania.md") odeślij do `/kurs-lekcja` krok 8:
-     nagrywanie bez ściągi to szukanie kart stanowiska i opisów narzędzi
-     w `artykul.md` przy włączonym nagrywaniu.
+     Bramka czyta ten plik, nie konspekt wprost: gdy `plan-nagrania.md` już
+     istnieje i niesie kolumnę „Do wpisania", nagrywaj z niego bez pytania
+     o sekcję w konspekcie - dotyczy to też lekcji, których konspekt tej
+     sekcji nigdy nie miał (stary układ, świadomie niezmigrowany).
+     Jeśli planu nie ma albo `npm run validate` zgłasza, że jest nieaktualny
+     - przegeneruj przed nagraniem: `npm run plan-nagrania -- <lekcja>`.
+     Kolumna i bloki w wygenerowanym planie są kopią sekcji
+     `## Do wklejenia i wpisania na ekranie` z `video/konspekt-nagrania.md`,
+     nie osobnego pliku. Gdy regeneracja się nie powiedzie, bo tej sekcji
+     brakuje w konspekcie, odeślij do `/kurs-lekcja`,
+     `Migracja lekcji ze starego układu` - dopiero regenerowany plan
+     wymaga tej sekcji, sam odczyt gotowego planu nie.
 2. **BRAMKA: silnik avatara.** Jeśli Rafał wskazał silnik w komendzie („avatar
    przez MCP", „przez API") — honoruj wskazanie bez pytania. Jeśli **nie**
    wskazał — zapytaj **przed renderem** i **czekaj na odpowiedź**: plan

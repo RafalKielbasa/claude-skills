@@ -52,6 +52,7 @@ w którym taki defekt w ogóle może się pojawić.
   taka bramke ma; to dokladnie ten ksztalt „guard zalozony w jednym miejscu i zapomniany
   w blizniaczym", o ktory dispatch review koncowego prosi wprost.
 
+- 2026-09-22, sesja session_01FoJzsTt4AksGtALq4JXv7T: osiem review zadań i cztery re-review nie zobaczyły, że `joinBlock` skleja kolejne niepuste linie spacją, więc tabela markdown w zwykłej sekcji konspektu wychodzi w wygenerowanym planie jako **jedna linia** - akapit literalnych rurek. Ta sama zmiana czyniła tę tabelę obowiązkową w dwóch miejscach (krok 8 skilla i krok 2 migracji), a dotarcie tabeli kontrolnej do dokumentu nagraniowego było deklarowanym powodem istnienia całego planu. Każde review porównywało diff z własnym briefem i każde miało rację; żaden brief nie kazał sprawdzić, czy **mandatowany artefakt faktycznie się renderuje**. Złapało to dopiero review całej gałęzi, generując plan z taką tabelą na kopii w scratchpadzie. Wzorzec rozszerza się: poza defektem „w cudzym diffie" jest też defekt „w niczyim diffie" - wymaganie spełnione przez każdy plik z osobna i niedziałające jako całość.
 ## Rozwiązanie
 
 Review całej gałęzi utrzymać jako osobny, obowiązkowy krok na najmocniejszym
