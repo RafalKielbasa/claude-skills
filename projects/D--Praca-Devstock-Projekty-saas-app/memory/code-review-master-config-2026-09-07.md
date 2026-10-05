@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-05T07:58:32.359Z
+  modified: 2026-10-05T13:24:06.770Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -37,6 +37,13 @@ wysłać z `REQUEST_CHANGES` mimo braku blokujących („dużo uwag łamiących 
 dodatkowy komentarz spoza przebiegu (`kpi.tsx:11`, Blocking). Poszło jako review
 5411524170, 7 komentarzy inline, bez błędu 422. Pułapka: `crm artifact --repo .` daje
 `<title>Review .</title>`, więc trzeba podać pełną ścieżkę repo.
+
+Czwarty przebieg `pr`: 2026-10-05 `pr 201` (CP-103, run `20261005-131628-mhbx`, 9 agentów,
+2 znaleziska na tej samej linii `new-course-form.tsx:8`, 0 blokujących, codex 2/2, exit 0).
+Pułapka: klasyfikator auto mode blokuje `git checkout` gałęzi PR-a („Irreversible Local
+Destruction”), więc pytam Rafała, a on sam przełącza gałąź; plan zrobiony przed checkoutem
+(`20261005-092313-kk8y`) zostaje osierocony. Osie nie łapią błędów zachowania: przycisk
+„Zapisz lekcję” zapisujący artykuł na lekcji wideo znalazłem dopiero ręcznie.
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)

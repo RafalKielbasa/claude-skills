@@ -14,14 +14,18 @@
       "PowerShell(Get-ChildItem -Path \"D:\\\\Praca\\\\Devstock\\\\Projekty\\\\saas app\\\\apps\\\\api\" -Force -File | Where-Object { $_.Name -match \"^\\(Dockerfile|docker|cloud\\)\" } | Select-Object Name)",
       "PowerShell(head *)",
       "Bash(git add *)",
-      "Bash(git commit *)",
       "Bash(pnpm typecheck *)",
       "Bash(pnpm --filter \"./apps/**\" typecheck)",
       "Bash(npx --yes js-yaml --version)",
       "Bash(node -e ' *)",
-      "Bash(git push *)",
       "Bash(gcloud storage *)",
       "Bash(gcloud projects *)"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "PowerShell(git commit:*)",
+      "PowerShell(git push:*)"
     ]
   }
 }
