@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-05T13:24:06.770Z
+  modified: 2026-10-06T11:58:19.608Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -44,6 +44,15 @@ Pułapka: klasyfikator auto mode blokuje `git checkout` gałęzi PR-a („Irreve
 Destruction”), więc pytam Rafała, a on sam przełącza gałąź; plan zrobiony przed checkoutem
 (`20261005-092313-kk8y`) zostaje osierocony. Osie nie łapią błędów zachowania: przycisk
 „Zapisz lekcję” zapisujący artykuł na lekcji wideo znalazłem dopiero ręcznie.
+
+Piąty przebieg `pr`: 2026-10-06 `pr 192` (CP-82 na tipie `1c968fb`, run `20261006-102328-0k9t`,
+11 agentów, 4 sugestie, codex 3/4, f-04 odrzucone). Przed `send` sprawdziłem moje stare
+komentarze na PR-ze: f-01/f-02/f-03 były już w review 5278850435, autor naniósł je tylko na
+jednym z trzech bliźniaczych plików. Rafał kazał zablokować: poszło jako review 5427958084
+`CHANGES_REQUESTED`, 4× Blocking (importy spoza barrela, arrow function zamiast `function`;
+te dwie ostatnie spoza przebiegu) + `layout.tsx:17` jako Suggestion, bez 422.
+Lekcja: przed `send` na PR, który już był recenzowany, zestaw znaleziska z wcześniejszymi
+komentarzami (`gh api pulls/<n>/comments`) — powtórzona uwaga zmienia wagę i treść komentarza.
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)
