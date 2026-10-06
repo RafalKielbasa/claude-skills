@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-06T11:58:19.608Z
+  modified: 2026-10-06T12:49:05.085Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -53,6 +53,16 @@ jednym z trzech bliźniaczych plików. Rafał kazał zablokować: poszło jako r
 te dwie ostatnie spoza przebiegu) + `layout.tsx:17` jako Suggestion, bez 422.
 Lekcja: przed `send` na PR, który już był recenzowany, zestaw znaleziska z wcześniejszymi
 komentarzami (`gh api pulls/<n>/comments`) — powtórzona uwaga zmienia wagę i treść komentarza.
+
+Szósty przebieg `pr`: 2026-10-06 `pr 198` (CP-100, tip `b2e0bd0`, run `20261006-120825-7fty`,
+11 agentów, 3 znaleziska: 1 sugestia + 2 drobiazgi, 0 blokujących, codex 3/3, exit 0, artefakt
+2a6CcrqYrCknbtjrQ14tnT). Checkout gałęzi PR-a tym razem przeszedł, bo Rafał kazał go wprost.
+f-01 (`getInitials` w `hero-info.tsx:31`) powtarza wątek ostrach1, autor go odbił („different
+input data”) — a `leaderboard-utils.ts:18` ma ten sam podpis `string | null`; nie wysłane.
+Wysłane 2026-10-06 jako review 5428512987 `CHANGES_REQUESTED` (f-01 Blocking + 2 Nitpick), bez 422.
+Notatka „Tutaj będzie fullDescription” w `details.tsx:35` jest uzgodniona z Rafałem — nie zgłaszać.
+Rafał: f-01 ma iść przy `send` jako Blocking (REQUEST_CHANGES); duplikaty od teraz blokujące
+z configu (punkt `**blocking:**` w `code-quality`), zob. [[feedback-duplication-is-blocking]].
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)

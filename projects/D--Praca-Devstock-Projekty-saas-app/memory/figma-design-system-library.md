@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c8dc6ed5-d383-473e-a0c4-69ae390c4fd8
-  modified: 2026-09-04T09:20:28.021Z
+  modified: 2026-10-06T12:29:31.213Z
 ---
 
 A dedicated Figma library **"udu-saas Design System"** is being built via the Figma MCP (`figma-generate-library` + `figma-use` skills) from the `apps/web` design-system foundations (see [[design-system-foundations-work]]).
@@ -41,6 +41,8 @@ A dedicated Figma library **"udu-saas Design System"** is being built via the Fi
   - **PUŁAPKA (2026-09-03): szewron sekcji rozwiniętej i zwiniętej różni się GEOMETRIĄ, nie obrotem.** Rozwinięta ma wektor 8×4 w punkcie (4,6), zwinięta 4×8 w (6,4); `rotation` obu wynosi 0. Test przez `node.rotation` niczego nie wykryje, trzeba porównać `width`/`height` wektora.
   - **PUŁAPKA (2026-09-03): `query()` nie przyjmuje ukośnika w wartości atrybutu.** `page.query('FRAME[name^=Nav/]')` wywala się na `Invalid selector: unexpected character '/'`. Obejście: `node.findAll(n => n.name.indexOf('Nav/') === 0)`.
   - **PUŁAPKA (2026-09-03): podmiana dzieci mistrza NIE przelicza układu w istniejących instancjach.** Po wymianie ramek `Nav/*` na instancje `NavItem` w wariantach `PanelRail` dwie instancje z nadpisaną widocznością (ekrany analityki) renderowały `Nav/Analityka` i `Nav/Subskrypcja` na tym samym `y=56`, czyli jedno na drugim. Pozostałe 11 instancji (bez nadpisań) przeliczyło się samo. Fix: `inst.setProperties({prop: false})` i zaraz `true` — toggle wymusza reflow. Po każdej operacji na dzieciach mistrza sprawdź `y` dzieci w instancjach, bo screenshot mistrza wygląda dobrze i nie pokazuje problemu.
+  - **PUŁAPKA (2026-10-06, potwierdzona reprodukcją): `opacity` farby związanej ze zmienną = kanał alfa ZMIENNEJ.** `accent`→`alpha/white-6` daje 6 %, `border`→`alpha/white-7` 7 %, `muted-foreground`→`alpha/fog-60` 60 %, a `primary`→`indigo/400` zawsze 100 %. Własne `opacity` na takiej farbie trzyma się czasem w mistrzu, ale **instancje je gubią**. Tint w komponencie robi się osobnym prostokątem `Tint` związanym ze zmienną + `node.opacity`, albo surowym kolorem. Wcześniejsze notatki o „zapiekaniu opacity po bindowaniu" działały tylko na ramkach, nie w instancjach.
+  - **DONE (2026-10-06): widoki egzaminu CP-106/CP-107** — rejestr stanu z ID: `docs/superpowers/plans/.dsb-state-exam-views-2026-10.json`. Nowe: strony `Sheet 1309:7`, `Spinner 1314:7`, `Stany (CP-99) 1314:8` (StateScreen, RetryLoading), `NotificationBell 1310:101` na `961:7`, `TopBar` boolean `Dzwonek#1310:4`, `PanelRail` booleany `Ogłoszenia#1311:0`/`Zespół#1311:5` + warianty `Aktywny=Ogłoszenia/Zespół`. `variant.clone()` gubi `componentPropertyReferences` dzieci.
   - **Screen gotcha:** `figma.createAutoLayout`/`createFrame` default to a WHITE fill — explicitly `node.fills=[]` on every transparent container, or dark tokens won't show. And `node.resize()` AFTER `layoutSizingHorizontal='FILL'` resets it to FIXED — set FILL last.
 - **Gotcha reused on screens:** for a WRAP horizontal auto-layout the HEIGHT is the COUNTER axis — set `counterAxisSizingMode='AUTO'`; auto-layout component instances often need `layoutSizingVertical='HUG'` to expand to content.
 - **Remaining DS work (separate from screens):** Code Connect mapping (after `@/components/ui/*` files exist), library publish (NOTE: variable/token sharing across files needs Org/Enterprise plan; team is Pro), QA audit (contrast/naming).

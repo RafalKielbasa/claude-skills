@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-09-26T14:11:14.791Z
+  modified: 2026-10-06T12:50:39.982Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -35,6 +35,14 @@ w `plans/milosz-assets/`, commit `56f7ec3`). Oba zrecenzowane i skomentowane 202
 („Plan zaakceptowany") jeszcze NIE ma — termin śr 30.09. Jakość: plan Miłosza kompletny, 15 twierdzeń
 o repo sprawdzonych i wszystkie trafione; plan Konrada ma poza brakami 2 błędy merytoryczne i 4
 sprzeczności wewnętrzne, których Rafał świadomie nie wysłał.
+
+Widoki w Figmie (obiecane na 05.10), start 2026-10-06: zakres = pełna macierz stanów z planów (44 ramki na 4 stronach),
+decyzja Rafała. Bramki: komponenty → Ogłoszenia → Powiadomienia → Zespół → Zaproszenie. Termin realny: przed 12.10
+(Konrad robi ekrany od zadania 10 „od razu według widoków"). Postęp i ID: `.dsb-state-exam-views-2026-10.json`
+(zob. [[figma-design-system-library]]). Formalnego „Plan zaakceptowany" w #199/#200 nie ma, obaj implementują backend.
+Stan 2026-10-06 wieczór: wszystkie 44 ramki zbudowane, bramki 1–4 zaakceptowane, bramka 5 (Zaproszenie `1331:7`)
+czeka na review. Strony: Ogłoszenia `1315:7`, Powiadomienia `1323:7`, Zespół `1327:7`, Zaproszenie `1331:7`.
+Wiadomości na Discord do kandydatów jeszcze NIE wysłane (Rafał wysyła sam).
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.
