@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-06T12:50:39.982Z
+  modified: 2026-10-06T13:02:06.874Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -42,7 +42,8 @@ decyzja Rafała. Bramki: komponenty → Ogłoszenia → Powiadomienia → Zespó
 (zob. [[figma-design-system-library]]). Formalnego „Plan zaakceptowany" w #199/#200 nie ma, obaj implementują backend.
 Stan 2026-10-06 wieczór: wszystkie 44 ramki zbudowane, bramki 1–4 zaakceptowane, bramka 5 (Zaproszenie `1331:7`)
 czeka na review. Strony: Ogłoszenia `1315:7`, Powiadomienia `1323:7`, Zespół `1327:7`, Zaproszenie `1331:7`.
-Wiadomości na Discord do kandydatów jeszcze NIE wysłane (Rafał wysyła sam).
+Zamiast wiadomości na Discord: linki do widoków i lista odstępstw od makiet kandydatów dopisane 2026-10-06
+na końcu sekcji „Zanim zaczniesz" w issues #196 (CP-106) i #197 (CP-107); kandydatów informuje Rafał.
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.
