@@ -18,6 +18,14 @@ przedstawione Rafałowi do bramki review.
    - `zrodla.md` kursu,
    - artykuły WSZYSTKICH wcześniejszych lekcji ze statusem `tresc: zatwierdzona`
      (spójność narracji; odwołuj się do nich: "jak pamiętasz z lekcji...").
+   **Usprawnienia filmów w kursie, który powstał przed nimi** (kurs online,
+   w `kurs.yaml` brak klucza `slajdy.odslanianie` albo `montaz.plansze`): zadaj
+   Rafałowi pytanie z `/kurs-nowy` (krok 2) wyłącznie o brakującą decyzję
+   i zapisz odpowiedź w `kurs.yaml`, istniejących wartości nie ruszając - także
+   "nie" (`odslanianie: false`, `plansze: false`), żeby
+   pytanie nie wracało przy kolejnych lekcjach. Kurs z oboma kluczami (każda
+   wartość) już zdecydował - nie pytaj. Włączenie dotyczy lekcji robionych od
+   teraz; gotowe filmy zmieniają się dopiero po ponownym renderze.
 2. **Research.** Zweryfikuj aktualność twierdzeń o narzędziach (WebSearch,
    oficjalne dokumentacje). KAŻDE nowe źródło dopisz do `zrodla.md` kursu
    z datą dostępu. Treści o AI starzeją się w miesiące — sprawdzaj wersje
@@ -67,7 +75,14 @@ przedstawione Rafałowi do bramki review.
         slajdzie podsumowującym albo wprowadzającym bohatera. Przyjmują ją
         układy `tytul`, `punkty`, `dwie-kolumny`, `liczba`, `tabela`; wyklucza
         się z `grafika` na tym samym slajdzie. Robot na każdym slajdzie
-        przestaje cokolwiek znaczyć po trzeciej lekcji.
+        przestaje cokolwiek znaczyć po trzeciej lekcji,
+      - **kurs z `slajdy: { odslanianie: true }` w `kurs.yaml`:** punkty
+        (kolumny, kroki procesu, wiersze tabeli) stoją na slajdzie w tej
+        kolejności, w jakiej lektor mówi o nich w segmencie. `/kurs-video`
+        odsłania je po kolei w rytm narracji, więc punkt postawiony wyżej niż
+        jego zdanie wjedzie w złym momencie (realny błąd: Misja AI: Start,
+        lekcja 8). Kotwic fraz (`video/odslony.yaml`) nie piszesz z góry -
+        dopisuje je `/kurs-video`, gdy podgląd dopasowania pokaże pomyłkę.
    d. `video/konspekt-nagrania.md` — dla typu demo: numerowana lista kroków
       do pokazania na ekranie, w kolejności segmentów `[ekran: screencast]`.
       Plik zaczyna się sekcją `## Przygotowanie przed nagraniem` - tabelą
@@ -78,6 +93,18 @@ przedstawione Rafałowi do bramki review.
       zatrzymanie (lektor ma gdzie zmieścić narrację przy montażu);
       nieudany dubel = powtórz czynność, śmieci nie wycina na bieżąco —
       Rafał dotnie je w postprodukcji przy montażu lektora.
+      **Kurs z `montaz: { plansze: true }` w `kurs.yaml`:** dopisz też
+      `video/plansze.yaml` - planszę (slajd w motywie kursu) tam, gdzie lektor
+      mówi dłużej niż ok. 15 s, a ekran stoi (wyjaśnienie pojęcia, zasada,
+      podsumowanie). Wejście `od: { fraza }` i zejście `do: { fraza }` to
+      dosłowne początki zdań ze scenariusza; `slajd: { naglowek, lead, punkty }`
+      z punktami w kolejności narracji; przy `odslanianie: true` lista `kroki`
+      to frazy, na których wjeżdża drugi, trzeci... punkt. Klucze główne:
+      `motyw`, `plansze` (opcjonalnie `katalog_grafik`); pola i przykłady:
+      `docs/superpowers/specs/2026-10-06-plansze-w-montazu-design.md`,
+      wzór gotowego pliku:
+      `kursy/misja-ai-start/modul-08-agenci/lekcja-08-agenci/video/plansze.yaml`.
+      Plansze nakłada sam `/kurs-montaz`; ta procedura tylko pisze plik.
    e. Oznaczenie pokrycia wideo w `artykul.md` (po napisaniu scenariusza):
       przed każdym blokiem artykułu (jeden lub kilka sąsiednich akapitów o tym
       samym wątku), którego meritum pada też w scenariuszu, wstaw callout —
@@ -121,6 +148,8 @@ przedstawione Rafałowi do bramki review.
      stoi jedno zdanie, dlaczego zostaje (np. segment-instrukcja z krótkimi
      zdaniami rozkazującymi). Ostrzeżenie przemilczane = nieprzeczytane,
    - liczba segmentów avatar ≤ 3,
+   - kurs z odsłanianiem punktów albo z planszami: kolejność punktów każdego
+     slajdu i każdej planszy = kolejność, w jakiej mówi o nich lektor,
    - **kontrole tej checklisty rób odczytem pliku, nie `grep`-em po frazie
      z treści.** Po wstawieniu twardych spacji `w wideo`, `z inwestycji`
      i `U Ciebie` mają w środku U+00A0, a emoji jako pattern w Git Bash nie
@@ -136,6 +165,13 @@ przedstawione Rafałowi do bramki review.
    `cd tools/course-pipeline && npm run validate --
    ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog lekcji, nie kursu —
    błędy z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
+   Dla `typ_video: prezentacja` od razu potem
+   `npm run kontrola-ukladu -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`
+   (render slajdów w Chrome, bez kosztów). Każdy zgłoszony problem - tekst
+   wychodzący poza pole, tekst za mały na filmie, niezaładowany font, układ
+   przesuwający się przy odsłanianiu punktów - traktuj jak BŁĄD: popraw
+   slajd (krótszy tekst, inny układ), nigdy motyw (motyw jest wspólny dla
+   wszystkich kursów). Linie `(info)` są tylko informacją.
 6. **Niezależny review AI.**
    `npm run review-ai -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
    Przeczytaj `review-ai.md`: problemy zasadne → popraw treść i powtórz

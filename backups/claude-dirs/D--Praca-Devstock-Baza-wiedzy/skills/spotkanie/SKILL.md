@@ -7,19 +7,11 @@ description: Wsparcie spotkań planistycznych rozwoju firmy — „przygotuj" bu
 
 Tryby: `/spotkanie przygotuj [data]`, `/spotkanie prowadź` i
 `/spotkanie transkrypt <data>`.
-Pliki spotkań żyją w `planning/`, układ zależy od typu spotkania: offsite
-płasko w `planning/` (`YYYY-MM-DD-agenda.md`, `YYYY-MM-DD-notatka.md`, daty
-ISO, sortują się chronologicznie); spotkanie robocze (tryb bezagendowy) w
-`planning/robocze/<data>-<godzina>-<slug>/notatka.md`; daily — skill
-`/daily`, nie ten plik — w `planning/daily/<data>-<godzina>/notatka.md`.
+Pliki spotkań żyją w `planning/`: `YYYY-MM-DD-agenda.md` i
+`YYYY-MM-DD-notatka.md` (daty ISO, sortują się chronologicznie).
 Szablony: `szablony/agenda.md`, `szablony/notatka.md` obok tego pliku —
 ZAWSZE wypełniaj szablon, nigdy nie improwizuj struktury; kolejne
-`przygotuj` parsuje te sekcje. Tryb bezagendowy wypełnia ten sam szablon
-notatki, ale świadomie pomija metadaną `Agenda:` i sekcję `## Nieomówione`
-— nie ma agendy, więc nie ma z czym porównać ani punktów, które zostały
-nieomówione. Tryb „prowadź" nie konsumuje żadnego transkryptu, więc
-pomija też metadaną `Źródła:` — wypełnia ją wyłącznie tryb „transkrypt"
-(z agendą i bezagendowy), nazwami plików wczytanych w jego kroku 3.
+`przygotuj` parsuje te sekcje.
 Wypełniając, zastępuj przykłady z komentarzy `<!-- -->` widoczną treścią
 i usuwaj komentarze-przykłady — realna treść nigdy nie zostaje w
 komentarzu.
@@ -28,12 +20,7 @@ komentarzu.
 
 Data spotkania: z argumentu; brak argumentu → dziś.
 
-1. **Historia.** Znajdź najnowszą notatkę spotkania planistycznego —
-   `planning/*-notatka.md` (offsite) ORAZ `planning/robocze/*/notatka.md`
-   (spotkania robocze), porównane po dacie (i godzinie dla roboczych, bo
-   ich katalog niesie `<data>-<godzina>`). `planning/daily/` NIE wchodzi do
-   tego przeglądu — statusy daily feedują digest w n8n, a wciąganie
-   każdego standupu zasypałoby wątki planistyczne.
+1. **Historia.** Znajdź najnowszą `planning/*-notatka.md`.
    - Status `szkic` → poprzednie spotkanie niedomknięte: zapytaj Rafała,
      czy najpierw je domknąć (`/spotkanie prowadź` wznowi sesję).
    - Brak jakiejkolwiek notatki → przeczytaj
@@ -110,51 +97,25 @@ Data spotkania: z argumentu; brak argumentu → dziś.
    d. BRAMKA: akceptacja Rafała. Notatka zostaje niezacommitowana —
       commit robi Rafał.
    e. Po akceptacji przejdź do indeksowania notatki do bazy wiedzy
-      (sekcja „Indeksowanie notatki do bazy wiedzy") — `prowadź` działa
-      zawsze na agendzie, więc produkuje notatkę offsite: `<typ> = offsite`,
-      układ płaski w `planning/`.
+      (sekcja „Indeksowanie notatki do bazy wiedzy").
 
 ## Tryb „transkrypt"
 
-Wywołanie: `/spotkanie transkrypt <data>` — data jest wymagana. Transkrypt(y)
-trafiają do `planning/transkrypty/` — Rafał wgrywa je ręcznie PRZED
-wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
+Wywołanie: `/spotkanie transkrypt <data>` — data jest wymagana (identyfikuje
+agendę i docelową notatkę). Transkrypt(y) trafiają do
+`planning/transkrypty/` — Rafał wgrywa je ręcznie
+PRZED wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
 
-1. **Agenda opcjonalna.** Wczytaj `planning/<data>-agenda.md`.
-   - Plik istnieje → **tryb z agendą** (jak dotychczas, spotkanie
-     całodniowe/offsite): sekcje notatki wynikają z punktów agendy;
-     artefakty to `planning/<data>-notatka.md` (+ pliki kolejek obok niego).
-   - Pliku nie ma, a Rafał wprost poprosił o notatkę ze spotkania
-     całodniowego (offsite) → powiedz to wprost, zaproponuj
-     `/spotkanie przygotuj <data>` i przerwij — ten tryb nie tworzy agendy
-     ad-hoc.
-   - Pliku nie ma w każdym innym przypadku → **tryb bezagendowy** dla
-     spotkania roboczego (`robocze`): sekcje notatki wynikają z tematów
-     znalezionych w transkrypcie (krok 4). Ustal godzinę spotkania: gdy
-     w `planning/transkrypty/` już leży plik dla tej daty, godzina wynika
-     z jego nazwy (`<data>-<godzina>-transkrypt...`); inaczej sprawdź
-     `kb-client pending --json` (`tools/kb-client`) — dokładnie jedno
-     nagranie tej daty → jego godzina; więcej niż jedno → wypisz godziny
-     i zapytaj Rafała, które przetworzyć (JEDNO pytanie), czekaj na
-     odpowiedź; brak nagrania na tę datę → powiedz to wprost i przerwij;
-     `pending` zawodzi (np. webhook jeszcze niewdrożony) → powiedz to
-     wprost, poproś Rafała o godzinę albo o wgranie pliku z nazwą
-     `<data>-<godzina>-transkrypt...`, potem przerwij.
-     Artefakty trafiają do `planning/robocze/<data>-<godzina>-<slug>/` —
-     `<slug>` to główny temat spotkania (małe litery, myślniki, bez
-     polskich znaków); gdy tematów jest więcej niż jeden i żaden nie
-     dominuje, złącz skrócone nazwy 2–3 tematów myślnikiem, przy większej
-     ich liczbie weź temat pierwszy — katalog ma zostać skanowalny, nie
-     wyczerpujący. Deklarację nagrania (standup czy spotkanie robocze)
-     sprawdzasz z treścią transkryptu w ręku, nie tutaj — patrz krok 3.
+1. **Wymagana agenda.** Wczytaj `planning/<data>-agenda.md`. Brak pliku →
+   powiedz to wprost, zaproponuj `/spotkanie przygotuj <data>` i przerwij
+   — ten tryb nie tworzy agendy ad-hoc.
 2. **Pusta skrzynka → Google Drive.** Gdy `planning/transkrypty/` nie
    zawiera plików (poza `.gitkeep`), poszukaj transkryptu na Google Drive
-   narzędziami Drive MCP: wyszukaj plik o nazwie `<data>-transkrypt` (tryb
-   z agendą) albo `<data>-<godzina>-transkrypt` (tryb bezagendowy, godzina
-   z kroku 1) — tworzy go pipeline n8n w dedykowanym folderze transkryptów
-   — pobierz treść i zapisz pod tą samą nazwą w `planning/transkrypty/`;
-   powiedz Rafałowi, że plik pochodzi z Drive. Plik na Drive ZOSTAJE
-   (archiwum po stronie n8n) — pobierasz kopię, niczego tam nie kasujesz.
+   narzędziami Drive MCP: wyszukaj plik o nazwie `<data>-transkrypt`
+   (tworzy go pipeline n8n w dedykowanym folderze transkryptów), pobierz
+   treść i zapisz jako `planning/transkrypty/<data>-transkrypt.md`; powiedz
+   Rafałowi, że plik pochodzi z Drive. Plik na Drive ZOSTAJE (archiwum po
+   stronie n8n) — pobierasz kopię, niczego tam nie kasujesz.
    - Brak narzędzi Drive w sesji → powiedz to wprost i poproś Rafała
      o ręczne wgranie pliku do `planning/transkrypty/`, potem przerwij.
    - Pliku nie ma też na Drive → powiedz wprost, że transkryptu nie ma
@@ -165,40 +126,19 @@ wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
    nie twórz. Więcej niż jeden plik → potraktuj łącznie jako treść jednego
    spotkania (kolejność wg nazwy pliku, jeśli sugeruje segmenty/kolejność
    nagrania).
-   - Tryb bezagendowy: teraz, z treścią w ręku, sprawdź deklarację na
-     początku transkryptu — deklaruje standup/daily → powiedz to jednym
-     zdaniem, wskaż `/daily <data> <godzina>` i przerwij, nic nie twórz;
-     n8n już nie klasyfikuje spotkań, więc deklaracja z transkryptu to
-     jedyny sygnał, który odróżnia tu daily od spotkania roboczego.
-4. **Analiza i mapowanie.**
-   - Tryb z agendą: dla każdego punktu agendy znajdź w transkrypcie
-     fragmenty, które go dotyczą — dopasowanie po temacie, nie po czasie
-     w nagraniu. Punkt agendy bez pasującej treści zostaje pusty → trafi
-     do `## Nieomówione`.
-   - Tryb bezagendowy: wypisz tematy, o których faktycznie rozmawiano —
-     sekcje notatki wynikają z nich, nie z agendy, której nie ma.
-   - W obu trybach sklasyfikuj istotne fragmenty jak w trybie „prowadź":
-     `ustalenie:` / `decyzja:` / `action item:` (dla action item wyłuskaj
-     osobę i termin, jeśli padły). Nie zmyślaj treści spoza transkryptu;
-     fragment niejednoznaczny → zacytuj go i zaznacz niepewność zamiast
-     interpretować na siłę.
-5. **Złożenie notatki.** Utwórz notatkę z `szablony/notatka.md` (status
-   `szkic`) w miejscu ustalonym w kroku 1:
-   - tryb z agendą: `planning/<data>-notatka.md`; `## Ustalenia` per
-     punkt agendy z wpisami z kroku 4; `## Nieomówione` (punkty agendy
-     bez wpisów),
-   - tryb bezagendowy: `planning/robocze/<data>-<godzina>-<slug>/notatka.md`;
-     `## Ustalenia` per temat z kroku 4 (`### N.` w kolejności tematów,
-     tytuł = temat, nie punkt agendy); pomiń metadaną `Agenda:` i sekcję
-     `## Nieomówione` — nie ma agendy, więc nie ma punktów nieomówionych,
-   - w obu trybach: `## Decyzje`, `## Action items` (tabela),
-     `## Zaparkowane` (wątki odłożone wspomniane w transkrypcie).
-   - w obu trybach: wypełnij metadaną `**Źródła:**` nazwami plików
-     transkryptów wczytanych w kroku 3 (rozdzielone przecinkiem, w
-     kolejności wczytania) — to jedyny sygnał, po którym
-     `.claude/hooks/nagrania-check.ps1` i `/daily`'s no-argument mode
-     rozpoznają nagranie jako przetworzone, gdy trafiło do notatki
-     całodniowej albo roboczej, a nie do własnej notatki daily.
+4. **Analiza i mapowanie.** Dla każdego punktu agendy znajdź w
+   transkrypcie fragmenty, które go dotyczą — dopasowanie po temacie, nie
+   po czasie w nagraniu. Sklasyfikuj istotne fragmenty jak w trybie
+   „prowadź": `ustalenie:` / `decyzja:` / `action item:` (dla action item
+   wyłuskaj osobę i termin, jeśli padły). Punkt agendy bez pasującej
+   treści zostaje pusty → trafi do `## Nieomówione`. Nie zmyślaj treści
+   spoza transkryptu; fragment niejednoznaczny → zacytuj go i zaznacz
+   niepewność zamiast interpretować na siłę.
+5. **Złożenie notatki.** Utwórz `planning/<data>-notatka.md` z
+   `szablony/notatka.md` (status `szkic`): `## Ustalenia` per punkt agendy
+   z wpisami z kroku 4, `## Decyzje`, `## Action items` (tabela),
+   `## Zaparkowane` (wątki odłożone wspomniane w transkrypcie),
+   `## Nieomówione`.
    - Action item bez osoby lub terminu w transkrypcie → dopytaj Rafała
      (jak w kroku 5a trybu „prowadź"); nadal brak → status
      `do doprecyzowania`.
@@ -209,101 +149,52 @@ wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
    wszystkie pliki (poza `.gitkeep`) z `planning/transkrypty/` — surowy
    transkrypt to poufna treść rozmowy, nie zostaje w repo ani na dysku po
    przetworzeniu. Notatka zostaje niezacommitowana — commit robi Rafał.
-8. **Indeksowanie.** Przejdź do budowy plików kolejek `wpisy.yaml` i
-   `zadania.yaml` (sekcja „Indeksowanie notatki do bazy wiedzy").
+8. **Indeksowanie.** Przejdź do indeksowania notatki do bazy wiedzy
+   (sekcja „Indeksowanie notatki do bazy wiedzy").
 
 ## Indeksowanie notatki do bazy wiedzy
 
 Wykonuj po finalizacji notatki: w trybie „prowadź" po kroku 5d, w trybie
-„transkrypt" po kroku 7. Obsługuje spotkania OFFSITE (tryb z agendą) i
-PLANNING/robocze (tryb bezagendowy) — DAILY idzie skillem `/daily`.
+„transkrypt" po kroku 7. Ponowny przebieg po poprawce notatki jest
+bezpieczny — te same `entry_id` podmieniają wpisy (bez duplikatów).
+Skill obsługuje wyłącznie spotkania OFFSITE (całodniowe) — DAILY/PLANNING
+idą torem n8n — dlatego prefiks wpisów jest zawsze `offsite:`.
 
-Schemat plików `wpisy.yaml`/`zadania.yaml`, bramka, kolejność egzekucji
-i reguły deduplikacji są opisane raz, w `docs/spotkania-kolejki.md`, i
-współdzielone z `/daily` — ta sekcja odsyła do tego dokumentu, nie
-powtarza jego treści.
-
-1. **Budowa kandydatów.** Z finalnej notatki zbuduj JEDEN kandydat wiedzy
-   na punkt agendy (tryb z agendą) albo na temat (tryb bezagendowy) —
-   sekcję `### N.` z `## Ustalenia`:
+1. **Budowa wpisów.** Z finalnej `planning/YYYY-MM-DD-notatka.md` zbuduj
+   wpisy — JEDEN wpis na punkt agendy (sekcję `### N.` z `## Ustalenia`):
    - treść = ustalenia i decyzje punktu przepisane pełnymi,
      samowystarczalnymi zdaniami (pełne nazwy zamiast zaimków; decyzje
      z uzasadnieniem, jeśli padło), z prefiksem
-     `[YYYY-MM-DD, <typ>: <tytuł punktu>] ` — `<typ>` to `offsite` (tryb
-     z agendą) albo `robocze` (tryb bezagendowy),
-   - POMIŃ: tabelę `## Action items` (trafia do `zadania.yaml`, nie tu —
-     statusy się zmieniają, wpis by się starzał), sekcje `## Zaparkowane`
-     i `## Nieomówione` oraz fragmenty z adnotacją niepewności —
-     wykluczenie fragmentów niepewnych ma jedną definicję, w sekcji
-     `wpisy.yaml` dokumentu `docs/spotkania-kolejki.md`, współdzieloną
-     z `/daily`,
+     `[YYYY-MM-DD, offsite: <tytuł punktu>] `,
+   - POMIŃ: tabelę `## Action items` (statusy się zmieniają — wpisy by się
+     starzały), sekcje `## Zaparkowane` i `## Nieomówione` oraz wpisy
+     z adnotacją niepewności (niejednoznaczne cytaty z transkryptu),
    - small talk, przekleństwa i wątki poboczne NIE przechodzą — notatka
      jest ich z konstrukcji pozbawiona; jeśli coś takiego mimo wszystko
-     w niej jest, nie przenoś tego do kandydata,
-   - punkt bez ustaleń i decyzji (pusty lub same action items) → bez
-     kandydata.
-   Każdy wiersz `## Action items` to JEDEN kandydat zadania do
-   `zadania.yaml`.
-2. **Kategorie, etykiety, przypisanie.** Do każdego kandydata `wpisy.yaml`
-   zaproponuj kategorię wg reguł skilla `baza-wiedzy`; niejednoznaczna →
-   zapytaj Rafała (ten tryb działa w rozmowie z nim; `/daily` nie ma takiej
-   synchronicznej chwili, więc tam niejednoznaczna kategoria idzie od razu
-   do bramki jako najlepsza propozycja — to nie jest wzorzec do skopiowania
-   tutaj). Do każdego kandydata `zadania.yaml` dobierz `labels` (domena +
-   rozmiar) wg taksonomii etykiet w `docs/ticket-conventions.md`, a
-   `assignee` wg reguły „Task assignment" w `docs/spotkania-kolejki.md`:
-   najpierw jawna deklaracja z rozmowy, potem macierz odpowiedzialności
-   z `docs/ticket-conventions.md` wg domeny zadania, dopiero na końcu
-   `null` — ta sekcja definiuje kolejność raz, nie powtarzamy jej tutaj.
-   Login nigdy nie jest zgadywany: gdy reguła niczego nie rozstrzyga
-   (także gdy `docs/ticket-conventions.md` brakuje) → `assignee: null`
-   plus jeden widoczny komentarz `#` nad blokiem tego kandydata,
-   nazywający osobę albo domenę i powód.
-3. **Deduplikacja przed bramką.** Wiedza: jedno wywołanie `kb-client
-   similar --category <c> --file <ścieżka> --json` per kandydat, w jego
-   kategorii — treść kandydata najpierw do pliku roboczego (dowolna
-   ścieżka w katalogu artefaktów tego spotkania, usuwana po wywołaniu):
-   `--text` w linii komend wystawia backticki i cytaty z treści kandydata
-   na zgubienie przez powłokę, więc zostaje tylko do krótkich sprawdzeń
-   ad-hoc. Klasyfikuj wynik wg aktualnych progów z sekcji „Thresholds"
-   w `docs/spotkania-kolejki.md` — czytanych na bieżąco, nigdy z pamięci.
-   Zadania: jeden odczyt tablicy kanban — repozytorium i tablica nazwane
-   raz w sekcji „Deduplication before the gate" tego samego dokumentu,
-   nie powtarzane tutaj (labelki i macierz odpowiedzialności zostają w
-   `docs/ticket-conventions.md`). Awaria webhooka albo odczytu tablicy
-   degraduje, nie blokuje — patrz tamże; przebieg idzie dalej do bramki
-   z widocznym komentarzem `#`, że deduplikacja była niedostępna.
-4. **Zapis plików kolejek.**
-   - tryb z agendą: `planning/<data>-wpisy.yaml`, `planning/<data>-zadania.yaml`,
-   - tryb bezagendowy: `planning/robocze/<data>-<godzina>-<slug>/wpisy.yaml`
-     i `.../zadania.yaml` (ten sam katalog co notatka).
-5. **BRAMKA: „przetwórz".** Pokaż Rafałowi jednoekranowe podsumowanie —
-   liczby per `action` w obu plikach, wszystko oflagowane (niepewne
-   fragmenty, nierozstrzygnięty `assignee`, niedostępna deduplikacja). Nic nie
-   wysyłaj, dopóki Rafał nie napisze „przetwórz" — brak odpowiedzi to nie
-   zgoda. Rafał edytuje treść i statusy bezpośrednio w plikach.
-6. **Egzekucja po „przetwórz".** Wykonaj kolejność egzekucji z
-   `docs/spotkania-kolejki.md`: upsert per zatwierdzony wpis wiedzy
-   (`entry_id` = `planning/<data>-notatka/<id>-<slug>` w trybie z agendą,
-   `planning/robocze/<data>-<godzina>-<slug>/<id>-<slug-wpisu>` w trybie
-   bezagendowym — dla `action: update` skopiowany z `similar_to`, nie
-   budowany na nowo), issue albo komentarz + wpis na tablicy per
-   zatwierdzone zadanie, wpis numeru issue do `## Action items` notatki.
-   Po wgraniu zatwierdzonych wpisów wiedzy uruchom porządek osieroconych
-   wpisów z sekcji „Execution order" `docs/spotkania-kolejki.md`: lista
-   wpisów pod prefiksem `entry_id` tego spotkania i usunięcie tych bez
-   odpowiednika w aktualnym `wpisy.yaml` — jedyny sposób, żeby korekta
-   tytułu punktu albo, w trybie bezagendowym, zmiana dominującego tematu
-   (który niesie każdy `entry_id` w swoim katalogu) nie zostawiła starego
-   wektora odpowiadającego na pytania w nieskończoność. Na końcu:
+     w niej jest, nie przenoś tego do wpisu,
+   - punkt bez ustaleń i decyzji (pusty lub same action items) → bez wpisu.
+2. **Kategorie.** Do każdego wpisu zaproponuj kategorię wg reguł skilla
+   `baza-wiedzy` (`dev` / `marketing` / `product` / `sales` / `company` /
+   `other` / `interns`); niejednoznaczna → zapytaj Rafała.
+3. **BRAMKA: Rafał zatwierdza podział i kategorie.** Pokaż wszystkie wpisy
+   (pełna treść + kategoria). Rafał może wpis usunąć, poprawić treść lub
+   zmienić kategorię. Bez zatwierdzenia nie upsertuj.
+4. **Upsert per wpis** przez kb-client (komendy z katalogu
+   `tools/kb-client`; wymaga `tools/kb-client/.env`):
 
-       npm run kb -- publish --type offsite --date <data> --title "<tytuł>" --file planning/<data>-notatka.md
+       npm run kb -- upsert --category <kategoria> --entry-id "planning/YYYY-MM-DD-notatka/<n>-<slug>" --text "<treść wpisu z prefiksem>"
 
-   (tryb bezagendowy: `--type robocze` i `--file
-   planning/robocze/<data>-<godzina>-<slug>/notatka.md`; żaden z trybów
-   nie ma `statuses.json`, więc bez `--statuses`). Zapisuj wynik w pliku
-   kolejki od razu po każdej operacji, żeby przerwany przebieg wznawiał,
-   nie powtarzał.
+   `<n>` = numer punktu agendy, `<slug>` = tytuł punktu małymi literami,
+   myślniki zamiast spacji, bez polskich znaków, np.
+   `planning/2026-07-30-notatka/2-kurs-agenty-ai`.
+5. **Sprzątanie po poprawkach.** Przy ponownej indeksacji tej samej notatki
+   (zmieniona liczba, tytuły lub kategorie punktów): `npm run kb -- list
+   --category <kategoria>` dla każdej kategorii użytej teraz ORAZ użytej
+   wcześniej dla tej notatki (gdy punkt zmienił kategorię, jego stary wpis
+   został pod poprzednią kategorią i trzeba go tam znaleźć), znajdź wpisy
+   z prefiksem `planning/YYYY-MM-DD-notatka/` bez odpowiednika w nowym
+   podziale i po pokazaniu ich Rafałowi usuń:
+   `npm run kb -- delete --category <kategoria> --entry-id "<osierocony>"`.
 
 ## Zasady
 
@@ -312,12 +203,6 @@ powtarza jego treści.
 - W trybie „prowadź" zero rozwlekłości: potwierdzenia jednolinijkowe,
   żadnych podsumowań przed `koniec`.
 - Statusy action items: `otwarte` | `zrobione` | `do doprecyzowania`.
-- Action items ze spotkania całodniowego (offsite) mogą teraz stać się
-  zadaniami na tablicy przez `zadania.yaml` — do tej zmiany żyły
-  wyłącznie w tabeli notatki. Nic nie powstaje bez `status: approved`
-  i słowa „przetwórz". Egzekucja notatki offsite trafia też przez
-  `kb-client publish` na Slacka (`#core-team`) — do tej zmiany offsite nie
-  publikował tam nic.
 - NIE modyfikuj `planning/02.06.2026-planning.md` (plik historyczny).
 - Odpowiedzi `sprawdź` tylko z repo — zero wiedzy z pamięci modelu.
 - Do bazy wektorowej trafia wyłącznie przetworzona treść notatki (sekcja

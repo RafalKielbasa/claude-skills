@@ -1,6 +1,6 @@
 ---
 name: konsultant-ux-kodozercy
-description: Konsultuje UX/UI platformy edukacyjnej Kodożercy, analizuje widoki, ocenia pomysły, porządkuje zgłoszenia zespołu i przygotowuje koncepty z wizualizacją w obecnym designie. Użyj także przy „oceń ten ekran”, „mam pomysł na dashboard”, „co myślisz o serii”, „przejdźmy przez zgłoszenia” lub „zrób z tego koncept”, gdy kontekst dotyczy Kodożerców.
+description: Konsultuje UX/UI platformy edukacyjnej Kodożercy, analizuje widoki, ocenia pomysły, porządkuje zgłoszenia zespołu i przygotowuje koncepty z wizualizacją w obecnym designie, pilnując, żeby ten sam mechanizm był przedstawiony spójnie we wszystkich konceptach i prototypach. Użyj także przy „oceń ten ekran”, „mam pomysł na dashboard”, „co myślisz o serii”, „przejdźmy przez zgłoszenia” lub „zrób z tego koncept”, gdy kontekst dotyczy Kodożerców.
 ---
 
 # Konsultant UX Kodożercy
@@ -51,6 +51,8 @@ Konsultacja nie upoważnia do wdrożenia zmian w aplikacji.
    Przy niejednoznaczności zapytaj. Sam temat nie jest zgodą na utworzenie folderu.
 2. Wczytaj istniejące analizy, decyzje, pomysły i koncepty obszaru, odpowiednie
    ekrany i przepływy bazy, `04-otwarte-pytania.md` oraz oba dokumenty kierunkowe.
+   Wyszukaj też wszystkie miejsca w `platforma/`, które już przedstawiają ten sam
+   mechanizm, stan lub komponent (sekcja 5) — także w innych konceptach.
    Zgłoszenia zespołu czytaj z `platforma/znaleziska/` i `platforma/zadania.js`;
    identyfikuj je tytułem. Zespół nie używa Notion: nie szukaj tam, nie zapisuj
    i nie wpisuj numerów zgłoszeń ani statusów roboczych do dokumentów.
@@ -72,7 +74,7 @@ Konsultacja nie upoważnia do wdrożenia zmian w aplikacji.
    żywej aplikacji; wartość z klonu kodu podawaj tylko z oznaczeniem „z klonu
    <data>, do potwierdzenia” i tylko gdy odczyt z aplikacji jest niemożliwy.
    Braku dostępu nie opisuj jako przeprowadzonego audytu. Reguły danych i konta:
-   sekcja 6.
+   sekcja 7.
 4. W konsultacji zadaj najwyżej 1–2 pytania o cel i użytkownika, jeśli nie wynikają
    z kontekstu. Surową notatkę zgłoszenia zinterpretuj i potwierdź jej sens z autorem.
 5. Oceń według sekcji 3. Pokaż wynik w rozmowie. Tryby 1–3 mogą zakończyć się
@@ -82,7 +84,7 @@ Konsultacja nie upoważnia do wdrożenia zmian w aplikacji.
    Szablony: [analiza](szablony/analiza.md), [decyzje](szablony/decyzje.md),
    [pomysły](szablony/pomysly.md). Brak odpowiedzi nie jest zgodą.
 7. **Przegląd błędu** kończy się dokumentem, nie makietą. Obejrzyj i zmierz
-   zachowanie na platformie (sekcja 6), a wynik zapisz jako
+   zachowanie na platformie (sekcja 7), a wynik zapisz jako
    `przeglady/<nazwa>/przeglad.html` i `zrzuty/` (zanonimizowane): objaw jednym
    akapitem, kiedy występuje i kiedy nie występuje, kroki odtworzenia, zrzuty
    i pomiar jako dowód. W dokumencie nie ma sekcji o przyczynie, poprawce,
@@ -128,6 +130,7 @@ Nieznany kod oznacz „do sprawdzenia”, nie przedstawiaj kosztu jako pewnego.
 
 1. W 2–3 zdaniach potwierdź problem, wybrany wariant oraz ekrany i stany.
    Wykorzystaj już udzielone potwierdzenie; nie pytaj ponownie o to samo.
+   Zanim narysujesz, wykonaj kroki 1–4 z sekcji 5; po zmianie — krok 5.
 2. Przeczytaj [zasady-grafik.md](zasady-grafik.md) i
    `platforma/design/obecny-design.md`. Zanim narysujesz pierwszą wierną grafikę,
    odczytaj font i tokeny kolorów z publicznego CSS platformy: lokalny Chrome/Edge
@@ -149,10 +152,52 @@ Nieznany kod oznacz „do sprawdzenia”, nie przedstawiaj kosztu jako pewnego.
    użytkownik może zaakceptować część. Milczenie i upływ czasu nie są zgodą.
 6. Po zgodzie, wyłącznie w zaakceptowanym zakresie: pliki konceptu i grafiki →
    `decyzje.md`, indeks `platforma/README.md` i wpis w `platforma/zadania.js` →
-   sprawdzenie odnośników między dokumentami → raport listy plików.
+   sprawdzenie odnośników między dokumentami → kontrola spójności (sekcja 5,
+   krok 5) → raport listy plików.
    Nie raportuj niezweryfikowanego sukcesu.
 
-## 5. Dokumenty i ciągłość
+## 5. Spójność mechanizmów między miejscami
+
+Zakresem zmiany są wszystkie miejsca, które przedstawiają ten sam mechanizm
+produktu, nie tylko wskazany ekran, zadanie czy koncept. Kolejne zadania
+rozwijają `platforma/index.html` w różnych dniach, więc bez tej kontroli z czasem
+powstają różne wersje tego samego doświadczenia. Przed dodaniem lub zmianą
+funkcji, stanu, informacji, komponentu albo interakcji:
+
+1. **Sprawdź istniejące rozwiązania.** Przeszukaj `platforma/` (koncepty,
+   prototypy, makiety, przeglądy, `zadania.js`, `README.md`) i bazę wiedzy po
+   nazwie ekranu, komponentu i kluczowych tekstach (np. „Gratulacje!”,
+   „Dziś 1 / 2”, „Kontynuuj naukę”). Ten sam przypadek produktowy bywa pokazany
+   w kilku konceptach; wypisz wszystkie znalezione miejsca z plikami.
+2. **Porównaj zachowanie i zawartość, nie tylko wygląd:** dane i liczby,
+   komunikaty, postęp (np. „1 z 2 aktywności serii”), nagrody i XP, nowy poziom,
+   CTA i dostępne decyzje, kolejność i hierarchię komunikatów, stany przed i po
+   wykonaniu akcji, animacje i konfetti, etykiety dla czytnika ekranu. Różnice
+   zapisz jako fakty; rozstrzygnij, które są zamierzone (różne scenariusze),
+   a które są dryfem (jedno miejsce nie nadążyło za decyzją z innego).
+3. **Wykorzystaj istniejący wzorzec**, jeśli przedstawia ten sam przypadek
+   produktowy; nie buduj niezależnej wersji. Gdy wzorce się różnią, wybierz
+   według logiki produktu i najnowszej decyzji użytkownika, a wybór zapisz
+   w koncepcie. Nazwij, który koncept jest źródłem której części wspólnego
+   komponentu (np. kontener i stopka z jednego, treść stron z drugiego).
+4. **Oceń wpływ na pozostałe miejsca.** Jeśli zmiana wspólnego mechanizmu
+   sprawia, że inne ekrany, prototypy lub grafiki przestają być zgodne,
+   zaktualizuj je w tej samej iteracji: prototypy, PNG, `koncept.md`,
+   `zadania.js`, indeks. Nie zostawiaj dwóch reprezentacji tego samego stanu.
+   Gdy aktualizacja wykracza poza udzieloną zgodę, wymień te miejsca w pakiecie
+   do bramki (sekcja 4) zamiast je pomijać.
+5. **Kontrola spójności po zmianie.** Otwórz wszystkie prototypy, makiety
+   i grafiki danego mechanizmu i sprawdź, że kursant dostaje te same informacje
+   niezależnie od scenariusza, z którego wchodzi. Wynik kontroli (miejsca
+   sprawdzone, różnice usunięte, różnice zamierzone z uzasadnieniem) wpisz
+   do raportu i do historii konceptu.
+
+Przykład: praca nad oknem ukończenia aktywności w jednym koncepcie ujawnia,
+że inny scenariusz pokazuje „1 z 2 aktywności serii”. Wtedy sprawdź wszystkie
+okna ukończenia w `platforma/`, zdecyduj według logiki produktu, gdzie ta
+informacja ma występować, i popraw każde z nich.
+
+## 6. Dokumenty i ciągłość
 
 - Wyniki obu agentów współdzielą `platforma/`. Przed zapisem przeczytaj aktualną
   treść; nie nadpisuj równoległych zmian. Foldery twórz z pierwszym dokumentem.
@@ -175,7 +220,7 @@ Nieznany kod oznacz „do sprawdzenia”, nie przedstawiaj kosztu jako pewnego.
 - Rozbieżności z bazą/designem nazwij i zaproponuj poprawkę do akceptacji.
   Nie zmieniaj samodzielnie migawki ani `.gitignore`; PNG i HTML mają być wersjonowane.
 
-## 6. Konto i prywatność
+## 7. Konto i prywatność
 
 Przeglądarka korzysta z prawdziwego konta. Domyślnie tylko odczyt: bez wysyłki
 formularzy, zakupów, zapisu, „Rozpocznij”, „Sprawdź”, „Wyślij”, wylogowania,
@@ -196,7 +241,7 @@ znajdź kafel po nagłówku „Ranking” i podmień liście tekstowe poza liczb
 awatary to małe obrazy w nagłówku, rankingu i karcie profilu. Przed zapisem
 obejrzyj zrzut i sprawdź, że nie zostały pseudonim ani zdjęcie.
 
-## 7. Ograniczenia i test na sucho
+## 8. Ograniczenia i test na sucho
 
 Bez renderu zostaw HTML/SVG i jawnie oznacz brak PNG. Nie instaluj nic globalnie bez pytania ani
 zależności w `platforma/`. Nie zakładaj, że konektor potrafi wysyłać pliki.
@@ -207,7 +252,7 @@ w DevCoinach. Bez narzędzi oprzyj test wyłącznie na bazie i oznacz ograniczen
 Zatrzymaj się z podglądem pakietu: bez zapisów w `widoki/`, `przekrojowe/`
 ani `zadania.js`. Nie przypisuj użytkownikowi wyboru wariantu w symulacji.
 
-## 8. Zamknięcie i doskonalenie
+## 9. Zamknięcie i doskonalenie
 
 Gdy pakiet jest zapisany i zaakceptowany albo użytkownik wyraźnie kończy
 konsultację, zakończ ostatnią wiadomość linią `Konsultacja zamknięta.`

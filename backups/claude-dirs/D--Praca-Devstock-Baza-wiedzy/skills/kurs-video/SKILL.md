@@ -27,6 +27,16 @@ przedstawione Rafałowi do bramki akceptacji.
      kosztowne API (ElevenLabs, HeyGen), tylko dla zatwierdzonej treści.
    - `video/scenariusz.md` nie może zawierać linii `[UWAGA: ...]` — `npm run video` zatrzyma
      się przed pierwszym płatnym wywołaniem. Nienaniesione uwagi nanieś przez `/kurs-uwagi`.
+   - Kurs online bez zapisanej decyzji o usprawnieniach filmów (brak klucza
+     `slajdy.odslanianie` albo `montaz.plansze` w `kurs.yaml`; kurs
+     `format: stacjonarny` pomijasz): zapytaj wyłącznie o brakującą decyzję
+     (pytanie z `/kurs-nowy`, krok 2), zapisz odpowiedź, także "nie"
+     (`false`), istniejących wartości nie ruszaj. Przy planszach włączonych
+     w lekcji demo bez `video/plansze.yaml` **zatrzymaj się**: montaż bez tego
+     pliku po cichu pominąłby plansze. Najpierw `/kurs-lekcja` pisze plik na
+     podstawie zatwierdzonego scenariusza i przedstawia go Rafałowi do
+     akceptacji; dopiero po niej wracasz tutaj. Zmiana treści lekcji przy tej
+     okazji = ponowne zatwierdzenie treści.
    - **Dla `typ_video: demo` dodatkowo:** układ scenariusza musi być avatar →
      screencasty → avatar (waliduje render). Etap renderu zależy od
      `video/nagranie-z-lektorem.mp4`: brak pliku = etap materiałów (paczka
@@ -58,6 +68,14 @@ przedstawione Rafałowi do bramki akceptacji.
    reszta pójdzie wybranym silnikiem. Bramka jest bezprzedmiotowa (renderuj
    bez pytania) tylko wtedy, gdy scenariusz lekcji nie ma segmentów
    `[ekran: avatar]` albo wszystkie ich pliki są już w `video/avatar/`.
+   **Zgoda na kontrole (osobno od silnika, zawsze przed renderem):** po
+   wygenerowaniu głosu idzie kontrola lektora (krok 4b: rozpoznanie mowy
+   ElevenLabs, grosze, wynik w cache), a w kursie z odsłanianiem także
+   rozpoznanie mowy slajdów (krok 3). Jeśli Rafał nie odniósł się do tego
+   w komendzie, powiedz o tym jednym zdaniem i czekaj na odpowiedź - także
+   wtedy, gdy pytanie o silnik było bezprzedmiotowe. „Bez kontroli lektora”
+   = pomijasz krok 4b; rozpoznanie mowy slajdów wyłącza się tylko kluczem
+   `slajdy.odslanianie` w `kurs.yaml`.
 3. **Sprawdź konfigurację** przed uruchomieniem, żeby nie wywalić się w
    połowie. Wspólne dla obu silników: `tools/course-pipeline/.env` ma
    `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `HEYGEN_AVATAR_ID`; `ffmpeg`
@@ -71,6 +89,24 @@ przedstawione Rafałowi do bramki akceptacji.
      się.
    Brak któregoś — zatrzymaj się i powiedz Rafałowi czego brakuje, zamiast
    odpalać połowiczny rendering.
+   **Kontrola układu slajdów (tor A), zawsze, przed płatnym renderem:**
+   `npm run kontrola-ukladu -- <lekcja>` (render w Chrome, bez kosztów).
+   Problem w raporcie = zatrzymaj się i wróć do `/kurs-lekcja` (poprawka
+   slajdu, nie motywu) - TTS i HeyGen nie idą na slajdy, które trzeba będzie
+   zmienić.
+   **Odsłony punktów (tylko kurs z `slajdy: { odslanianie: true }` w `kurs.yaml`, tor A):**
+   render dodatkowo rozpoznaje mowę audio segmentów slajdów (ElevenLabs Speech-to-Text,
+   grosze; cache wspólny z `npm run kontrola-lektora`, więc po kontroli lektora zwykle
+   za darmo) i potrzebuje Chrome. Powiedz o tym Rafałowi w tej bramce. Kotwice
+   (frazy, od których lektor zaczyna mówić o punkcie) i grafiki slajdów leżą w
+   `video/odslony.yaml`; podgląd dopasowania bez renderu: `npm run odslony -- <lekcja>`,
+   raport `video/klipy/odslony/dopasowanie.md` (spec
+   `docs/superpowers/specs/2026-10-07-odslony-w-prezentacjach-design.md`).
+   Po renderze przejrzyj ten raport sam: punkt z metodą „rozłożone” albo
+   wyraźnie spóźniony wobec swojego zdania to kandydat na kotwicę - dopisz
+   frazy do `video/odslony.yaml` (`kotwice: { <numer slajdu>: [fraza punktu 1, fraza punktu 2, ...] }`, tyle fraz, ile punktów)
+   i przegeneruj (audio i avatary z cache, bez kosztów). Rafałowi w bramce 5
+   podaj tylko to, czego nie dało się poprawić.
 4. **Uruchom rendering** wg silnika wybranego w bramce:
    - **Silnik `api`:**
      `cd tools/course-pipeline && npm run video -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
@@ -116,9 +152,24 @@ przedstawione Rafałowi do bramki akceptacji.
    długości ciszy. Przekaż Rafałowi ścieżkę spisu; Rafał
    montuje lektora z nagraniem w edytorze, eksportuje
    `video/nagranie-z-lektorem.mp4` i wtedy ponowny `npm run video` spina
-   final. Po zmianie treści scenariusza przypomnij
+   final. Ten krok może zamiast edytora zrobić `/kurs-montaz` (montaż
+   automatyczny z bramką: lekcja, nagranie, intro, outro) — zaproponuj go
+   Rafałowi razem ze ścieżką spisu. Po zmianie treści scenariusza przypomnij
    Rafałowi, że zmontowany materiał trzeba zaktualizować ręcznie — pipeline
    tego nie wykryje.
+4b. **Kontrola lektora (objęta zgodą z bramki 2):**
+   `npm run kontrola-lektora -- <lekcja>` (rozpoznanie mowy ElevenLabs,
+   grosze, cache). Silnik `api` - raz, po renderze. Silnik `mcp` - dwa razy:
+   po 4a (wtedy istnieje tylko audio avatarów, więc kontrola obejmuje je,
+   zanim pójdzie HeyGen) i po 4c (cała lekcja; audio avatarów z cache). Raport `video/audio/kontrola/raport.md` wskazuje słowa,
+   które generator dorzucił albo zgubił względem scenariusza, z czasem
+   w pliku. To raport do odsłuchu, nie bramka: w bramce 5 podaj Rafałowi te
+   miejsca (plik, sekunda, zdanie), żeby odsłuchał je przed oceną całości.
+   Artefakt potwierdzony uchem = poprawka tekstu lektora w `scenariusz.md`
+   przez `/kurs-lekcja` (zapis fonetyczny wg `wymowa.md` albo przeformułowanie
+   zdania - TTS czyta scenariusz, sam wpis w `wymowa.md` niczego w głosie nie
+   zmieni) i nowe audio całej lekcji (uprzedź o koszcie, krok 4). Pomiar tonu (`--ton`) jest eksperymentalny -
+   nie uruchamiaj go bez prośby Rafała.
 5. **BRAMKA: Rafał ogląda `video/final.mp4`** (lokalnie — plik nie trafia do
    git, patrz Zasady). Uwagi Rafała: jeśli dotyczą treści segmentu
    (scenariusz/slajdy), wróć do `/kurs-lekcja`, popraw treść, usuń
@@ -183,6 +234,11 @@ przedstawione Rafałowi do bramki akceptacji.
   zmieniaj brzmienia lektora i nie odpalaj próbek bez jego zgody (płatne API).
   Osobna sprawa niż `PAUZA_W_MOWIE_S` (cisza przed frazami-przejściami,
   `src/pauzy.js`) — tę kalibruje flaga `--pauza`.
-- Bez intro/outro z szablonu marki — nie istnieje jeszcze plik szablonu w
-  `kursy/_wspolne/`. `final.mp4` to na razie czysty montaż segmentów.
+- Intro/outro tylko z bramki `/kurs-montaz`: gdy lekcja ma
+  `video/montaz/zrodla.json`, etap 2 dokleja wskazane tam intro na początku
+  i outro na końcu `final.mp4` — bez zmian treści (jak avatary: tylko
+  przekodowanie do wspólnego formatu klipów). Brak pliku = czysty montaż
+  segmentów, jak dotąd. Intro i outro są wspólne dla wszystkich kursów:
+  `kursy/_wspolne/oprawa/intro.mp4` i `outro.mp4` — bramka `/kurs-montaz`
+  proponuje je jako pierwsze.
 - NIE publikuje do CMS/Vimeo — to `/kurs-publikuj` (kolejny etap).

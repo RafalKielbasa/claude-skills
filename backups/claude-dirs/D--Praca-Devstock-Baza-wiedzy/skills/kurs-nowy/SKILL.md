@@ -29,7 +29,13 @@ szkieletem folderów. NIE generuje treści lekcji — to robi `/kurs-lekcja`.
    - zakres świadomie POZA kursem,
    - orientacyjna liczba modułów i (kurs online) preferencje toru video
      (prezentacja/demo); kurs stacjonarny nie ma toru video - każdy blok
-     ma `typ_bloku: zajecia`, ostatni może być `hackathon`.
+     ma `typ_bloku: zajecia`, ostatni może być `hackathon`,
+   - (kurs online) dwa usprawnienia filmów, JEDNYM pytaniem, z rekomendacją
+     "tak" dla obu: punkty slajdów odsłaniane w rytm lektora (lekcje
+     prezentacja) i plansze ze slajdem na nagraniach ekranu tam, gdzie lektor
+     długo mówi, a ekran stoi (lekcje demo). Odpowiedź zapisujesz w `kurs.yaml`
+     w kroku 6; później włącza się je i wyłącza samym kluczem. Dalsze skille
+     robią resztę same - nikt nie musi pamiętać o komendach.
 3. **Research.** Aktualny stan narzędzi i tematu (WebSearch). Każde źródło
    zapisz z datą dostępu — trafi do `zrodla.md`.
 4. **Propozycja programu.** Moduły → lekcje. Każdy moduł: cel biznesowy,
@@ -49,7 +55,12 @@ szkieletem folderów. NIE generuje treści lekcji — to robi `/kurs-lekcja`.
    - `kursy/<slug>/kurs.yaml` — wg `kursy/_wspolne/szablony/kurs.yaml`,
      wypełniony programem (slugi kebab-case, numeracja od 1); kurs
      stacjonarny dostaje `format: stacjonarny`, `bariera_kodu` wg decyzji
-     z kroku 2 i `typ_bloku` zamiast `typ_video` w każdej lekcji programu,
+     z kroku 2 i `typ_bloku` zamiast `typ_video` w każdej lekcji programu;
+     kurs online dostaje usprawnienia filmów z kroku 2:
+     `slajdy: { odslanianie: true }` (odsłanianie punktów) i/lub
+     `montaz: { plansze: true }` (plansze na nagraniach); przy odpowiedzi
+     "nie" zapisz `false` - brak klucza też znaczy "wyłączone", ale
+     `/kurs-lekcja` i `/kurs-video` zapytałyby wtedy ponownie,
    - `kursy/<slug>/zrodla.md` — źródła z kroku 3 z datami,
    - folder `modul-NN-<slug>/lekcja-NN-<slug>/` dla KAŻDEJ lekcji programu
      (NN dwucyfrowe), w każdym `lekcja.yaml` wg szablonu — wypełnij tytul,
