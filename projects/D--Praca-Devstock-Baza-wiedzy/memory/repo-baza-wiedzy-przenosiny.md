@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: fda79c08-275f-4424-9045-38899980dee1
-  modified: 2026-10-07T19:57:49.882Z
+  modified: 2026-10-08T05:16:05.028Z
 ---
 
 Stan potwierdzony 2026-10-07: `gh api repos/devstock-org/devstock-team --jq .full_name` zwraca
@@ -14,8 +14,12 @@ Stan potwierdzony 2026-10-07: `gh api repos/devstock-org/devstock-team --jq .ful
 do „devstock team".
 
 Historia decyzji (2026-10-07): kod szedł mirrorem z `devstock-team-knowledge-base` do `core-team`,
-potem `core-team` dostał nazwę `devstock-team`, stare `devstock-team-knowledge-base` archiwizowane
-(trzyma 27 starych PR-ów).
+potem `core-team` dostał nazwę `devstock-team`. Stare `devstock-team-knowledge-base` ma zostać
+zarchiwizowane (trzyma 27 starych PR-ów), ale **na 2026-10-08 NIE jest** (`archived=false`) i przyjmuje
+pushe: 2026-10-07 22:20 Grzegorz (`elstyropiano`) utworzył tam i skasował gałąź `skill/przygotuj-glos`
+(`1b486d0f`), której nie ma w `devstock-team`. Przed archiwizacją ta gałąź musi trafić do nowego repo;
+stan sprawdzaj przez `gh api repos/devstock-org/devstock-team-knowledge-base --jq .archived` i
+`…/activity`, nie przez porównanie gałęzi.
 
 **Lokalnego `origin` nie zmieniaj** — wskazuje `devstock-org/devstock-team.git`, czyli właściwe repo.
 PR-y z tego repo idą do `devstock-org/devstock-team`.

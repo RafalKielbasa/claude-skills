@@ -46,6 +46,13 @@ ten kod, ktorego pomiar dotyczyl.
 
 - 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: literał `HASZ_BEZ_UWAG = 'e9f0efdc5de6'` wpisany do briefu Taska 4 dzień wcześniej jako "hasz sprzed zmiany" był już nieaktualny — commit `4f54506` przepisał w międzyczasie nagłówki w fiksturze `SCENARIUSZ_DEMO`. Przeliczony przed dispatchem na `cf19aa86f6c5`. Brief sam przewidywał ten przypadek i podawał komendę do przeliczenia, ale nic nie wymuszało jej uruchomienia.
 
+- 2026-10-07, sesja c653066f-3e46-4d11-8f8b-71a5c9d865a7: dowód zastosowania rozwiązania (przeciw
+  porażce). Zgoda na push dotyczyła stanu „`main` ahead 2"; tuż przed pushem `git fetch` +
+  `git rev-list --left-right --count` pokazały `0 5`, bo druga sesja dorzuciła trzy commity —
+  nowa liczba poszła do pytania o zgodę zamiast starej. Mirror do `core-team` poprzedzony w tej
+  samej komendzie asercją `test "$(git ls-remote … | wc -l)" = "0"`, nie wynikiem sprzed dwóch tur.
+  Liczba issues `497` z 5.10 przemierzona 7.10 (`504`) przed cytatem w raporcie.
+
 ## Rozwiazanie
 Liczbe, ktora steruje decyzja albo trafia do promptu subagenta, mierz w tej samej turze, w ktorej
 ja podajesz, i zapisuj razem z nia, czego dokladnie dotyczy pomiar (commit, migawka, katalog).

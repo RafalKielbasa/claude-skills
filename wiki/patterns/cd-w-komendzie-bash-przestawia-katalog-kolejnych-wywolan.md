@@ -119,6 +119,13 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   zero użyć rozwiązania potwierdza wniosek z ósmego: miejscem tej reguły jest
   `~/.claude/CLAUDE.md`, nie strona wzorca.
 
+- 2026-10-05/08, sesja c653066f-3e46-4d11-8f8b-71a5c9d865a7: trzynasty dowód,
+  dwunasta sesja. `cd "D:/Praca/Devstock/…" && …` na początku prawie każdej
+  komendy (repo bazy wiedzy, `devstock-team-agent`, `tools/kb-client`,
+  `.claude/wiki`), kilkanaście „Environment update" i „Shell cwd was reset".
+  Bez szkody — każda komenda znowu niosła własny `cd` ze ścieżką bezwzględną;
+  podpowłoka użyta raz, przypadkiem, w sondzie `devstock-team-agent`.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:

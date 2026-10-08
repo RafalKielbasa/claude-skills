@@ -27,6 +27,16 @@ porówna.
   (m.in. „suite zielony — nie uruchomiony w tej sesji"). Wyszło, że Plan B
   istnieje tylko jako zakres w Planie A, nie jako plik. Pisany później Plan B
   brał sygnatury Planu A z kodu na dysku, nie z tekstu planu.
+- 2026-10-05, sesja c653066f-3e46-4d11-8f8b-71a5c9d865a7 (nowa rozmowa, zero
+  kontekstu): na „pracowaliśmy ostatnio nad systemem agentowym, zweryfikuj, czy
+  wszystkie skille zostały zrobione" stan odtworzony z `git log --stat`, ledgera
+  `.superpowers/sdd/2026-09-26-meeting-processing-repo-side/progress.md`,
+  dziennika sesji i trzech planów, a potem sprawdzony na żywo: `kb-client
+  pending`/`similar` → `404 … is not registered`, `gh auth status` → brak
+  scope'u `project`, `ls workflows/` w `devstock-team-agent` → brak `37`–`40`.
+  Ledger mówił „repo-side gotowe", dopiero sondy pokazały, że strona n8n nie
+  istnieje. Odstępstwo: nie podałem gałęzi, na której leży praca — patrz
+  [[gotowe-na-galezi-roboczej-zgloszone-bez-galezi-integracji]].
 
 ## Rozwiązanie
 Gdy pytanie dotyczy czegoś, czego nie ma w kontekście, powiedz to w pierwszym
