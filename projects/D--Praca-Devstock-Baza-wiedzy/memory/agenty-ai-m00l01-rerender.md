@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: fda79c08-275f-4424-9045-38899980dee1
-  modified: 2026-10-08T08:43:01.514Z
+  modified: 2026-10-08T11:45:36.246Z
 ---
 
 Rafał 2026-10-08: lekcję 1 modułu 0 kursu `agenty-ai` robimy od nowa, „skillami Mateusza i Grzegorza”:
@@ -21,6 +21,8 @@ Decyzje Rafała 2026-10-08:
 - Node systemowy podniesiony do 24.20.0 (winget) - `tools/nagrywanie` wymaga >=22.11; Playwright ffmpeg doinstalowany.
 
 Stare media (wrzesień, głos v2) przeniesione do `video/archiwum/2026-09-v2/` lekcji.
+
+Stan 2026-10-08 po południu: scenariusz przeredagowany wg profilu wypowiedzi Bartka (commit `31243016`), etap 1 `/kurs-video` ZROBIONY - avatary przez HeyGen MCP (konto Bartłomieja Łozy, plan pro, Avatar IV, 1080p 16:9, ręcznie: create_asset_upload → PUT → complete → create_video_from_avatar → get_video → curl pod `cel`), paczka lektora V4 w `video/lektor/`. Pułapka: pełny render po `--plan-avatara` generuje od nowa `audio/01.mp3`/`04.mp3`, ale do filmu idzie dźwięk wpieczony w mp4 avatara (`assemble-video.js:56`), więc liczy się kontrola lektora z PIERWSZEGO przebiegu (po 4a). Klucz ElevenLabs dostał `speech_to_text` 2026-10-08. Dalej: `/kurs-nagrywanie`.
 
 **Why:** pierwsza lekcja kursu przechodzi cały nowy tor (V4 + automat + montaż automatyczny + oprawa) - wzorzec dla reszty lekcji demo agenty-ai.
 **How to apply:** kolejność: etap 1 `/kurs-video` (MCP: `--plan-avatara` → HeyGen MCP → `--avatar=mcp`, kontrola lektora) → `/kurs-nagrywanie` „Pierwsza lekcja z nową usługą” (n8n: kurs.yaml `nagrywanie.uslugi.n8n`, login, sonda, moduł usługi, próba, powiększenie, PR) → `/kurs-montaz` od zaznaczeń i plansz → etap 2 `/kurs-video` ze znakiem AI. Sprawdzaj stan w git log i `video/` lekcji, nie z pamięci.
