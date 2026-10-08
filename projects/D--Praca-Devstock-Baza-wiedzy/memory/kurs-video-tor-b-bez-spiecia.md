@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: 21e37356-099e-4ae0-99b4-1875bd23ce17
-  modified: 2026-09-07T13:00:51.992Z
+  modified: 2026-10-08T08:43:15.744Z
 ---
 
 Rafał sam składa finalne wideo, gdy nakłada głos na nagranie — etap
@@ -29,3 +29,7 @@ czekaj na `nagranie-z-lektorem.mp4`, nie próbuj odpalać drugiego przebiegu
 gotowy — to poza tym repo/pipeline'em). Jeśli Rafał kiedyś poprosi
 o tradycyjne spięcie finalne przez pipeline dla konkretnej lekcji, to jest
 wyjątek na tę jedną prośbę, nie zmiana tej zasady na stałe.
+
+**Wyjątek 2026-10-08:** M00L01 robimy od nowa pełną ścieżką automatu (nagrywanie Playwrightem, `/kurs-montaz`,
+oprawa i znak AI, etap 2 do `final.mp4`) - patrz [[agenty-ai-m00l01-rerender]]. Gdy Rafał zechce tego samego
+przy kolejnych lekcjach demo, zapytaj, czy ta zasada przestaje obowiązywać.
