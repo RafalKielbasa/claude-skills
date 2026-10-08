@@ -22,6 +22,12 @@ twierdzeniem o stanie, który może przestać obowiązywać przed następną tur
   `kb -- pending --json` wypisało tylko „Użycie", `git merge-base --is-ancestor` → gałąź
   niezmergowana (48 przed, 122 za `main`). Lista kroków testu z 5.10 nie miała kroku „merge do
   `main`".
+- 2026-10-08, sesja claude.ai/code/session_01PEmJYYAK5hBJGhZ3cKxfgs: reguła zastosowana, skutek i
+  tak przyszedł. Przed publikacją kolektora n8n pytanie-bramka nazwało gałąź wprost („`/daily`
+  … są tylko na `feature/tor-stacjonarny`, niezmergowane") z rekomendacją „Po merge"; Rafał wybrał
+  „Od razu". Pierwsze `/daily 2026-10-08 1000` na `main` → `Unknown skill: daily`, osobny
+  `git worktree` gałęzi, a w połowie skilla Rafał przerwał: „merguj tą gałąź". Wniosek: przy
+  „przełączeniu toru" merge powinien być krokiem planu przełączenia, nie osobną rekomendacją.
 
 ## Rozwiązanie
 Raport kompletności zawsze podaje gałąź, na której leży praca, i wynik

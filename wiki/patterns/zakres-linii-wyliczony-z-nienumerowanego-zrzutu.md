@@ -32,6 +32,13 @@ w srodku nastepnego akapitu.
   po zapisie. Obie naprawy wymagaly osobnej rundy. Wszystkie pozostale podmiany
   tej sesji, robione z numerow z `cat -n` / `grep -n` i z asercja na pierwszej
   linii zakresu, przeszly bez chybienia.
+- 2026-10-08, sesja claude.ai/code/session_01PEmJYYAK5hBJGhZ3cKxfgs: wariant „numery z
+  odczytu sprzed WŁASNEJ edycji". `Read` z numerami pokazał `status:` zadania #1 w linii 13;
+  potem `Edit` skrócił komentarz nagłówka `zadania.yaml` o jedną linię, a `sed -i '13s/^
+  status: *$/…/; 22s/…/'` poszedł na starych numerach. Linia 22 (#2) trafiła, linia 13 była już
+  `issue: null` — wzorzec nie dopasował, `sed` nic nie zmienił i nic nie zgłosił. Wyszło na
+  kontrolnym `grep -n "status:"` po zapisie; naprawa `Edit` po treści. Numer linii jest ważny
+  tylko do pierwszej zmiany pliku, także mojej.
 
 ## Rozwiazanie
 Numery linii do podmiany bierz wylacznie z wyjscia numerowanego (`cat -n`,
