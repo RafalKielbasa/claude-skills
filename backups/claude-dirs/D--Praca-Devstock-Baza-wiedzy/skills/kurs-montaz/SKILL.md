@@ -1,6 +1,6 @@
 ---
 name: kurs-montaz
-description: Automatic track B montage for a demo lesson — fits Rafał's silent screen recording to the voice-over package (video/lektor/ + spis.md) paragraph by paragraph, cuts retakes and waits, adds zoom and highlight frames where the narration points, and writes video/nagranie-z-lektorem.mp4 in place of the manual editor (CapCut) step; intro and outro from the gate are attached unchanged by /kurs-video. Starts with a decision gate where Rafał picks the lesson and gives the paths to the screen recording, intro and outro. Use when Rafał says "zmontuj lekcję", "zrób montaż nagrania", "dopasuj nagranie do lektora", "montaż zamiast CapCuta", "dodaj intro i outro do lekcji". NOT for generating the voice-over package, avatars or final.mp4 (that is /kurs-video), and NOT for live-event gift screencasts.
+description: Automatic track B montage for a demo lesson — fits Rafał's silent screen recording to the voice-over package (video/lektor/ + spis.md) paragraph by paragraph, cuts retakes and waits, adds zoom and highlight frames where the narration points, and writes video/nagranie-z-lektorem.mp4 in place of the manual editor (CapCut) step; intro and outro (from the gate, or from kurs.yaml `oprawa` when the course has it) are attached unchanged by /kurs-video. Starts with a decision gate where Rafał picks the lesson and gives the path to the screen recording, plus intro and outro only in a course without kurs.yaml `oprawa`. Use when Rafał says "zmontuj lekcję", "zrób montaż nagrania", "dopasuj nagranie do lektora", "montaż zamiast CapCuta", "dodaj intro i outro do lekcji". NOT for generating the voice-over package, avatars or final.mp4 (that is /kurs-video), and NOT for live-event gift screencasts.
 ---
 
 # /kurs-montaz — automatic montage of a track B lesson
@@ -108,22 +108,36 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    when its content is approved and stage 1 of `/kurs-video` produced both `video/lektor/spis.md`
    and the avatars. If the lesson Rafał named is not ready, stop and say why, quoting `powod`;
    stage 1 belongs to `/kurs-video`, not to this skill.
-2. **GATE: lesson and sources.** One `AskUserQuestion` call with four questions, before any other
-   work:
+   **Recorded by the automation** (`/kurs-nagrywanie`, course with `nagrywanie: { automat: true }`):
+   `zrodla.json` and `edl.json` already exist, with every paragraph's recording range, waits and
+   skipped variants taken from the automation's step markers. Skip steps 2-4 (sources, index, ranges)
+   and never move `od`/`do`, `oczekiwania` or `pomin` - they match the voice-over frame by frame.
+   **Course without kurs.yaml `oprawa`:** ask Rafał only for intro and outro and write them with the
+   sources gate, passing the recordings exactly as listed in the existing `zrodla.json`, in the same
+   order (EDL `zrodlo` indexes point into that list). **Course with `oprawa`** (`oprawaKursu: true` in
+   the list): ask nothing - intro and outro come from the course, and `zrodla.json` written by the
+   automation already has them as `null`. Then add highlights, pauses and boards (step 4 effects part)
+   and go on with the sample gate.
+2. **GATE: lesson and sources.** One `AskUserQuestion` call before any other work: four questions in a
+   course without kurs.yaml `oprawa`, two (lekcja, nagranie ekranu) in a course with it (`oprawaKursu: true`
+   in the list - intro and outro are decided once per course and attached by `/kurs-video`):
    - **Lekcja** — the ready lessons as options (up to four), "Other" for a path. Mark a lesson
      with `maMontaz: true`: its current `nagranie-z-lektorem.mp4` may be a manual export.
    - **Nagranie ekranu** — the newest recordings as options, each labelled with date and length.
      "Other" takes a path, or several paths separated by `;` in recording order.
-   - **Intro** and **Outro** — the file from `oprawa` as the first option, marked
+   - **Intro** and **Outro** (only without kurs.yaml `oprawa`) — the file from `oprawa` as the first option, marked
      "(Recommended)" when it is the shared one from `kursy/_wspolne/oprawa/`; "Brak intro" /
      "Brak outro" as the other. "Other" takes a path. When the shared file is missing, say that
      it belongs in `oprawa.katalog` as `intro.mp4` / `outro.mp4`.
    No answer is not approval. A timeout of the question tool is not approval either — say you are
-   waiting and ask again. Never pick a recording, intro or outro yourself, even when only one
-   candidate exists.
+   waiting and ask again. Never pick a recording yourself, and in a course without kurs.yaml `oprawa` never
+   pick an intro or outro yourself either, even when only one candidate exists.
    When the lesson already has `video/montaz/zrodla.json` (`npm run montaz -- zrodla <lekcja>`
-   shows it), show the saved paths first and ask whether they stay. Then save the answer:
-   `npm run montaz -- zrodla <lekcja> --nagranie=<plik> [--nagranie=<plik2>] (--intro=<plik>|--bez-intro) (--outro=<plik>|--bez-outro)`.
+   shows it), show the saved paths first and ask whether they stay (in a course with `oprawa` show the
+   course's intro/outro decision instead of saved intro/outro paths). Then save the answer:
+   `npm run montaz -- zrodla <lekcja> --nagranie=<plik> [--nagranie=<plik2>] (--intro=<plik>|--bez-intro) (--outro=<plik>|--bez-outro)`;
+   in a course with `oprawa` without any intro/outro flag:
+   `npm run montaz -- zrodla <lekcja> --nagranie=<plik> [--nagranie=<plik2>]` (a flag there is an error).
    The command checks every file with ffprobe: a recording needs video, intro and outro need
    video and sound. A `BŁĄD` goes back to Rafał verbatim, with the question asked again.
 3. **Index the recording.** `npm run montaz -- indeks <lekcja>` (add `--zrodlo=N` for the second
@@ -240,7 +254,9 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    already there. Avatars always live in the lesson's own `video/avatar/` (stage 1 writes them
    there, stage 2 reads them from there), so the gate never asks for an avatar path. Stage 2
    puts the opening and closing avatar around the screen recording, attaches the intro and
-   outro from `zrodla.json` and assembles `video/final.mp4`. Tell Rafał that, and that `final.mp4` is his to watch at the
+   outro (from kurs.yaml `oprawa` when the course has it, otherwise from `zrodla.json`) and assembles
+   `video/final.mp4`. In a course with `oprawa.znak_ai` it also burns in the AI mark between them and
+   hands over the film only after the mark's control gate (`video/znak-ai/raport.md`). Tell Rafał that, and that `final.mp4` is his to watch at the
    `/kurs-video` acceptance gate. Montage remarks from that gate come back here: change the EDL,
    then `render`, then `/kurs-video` stage 2 again.
 8. **Close.** Changes stay uncommitted — Rafał commits. Montage leaves nothing to commit in the
@@ -249,6 +265,9 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
 
 ## Rules
 
+- In a course with kurs.yaml `oprawa.znak_ai`, `montaz render` also writes `video/montaz/obszary-filmu.json`
+  (where highlights, boards and automation actions are on screen) for the AI mark's corner guard. Nothing to
+  do by hand; a course without the key gets no new file.
 - **Intro, outro and avatars are never modified.** No trimming, no fades, no loudness changes, no
   re-voicing. `/kurs-video` re-encodes them to the common clip format (1920×1080, 30 fps, AAC
   48 kHz) only because concat needs one format; what is seen and heard stays as delivered.

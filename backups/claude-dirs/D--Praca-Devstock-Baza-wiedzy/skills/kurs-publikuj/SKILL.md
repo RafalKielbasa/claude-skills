@@ -60,6 +60,11 @@ Input: a course, module or lesson path (`kursy/<slug>`, `kursy/<slug>/modul-NN-x
   `vimeo: "<numeric id>"`, at position `N*10` — before the article. `status.video` stays a
   production note. So the moment Rafał lets you run the command IS the decision to publish the
   recording; if a lesson row says `video: create` and he did not expect it, stop and ask.
+- Course with `oprawa: { znak_ai: true }` in `kurs.yaml`: publish refuses a lesson video whose
+  local `video/final.mp4` has no valid AI-mark acceptance (`video/znak-ai/akceptacja.json`: sha256 of the
+  file and the mark configuration unchanged) - the fix is a new `/kurs-video` render, never a bypass. A
+  missing `final.mp4` on this machine (also after a failed render moved it to the archive) is a refusal too:
+  publish the video from the machine that rendered and accepted it.
 - The video's `totalTime` comes from `video/final.mp4` in the lesson folder, when that file is
   there. It is not in git, so on a fresh clone — and for every tor B lesson assembled by hand —
   the video publishes without a duration. That is allowed, never a reason to block.

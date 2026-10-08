@@ -28,7 +28,8 @@ przedstawione Rafałowi do bramki akceptacji.
    - `video/scenariusz.md` nie może zawierać linii `[UWAGA: ...]` — `npm run video` zatrzyma
      się przed pierwszym płatnym wywołaniem. Nienaniesione uwagi nanieś przez `/kurs-uwagi`.
    - Kurs online bez zapisanej decyzji o usprawnieniach filmów (brak klucza
-     `slajdy.odslanianie` albo `montaz.plansze` w `kurs.yaml`; kurs
+     `slajdy.odslanianie`, `montaz.plansze`, `oprawa` albo - w kursie z lekcjami demo -
+     `nagrywanie.automat` w `kurs.yaml`; kurs
      `format: stacjonarny` pomijasz): zapytaj wyłącznie o brakującą decyzję
      (pytanie z `/kurs-nowy`, krok 2), zapisz odpowiedź, także "nie"
      (`false`), istniejących wartości nie ruszaj. Przy planszach włączonych
@@ -94,6 +95,18 @@ przedstawione Rafałowi do bramki akceptacji.
    Problem w raporcie = zatrzymaj się i wróć do `/kurs-lekcja` (poprawka
    slajdu, nie motywu) - TTS i HeyGen nie idą na slajdy, które trzeba będzie
    zmienić.
+   **Znak AI (tylko kurs z `oprawa: { znak_ai: true }` w `kurs.yaml`, oba tory):** render
+   składa środek filmu, strażnik rogu układa plan znaku (`video/znak-ai/plan.json`), znak jest
+   wpalany, doklejane są intro i outro z `kursy/_wspolne/oprawa/`, a kandydat przechodzi bramkę
+   (pełny napis na starcie, widoczność, wyjście przed outro, technika). Bez płatnych wywołań;
+   kilka do kilkunastu minut więcej. Po renderze przeczytaj `video/znak-ai/raport.md` i pokaż
+   Rafałowi sekcję „Do przejrzenia przez człowieka” z klatkami. Bramka nie przeszła = `final.mp4`
+   nie powstaje, stary film idzie do `video/archiwum/` jako nieaktualny, `status.video: brak`,
+   odrzucony film leży w `video/znak-ai/odrzucony.mp4`: pokaż raport i zaproponuj poprawkę
+   (wymuszony róg w `video/znak-ai.yaml`: `rogi: [{ od, do, rog }]`, zaznaczenie w EDL) - nigdy
+   obejście. Przy bramce akceptacji filmu sprawdź `npm run znak-ai -- kontrola <lekcja>`
+   (akceptacja `video/znak-ai/akceptacja.json` zgodna z `final.mp4`). Projekt:
+   `docs/superpowers/specs/2026-10-07-oprawa-znak-ai-design.md`.
    **Odsłony punktów (tylko kurs z `slajdy: { odslanianie: true }` w `kurs.yaml`, tor A):**
    render dodatkowo rozpoznaje mowę audio segmentów slajdów (ElevenLabs Speech-to-Text,
    grosze; cache wspólny z `npm run kontrola-lektora`, więc po kontroli lektora zwykle
@@ -132,7 +145,7 @@ przedstawione Rafałowi do bramki akceptacji.
    głos trzymał jedno tempo przez całą lekcję. Pliki audio to
    `video/audio/NN.mp3` (NN = numer chunku), a **cache jest per lekcja**
    (`video/audio/.lesson-cache`), nie per plik: zmiana treści narracji,
-   modelu, `ELEVENLABS_VOICE_SETTINGS` w `src/config.js`, nadpisań
+   modelu albo głosu (`lektor.model` / `lektor.voice_id` w `kurs.yaml`, `.env`), ustawień głosu z `ELEVENLABS_MODELS` w `src/config.js`, nadpisań
    `ELEVENLABS_*` w `.env` albo stałych pauz akapitowych regeneruje audio
    **całej lekcji** — sklejonego łańcucha nie da się odbudować od środka.
    To realny koszt API (~13 600 znaków, ok. 1,4 $ za lekcję); uprzedź
@@ -154,7 +167,10 @@ przedstawione Rafałowi do bramki akceptacji.
    `video/nagranie-z-lektorem.mp4` i wtedy ponowny `npm run video` spina
    final. Ten krok może zamiast edytora zrobić `/kurs-montaz` (montaż
    automatyczny z bramką: lekcja, nagranie, intro, outro) — zaproponuj go
-   Rafałowi razem ze ścieżką spisu. Po zmianie treści scenariusza przypomnij
+   Rafałowi razem ze ścieżką spisu. **Kurs z `nagrywanie: { automat: true }`:**
+   nagrania ekranu nie robi człowiek - po paczce lektora uruchom
+   `/kurs-nagrywanie` (automat Playwrighta nagrywa ujęcia i pisze EDL), potem
+   `/kurs-montaz` od kroku zaznaczeń i plansz (EDL już wypełniony), potem etap 2. Po zmianie treści scenariusza przypomnij
    Rafałowi, że zmontowany materiał trzeba zaktualizować ręcznie — pipeline
    tego nie wykryje.
 4b. **Kontrola lektora (objęta zgodą z bramki 2):**
@@ -220,21 +236,22 @@ przedstawione Rafałowi do bramki akceptacji.
   `video/nagranie.mp4` i `video/nagranie-z-lektorem.mp4` też są w
   `.gitignore`, ale **nie są odtwarzalne** — to prawdziwy materiał źródłowy,
   backup to odpowiedzialność Rafała.
-- Głos ElevenLabs i avatar HeyGen są obecnie placeholderami (dowolne realne
-  ID z konta Rafała) — jeśli okażą się docelowo złe, Rafał podmieni
-  `ELEVENLABS_VOICE_ID`/`HEYGEN_AVATAR_ID` w `.env`; nie wybieraj ich sam.
-- **Interpunkcja i intonacja lektora** to `ELEVENLABS_VOICE_SETTINGS`
-  w `src/config.js` (stability, style, speed — niższa stability i speed
-  poniżej 1 dają słyszalne przecinki i żywszą melodię zdania). Wartości
+- Lektor: domyślnie `eleven_v4` z głosem `ELEVENLABS_VOICE_ID` z `.env`; kurs może przypiąć
+  model i głos w `kurs.yaml` (`lektor.model`, `lektor.voice_id` — `misja-ai-start` jest
+  przypięta do v2). Avatar HeyGen to `HEYGEN_AVATAR_ID` w `.env`. Głosu, modelu ani avatara
+  nie wybierasz sam — zmienia je Rafał.
+- **Ustawienia głosu modelu** to ustawienia modelu w `ELEVENLABS_MODELS` (`src/config.js`): dla v2 stability, style, speed, dla v4 tylko stability i similarity. Wartości
   dobiera się **odsłuchem, nie w ciemno**:
   `npm run tts-proba -- <lekcja> [--segment=N] [--pauza=S]` generuje ten sam
-  akapit w kilku wariantach (w tym „baseline" bez ustawień) do
+  akapit w kilku wariantach (dla v2 cztery, w tym „baseline" z bazowym
+  brzmieniem konta; dla v4 trzy warianty stability: 0,35 / 0,5 / 0,7) do
   `experiments/tts-proba/` wraz ze `spis.md`. Rafał odsłuchuje i wskazuje
   zwycięzcę — dopiero wtedy wpisujesz wartości do `config.js`. Sam nie
   zmieniaj brzmienia lektora i nie odpalaj próbek bez jego zgody (płatne API).
   Osobna sprawa niż `PAUZA_W_MOWIE_S` (cisza przed frazami-przejściami,
   `src/pauzy.js`) — tę kalibruje flaga `--pauza`.
-- Intro/outro tylko z bramki `/kurs-montaz`: gdy lekcja ma
+- Intro/outro: w kursie z `oprawa` w `kurs.yaml` z kursu (oba tory, pliki
+  `kursy/_wspolne/oprawa/`); inaczej z bramki `/kurs-montaz`: gdy lekcja ma
   `video/montaz/zrodla.json`, etap 2 dokleja wskazane tam intro na początku
   i outro na końcu `final.mp4` — bez zmian treści (jak avatary: tylko
   przekodowanie do wspólnego formatu klipów). Brak pliku = czysty montaż

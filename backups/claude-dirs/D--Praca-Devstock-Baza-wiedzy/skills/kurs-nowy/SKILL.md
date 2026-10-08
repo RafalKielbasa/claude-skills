@@ -35,7 +35,18 @@ szkieletem folderów. NIE generuje treści lekcji — to robi `/kurs-lekcja`.
      prezentacja) i plansze ze slajdem na nagraniach ekranu tam, gdzie lektor
      długo mówi, a ekran stoi (lekcje demo). Odpowiedź zapisujesz w `kurs.yaml`
      w kroku 6; później włącza się je i wyłącza samym kluczem. Dalsze skille
-     robią resztę same - nikt nie musi pamiętać o komendach.
+     robią resztę same - nikt nie musi pamiętać o komendach,
+   - (kurs online z lekcjami demo) czy ekran nagrywa automat Playwrightem
+     (`/kurs-nagrywanie`: sam klika w przeglądarce według planu nagrania), czy
+     człowiek - z rekomendacją "automat", gdy praca kursanta dzieje się
+     w przeglądarce (n8n w chmurze, czaty AI). Odpowiedź do `kurs.yaml`
+     (`nagrywanie: { automat: true | false }`) w kroku 6,
+   - (kurs online) oprawa filmów, JEDNYM pytaniem, z rekomendacją "tak": intro
+     przed lekcją, outro po lekcji (wspólne pliki `kursy/_wspolne/oprawa/`) i
+     oznaczenie AI w filmie (filmy mają awatar i sklonowany głos Barta - AI Act
+     art. 50; znak pojawia się po intro i znika przed outro, wpala go `/kurs-video`
+     automatycznie). Odpowiedź do `kurs.yaml` (`oprawa: { intro, outro, znak_ai }`,
+     wszystkie trzy klucze) w kroku 6.
 3. **Research.** Aktualny stan narzędzi i tematu (WebSearch). Każde źródło
    zapisz z datą dostępu — trafi do `zrodla.md`.
 4. **Propozycja programu.** Moduły → lekcje. Każdy moduł: cel biznesowy,
@@ -58,7 +69,9 @@ szkieletem folderów. NIE generuje treści lekcji — to robi `/kurs-lekcja`.
      z kroku 2 i `typ_bloku` zamiast `typ_video` w każdej lekcji programu;
      kurs online dostaje usprawnienia filmów z kroku 2:
      `slajdy: { odslanianie: true }` (odsłanianie punktów) i/lub
-     `montaz: { plansze: true }` (plansze na nagraniach); przy odpowiedzi
+     `montaz: { plansze: true }` (plansze na nagraniach) i
+     `nagrywanie: { automat: true }` (automat Playwrighta) oraz oprawę
+     `oprawa: { intro: true, outro: true, znak_ai: true }`; przy odpowiedzi
      "nie" zapisz `false` - brak klucza też znaczy "wyłączone", ale
      `/kurs-lekcja` i `/kurs-video` zapytałyby wtedy ponownie,
    - `kursy/<slug>/zrodla.md` — źródła z kroku 3 z datami,

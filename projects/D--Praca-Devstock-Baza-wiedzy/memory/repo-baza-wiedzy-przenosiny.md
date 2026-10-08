@@ -1,27 +1,27 @@
 ---
 name: repo-baza-wiedzy-przenosiny
-description: "Remote \"Bazy wiedzy\" wskazuje na stary adres i celowo NIE poprawiamy go - Rafał przenosi repo"
-metadata: 
+description: "Baza wiedzy żyje w devstock-org/devstock-team (scalone z core-team, potwierdzone 2026-10-07); lokalny origin devstock-team.git jest poprawny"
+metadata:
   node_type: memory
   type: project
-  originSessionId: 1f305bfb-722e-43f6-ae8f-752d0d412bcf
-  modified: 2026-09-22T17:18:03.563Z
+  originSessionId: fda79c08-275f-4424-9045-38899980dee1
+  modified: 2026-10-07T19:57:49.882Z
 ---
 
-`git push` w repo „Baza wiedzy" wypisuje ostrzeżenie GitHuba:
-`This repository moved. Please use the new location: https://github.com/devstock-org/devstock-team-knowledge-base.git`,
-bo lokalny `origin` wskazuje wciąż na `devstock-org/devstock-team.git`. Przekierowanie działa,
-push przechodzi normalnie.
+Stan potwierdzony 2026-10-07: `gh api repos/devstock-org/devstock-team --jq .full_name` zwraca
+`devstock-org/devstock-team` (nie `devstock-team-knowledge-base`) — scalenie z `core-team` zrobione,
+`devstock-team` to prawdziwe repo z kodem, issues i tablicą (projekt 3). Rafał potwierdził: commitujemy
+do „devstock team".
 
-**Nie proponuj `git remote set-url`.** Rafał powiedział 2026-09-22: „Będę zmieniał lokalizację
-tego repo wiec nie trzeba" - adres i tak się zmieni, więc poprawianie go teraz to praca do
-wyrzucenia.
+Historia decyzji (2026-10-07): kod szedł mirrorem z `devstock-team-knowledge-base` do `core-team`,
+potem `core-team` dostał nazwę `devstock-team`, stare `devstock-team-knowledge-base` archiwizowane
+(trzyma 27 starych PR-ów).
 
-**Why:** bez tej notatki każda sesja zobaczy ostrzeżenie przy pushu i zaproponuje tę samą
-poprawkę, którą Rafał już raz odrzucił.
+**Lokalnego `origin` nie zmieniaj** — wskazuje `devstock-org/devstock-team.git`, czyli właściwe repo.
+PR-y z tego repo idą do `devstock-org/devstock-team`.
 
-**How to apply:** ostrzeżenie o przenosinach przy `git push` zignoruj i nie komentuj go jako
-problemu do naprawy. Jeśli push kiedyś padnie na 404 zamiast przekierować, to znaczy, że
-przenosiny się odbyły - wtedy zapytaj o nowy adres, zamiast zgadywać.
+**Why:** przed scaleniem `devstock-team` było tylko przekierowaniem; po scaleniu to docelowe repo, więc
+ostrzeżenia „This repository moved" już nie powinno być.
 
-Tryb commitów i pushy w tym repo: [[tryb-commitow-per-repo]].
+**How to apply:** push nadal wyłącznie za jawną zgodą Rafała w danej rozmowie — patrz
+[[tryb-commitow-per-repo]].

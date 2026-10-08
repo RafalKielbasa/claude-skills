@@ -19,12 +19,13 @@ przedstawione Rafałowi do bramki review.
    - artykuły WSZYSTKICH wcześniejszych lekcji ze statusem `tresc: zatwierdzona`
      (spójność narracji; odwołuj się do nich: "jak pamiętasz z lekcji...").
    **Usprawnienia filmów w kursie, który powstał przed nimi** (kurs online,
-   w `kurs.yaml` brak klucza `slajdy.odslanianie` albo `montaz.plansze`): zadaj
+   w `kurs.yaml` brak klucza `slajdy.odslanianie`, `montaz.plansze`, `oprawa` albo - w kursie
+   z lekcjami demo - `nagrywanie.automat`): zadaj
    Rafałowi pytanie z `/kurs-nowy` (krok 2) wyłącznie o brakującą decyzję
    i zapisz odpowiedź w `kurs.yaml`, istniejących wartości nie ruszając - także
    "nie" (`odslanianie: false`, `plansze: false`), żeby
-   pytanie nie wracało przy kolejnych lekcjach. Kurs z oboma kluczami (każda
-   wartość) już zdecydował - nie pytaj. Włączenie dotyczy lekcji robionych od
+   pytanie nie wracało przy kolejnych lekcjach. Kurs ze wszystkimi tymi kluczami
+   (każda wartość) już zdecydował - nie pytaj. Włączenie dotyczy lekcji robionych od
    teraz; gotowe filmy zmieniają się dopiero po ponownym renderze.
 2. **Research.** Zweryfikuj aktualność twierdzeń o narzędziach (WebSearch,
    oficjalne dokumentacje). KAŻDE nowe źródło dopisz do `zrodla.md` kursu

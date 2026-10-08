@@ -311,8 +311,9 @@ Read the command's own output before telling Rafał anything succeeded: `OK:
 <N> plików lektora — spis: <path>` means it worked; `BŁĄD: ...` means it did
 not run at all (a common cause: a segment with no screencast text, or one
 over the model's character limit — fix the staged narration and re-run,
-never retry blindly). This step calls the real ElevenLabs API through
-`generujAudioSegmentu` and spends real credits — it is not undone by a later
+never retry blindly). This step calls the real ElevenLabs API (on v2 through
+`generujAudioSegmentu`, on v4, the default, through `generateAudioWithTimestamps`
+plus silence padding in `src/cisza.js`) and spends real credits — it is not undone by a later
 decline at §12, the same way a render's CPU-time is not refunded by
 `live-boards` deleting its own `.review` folder on decline.
 
