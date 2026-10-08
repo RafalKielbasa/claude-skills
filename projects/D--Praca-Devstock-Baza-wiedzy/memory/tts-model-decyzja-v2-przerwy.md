@@ -5,10 +5,10 @@ metadata:
   node_type: memory
   type: project
   originSessionId: b732f5c4-07fd-42e5-90fa-d6d13cd12297
-  modified: 2026-10-08T05:06:43.210Z
+  modified: 2026-10-08T05:42:59.475Z
 ---
 
-**Aktualizacja 2026-10-08 — NOWA DECYZJA: domyślny lektor `eleven_v4`.** Głos `2MLx6VudpP6LiJSGs38o`, model i głos per kurs w `kurs.yaml` (`lektor.model`, `lektor.voice_id`), `misja-ai-start` przypięta do `eleven_multilingual_v2` + `FEXBtVuB3zFqBhMYxmeV` (opis niżej obowiązuje już tylko dla niej), `agenty-ai` przechodzi na v4. V4 nie czyta `<break>` — pauzy to cisza dopełniana po generacji (`src/cisza.js`). Spec `docs/superpowers/specs/2026-10-07-elevenlabs-v4-voice-design.md`. Stan 2026-10-08: zmergowane do `main` (`19cb4f52`) i wypchnięte do `devstock-org/devstock-team`, gałąź i worktree usunięte; lokalny `.env` ma już `ELEVENLABS_VOICE_ID=2MLx6VudpP6LiJSGs38o` (stary głos jako komentarz). Sprawdzone `resolveTtsProfile`: agenty-ai → eleven_v4 + nowy głos, misja-ai-start → v2 + FEXBtVuB3zFqBhMYxmeV. Brzmienie v4 (stability/similarity) do kalibracji na słuch `npm run tts-proba` — płatne, za zgodą Rafała.
+**Aktualizacja 2026-10-08 — NOWA DECYZJA: domyślny lektor `eleven_v4`.** Głos `2MLx6VudpP6LiJSGs38o`, model i głos per kurs w `kurs.yaml` (`lektor.model`, `lektor.voice_id`), `misja-ai-start` przypięta do `eleven_multilingual_v2` + `FEXBtVuB3zFqBhMYxmeV` (opis niżej obowiązuje już tylko dla niej), `agenty-ai` przechodzi na v4. V4 nie czyta `<break>` — pauzy to cisza dopełniana po generacji (`src/cisza.js`). Spec `docs/superpowers/specs/2026-10-07-elevenlabs-v4-voice-design.md`. Stan 2026-10-08: zmergowane do `main` (`19cb4f52`) i wypchnięte do `devstock-org/devstock-team`, gałąź i worktree usunięte; lokalny `.env` ma już `ELEVENLABS_VOICE_ID=2MLx6VudpP6LiJSGs38o` (stary głos jako komentarz). Sprawdzone `resolveTtsProfile`: agenty-ai → eleven_v4 + nowy głos, misja-ai-start → v2 + FEXBtVuB3zFqBhMYxmeV. Kalibracja 2026-10-08 ZROBIONA: probe na `agenty-ai` M00L01 segment 4 (stability 0,35/0,5/0,7, ~3,1 tys. kredytów) — Rafał: „wszystkie bardzo zbliżone", zostaje stability 0,5 / similarity 0,75 (commit `b65bf40b`, niewypchnięty). Stability słabo zmienia ten głos — kolejną rundę (płatną, za zgodą) kierować raczej na similarity.
 
 Decyzja z 2026-07-23 dla lektora video kursów (`tools/course-pipeline`): zostajemy na `eleven_multilingual_v2` + przerwy (cisza między tematami + `<break>` w tekście), NIE przechodzimy na `eleven_v3` — „na ten moment".
 
