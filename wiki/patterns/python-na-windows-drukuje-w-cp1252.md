@@ -72,6 +72,10 @@ niepowodzenie całej operacji.
   starą. Naprawione powtórzeniem drugiej połowy z prefiksem
   `PYTHONIOENCODING=utf-8`; od tej pory wszystkie wywołania w sesji miały ten
   prefiks.
+- 2026-10-08, sesja 8d719440 (id claude.ai niedostępny): szósty dowód. Skrypt kontrolny testu bramki
+  (`check_runs.py`) drukował linie ze znakiem ⚠ (U+26A0); przy przekierowaniu wyjścia do pliku padł
+  `UnicodeEncodeError: 'charmap'`. Naprawione `sys.stdout.reconfigure(encoding="utf-8")` na początku
+  skryptu.
 
 ## Rozwiązanie
 Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie

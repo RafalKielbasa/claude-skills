@@ -89,6 +89,10 @@ kodem i nie powinna przechodzić przez składnię języka.
   się wykonało. Naprawione dopiero po przejściu na schemat opisany niżej:
   treść dowodów zapisana narzędziem `Write` do plików w scratchpadzie, skrypt
   Pythona wyłącznie ASCII, wklejanie przez `io.open(...).read()`.
+- 2026-10-08, sesja 8d719440 (id claude.ai niedostępny): dziesiąty dowód. Heredoc `python - <<'PYEOF'`
+  przez narzędzie Bash dopisywał do skryptu fixture'ów `t.replace("> **Status:** finalna\n", …)`;
+  sekwencja `\n` dotarła jako prawdziwy znak nowej linii i rozbiła literał (`SyntaxError:
+  unterminated string literal`). Poprawione narzędziem Edit.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją

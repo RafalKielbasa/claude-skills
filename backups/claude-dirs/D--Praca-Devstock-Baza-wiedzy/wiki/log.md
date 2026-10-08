@@ -244,3 +244,11 @@ Format wpisu:
 - założono: niepewny-fragment-cytowany-zamiast-przypisany (skill: daily, typ: sukces) — mówcy tylko z wywołania po imieniu, status Szymona i przekręcone nazwy zacytowane z ⚠; notatka zaakceptowana bez korekty przypisań.
 - Wzorce globalne dotknięte w tej sesji: nowe merge-galezi-po-squashu-wskrzesza-usuniete-tresci, n8n-mcp-renamenode-nie-przepisuje-kodu, msys-tlumaczy-sciezki-tylko-w-argv, sprawdzenie-sekretu-przez-rozwiniecie-zmiennej; dowody w gotowe-na-galezi-roboczej-zgloszone-bez-galezi-integracji, zakres-linii-wyliczony-z-nienumerowanego-zrzutu, skrypt-z-asercja-zamiast-serii-edycji.
 - Sygnał repo: bez zmian — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`. Cztery porażki `daily` mają po jednym dowodzie; przy drugim dailym warto sprawdzić, które się powtórzą.
+
+## 2026-10-08 — sesja 8d719440 (id claude.ai niedostępny) (bramka `/daily` i `/spotkanie` punkt po punkcie: brainstorming → spec → plan → egzekucja inline → final review → poprawki, testy na sucho)
+- zaadresowano: kolejka-bez-slownika-statusow (daily) — bramka zapisuje statusy sama, wartość spoza słownika idzie jak `proposed` (`ea378033`); wpis w skill-impact.
+- dopisano dowód: drive-mcp-nie-widzi-dysku-wspoldzielonego — id z `kb-client pending` „not found", fixture bez transkryptu.
+- dopisano dowód: update-z-deduplikacji-trafia-w-caly-dokument — agenci testowi sami flagowali #3/#6/#7 jako nadpisanie dokumentu repo.
+- skill-impact: daily i spotkanie — zaakceptowane zmiany spoza evolve-skill (bramka punkt po punkcie).
+- Wzorce globalne dotknięte w tej sesji: nowe asercja-testu-na-sygnale-zastepczym, klasyfikator-blokuje-zapisy-dry-run-w-subagencie, plan-zaweza-regule-specu, skill-testowany-na-sucho-skryptem-odpowiedzi (sukces), bash-c-w-argumencie-zatrzymany-przez-straznik-usuwania; dowody do python-na-windows-drukuje-w-cp1252, windows-path-w-literale-skryptu, kod-referencyjny-planu-nigdy-nie-uruchomiony.
+- Sygnał repo: bez zmian — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.

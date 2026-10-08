@@ -103,6 +103,11 @@ wierność jest tym, o co się go prosi.
   suite'u uruchomiłem (121/121) — czyli dostęp do wykonania był, tylko nieużyty na kodzie
   referencyjnym planu. Wart odnotowania wariant: uruchomienie **samego fixture'u** przez istniejący
   suite jest tańsze niż uruchomienie bloków zadania i łapie dokładnie tę klasę defektu.
+- 2026-10-08, sesja 8d719440 (id claude.ai niedostępny), repo Baza wiedzy: dziesiąty dowód. Plan bramki
+  `/daily` niósł pełny `check_runs.py`; przed zapisem planu przeszedł tylko `ast.parse`, nie uruchomienie.
+  W egzekucji wyszły: `IndexError` przy krótszym przebiegu (indeksowanie kart), crash cp1252 przy
+  przekierowaniu wyjścia i dwie błędne wartości oczekiwane (15 zamiast 16 kart, `## Statusy` jako dowód
+  pokazania notatki) — każda kosztowała ruling. Zob. asercja-testu-na-sygnale-zastepczym.
 
 ## Rozwiązanie
 

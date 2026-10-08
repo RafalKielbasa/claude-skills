@@ -126,6 +126,12 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   Bez szkody — każda komenda znowu niosła własny `cd` ze ścieżką bezwzględną;
   podpowłoka użyta raz, przypadkiem, w sondzie `devstock-team-agent`.
 
+- 2026-10-08, sesja 91761871-49a7-472c-b429-5c049696698e (id claude.ai niedostępny):
+  czternasty dowód, trzynasta sesja. `cd /e/Praca/agent-biznes && …`
+  i `cd "/d/Praca/Devstock/…" && …` w większości komend (CLI idea-engine,
+  worktree bazy wiedzy, `tools/kb-client`), po każdej „Shell cwd was reset”.
+  Bez szkody — każda komenda niosła własny `cd` ze ścieżką bezwzględną.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:

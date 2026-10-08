@@ -23,6 +23,11 @@ ruszając `action` — w edytorze `update` nie wygląda na operację niszczącą
   0,2059, `product/identyfikacja-wizualna-agenci-ai.md` 0,2247), 2 na wpisy spotkania 2026-08-17 o
   innym temacie (0,2406, 0,2239). Wszystkie 8 oznaczone `accepted` bez zmiany `action`; przy bramce
   wychwycone komentarzem `# UWAGA` w `wpisy.yaml`, Rafał wybrał „zmień na new".
+- 2026-10-08, sesja 8d719440 (id claude.ai niedostępny): w testach na sucho bramki agenci grający
+  `/daily` sami oznaczali wpisy #3, #6, #7 (`similar_to` = `knowledge-base/product/notatki-spotkania.md`,
+  `marketing/13-seo-i-blog.md`, `product/identyfikacja-wizualna-agenci-ai.md`) jako ryzyko nadpisania
+  dokumentu repo tekstem z daily. Kontrakt deduplikacji bez zmian; nowa karta `update` pokazuje
+  dopasowanie i „Akceptuj jako nowy", ale nie ostrzega, że celem jest cały dokument.
 
 ## Rozwiązanie
 `action: update` tylko wtedy, gdy `similar_to` jest wpisem spotkania (prefiks `planning/`) i to

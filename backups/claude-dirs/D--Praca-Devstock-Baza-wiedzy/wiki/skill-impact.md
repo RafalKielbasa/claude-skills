@@ -987,3 +987,266 @@ index 5aa4f8f..38769a4 100644
    disagreement it shows in full** (§9). This skill never edits `.env`;
    a manifest correction is the only file it may touch on that path, and
 ```
+
+## 2026-10-08 — daily — zaakceptowana
+- **Wzorce:** kolejka-bez-slownika-statusow
+- **Zmiana:** Krok 7 zastąpiony przejściem punkt po punkcie z `docs/spotkania-kolejki.md` („The gate"): karty z przyciskami `AskUserQuestion`, cała notatka dopiero na ekranie końcowym, jedno „Akceptuj i wykonaj" zamiast akceptacji notatki i dwóch „przetwórz"; krok 1 wraca do bramki bez przebudowy (także samą datą), znacznik `**Opublikowano:**`, `duplicate` zostaje `proposed` do bramki. Commity `1ac982cb`, `ea378033`; wprowadzone przez brainstorming → spec → plan, poza `evolve-skill`.
+- **Powód decyzji:** zaakceptowana — prośba Rafała („forma przedstawiania mi treści do zaakceptowania jest dość toporna … przechodzimy punkt po punkcie"); projekt, spec i plan zatwierdzone przez niego.
+
+```diff
+diff --git a/.claude/skills/daily/SKILL.md b/.claude/skills/daily/SKILL.md
+index 833d3639..98a9f5a2 100644
+--- a/.claude/skills/daily/SKILL.md
++++ b/.claude/skills/daily/SKILL.md
+@@ -2,8 +2,9 @@
+ name: daily
+ description: >-
+   Processes one standup (DAILY) recording into a note and the two review queues — `wpisy.yaml`
+-  (knowledge candidates) and `zadania.yaml` (task candidates) — behind the file-based gate that
+-  `docs/spotkania-kolejki.md` defines, then on "przetwórz" executes what Rafał approved and
++  (knowledge candidates) and `zadania.yaml` (task candidates) — then walks Rafał through every
++  uncertain passage and every candidate one card at a time, behind the gate
++  `docs/spotkania-kolejki.md` defines, and on his final approval executes what he approved and
+   publishes to Slack. Triggers: "przetwórz daily", "notatka z daily", `/daily [date] [time]`. Not
+   for whole-day offsites or short working sessions (PLANNING) — those go through `/spotkanie`.
+   Not for the weekly project or trends reports — those stay in n8n (`29_weekly_project_report`,
+@@ -23,7 +24,7 @@ the comment markers — real content never stays inside a comment.
+ 
+ The queue file schema, the gate, the execution order and the deduplication rules are defined once,
+ in `docs/spotkania-kolejki.md`, and shared with `/spotkanie`. This skill points at that document
+-instead of restating it — read it before Step 6 and Step 8 below.
++instead of restating it — read it before Steps 6, 7 and 8 below.
+ 
+ ## 1. Modes
+ 
+@@ -38,10 +39,20 @@ instead of restating it — read it before Step 6 and Step 8 below.
+   name in any `notatka.md` under `planning/` (a whole-day note can merge several transcripts,
+   including time-keyed ones). List the ones matching none of the three, one line each (date, time,
+   file name), and stop — this mode only reports, it never processes anything.
+-- **`/daily <date> <time>`.** Process exactly that recording.
+-- **`/daily <date>`, no time.** Look at the pending list (or at file names already sitting in
+-  `planning/transkrypty/`) for that date.
+-  - Exactly one recording that day → proceed with it, as if the time had been given.
++- **`/daily <date> <time>`.** If `planning/daily/<date>-<time>/notatka.md` already exists, this is
++  a re-entry. With `**Status:** szkic`, skip Steps 2–5 — never rebuild the note or a queue file
++  over decisions already made at the gate. If `wpisy.yaml`, `zadania.yaml` or `statuses.json` is
++  missing, the earlier run stopped inside Step 6: build the missing file(s) only, by Step 6's
++  rules, then go to Step 7; with all three present, go straight to Step 7. With
++  `**Status:** finalna`, build nothing and ask nothing: report which `approved` entries are not
++  yet `indexed`, `created` or `commented`, and whether the note carries the `**Opublikowano:**`
++  marker ("Execution order" in `docs/spotkania-kolejki.md`) — anything outstanding, publication
++  included, runs on "przetwórz" (Step 8) — or that everything is done, and stop. Otherwise process
++  exactly that recording.
++- **`/daily <date>`, no time.** The candidates for that date are the pending recordings (or file
++  names already sitting in `planning/transkrypty/`) plus every `planning/daily/<date>-<time>/`
++  whose `notatka.md` is still `szkic`; a time found both ways counts once.
++  - Exactly one → proceed with it, as if the time had been given (re-entry included).
+   - More than one → list the times found, ask Rafał which one, and wait. Absence of an answer is
+     not a choice.
+   - None → say plainly that nothing is pending for that date and stop.
+@@ -99,7 +110,8 @@ Create `planning/daily/<date>-<time>/notatka.md` from the template.
+   deadline gets status `do doprecyzowania`, resolved by Rafał editing the file at the gate, not by
+   a mid-build question.
+ - **Never invent content.** A passage that is ambiguous — unclear reference, cut short, disputed
+-  between speakers — is quoted verbatim and flagged as uncertain instead of interpreted.
++  between speakers — is quoted verbatim and flagged with the `⚠` marker `docs/spotkania-kolejki.md`
++  defines ("Uncertain passages") instead of interpreted.
+ 
+ ## 6. Building the queues
+ 
+@@ -111,7 +123,7 @@ passage — the one Step 5 quoted and flagged instead of interpreting — into a
+ builds this file. Propose each knowledge candidate's category per skill `baza-wiedzy`'s rules; an
+ ambiguous fit is a best guess corrected by Rafał at the gate, not a question asked now.
+ 
+-**Deduplication, run before either file is shown:**
++**Deduplication, run before the gate opens:**
+ 
+ - Knowledge: one `kb-client similar --category <c> --file <path> --json` call per candidate —
+   write the candidate's exact text to a scratch file first (any path under this meeting's own
+@@ -126,7 +138,7 @@ ambiguous fit is a best guess corrected by Rafał at the gate, not a question as
+   auto-classified `duplicate`; outside it, or no match, is `action: new`.
+ - Tasks: one read of the kanban board — target repository and board named once in
+   `docs/spotkania-kolejki.md`'s "Deduplication before the gate" section, not restated here —
+-  matching by topic, drafts included. A match is `duplicate` (`status: rejected` by default); a
++  matching by topic, drafts included. A match is `duplicate` (left `proposed`; the gate offers keeping it rejected first); a
+   matched topic carrying new information is `supplement`; no match is `new`. That same section
+   also carries the degradation rule for when `docs/ticket-conventions.md` is absent — read it
+   before creating anything.
+@@ -149,31 +161,30 @@ content as the note.
+ 
+ ## 7. The gate
+ 
+-Show Rafał the whole note (`notatka.md`), not only counts, plus a one-screen summary: counts per
+-`action` in each file, and anything flagged — ambiguous passages, an unresolved `assignee`, a
+-dedup-unavailable note. State plainly that nothing has left the repo. Then stop and wait.
++Read "The gate" in `docs/spotkania-kolejki.md` fresh and run it with all five phases in one
++sitting: summary, `⚠` passages, `wpisy.yaml`, `zadania.yaml`, final screen. The whole note appears
++only on the final screen, with every walk decision already applied. In phase 2 a resolution that
++touches a person's status is written to both `## Statusy` and `statuses.json`.
+ 
+-Two separate signals gate two separate things here, mirroring `/spotkanie`'s note gate:
++On the final screen:
+ 
+-- **"przetwórz"** approves the queues — Rafał edits text and statuses directly in `wpisy.yaml`
+-  and `zadania.yaml`, then says the word. Silence is not approval, no matter how long it lasts.
+-  Proceed to Step 8 regardless of the note's own status below.
+-- **Accepting the note** is a second, separate act. Only once Rafał confirms the note itself is
+-  ready: change `**Status:** szkic` to `**Status:** finalna` in `notatka.md`, and delete every
+-  file from `planning/transkrypty/` except `.gitkeep` — redacted and raw alike; neither ever
+-  enters git or the vector store. Until Rafał accepts it, the note stays `szkic`,
+-  `planning/transkrypty/` is left as it is, and Step 8 does not publish it — a status the model
+-  wrote for itself is not Rafał's approval of it. Do not run git commands yourself: committing the
+-  finalised artifacts follows this repository's normal commit flow. **Once the note reads
+-  `finalna`, publication needs one more "przetwórz."** Say it again — Step 8 skips every entry
+-  already `indexed` or `created`/`commented` (nothing to redo there), and this time finds
+-  `**Status:**` already `finalna`, so it reaches the `kb-client publish` call instead of stopping
+-  short of it. Without this second "przetwórz," publication stalls forever even after acceptance.
++- **Akceptuj i wykonaj** is Rafał's acceptance of the note and his approval of the queues in one
++  answer. In this order: change `**Status:** szkic` to `**Status:** finalna` in `notatka.md`;
++  delete every file from `planning/transkrypty/` except `.gitkeep` — redacted and raw alike,
++  neither ever enters git or the vector store; then run Step 8.
++- **Jeszcze nie** stops with nothing executed. The note stays `szkic`, `planning/transkrypty/` is
++  left as it is, and `/daily <date> <time>` (or `/daily <date>`) later re-enters here (Step 1).
+ 
+-## 8. Execution on "przetwórz"
++`finalna` is written only on **Akceptuj i wykonaj** — a status the model wrote for itself is not
++Rafał's approval. Do not run git commands yourself: committing the finalised artifacts follows this
++repository's normal commit flow.
+ 
+-Follow the execution order in `docs/spotkania-kolejki.md` exactly, including its two easiest
+-mistakes and its orphan-cleanup step:
++## 8. Execution
++
++Runs on **Akceptuj i wykonaj** (Step 7), or on "przetwórz" when an earlier execution was
++interrupted. If `notatka.md` does not read `**Status:** finalna`, execute nothing and go to Step 7
++— execution never starts from a draft. Follow the execution order in `docs/spotkania-kolejki.md`
++exactly, including its two easiest mistakes and its orphan-cleanup step:
+ 
+ - An `approved` knowledge entry with `action: update` upserts under the `entry_id` copied verbatim
+   from `similar_to` — never a freshly built one. `action: new` builds
+@@ -187,15 +198,14 @@ mistakes and its orphan-cleanup step:
+   `zadania.yaml` (`issue`, `status: created`/`commented`) **and** the note's `## Action items` row
+   — the note and the board must agree.
+ - `rejected` and `duplicate` entries are left exactly as they are — no operation runs for them.
+-- Then check `notatka.md`'s `**Status:**`:
+-  - `finalna` → `kb-client publish --type daily --date <date> --title "<title>" --file
+-    planning/daily/<date>-<time>/notatka.md --statuses planning/daily/<date>-<time>/statuses.json`.
+-  - still `szkic` → do not publish. Say plainly that the entries above were executed but
+-    publication is waiting for Rafał to accept the note (Step 7).
++- Then publish, unless the note already carries `**Opublikowano:**`: `kb-client publish --type
++  daily --date <date> --title "<title>" --file planning/daily/<date>-<time>/notatka.md --statuses
++  planning/daily/<date>-<time>/statuses.json`. On success, write the marker into the note as
++  "Execution order" defines.
+ - Write every result immediately after the operation that produced it succeeds, so an interrupted
+   run resumes on the next "przetwórz" instead of repeating.
+-- Report what was written where: entries indexed, issues created or commented, and either the
+-  publish result or the plain statement that publication is waiting for the note.
++- Report what was written where: entries indexed, issues created or commented, and the publish
++  result.
+ 
+ ## Rules
+ 
+```
+
+## 2026-10-08 — spotkanie — zaakceptowana
+- **Wzorce:** kolejka-bez-slownika-statusow (kontrakt wspólny z daily)
+- **Zmiana:** Tryb „transkrypt": krok 1 wraca tylko do otwartej bramki tej daty, krok 6 przechodzi fragmenty ⚠ kartami; indeksowanie krok 5 to przejście punkt po punkcie ze wspólnej bramki, ekran końcowy „Wykonaj" · „Jeszcze nie", publikacja pomijana przy znaczniku `**Opublikowano:**`. Commity `117074bc`, `ea378033`; poza `evolve-skill`.
+- **Powód decyzji:** zaakceptowana — Rafał wybrał objęcie obu bramek w brainstormingu.
+
+```diff
+diff --git a/.claude/skills/spotkanie/SKILL.md b/.claude/skills/spotkanie/SKILL.md
+index 076939fa..3971947c 100644
+--- a/.claude/skills/spotkanie/SKILL.md
++++ b/.claude/skills/spotkanie/SKILL.md
+@@ -120,7 +120,16 @@ Wywołanie: `/spotkanie transkrypt <data>` — data jest wymagana. Transkrypt(y)
+ trafiają do `planning/transkrypty/` — Rafał wgrywa je ręcznie PRZED
+ wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
+ 
+-1. **Agenda opcjonalna.** Wczytaj `planning/<data>-agenda.md`.
++1. **Powrót do bramki, potem agenda.** Najpierw szukaj otwartej bramki tej daty: plików kolejek
++   `planning/<data>-wpisy.yaml` (tryb z agendą) albo `planning/robocze/<data>-*/wpisy.yaml`
++   (tryb bezagendowy), w których — albo w sąsiednim `zadania.yaml` — jest pozycja bez decyzji
++   (patrz „Resuming" w `docs/spotkania-kolejki.md`) albo `approved` jeszcze niewykonana, albo
++   których notatka nie ma znacznika `**Opublikowano:**` („Execution order" tamże). Spotkanie
++   z kolejkami w pełni wykonanymi i opublikowanymi jest zamknięte i nie liczy się.
++   Dokładnie jedna otwarta bramka → przejdź od razu do kroku 5 sekcji „Indeksowanie notatki do
++   bazy wiedzy" — nie szukaj transkryptów (skasowane przy akceptacji notatki) i niczego nie buduj
++   od nowa. Więcej niż jedna → wypisz je, zapytaj Rafała, którą, i czekaj. Żadnej → to nowe
++   nagranie: wczytaj `planning/<data>-agenda.md`.
+    - Plik istnieje → **tryb z agendą** (jak dotychczas, spotkanie
+      całodniowe/offsite): sekcje notatki wynikają z punktów agendy;
+      artefakty to `planning/<data>-notatka.md` (+ pliki kolejek obok niego).
+@@ -180,8 +189,8 @@ wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
+    - W obu trybach sklasyfikuj istotne fragmenty jak w trybie „prowadź":
+      `ustalenie:` / `decyzja:` / `action item:` (dla action item wyłuskaj
+      osobę i termin, jeśli padły). Nie zmyślaj treści spoza transkryptu;
+-     fragment niejednoznaczny → zacytuj go i zaznacz niepewność zamiast
+-     interpretować na siłę.
++     fragment niejednoznaczny → zacytuj go i oznacz znacznikiem `⚠` z sekcji
++     „Uncertain passages" w `docs/spotkania-kolejki.md`, zamiast interpretować na siłę.
+ 5. **Złożenie notatki.** Utwórz notatkę z `szablony/notatka.md` (status
+    `szkic`) w miejscu ustalonym w kroku 1:
+    - tryb z agendą: `planning/<data>-notatka.md`; `## Ustalenia` per
+@@ -202,8 +211,13 @@ wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
+    - Action item bez osoby lub terminu w transkrypcie → dopytaj Rafała
+      (jak w kroku 5a trybu „prowadź"); nadal brak → status
+      `do doprecyzowania`.
+-6. **Przegląd z Rafałem.** Pokaż całą notatkę. Rafał poprawia, dopisuje
+-   lub kwestionuje dopasowania — nanieś poprawki.
++6. **Przegląd z Rafałem.** Najpierw etap fragmentów `⚠` bramki z `docs/spotkania-kolejki.md`
++   (sekcje „Phases" i „Resolving a `⚠` passage" w „The gate", czytane na bieżąco): fragment po
++   fragmencie, karta i przyciski, rozstrzygnięcie zapisane w notatce od razu. Fragment, który po
++   rozstrzygnięciu jest ustaleniem, decyzją albo action itemem, przenieś do właściwej sekcji
++   notatki — kandydatów jeszcze nie budujesz, powstaną z zaakceptowanej notatki w sekcji
++   „Indeksowanie". Potem pokaż całą notatkę. Rafał poprawia, dopisuje lub kwestionuje
++   dopasowania — nanieś poprawki.
+ 7. **BRAMKA: Rafał zatwierdza notatkę.** Dopiero wtedy: zmień
+    `**Status:** szkic` → `**Status:** finalna`, zapisz plik i USUŃ
+    wszystkie pliki (poza `.gitkeep`) z `planning/transkrypty/` — surowy
+@@ -277,12 +291,15 @@ powtarza jego treści.
+    - tryb z agendą: `planning/<data>-wpisy.yaml`, `planning/<data>-zadania.yaml`,
+    - tryb bezagendowy: `planning/robocze/<data>-<godzina>-<slug>/wpisy.yaml`
+      i `.../zadania.yaml` (ten sam katalog co notatka).
+-5. **BRAMKA: „przetwórz".** Pokaż Rafałowi jednoekranowe podsumowanie —
+-   liczby per `action` w obu plikach, wszystko oflagowane (niepewne
+-   fragmenty, nierozstrzygnięty `assignee`, niedostępna deduplikacja). Nic nie
+-   wysyłaj, dopóki Rafał nie napisze „przetwórz" — brak odpowiedzi to nie
+-   zgoda. Rafał edytuje treść i statusy bezpośrednio w plikach.
+-6. **Egzekucja po „przetwórz".** Wykonaj kolejność egzekucji z
++5. **BRAMKA: przejście punkt po punkcie.** Przeprowadź bramkę z sekcji „The gate" w
++   `docs/spotkania-kolejki.md` (czytaj ją na bieżąco): podsumowanie na jeden ekran, kandydaci
++   wiedzy, kandydaci zadań, ekran końcowy. Etap fragmentów `⚠` masz za sobą (krok 6 trybu
++   „transkrypt"), a notatka jest zaakceptowana, więc ekran końcowy pokazuje samą tabelę decyzji:
++   **Wykonaj** → krok 6; **Jeszcze nie** → koniec, nic nie wysłane, decyzje są już w plikach,
++   a powrót to `/spotkanie transkrypt <data>` (krok 1). Nic nie wysyłaj przed **Wykonaj** —
++   brak odpowiedzi to nie zgoda.
++6. **Egzekucja po „Wykonaj".** Także po „przetwórz", gdy wcześniejsza egzekucja została
++   przerwana. Wykonaj kolejność egzekucji z
+    `docs/spotkania-kolejki.md`: upsert per zatwierdzony wpis wiedzy
+    (`entry_id` = `planning/<data>-notatka/<id>-<slug>` w trybie z agendą,
+    `planning/robocze/<data>-<godzina>-<slug>/<id>-<slug-wpisu>` w trybie
+@@ -301,9 +318,11 @@ powtarza jego treści.
+ 
+    (tryb bezagendowy: `--type robocze` i `--file
+    planning/robocze/<data>-<godzina>-<slug>/notatka.md`; żaden z trybów
+-   nie ma `statuses.json`, więc bez `--statuses`). Zapisuj wynik w pliku
+-   kolejki od razu po każdej operacji, żeby przerwany przebieg wznawiał,
+-   nie powtarzał.
++   nie ma `statuses.json`, więc bez `--statuses`). Publikację pomiń, gdy
++   notatka ma już znacznik `**Opublikowano:**`; po udanej publikacji wpisz
++   go do notatki („Execution order" w `docs/spotkania-kolejki.md`). Zapisuj
++   wynik w pliku kolejki od razu po każdej operacji, żeby przerwany przebieg
++   wznawiał, nie powtarzał.
+ 
+ ## Zasady
+ 
+@@ -315,7 +334,7 @@ powtarza jego treści.
+ - Action items ze spotkania całodniowego (offsite) mogą teraz stać się
+   zadaniami na tablicy przez `zadania.yaml` — do tej zmiany żyły
+   wyłącznie w tabeli notatki. Nic nie powstaje bez `status: approved`
+-  i słowa „przetwórz". Egzekucja notatki offsite trafia też przez
++  i odpowiedzi **Wykonaj** na ekranie końcowym bramki. Egzekucja notatki offsite trafia też przez
+   `kb-client publish` na Slacka (`#core-team`) — do tej zmiany offsite nie
+   publikował tam nic.
+ - NIE modyfikuj `planning/02.06.2026-planning.md` (plik historyczny).
+```

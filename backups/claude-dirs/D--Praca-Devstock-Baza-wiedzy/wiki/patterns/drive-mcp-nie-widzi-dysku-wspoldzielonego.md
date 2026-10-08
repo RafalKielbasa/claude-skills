@@ -22,6 +22,10 @@ credentialem z dostępem do dysku współdzielonego.
   `1iJz2_jseQ…` (surowy) → „Requested entity was not found"; wcześniej `search_files
   parentId = '1KbFsbOnbPqc7iksHWKx7NHC6Ioqz2Ny4'` → `{}`. Transkrypt wzięty z danych wykonania n8n
   (`Format Transcript` w exec `27678` = dokładnie treść zapisana przez `Save Transcript to Drive`).
+- 2026-10-08, sesja 8d719440 (id claude.ai niedostępny): fixture testu bramki potrzebował
+  transkryptu 2026-10-08 10:00; `read_file_content` po id z `kb-client pending` zwrócił „Requested
+  entity was not found", `search_files` po nazwie — pusto. Testy poszły bez transkryptu, ścieżka kart
+  „ŹRÓDŁO — transkrypt" i pole `KONTEKST` zostały niesprawdzone.
 
 ## Rozwiązanie
 W kroku 2: gdy Drive MCP zwróci „not found" albo pusty wynik, nie przerywać od razu — pobrać treść

@@ -356,3 +356,21 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: skrypt-z-asercja-zamiast-serii-edycji (dziesiąty) — jedna lista 41 operacji generowała eksport repo i `operations` dla MCP; porównanie repo↔prod znalazło tylko błąd narzędzia.
 - Wzorce repo (`Baza wiedzy/.claude/wiki/`): pięć nowych o skillu `daily` (pierwsze realne użycie) — patrz log repo.
 - Sygnał globalny: żaden wzorzec nie ma statusu `nawrót`; nowe mają po jednym dowodzie. Lista kandydatów bez zmian: kod-referencyjny-planu-nigdy-nie-uruchomiony (9) → `/evolve-skill superpowers:writing-plans`; subagent-odmawia-commita-mimo-jawnego-wyjatku (3) i ruling-z-nieweryfikowana-przeslanka (3) → `/evolve-skill superpowers:subagent-driven-development`; ogólne bez skilla: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (13), windows-path-w-literale-skryptu (9), twierdzenie-o-pliku-bez-odczytu (5), python-na-windows-drukuje-w-cp1252 (5), zweryfikowana-liczba-powtarzana-jako-stala (4).
+
+## 2026-10-08 — sesja 8d719440 (id claude.ai niedostępny) (repo Baza wiedzy: bramka `/daily` i `/spotkanie` punkt po punkcie, testy skilli na sucho)
+- założono: asercja-testu-na-sygnale-zastepczym (skill: superpowers:writing-plans, typ: porażka) — pięć fałszywych FAIL w testach bramki: karta przerwania nieliczona, `## Statusy` w polu MIEJSCE, goły `entry_id`, globalna sonda issues, fixture bez znacznika.
+- założono: klasyfikator-blokuje-zapisy-dry-run-w-subagencie (skill: ogólny, typ: porażka) — „[Auto-Mode Bypass]\" i „Code from External\" na zapisach przez wrapper; ta sama komenda raz przeszła, raz nie.
+- założono: plan-zaweza-regule-specu (skill: superpowers:writing-plans, typ: porażka) — spec §9 „notatka + wpisy + zadania", plan „notatka"; złapał dopiero final review.
+- założono: skill-testowany-na-sucho-skryptem-odpowiedzi (skill: superpowers:writing-skills, typ: sukces) — 9 scenariuszy, RED/GREEN, trzy uwagi review zreprodukowane.
+- założono: bash-c-w-argumencie-zatrzymany-przez-straznik-usuwania (skill: ogólny, typ: porażka) — `task-done -- bash -c` zatrzymane bez `rm`; obejście plikiem `.py`.
+- dopisano dowód: python-na-windows-drukuje-w-cp1252 (szósty) — `check_runs.py` z ⚠ przy przekierowaniu.
+- dopisano dowód: windows-path-w-literale-skryptu (dziesiąty) — `\n` w heredocu zamienione na nową linię, `SyntaxError`.
+- dopisano dowód: kod-referencyjny-planu-nigdy-nie-uruchomiony (dziesiąty) — skrypt kontrolny z planu tylko sparsowany, cztery defekty w egzekucji.
+- Wzorce repo (`Baza wiedzy/.claude/wiki/`): kolejka-bez-slownika-statusow zaadresowany; dowody do drive-mcp-nie-widzi-dysku-wspoldzielonego i update-z-deduplikacji-trafia-w-caly-dokument — patrz log repo.
+- Sygnał globalny: brak wzorców `nawrót`; kandydaci bez zmian, z nowymi dowodami: kod-referencyjny-planu-nigdy-nie-uruchomiony (10) → `/evolve-skill superpowers:writing-plans`, windows-path-w-literale-skryptu (10), python-na-windows-drukuje-w-cp1252 (6).
+
+## 2026-10-08 — sesja 91761871-49a7-472c-b429-5c049696698e (id claude.ai niedostępny; agent-biznes: idea-engine `vision` dla Kodożerców, materiały na spotkanie 13.10 w Claude Docs i Bazie wiedzy)
+- dopisano dowód: subagent-limit-zastapiony-wlasna-ocena (trzeci, obsłużony poprawnie) — badacz padł na `ENOTFOUND` w trakcie pracy; sprawdzenie braku pliku wyjściowego, potem wznowienie tego samego agenta przez `SendMessage` zamiast nowego dispatchu.
+- dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (czternasty, trzynasta sesja) — `cd … &&` w większości komend, bez szkody.
+- Wzorce repo (`agent-biznes/.claude/wiki/`): dwa nowe sukcesy o skillu `idea-engine` — patrz log repo.
+- Sygnał globalny: żaden wzorzec nie ma statusu `nawrót`. Lista kandydatów bez zmian: kod-referencyjny-planu-nigdy-nie-uruchomiony (9) → `/evolve-skill superpowers:writing-plans`; subagent-odmawia-commita-mimo-jawnego-wyjatku (3) i ruling-z-nieweryfikowana-przeslanka (3) → `/evolve-skill superpowers:subagent-driven-development`; ogólne bez skilla: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (14), windows-path-w-literale-skryptu (9), twierdzenie-o-pliku-bez-odczytu (5), python-na-windows-drukuje-w-cp1252 (5), zweryfikowana-liczba-powtarzana-jako-stala (4), subagent-limit-zastapiony-wlasna-ocena (3, w tym dwa poprawne obsłużenia).

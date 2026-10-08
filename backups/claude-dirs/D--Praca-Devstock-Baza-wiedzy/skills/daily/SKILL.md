@@ -2,8 +2,9 @@
 name: daily
 description: >-
   Processes one standup (DAILY) recording into a note and the two review queues — `wpisy.yaml`
-  (knowledge candidates) and `zadania.yaml` (task candidates) — behind the file-based gate that
-  `docs/spotkania-kolejki.md` defines, then on "przetwórz" executes what Rafał approved and
+  (knowledge candidates) and `zadania.yaml` (task candidates) — then walks Rafał through every
+  uncertain passage and every candidate one card at a time, behind the gate
+  `docs/spotkania-kolejki.md` defines, and on his final approval executes what he approved and
   publishes to Slack. Triggers: "przetwórz daily", "notatka z daily", `/daily [date] [time]`. Not
   for whole-day offsites or short working sessions (PLANNING) — those go through `/spotkanie`.
   Not for the weekly project or trends reports — those stay in n8n (`29_weekly_project_report`,
@@ -23,7 +24,7 @@ the comment markers — real content never stays inside a comment.
 
 The queue file schema, the gate, the execution order and the deduplication rules are defined once,
 in `docs/spotkania-kolejki.md`, and shared with `/spotkanie`. This skill points at that document
-instead of restating it — read it before Step 6 and Step 8 below.
+instead of restating it — read it before Steps 6, 7 and 8 below.
 
 ## 1. Modes
 
@@ -38,10 +39,20 @@ instead of restating it — read it before Step 6 and Step 8 below.
   name in any `notatka.md` under `planning/` (a whole-day note can merge several transcripts,
   including time-keyed ones). List the ones matching none of the three, one line each (date, time,
   file name), and stop — this mode only reports, it never processes anything.
-- **`/daily <date> <time>`.** Process exactly that recording.
-- **`/daily <date>`, no time.** Look at the pending list (or at file names already sitting in
-  `planning/transkrypty/`) for that date.
-  - Exactly one recording that day → proceed with it, as if the time had been given.
+- **`/daily <date> <time>`.** If `planning/daily/<date>-<time>/notatka.md` already exists, this is
+  a re-entry. With `**Status:** szkic`, skip Steps 2–5 — never rebuild the note or a queue file
+  over decisions already made at the gate. If `wpisy.yaml`, `zadania.yaml` or `statuses.json` is
+  missing, the earlier run stopped inside Step 6: build the missing file(s) only, by Step 6's
+  rules, then go to Step 7; with all three present, go straight to Step 7. With
+  `**Status:** finalna`, build nothing and ask nothing: report which `approved` entries are not
+  yet `indexed`, `created` or `commented`, and whether the note carries the `**Opublikowano:**`
+  marker ("Execution order" in `docs/spotkania-kolejki.md`) — anything outstanding, publication
+  included, runs on "przetwórz" (Step 8) — or that everything is done, and stop. Otherwise process
+  exactly that recording.
+- **`/daily <date>`, no time.** The candidates for that date are the pending recordings (or file
+  names already sitting in `planning/transkrypty/`) plus every `planning/daily/<date>-<time>/`
+  whose `notatka.md` is still `szkic`; a time found both ways counts once.
+  - Exactly one → proceed with it, as if the time had been given (re-entry included).
   - More than one → list the times found, ask Rafał which one, and wait. Absence of an answer is
     not a choice.
   - None → say plainly that nothing is pending for that date and stop.
@@ -99,7 +110,8 @@ Create `planning/daily/<date>-<time>/notatka.md` from the template.
   deadline gets status `do doprecyzowania`, resolved by Rafał editing the file at the gate, not by
   a mid-build question.
 - **Never invent content.** A passage that is ambiguous — unclear reference, cut short, disputed
-  between speakers — is quoted verbatim and flagged as uncertain instead of interpreted.
+  between speakers — is quoted verbatim and flagged with the `⚠` marker `docs/spotkania-kolejki.md`
+  defines ("Uncertain passages") instead of interpreted.
 
 ## 6. Building the queues
 
@@ -111,7 +123,7 @@ passage — the one Step 5 quoted and flagged instead of interpreting — into a
 builds this file. Propose each knowledge candidate's category per skill `baza-wiedzy`'s rules; an
 ambiguous fit is a best guess corrected by Rafał at the gate, not a question asked now.
 
-**Deduplication, run before either file is shown:**
+**Deduplication, run before the gate opens:**
 
 - Knowledge: one `kb-client similar --category <c> --file <path> --json` call per candidate —
   write the candidate's exact text to a scratch file first (any path under this meeting's own
@@ -126,7 +138,7 @@ ambiguous fit is a best guess corrected by Rafał at the gate, not a question as
   auto-classified `duplicate`; outside it, or no match, is `action: new`.
 - Tasks: one read of the kanban board — target repository and board named once in
   `docs/spotkania-kolejki.md`'s "Deduplication before the gate" section, not restated here —
-  matching by topic, drafts included. A match is `duplicate` (`status: rejected` by default); a
+  matching by topic, drafts included. A match is `duplicate` (left `proposed`; the gate offers keeping it rejected first); a
   matched topic carrying new information is `supplement`; no match is `new`. That same section
   also carries the degradation rule for when `docs/ticket-conventions.md` is absent — read it
   before creating anything.
@@ -149,31 +161,30 @@ content as the note.
 
 ## 7. The gate
 
-Show Rafał the whole note (`notatka.md`), not only counts, plus a one-screen summary: counts per
-`action` in each file, and anything flagged — ambiguous passages, an unresolved `assignee`, a
-dedup-unavailable note. State plainly that nothing has left the repo. Then stop and wait.
+Read "The gate" in `docs/spotkania-kolejki.md` fresh and run it with all five phases in one
+sitting: summary, `⚠` passages, `wpisy.yaml`, `zadania.yaml`, final screen. The whole note appears
+only on the final screen, with every walk decision already applied. In phase 2 a resolution that
+touches a person's status is written to both `## Statusy` and `statuses.json`.
 
-Two separate signals gate two separate things here, mirroring `/spotkanie`'s note gate:
+On the final screen:
 
-- **"przetwórz"** approves the queues — Rafał edits text and statuses directly in `wpisy.yaml`
-  and `zadania.yaml`, then says the word. Silence is not approval, no matter how long it lasts.
-  Proceed to Step 8 regardless of the note's own status below.
-- **Accepting the note** is a second, separate act. Only once Rafał confirms the note itself is
-  ready: change `**Status:** szkic` to `**Status:** finalna` in `notatka.md`, and delete every
-  file from `planning/transkrypty/` except `.gitkeep` — redacted and raw alike; neither ever
-  enters git or the vector store. Until Rafał accepts it, the note stays `szkic`,
-  `planning/transkrypty/` is left as it is, and Step 8 does not publish it — a status the model
-  wrote for itself is not Rafał's approval of it. Do not run git commands yourself: committing the
-  finalised artifacts follows this repository's normal commit flow. **Once the note reads
-  `finalna`, publication needs one more "przetwórz."** Say it again — Step 8 skips every entry
-  already `indexed` or `created`/`commented` (nothing to redo there), and this time finds
-  `**Status:**` already `finalna`, so it reaches the `kb-client publish` call instead of stopping
-  short of it. Without this second "przetwórz," publication stalls forever even after acceptance.
+- **Akceptuj i wykonaj** is Rafał's acceptance of the note and his approval of the queues in one
+  answer. In this order: change `**Status:** szkic` to `**Status:** finalna` in `notatka.md`;
+  delete every file from `planning/transkrypty/` except `.gitkeep` — redacted and raw alike,
+  neither ever enters git or the vector store; then run Step 8.
+- **Jeszcze nie** stops with nothing executed. The note stays `szkic`, `planning/transkrypty/` is
+  left as it is, and `/daily <date> <time>` (or `/daily <date>`) later re-enters here (Step 1).
 
-## 8. Execution on "przetwórz"
+`finalna` is written only on **Akceptuj i wykonaj** — a status the model wrote for itself is not
+Rafał's approval. Do not run git commands yourself: committing the finalised artifacts follows this
+repository's normal commit flow.
 
-Follow the execution order in `docs/spotkania-kolejki.md` exactly, including its two easiest
-mistakes and its orphan-cleanup step:
+## 8. Execution
+
+Runs on **Akceptuj i wykonaj** (Step 7), or on "przetwórz" when an earlier execution was
+interrupted. If `notatka.md` does not read `**Status:** finalna`, execute nothing and go to Step 7
+— execution never starts from a draft. Follow the execution order in `docs/spotkania-kolejki.md`
+exactly, including its two easiest mistakes and its orphan-cleanup step:
 
 - An `approved` knowledge entry with `action: update` upserts under the `entry_id` copied verbatim
   from `similar_to` — never a freshly built one. `action: new` builds
@@ -187,15 +198,14 @@ mistakes and its orphan-cleanup step:
   `zadania.yaml` (`issue`, `status: created`/`commented`) **and** the note's `## Action items` row
   — the note and the board must agree.
 - `rejected` and `duplicate` entries are left exactly as they are — no operation runs for them.
-- Then check `notatka.md`'s `**Status:**`:
-  - `finalna` → `kb-client publish --type daily --date <date> --title "<title>" --file
-    planning/daily/<date>-<time>/notatka.md --statuses planning/daily/<date>-<time>/statuses.json`.
-  - still `szkic` → do not publish. Say plainly that the entries above were executed but
-    publication is waiting for Rafał to accept the note (Step 7).
+- Then publish, unless the note already carries `**Opublikowano:**`: `kb-client publish --type
+  daily --date <date> --title "<title>" --file planning/daily/<date>-<time>/notatka.md --statuses
+  planning/daily/<date>-<time>/statuses.json`. On success, write the marker into the note as
+  "Execution order" defines.
 - Write every result immediately after the operation that produced it succeeds, so an interrupted
   run resumes on the next "przetwórz" instead of repeating.
-- Report what was written where: entries indexed, issues created or commented, and either the
-  publish result or the plain statement that publication is waiting for the note.
+- Report what was written where: entries indexed, issues created or commented, and the publish
+  result.
 
 ## Rules
 

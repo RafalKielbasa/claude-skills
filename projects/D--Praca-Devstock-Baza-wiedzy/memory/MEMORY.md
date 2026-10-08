@@ -22,4 +22,6 @@
 - [CodeBusters publish — diagnoza 500](codebusters-publish-diagnoza-500.md) — klient widzi okrojony komunikat; pełny ślad w `fly logs` (main/production), MySQL robi z gołego String varchar(191).
 - [Repo Baza wiedzy - devstock-team](repo-baza-wiedzy-przenosiny.md) - scalenie z core-team ZROBIONE (sprawdzone 2026-10-07): commitujemy do `devstock-org/devstock-team`, lokalny origin już tam wskazuje; push tylko za zgodą.
 - [n8n-prod — inwentaryzacja i porządki 2026-10-08](n8n-prod-inwentaryzacja.md) — 13 zarchiwizowanych, stary tor (B) czeka tydzień; `23` zostaje (woła go `34_kb_ask` i `31`); numeracja prod ≠ repo; historia wykonań tylko ~10 h; `29` naprawiony; `37`–`40` na prodzie; `01` = kolektor od 2026-10-08 (cofnięcie: wersja `0d5eabb4`), Task 7 za tydzień.
+- [Bramka /daily i /spotkanie punkt po punkcie](bramka-punkt-po-punkcie.md) — od 2026-10-08 karty + jedno zatwierdzenie; pierwsze realne /daily = test akceptacyjny; daily 2026-10-08 bez znacznika `Opublikowano`.
+- [Dry run skilli — ograniczenia](dry-run-skilli-ograniczenia.md) — klasyfikator auto blokuje zapisy przez wrapper niedeterministycznie; Drive MCP nie widzi transkryptów n8n.
 - [n8n MCP: renameNode nie rusza kodu](n8n-mcp-rename-node-code-refs.md) — `$('Stara nazwa')` w węzłach Code zostaje; popraw sam i sprawdź eksportem; MCP nie pokazuje credentiali.

@@ -120,7 +120,16 @@ Wywołanie: `/spotkanie transkrypt <data>` — data jest wymagana. Transkrypt(y)
 trafiają do `planning/transkrypty/` — Rafał wgrywa je ręcznie PRZED
 wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
 
-1. **Agenda opcjonalna.** Wczytaj `planning/<data>-agenda.md`.
+1. **Powrót do bramki, potem agenda.** Najpierw szukaj otwartej bramki tej daty: plików kolejek
+   `planning/<data>-wpisy.yaml` (tryb z agendą) albo `planning/robocze/<data>-*/wpisy.yaml`
+   (tryb bezagendowy), w których — albo w sąsiednim `zadania.yaml` — jest pozycja bez decyzji
+   (patrz „Resuming" w `docs/spotkania-kolejki.md`) albo `approved` jeszcze niewykonana, albo
+   których notatka nie ma znacznika `**Opublikowano:**` („Execution order" tamże). Spotkanie
+   z kolejkami w pełni wykonanymi i opublikowanymi jest zamknięte i nie liczy się.
+   Dokładnie jedna otwarta bramka → przejdź od razu do kroku 5 sekcji „Indeksowanie notatki do
+   bazy wiedzy" — nie szukaj transkryptów (skasowane przy akceptacji notatki) i niczego nie buduj
+   od nowa. Więcej niż jedna → wypisz je, zapytaj Rafała, którą, i czekaj. Żadnej → to nowe
+   nagranie: wczytaj `planning/<data>-agenda.md`.
    - Plik istnieje → **tryb z agendą** (jak dotychczas, spotkanie
      całodniowe/offsite): sekcje notatki wynikają z punktów agendy;
      artefakty to `planning/<data>-notatka.md` (+ pliki kolejek obok niego).
@@ -180,8 +189,8 @@ wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
    - W obu trybach sklasyfikuj istotne fragmenty jak w trybie „prowadź":
      `ustalenie:` / `decyzja:` / `action item:` (dla action item wyłuskaj
      osobę i termin, jeśli padły). Nie zmyślaj treści spoza transkryptu;
-     fragment niejednoznaczny → zacytuj go i zaznacz niepewność zamiast
-     interpretować na siłę.
+     fragment niejednoznaczny → zacytuj go i oznacz znacznikiem `⚠` z sekcji
+     „Uncertain passages" w `docs/spotkania-kolejki.md`, zamiast interpretować na siłę.
 5. **Złożenie notatki.** Utwórz notatkę z `szablony/notatka.md` (status
    `szkic`) w miejscu ustalonym w kroku 1:
    - tryb z agendą: `planning/<data>-notatka.md`; `## Ustalenia` per
@@ -202,8 +211,13 @@ wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
    - Action item bez osoby lub terminu w transkrypcie → dopytaj Rafała
      (jak w kroku 5a trybu „prowadź"); nadal brak → status
      `do doprecyzowania`.
-6. **Przegląd z Rafałem.** Pokaż całą notatkę. Rafał poprawia, dopisuje
-   lub kwestionuje dopasowania — nanieś poprawki.
+6. **Przegląd z Rafałem.** Najpierw etap fragmentów `⚠` bramki z `docs/spotkania-kolejki.md`
+   (sekcje „Phases" i „Resolving a `⚠` passage" w „The gate", czytane na bieżąco): fragment po
+   fragmencie, karta i przyciski, rozstrzygnięcie zapisane w notatce od razu. Fragment, który po
+   rozstrzygnięciu jest ustaleniem, decyzją albo action itemem, przenieś do właściwej sekcji
+   notatki — kandydatów jeszcze nie budujesz, powstaną z zaakceptowanej notatki w sekcji
+   „Indeksowanie". Potem pokaż całą notatkę. Rafał poprawia, dopisuje lub kwestionuje
+   dopasowania — nanieś poprawki.
 7. **BRAMKA: Rafał zatwierdza notatkę.** Dopiero wtedy: zmień
    `**Status:** szkic` → `**Status:** finalna`, zapisz plik i USUŃ
    wszystkie pliki (poza `.gitkeep`) z `planning/transkrypty/` — surowy
@@ -277,12 +291,15 @@ powtarza jego treści.
    - tryb z agendą: `planning/<data>-wpisy.yaml`, `planning/<data>-zadania.yaml`,
    - tryb bezagendowy: `planning/robocze/<data>-<godzina>-<slug>/wpisy.yaml`
      i `.../zadania.yaml` (ten sam katalog co notatka).
-5. **BRAMKA: „przetwórz".** Pokaż Rafałowi jednoekranowe podsumowanie —
-   liczby per `action` w obu plikach, wszystko oflagowane (niepewne
-   fragmenty, nierozstrzygnięty `assignee`, niedostępna deduplikacja). Nic nie
-   wysyłaj, dopóki Rafał nie napisze „przetwórz" — brak odpowiedzi to nie
-   zgoda. Rafał edytuje treść i statusy bezpośrednio w plikach.
-6. **Egzekucja po „przetwórz".** Wykonaj kolejność egzekucji z
+5. **BRAMKA: przejście punkt po punkcie.** Przeprowadź bramkę z sekcji „The gate" w
+   `docs/spotkania-kolejki.md` (czytaj ją na bieżąco): podsumowanie na jeden ekran, kandydaci
+   wiedzy, kandydaci zadań, ekran końcowy. Etap fragmentów `⚠` masz za sobą (krok 6 trybu
+   „transkrypt"), a notatka jest zaakceptowana, więc ekran końcowy pokazuje samą tabelę decyzji:
+   **Wykonaj** → krok 6; **Jeszcze nie** → koniec, nic nie wysłane, decyzje są już w plikach,
+   a powrót to `/spotkanie transkrypt <data>` (krok 1). Nic nie wysyłaj przed **Wykonaj** —
+   brak odpowiedzi to nie zgoda.
+6. **Egzekucja po „Wykonaj".** Także po „przetwórz", gdy wcześniejsza egzekucja została
+   przerwana. Wykonaj kolejność egzekucji z
    `docs/spotkania-kolejki.md`: upsert per zatwierdzony wpis wiedzy
    (`entry_id` = `planning/<data>-notatka/<id>-<slug>` w trybie z agendą,
    `planning/robocze/<data>-<godzina>-<slug>/<id>-<slug-wpisu>` w trybie
@@ -301,9 +318,11 @@ powtarza jego treści.
 
    (tryb bezagendowy: `--type robocze` i `--file
    planning/robocze/<data>-<godzina>-<slug>/notatka.md`; żaden z trybów
-   nie ma `statuses.json`, więc bez `--statuses`). Zapisuj wynik w pliku
-   kolejki od razu po każdej operacji, żeby przerwany przebieg wznawiał,
-   nie powtarzał.
+   nie ma `statuses.json`, więc bez `--statuses`). Publikację pomiń, gdy
+   notatka ma już znacznik `**Opublikowano:**`; po udanej publikacji wpisz
+   go do notatki („Execution order" w `docs/spotkania-kolejki.md`). Zapisuj
+   wynik w pliku kolejki od razu po każdej operacji, żeby przerwany przebieg
+   wznawiał, nie powtarzał.
 
 ## Zasady
 
@@ -315,7 +334,7 @@ powtarza jego treści.
 - Action items ze spotkania całodniowego (offsite) mogą teraz stać się
   zadaniami na tablicy przez `zadania.yaml` — do tej zmiany żyły
   wyłącznie w tabeli notatki. Nic nie powstaje bez `status: approved`
-  i słowa „przetwórz". Egzekucja notatki offsite trafia też przez
+  i odpowiedzi **Wykonaj** na ekranie końcowym bramki. Egzekucja notatki offsite trafia też przez
   `kb-client publish` na Slacka (`#core-team`) — do tej zmiany offsite nie
   publikował tam nic.
 - NIE modyfikuj `planning/02.06.2026-planning.md` (plik historyczny).

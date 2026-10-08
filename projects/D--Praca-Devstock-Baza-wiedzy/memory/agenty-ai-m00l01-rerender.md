@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: fda79c08-275f-4424-9045-38899980dee1
-  modified: 2026-10-08T11:45:36.246Z
+  modified: 2026-10-08T14:05:53.460Z
 ---
 
 Rafał 2026-10-08: lekcję 1 modułu 0 kursu `agenty-ai` robimy od nowa, „skillami Mateusza i Grzegorza”:
@@ -22,7 +22,10 @@ Decyzje Rafała 2026-10-08:
 
 Stare media (wrzesień, głos v2) przeniesione do `video/archiwum/2026-09-v2/` lekcji.
 
-Stan 2026-10-08 po południu: scenariusz przeredagowany wg profilu wypowiedzi Bartka (commit `31243016`), etap 1 `/kurs-video` ZROBIONY - avatary przez HeyGen MCP (konto Bartłomieja Łozy, plan pro, Avatar IV, 1080p 16:9, ręcznie: create_asset_upload → PUT → complete → create_video_from_avatar → get_video → curl pod `cel`), paczka lektora V4 w `video/lektor/`. Pułapka: pełny render po `--plan-avatara` generuje od nowa `audio/01.mp3`/`04.mp3`, ale do filmu idzie dźwięk wpieczony w mp4 avatara (`assemble-video.js:56`), więc liczy się kontrola lektora z PIERWSZEGO przebiegu (po 4a). Klucz ElevenLabs dostał `speech_to_text` 2026-10-08. Dalej: `/kurs-nagrywanie`.
+Stan 2026-10-08 po południu: scenariusz przeredagowany wg profilu wypowiedzi Bartka (commit `31243016`), etap 1 `/kurs-video` ZROBIONY - avatary przez HeyGen MCP (konto Bartłomieja Łozy, plan pro, Avatar IV, 1080p 16:9, ręcznie: create_asset_upload → PUT → complete → create_video_from_avatar → get_video → curl pod `cel`), paczka lektora V4 w `video/lektor/`. Pułapka: pełny render po `--plan-avatara` generuje od nowa `audio/01.mp3`/`04.mp3`, ale do filmu idzie dźwięk wpieczony w mp4 avatara (`assemble-video.js:56`), więc liczy się kontrola lektora z PIERWSZEGO przebiegu (po 4a). Klucz ElevenLabs dostał `speech_to_text` 2026-10-08.
+
+Stan 2026-10-08 wieczór: automat n8n GOTOWY (commit `a4f1810f`): `kursy/agenty-ai/_nagrywanie/uslugi/n8n.js` + `video/nagrywanie.yaml` M00L01 (kroki 6-31 jedno ujęcie, budżet 1, dogrywka 1-5), próba na workflow testowym `QTN9nUu0shNDCpSI` 26/26. Scenariusz: "Failed"→"Error"/"Erer" (`54f81212`), nowe audio wygenerowane. Czeka na Rafała: usunąć czat "Badacz - test", zarchiwizować i usunąć "Test automatu", nagrać dogrywkę 1-5 (profil kursu, DISPLAY3 F11), podać ID workflow lekcji → dopisać do `identyfikatory` i `prepare.workflows`, karta w nagrywanie.yaml, potem `nagraj` z bramką po pierwszym ujęciu, `edl`, `/kurs-montaz`, etap 2.
+Pułapki n8n 2.x: CSS zoom > 1 wypycha pasek nagłówka i Logs z kadru (100vh) - powiększenie 1; profil kursu logowany w zwykłym Chrome `--user-data-dir` (domyślnego User Data Chrome 136+ nie da się zautomatyzować); okno na DISPLAY3: `RECORDING_WINDOW_POSITION=-1920,0 RECORDING_FULLSCREEN=1`; blokada "Edit here" po przerwanej sesji; podgląd starszego wykonania pokazuje nazwy węzłów z chwili uruchomienia.
 
 **Why:** pierwsza lekcja kursu przechodzi cały nowy tor (V4 + automat + montaż automatyczny + oprawa) - wzorzec dla reszty lekcji demo agenty-ai.
 **How to apply:** kolejność: etap 1 `/kurs-video` (MCP: `--plan-avatara` → HeyGen MCP → `--avatar=mcp`, kontrola lektora) → `/kurs-nagrywanie` „Pierwsza lekcja z nową usługą” (n8n: kurs.yaml `nagrywanie.uslugi.n8n`, login, sonda, moduł usługi, próba, powiększenie, PR) → `/kurs-montaz` od zaznaczeń i plansz → etap 2 `/kurs-video` ze znakiem AI. Sprawdzaj stan w git log i `video/` lekcji, nie z pamięci.

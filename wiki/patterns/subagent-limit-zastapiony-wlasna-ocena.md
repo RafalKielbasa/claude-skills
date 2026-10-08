@@ -24,6 +24,15 @@ każdy nowy dispatch pada niezależnie od treści promptu.
   „Jeśli dispatch subagenta zwróci błąd 429, przerwij zadanie, powiedz o tym
   użytkownikowi i wróć po resecie. Nie zastępuj scenariusza własną oceną."
 - 2026-09-07, sesja session_01JAgUNken6DG6aFPjDmKkAX: drugi dowod, tym razem obsluzony poprawnie — zapisany, zeby przyszla zmiana skilla nie zepsula tego zachowania. Implementer rundy poprawek Taska 4 padl na `HTTP 429 — monthly spend limit` przed wykonaniem czegokolwiek. Kontroler nie dokonczyl poprawek wlasna ocena: najpierw sprawdzil, czy cos czesciowo weszlo (diff drzewa wobec `snap-t4fix` pusty), zapisal w ledgerze fakt padniecia i godzine resetu limitu, po czym wyslal swiezego implementera z ta sama lista siedmiu poprawek i notka, ze poprzedni zostal zabity przez infrastrukture i zadna praca nie wyladowala. Klucz: weryfikacja stanu **przed** ponowieniem, bo dispatch mogl paczc w srodku zapisu.
+- 2026-10-08, sesja 91761871-49a7-472c-b429-5c049696698e (id claude.ai niedostępny):
+  trzeci dowód, obsłużony poprawnie, i nowy wariant rozwiązania. Z siedmiu
+  równoległych badaczy idea-engine jeden (`vision-offer`) padł w trakcie pracy na
+  „API Error: Can’t reach the API server (ENOTFOUND)”. Najpierw sprawdzono, że plik
+  wyjściowy nie powstał (`ls` katalogu runu), potem — po „kontynuuj” Rafała —
+  **wznowiono tego samego agenta przez `SendMessage`** z prośbą o dokończenie i zapis
+  pliku. Agent zachował zebrane źródła i oddał poprawną notatkę po ok. 4,5 minuty
+  (8 wywołań narzędzi wobec ok. 110–130 u pozostałych badaczy); własna ocena
+  niczego nie zastąpiła.
 
 ## Rozwiązanie
 Gdy dispatch podagenta zwraca 429, rozróżnić dwa przypadki. Jeśli podagent miał
