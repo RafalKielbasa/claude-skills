@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 41a1e8b7-c5e2-4570-9e9d-57aefeb98e5e
-  modified: 2026-10-08T05:27:32.220Z
+  modified: 2026-10-08T08:03:48.016Z
 ---
 
 Porządki na n8n-prod (MCP `n8n-prod`, projekt osobisty Rafała `jBR2URVfzyXQxOop`, team projects wyłączone) zrobione 2026-10-08 za zgodą Rafała: zarchiwizowano 13 workflowów — `32_manualy_sync_db`, `Chat with`, `Delete unnecessary trascription`, `Update notion task`, `Notion task agent`, `dev_agent`, `marketing_agent`, `sales_agent`, `product_agent`, `company_agent`, `Poranne podsumowanie z kalendarza`, `manual_update_vector_store` (miał 6 aktywnych triggerów Drive), `17_github_close_issue` (osierocony). Zostały 22.
@@ -20,6 +20,9 @@ Porządki na n8n-prod (MCP `n8n-prod`, projekt osobisty Rafała `jBR2URVfzyXQxOo
 - Przed Task 7 mapuj numery repo → prod po nazwie, nie po numerze.
 - Historia wykonań na prodzie sięga ~10 h — brak wykonań nie dowodzi nieużywania; decyduj po wywołujących i triggerach. `updatedAt` wszystkich workflowów = 2026-10-08T04:56 (operacja zbiorcza), bezużyteczny.
 - Zarchiwizowanego workflowa MCP nie odczyta (`get_workflow_details` → „is archived and cannot be accessed").
-- Znane defekty na 2026-10-08: `29` ma narzędzie KB na nieistniejące ID `6OePp88TYSjx1RW4` (żywy `23` = `Inr9rmvQkBFMxTaq`); `01` triggeruje się schedulem co 10 min, nie Drive triggerem; węzły GitHub w `15`/`16`/`27`/`29` celują w `devstock-org/core-team`.
+- Defekty na 2026-10-08: `29` miał narzędzie KB na nieistniejące ID `6OePp88TYSjx1RW4` — NAPRAWIONE tego dnia (wersja `58e7f875…` → `Inr9rmvQkBFMxTaq`); `01` triggeruje się schedulem co 10 min, nie Drive triggerem; węzły GitHub w `15`/`16`/`27`/`29` celują w `devstock-org/core-team`.
+- Pliki w `devstock-team-agent/workflows/` sprzed 2026-10-08 niosą ID z innej instancji (np. `23` = `6OePp88TYSjx1RW4`); nowe `37`–`40` to eksporty z proda (ID prodowe).
+
+**Nowy tor spotkań — n8n (2026-10-08, budowane przez MCP, commity na `main` devstock-team-agent `be8c7fd`..`8731fa7`, bez pusha):** `37_kb_similar` `8TM4sF1qEe85ZIi9`, `38_meeting_publish` `GAvJTcKAoKI6huMz`, `39_meeting_pending` `EfEnyLboy3ZqZ2ln`, `40_error_notify` `EXiPR4NMX0YEzK81` — wszystkie opublikowane. `score` z PGVector load = dystans kosinusowy (identyczny tekst → 0, ten sam temat ~0,25, niepowiązane ~0,7). ROZJAZD repo≠prod: `37` ma w repo (`834268a`) `alwaysOutputData: true` na `PGVector Load`, na prodzie jeszcze NIE — MCP padł (ENOTFOUND); dograć jedną operacją + publish. Czeka na Rafała: smoke `38` (najpierw `information_schema` dla `daily_summaries.id`, data-wartownik zamiast 2026-09-26) (post na #core-team + wiersz daily), kanał `#automation_errors` (nie istnieje / app nie jest członkiem — `40` adresuje go po nazwie), podpięcie `40` jako Error Workflow, Task 6 (okrojenie `01`) i Task 7 (archiwizacja grupy B).
 
 Powiązane: [[repo-baza-wiedzy-przenosiny]], [[kb-webhook-cold-start]].
