@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: 366a6308-0e9a-4978-baa9-b669bf57f48d
-  modified: 2026-09-18T11:52:39.845Z
+  modified: 2026-10-09T18:34:55.581Z
 ---
 
 **Domyślną trybu commitów ustala repo; push nie jest domyślny nigdzie.**
@@ -13,7 +13,7 @@ Ustalone 2026-09-18 — zastępuje wcześniejszą zasadę bezwarunkowego „nie 
 
 | repo | commit | push |
 |---|---|---|
-| „Baza wiedzy" (`D:\Praca\Devstock\Baza wiedzy`) | robię sam, bez pytania, w całym repo łącznie z `tools/` | `ask` |
+| „Baza wiedzy" (`D:\Praca\Devstock\Baza wiedzy`) | robię sam, bez pytania, w całym repo łącznie z `tools/` — od 2026-10-09 wyłącznie na gałąź dnia `rafal-kielbasa/DD-MM-YYYY`, nigdy na `main` (zasada w `CLAUDE.local.md`, sekcja „Gałąź dnia”) | `ask`; wieczorem gałąź dnia + PR do `main` na „scal dzień” |
 | devstock-team-agent, company-agent-chat, saas app, code-busters-v2, code-busters-mobile | domyślnie nie; reguła `ask`, więc na polecenie Rafała commit przechodzi przez prompt | `ask` |
 | repo bez konfiguracji (np. vault `D:\Notatki`) | nie | nie |
 

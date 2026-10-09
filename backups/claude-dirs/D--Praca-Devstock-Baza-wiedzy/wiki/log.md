@@ -252,3 +252,14 @@ Format wpisu:
 - skill-impact: daily i spotkanie — zaakceptowane zmiany spoza evolve-skill (bramka punkt po punkcie).
 - Wzorce globalne dotknięte w tej sesji: nowe asercja-testu-na-sygnale-zastepczym, klasyfikator-blokuje-zapisy-dry-run-w-subagencie, plan-zaweza-regule-specu, skill-testowany-na-sucho-skryptem-odpowiedzi (sukces), bash-c-w-argumencie-zatrzymany-przez-straznik-usuwania; dowody do python-na-windows-drukuje-w-cp1252, windows-path-w-literale-skryptu, kod-referencyjny-planu-nigdy-nie-uruchomiony.
 - Sygnał repo: bez zmian — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.
+
+## 2026-10-09 — sesja ece85169-32f2-44b7-9695-689c071f34ce (id claude.ai niedostępny) (n8n: raport tygodniowy 29 i alerty 31 — spec/plan w tym repo; zasada „gałąź dnia” w CLAUDE.local.md)
+- Bez nowych wzorców — skille tego repo nie były używane (praca szła przez superpowers i n8n MCP).
+- Wzorce globalne dotknięte w tej sesji: nowe porownanie-z-latana-kopia-zamiast-swiezego-odczytu, zmiana-prod-w-subagencie-bez-zgody-widocznej-dla-klasyfikatora, sukces-wykonania-n8n-nie-dowodzi-tresci, nowa-konwencja-sprawdzona-z-plikami-ignorowanymi-i-historia (sukces); dowody do review-zakresowe-nie-widza-defektu-poza-swoim-diffem, pytania-niezalezne-zadawane-po-jednym-na-ture, subagent-limit-zastapiony-wlasna-ocena.
+- Sygnał repo: bez zmian — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.
+
+## 2026-10-09 — sesja 75fd3461-2b88-4b25-b48e-af1812a307e6 (id claude.ai niedostępny) (walidacja „Kodożercy dla dzieci i rodziców” skillem deep-research, punkt 3 notatek przed spotkaniem, `/spotkanie przygotuj 2026-10-13`)
+- założono: skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo (skill: spotkanie i sześć innych, typ: porażka) — krok 5 „commit robi Rafał” sprzeczny z trybem commitów repo; agenda zacommitowana (`1daedb99`) z zapowiedzią przy bramce.
+- `/spotkanie przygotuj` przeszło gładko: projekt agendy w scratchpadzie z pełną ścieżką i tabelą punktów, zatwierdzony w jednej turze — bez osobnego wzorca.
+- Wzorce globalne dotknięte w tej sesji: nowe twierdzenie-negatywne-z-czesci-przestrzeni, rownolegli-badacze-wyczerpuja-wspolny-limit-wyszukiwan, najmocniejsze-ustalenie-sprawdzone-u-zrodla-przed-oddaniem (sukces); dowód do windows-path-w-literale-skryptu.
+- Sygnał repo: bez zmian — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.

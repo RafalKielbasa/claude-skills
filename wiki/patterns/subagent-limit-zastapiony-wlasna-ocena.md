@@ -33,6 +33,14 @@ każdy nowy dispatch pada niezależnie od treści promptu.
   pliku. Agent zachował zebrane źródła i oddał poprawną notatkę po ok. 4,5 minuty
   (8 wywołań narzędzi wobec ok. 110–130 u pozostałych badaczy); własna ocena
   niczego nie zastąpiła.
+- 2026-10-09, sesja ece85169-32f2-44b7-9695-689c071f34ce (id claude.ai
+  niedostępny): czwarty dowód, obsłużony poprawnie. Restart procesu Claude Code
+  zatrzymał review całości (opus) przed raportem („didn't finish before the
+  previous session ended”). Kontroler najpierw sprawdził, że katalog
+  `final-review/` nie powstał, potem wznowił tego samego agenta przez
+  `SendMessage` z prośbą o dokończenie i ponowne załadowanie narzędzi MCP.
+  Agent oddał pełny raport („Ready to publish”, ważna uwaga o strefie crona).
+  Bramkę publikacji otwarto dopiero po raporcie.
 
 ## Rozwiązanie
 Gdy dispatch podagenta zwraca 429, rozróżnić dwa przypadki. Jeśli podagent miał

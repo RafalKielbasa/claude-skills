@@ -39,6 +39,17 @@ preferencja użytkownika idzie w drugą stronę niż instrukcja skilla.
   („MCP (plan konta)", „Renderuj teraz, ściąga potem") i render ruszył po
   jednej rundzie zamiast dwóch, przy płatnym API po obu stronach.
 
+- 2026-10-09, sesja ece85169-32f2-44b7-9695-689c071f34ce (id claude.ai
+  niedostępny): trzeci dowód, trzecia sesja, oba warianty w jednej rozmowie.
+  - Bramka publikacji (poza brainstormingiem): trzy niezależne decyzje
+    („publikować?”, strefa crona, termin pierwszego raportu) poszły w jednym
+    `AskUserQuestion`, a odpowiedzi przyszły w jednej rundzie.
+  - Brainstorming zasady „gałąź dnia” zadał trzy pytania w trzech turach:
+    pliki lokalne, zasięg, sposób scalania. Zasięg (tylko Rafał czy zespół)
+    nie zależał od odpowiedzi o worktree, więc mógł pójść razem z nią.
+    Pytanie o scalanie zależało od odczytu historii, więc osobna tura była
+    tam uzasadniona.
+
 ## Rozwiązanie
 Przed zadaniem pytań rozstrzygnąć, czy odpowiedź na którekolwiek zmienia
 brzmienie albo opcje pozostałych. Pytania zależne zadawać po jednym, zgodnie

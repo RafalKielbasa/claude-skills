@@ -94,6 +94,13 @@ kodem i nie powinna przechodzić przez składnię języka.
   sekwencja `\n` dotarła jako prawdziwy znak nowej linii i rozbiła literał (`SyntaxError:
   unterminated string literal`). Poprawione narzędziem Edit.
 
+- 2026-10-09, sesja 75fd3461 (id claude.ai niedostępny): skrypt Node
+  łatający wpis dziennika, zapisany heredokiem `<<'EOF'` przez narzędzie Bash,
+  miał w literale `\\Praca\\Devstock`; heredoc oddał pojedyncze ukośniki,
+  JS przeczytał `\P` jako `P`, kotwica nie pasowała i asercja liczby wystąpień
+  zatrzymała zapis przed zmianą pliku. Naprawa: skrypt zapisany narzędziem Write,
+  ukośnik składany przez `String.fromCharCode(92)`.
+
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją
 w skrypcie, zamiast wklejać do literału. Skrypt ma wtedy w sobie wyłącznie
