@@ -58,6 +58,14 @@
   jest włączony: commituję sam w tej samej konwencji i podaję w raporcie hash
   oraz gałąź.
 
+## Tablica (board-tracker)
+
+- W repo z rejestru `tools/board-tracker/trackers.json` („Baza wiedzy", edu_saas, code-busters,
+  code-busters-mobile) każda sesja, która coś zmienia, jest przypięta do issue przez skill
+  `board-tracker`. Brief z hooka `SessionStart` mówi, co mam w toku i w gotowych.
+- Praca rusza od razu. Na moje „tak” czeka tylko założenie issue, dopisanie mnie jako assignee,
+  zamknięcie i każda zmiana statusu poza przejściem do „w toku” przy przypięciu.
+
 ## GCP i infrastruktura chmurowa
 
 - **Nie wykonuję żadnych zmian stanu w GCP.** `gcloud`, `gsutil`, `bq`, `terraform apply`, konsola — cokolwiek tworzy, kasuje, włącza albo nadaje uprawnienia, podaję jako komendę do wklejenia i nigdy nie uruchamiam sam. Dotyczy to m.in. `services enable`, `add-iam-policy-binding`, `remove-iam-policy-binding`, `buckets create`, `keys create`.
@@ -199,5 +207,7 @@ Stały szkielet, w tej kolejności:
 3. **Weryfikacja** — uruchomiona komenda i jej wynik. Jeśli nie uruchomiłeś
    testów albo builda, piszesz wprost „nie zweryfikowane" i dlaczego. Brak tej
    linii oznacza, że coś przemilczałeś.
-4. **Następny krok** — a przy zatrzymaniu na review dodatkowo propozycja treści
+4. **Tablica** — `#N` i link do śladu w issue (skill `board-tracker`), albo „sesja bez
+   przypięcia” (repo spoza rejestru albo sesja bez zmian).
+5. **Następny krok** — a przy zatrzymaniu na review dodatkowo propozycja treści
    commita w Conventional Commits (patrz „Git").

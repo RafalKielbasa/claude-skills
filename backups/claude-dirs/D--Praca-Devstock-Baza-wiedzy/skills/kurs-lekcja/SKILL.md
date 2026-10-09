@@ -177,9 +177,28 @@ przedstawione Rafałowi do bramki review.
    `npm run review-ai -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
    Przeczytaj `review-ai.md`: problemy zasadne → popraw treść i powtórz
    kroki 5–6 (max 2 iteracje); problemy niezasadne → odnotuj dlaczego.
+   Potem **review scenariusza przez Codex** (jedno przejście, po poprawkach
+   z review-ai): `npm run review-codex -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`
+   (kilka minut; Codex czyta tekst lektora i wytyczne - profil wypowiedzi,
+   redakcja, styleguide, szablon scenariusza, wymowa - w trybie tylko do
+   odczytu i zapisuje `review-codex.md`). Każdą uwagę oceniasz sam:
+   - `Typ: styl` - nanosisz do `video/scenariusz.md`, gdy poprawia tekst
+     według profilu. Propozycję, która gubi albo zmienia fakt, liczbę lub
+     nazwę z "Nietykalnych" w `redakcja.md`, nanosisz w poprawionej formie
+     (w tabeli: "po korekcie" i co zmieniłeś). Uwaga o ryzyku TTS: nanosisz,
+     gdy zdanie kończy się jednosylabowym słowem po przecinku ("mówi, co." -
+     głos V4 ucina taki koniec); samo krótkie zdanie to pasmo rytmu Bartka,
+     nie błąd. Inaczej odrzucasz z uzasadnieniem w jednym zdaniu. Nowy zapis
+     fonetyczny dopisujesz do `wymowa.md`. Zmiana samego brzmienia narracji
+     nie idzie do artykułu (narracja bez odpowiednika na ekranie).
+   - `Typ: treść` - nie nanosisz; trafia do bramki osobną listą, decyduje Rafał.
+   - Komenda kończy się `BŁĄD` (np. Codex niezalogowany) - w bramce jedno
+     zdanie, że review Codexa się nie odbył i dlaczego; bramki nie blokuje.
+   Po naniesieniu uruchom ponownie walidację z kroku 5.
 7. **BRAMKA: prezentacja Rafałowi.** Pokaż: ścieżki plików, streszczenie
-   lekcji (3–5 zdań), werdykt z review-ai.md + co poprawiono, liczbę
-   segmentów avatar. Uwagi Rafała nanoś od ręki i iteruj. Rafał może też
+   lekcji (3–5 zdań), werdykt z review-ai.md + co poprawiono, tabelę uwag
+   Codexa (nr | segment | uwaga | zasadna? | naniesiona / po korekcie / dlaczego nie) i osobno
+   uwagi `Typ: treść` do decyzji, liczbę segmentów avatar. Uwagi Rafała nanoś od ręki i iteruj. Rafał może też
    wpisać je wprost do `video/scenariusz.md` jako linie `[UWAGA: ...]` — wtedy
    nanosi je `/kurs-uwagi`, a nie ta procedura.
 8. **Po zatwierdzeniu przez Rafała:** ustaw `status.tresc: zatwierdzona`,
@@ -242,5 +261,5 @@ Po zgodzie Rafała, wyłącznie dla tej jednej lekcji:
   (etapy 1b/1c).
 - Jeśli lekcja.yaml nie istnieje lub kurs nie ma programu — przerwij
   i skieruj na /kurs-nowy.
-- Poprawki po review Rafała nie wymagają ponownego review-ai, chyba że
-  zmieniła się większość treści.
+- Poprawki po review Rafała nie wymagają ponownego review-ai ani
+  review-codex, chyba że zmieniła się większość treści.

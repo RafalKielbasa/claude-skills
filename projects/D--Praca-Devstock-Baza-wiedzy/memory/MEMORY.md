@@ -27,5 +27,6 @@
 - [Bramka /daily i /spotkanie punkt po punkcie](bramka-punkt-po-punkcie.md) — od 2026-10-08 karty + jedno zatwierdzenie; pierwsze realne /daily = test akceptacyjny; daily 2026-10-08 bez znacznika `Opublikowano`.
 - [Dry run skilli — ograniczenia](dry-run-skilli-ograniczenia.md) — klasyfikator auto blokuje zapisy przez wrapper niedeterministycznie.
 - [Drive konektor — konto devstock.com](drive-konektor-konto-devstock.md) — transkrypty są na dysku współdzielonym `meetings`; konektor widzi je tylko na koncie `rafal.kielbasa@devstock.com`, „not found" = sprawdź `owner` w `list_recent_files`.
+- [Board tracker — stan 2026-10-09](board-tracker-status.md) — CLI + skill + hook SessionStart na `main` (PR #597); czeka akceptacja Rafała w nowych sesjach i inwentaryzacja; kalibracja progów ~23.10.
 - [n8n MCP: renameNode nie rusza kodu](n8n-mcp-rename-node-code-refs.md) — `$('Stara nazwa')` w węzłach Code zostaje; popraw sam i sprawdź eksportem; MCP nie pokazuje credentiali.
 - [n8n-prod liczy crony w UTC](n8n-prod-strefa-utc.md) — „08:00” = 10:00 Warszawa latem; `settings.timezone: Europe/Warsaw` (bez wersji, działa od razu — zgoda jak na publikację); `29`/`31` ustawione 2026-10-09.

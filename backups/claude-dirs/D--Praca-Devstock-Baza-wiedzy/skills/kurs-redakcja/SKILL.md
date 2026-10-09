@@ -165,6 +165,27 @@ z modelem i effortem wybranym przez Rafała na starcie.
    wynik wzorca, a nie fakt — tak samo odbite `old_string` w `Edit` i licznik
    z własnego skryptu kontrolnego. Reguła obowiązuje też `grep`-y z kroku 6.
    Naruszenia napraw od ręki.
+5a. **Review scenariusza przez Codex** (tylko gdy redagowany był
+   `video/scenariusz.md`; jedno przejście, na tekście po krokach 4-5):
+   `cd tools/course-pipeline && npm run review-codex -- ../../kursy/<slug>/<modul>/<lekcja>`
+   (kilka minut; Codex czyta tekst lektora i wytyczne - profil wypowiedzi,
+   redakcja, styleguide, szablon scenariusza, wymowa - w trybie tylko do
+   odczytu i zapisuje `review-codex.md`). To drugi, niezależny czytelnik
+   stylu Bartka po agencie B. Każdą uwagę oceniasz sam:
+   - `Typ: styl` - nanosisz do `video/scenariusz.md`, gdy poprawia tekst
+     według profilu. Propozycję, która gubi albo zmienia fakt, liczbę lub
+     nazwę z "Nietykalnych", nanosisz w poprawionej formie (w tabeli: "po
+     korekcie" i co zmieniłeś). Uwaga o ryzyku TTS: nanosisz, gdy zdanie
+     kończy się jednosylabowym słowem po przecinku ("mówi, co." - głos V4
+     ucina taki koniec); samo krótkie zdanie to pasmo rytmu Bartka, nie błąd.
+     Inaczej odrzucasz z uzasadnieniem w jednym zdaniu. Nowy zapis fonetyczny
+     dopisujesz do `wymowa.md`. Naniesione zmiany przechodzą tę samą kontrolę
+     co w kroku 5 (nazwy, `[AKCJA: ...]`, segmenty bez zmian); zmiana samego
+     brzmienia narracji nie idzie do artykułu w kroku 6 (narracja bez
+     odpowiednika na ekranie).
+   - `Typ: treść` - nie nanosisz; trafia do bramki osobną listą, decyduje Rafał.
+   - Komenda kończy się `BŁĄD` (np. Codex niezalogowany) - w bramce jedno
+     zdanie, że review Codexa się nie odbył i dlaczego; bramki nie blokuje.
 6. **Propagacja na pliki zależne.** Lekcja mówi to samo w kilku plikach,
    a redakcja rusza tylko część z nich. Zmiana, która wylądowała wyłącznie
    w zredagowanym pliku, jest rozjazdem — wychodzi przy nagraniu, po bramce
@@ -231,7 +252,9 @@ z modelem i effortem wybranym przez Rafała na starcie.
    tabelę propagacji na pliki zależne (co się zmieniło → jakie pliki
    zaktualizowane → `plik:linia`) wraz z licznikami `grep` z kroku 6,
    listę wątpliwości merytorycznych od agentów, pozycje dopisane
-   do `wymowa.md` (jeśli redagowałeś scenariusz),
+   do `wymowa.md` (jeśli redagowałeś scenariusz), tabelę uwag Codexa z kroku 5a
+   (nr | segment | uwaga | zasadna? | naniesiona / po korekcie / dlaczego nie) i osobno uwagi
+   `Typ: treść` do decyzji,
    zmiany statusów (w tym `video → brak`, jeśli zaszło),
    przypomnienie, że pełny diff czeka w drzewie roboczym. Uwagi Rafała nanoś
    od ręki (w głównej sesji, bez ponownego Workflow) i iteruj. Rafał może też

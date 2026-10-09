@@ -10,6 +10,11 @@
           {
             "type": "command",
             "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\rafal\\.claude\\hooks\\powtorki-check.ps1\""
+          },
+          {
+            "type": "command",
+            "command": "node \"D:/Praca/Devstock/Baza wiedzy/tools/board-tracker/src/cli.js\" hook",
+            "timeout": 15
           }
         ]
       }
