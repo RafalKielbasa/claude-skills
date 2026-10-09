@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: fda79c08-275f-4424-9045-38899980dee1
-  modified: 2026-10-08T14:05:53.460Z
+  modified: 2026-10-09T05:52:50.849Z
 ---
 
 Rafał 2026-10-08: lekcję 1 modułu 0 kursu `agenty-ai` robimy od nowa, „skillami Mateusza i Grzegorza”:
@@ -26,6 +26,10 @@ Stan 2026-10-08 po południu: scenariusz przeredagowany wg profilu wypowiedzi Ba
 
 Stan 2026-10-08 wieczór: automat n8n GOTOWY (commit `a4f1810f`): `kursy/agenty-ai/_nagrywanie/uslugi/n8n.js` + `video/nagrywanie.yaml` M00L01 (kroki 6-31 jedno ujęcie, budżet 1, dogrywka 1-5), próba na workflow testowym `QTN9nUu0shNDCpSI` 26/26. Scenariusz: "Failed"→"Error"/"Erer" (`54f81212`), nowe audio wygenerowane. Czeka na Rafała: usunąć czat "Badacz - test", zarchiwizować i usunąć "Test automatu", nagrać dogrywkę 1-5 (profil kursu, DISPLAY3 F11), podać ID workflow lekcji → dopisać do `identyfikatory` i `prepare.workflows`, karta w nagrywanie.yaml, potem `nagraj` z bramką po pierwszym ujęciu, `edl`, `/kurs-montaz`, etap 2.
 Pułapki n8n 2.x: CSS zoom > 1 wypycha pasek nagłówka i Logs z kadru (100vh) - powiększenie 1; profil kursu logowany w zwykłym Chrome `--user-data-dir` (domyślnego User Data Chrome 136+ nie da się zautomatyzować); okno na DISPLAY3: `RECORDING_WINDOW_POSITION=-1920,0 RECORDING_FULLSCREEN=1`; blokada "Edit here" po przerwanej sesji; podgląd starszego wykonania pokazuje nazwy węzłów z chwili uruchomienia.
+
+Stan 2026-10-08 noc: rdzeń rozszerzony o cel `utworz` (commit `f53e3901`, spec `docs/superpowers/specs/2026-10-08-nagrywanie-zasob-utworzony-design.md`) - automat sam zakłada workflow, więc M00L01 to JEDNO ujęcie kroków 1-31 z pustej listy, bez dogrywki; `kurs.yaml` `identyfikatory: []`, bez `prepare`. Ujęcie `lekcja-v6` gotowe (31/31, 141 s, workflow `7LtRPRWqZ3pyUgbF`, wykonania 541/542) - czeka na bramkę obejrzenia Rafała, potem `edl`, `/kurs-montaz`, etap 2. Przed KAŻDYM ujęciem Rafał ręcznie usuwa workflow poprzedniego (decyzja 2026-10-08); v5 padło raz na zbędnym „o” w „Anna Kowalska” (przyczyna nieznana, odczyt kontrolny złapał). Otwarte: „My workflow 3” w kadrze vs lektor „My workflow” (licznik nazw n8n liczy całą instancję, w tym projekt „Rafał Devstock”).
+
+Stan 2026-10-09 rano: montaż automatyczny gotowy (próbka seg. 2 zaakceptowana przez Rafała, pełny render 8:27, 17 nakładek plansz), etap 2 `/kurs-video --avatar=mcp` zrobiony: `video/final.mp4` 10:53, znak AI ZAAKCEPTOWANY (akceptacja ważna, 0 twardych, 2 ostrzeżenia do obejrzenia), `status.video: wyrenderowane` (commit `bbb8e98c`). Czeka bramka akceptacji filmu przez Rafała. Poprawki narzędzi po drodze: kotwica tuż za `od` gubiła stopklatkę (`2ddc9d33`), stykówka plansz ze ścieżką względną (`6aff6eb3`), `video/znak-ai/` do `.gitignore` (`f24c830f`). Pułapka EDL: wycięcie musi kończyć się DOKŁADNIE na `do` akapitu, inaczej zostaje ułamek klatki = puste ujęcie i klip krótszy (render łapie „klipom brakuje klatek”).
 
 **Why:** pierwsza lekcja kursu przechodzi cały nowy tor (V4 + automat + montaż automatyczny + oprawa) - wzorzec dla reszty lekcji demo agenty-ai.
 **How to apply:** kolejność: etap 1 `/kurs-video` (MCP: `--plan-avatara` → HeyGen MCP → `--avatar=mcp`, kontrola lektora) → `/kurs-nagrywanie` „Pierwsza lekcja z nową usługą” (n8n: kurs.yaml `nagrywanie.uslugi.n8n`, login, sonda, moduł usługi, próba, powiększenie, PR) → `/kurs-montaz` od zaznaczeń i plansz → etap 2 `/kurs-video` ze znakiem AI. Sprawdzaj stan w git log i `video/` lekcji, nie z pamięci.
