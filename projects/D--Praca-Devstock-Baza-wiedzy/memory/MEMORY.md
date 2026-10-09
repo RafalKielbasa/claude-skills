@@ -18,6 +18,7 @@
 - [Podpisy ilustracji w artykułach](ilustracje-podpis-w-artykulach.md) — format `**Ilustracja NR.** Podpis.` pod obrazkiem; zapisany w `/kurs-redakcja`, do `/kurs-lekcja` świadomie NIE dokładamy.
 - [ElevenLabs — klucz bez user_read i speech_to_text](elevenlabs-klucz-bez-user-read.md) — limitu kredytów NIE odczytasz z API, a kontrola lektora / rozpoznanie mowy plansz pada 401 (brak speech_to_text, 2026-10-08); uprawnienia dodaje Rafał w dashboardzie.
 - [MCP: klucz projektu zależy od litery dysku](mcp-klucz-projektu-litera-dysku.md) — VS Code `d:\`, terminal `D:\` = dwa projekty w `~/.claude.json`; `claude mcp remove` kasuje token OAuth; zasięg user nie dziedziczy tokenu local.
+- [Pełna ścieżka do pliku przy bramkach](pelna-sciezka-do-pliku.md) — plik do obejrzenia zawsze jako pełna bezwzględna ścieżka w bloku kodu, nigdy skrót ani odsyłacz do wcześniejszej wiadomości.
 - [Bash tool halves doubled backslashes in heredocs](bash-heredoc-backslash-halved.md) — content with a doubled backslash (regex escapes, Windows paths) goes through Edit/Write, not heredoc or sed; verify with `cat -A`.
 - [CodeBusters publish — diagnoza 500](codebusters-publish-diagnoza-500.md) — klient widzi okrojony komunikat; pełny ślad w `fly logs` (main/production), MySQL robi z gołego String varchar(191).
 - [Repo Baza wiedzy - devstock-team](repo-baza-wiedzy-przenosiny.md) - scalenie z core-team ZROBIONE (sprawdzone 2026-10-07): commitujemy do `devstock-org/devstock-team`, lokalny origin już tam wskazuje; push tylko za zgodą.
