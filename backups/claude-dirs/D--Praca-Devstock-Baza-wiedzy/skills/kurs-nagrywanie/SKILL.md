@@ -1,13 +1,16 @@
 ---
 name: kurs-nagrywanie
-description: Automatyczne nagrywanie ekranu lekcji demo Playwrightem (tools/nagrywanie) - automat sam klika w przeglądarce według planu nagrania, zapisuje znaczniki kroków i oddaje gotowy EDL montażowi automatycznemu. Przy pierwszej lekcji z nową usługą (np. n8n) prowadzi przez jednorazowe przygotowanie - warunki bezpieczeństwa konta, logowanie w osobnym profilu, sonda interfejsu i obsługa usługi sprawdzona na koncie zespołu. Używaj, gdy kurs ma `nagrywanie: { automat: true }` w kurs.yaml i lekcja demo ma zatwierdzoną treść i plan nagrania; woła go /kurs-video zamiast ręcznego nagrania. NIE do pracy poza przeglądarką (terminal, aplikacje desktopowe) - te kroki nagrywa się ręcznie jako dogrywki.
+description: Automatyczne nagrywanie ekranu lekcji demo Playwrightem (tools/nagrywanie) - automat sam klika w przeglądarce według planu nagrania, zapisuje znaczniki kroków i oddaje gotowy EDL montażowi automatycznemu. Przy pierwszej lekcji z nową usługą (np. n8n) prowadzi przez jednorazowe przygotowanie - warunki bezpieczeństwa konta, logowanie w osobnym profilu, sonda interfejsu i obsługa usługi sprawdzona na koncie zespołu. Używaj, gdy kurs ma `nagrywanie: { automat: true }` w kurs.yaml i lekcja demo ma zatwierdzoną treść i plan nagrania - najpierw przed lektorem (przebieg próbny ze zrzutami ekranu i raport rozjazdów scenariusza z aplikacją), potem po paczce lektora (nagranie); woła go /kurs-video zamiast ręcznego nagrania. NIE do pracy poza przeglądarką (terminal, aplikacje desktopowe) - te kroki nagrywa się ręcznie jako dogrywki.
 ---
 
 # /kurs-nagrywanie - automat nagrywa ekran lekcji demo
 
-Wejście: ścieżka lekcji demo, np. `kursy/<slug>/modul-03-x/lekcja-01-y`. Wynik: surowe nagrania ujęć ze znacznikami
-kroków i `video/montaz/edl.json` + `zrodla.json` lekcji, gotowe dla `/kurs-montaz`. Projekt:
-`docs/superpowers/specs/2026-10-07-nagrywanie-wspolne-design.md`; narzędzie i formaty: `tools/nagrywanie/README.md`.
+Wejście: ścieżka lekcji demo, np. `kursy/<slug>/modul-03-x/lekcja-01-y`. Wynik w dwóch częściach: przed lektorem
+zaakceptowany raport przebiegu próbnego `video/przebieg-probny.md` (kroki 0-4), po paczce lektora surowe nagrania
+ujęć ze znacznikami kroków i `video/montaz/edl.json` + `zrodla.json` lekcji, gotowe dla `/kurs-montaz` (kroki 5-6).
+Projekt: `docs/superpowers/specs/2026-10-07-nagrywanie-wspolne-design.md` i
+`docs/superpowers/specs/2026-10-10-nagrywanie-przebieg-probny-design.md`; narzędzie i formaty:
+`tools/nagrywanie/README.md`.
 Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
 
 ## Procedura
@@ -31,7 +34,59 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    grupy prób z budżetem, warianty narracji, ujęcia, dogrywki. Treść do wpisania bierz dosłownie z planu (kolumna
    "Do wpisania" i bloki pod tabelą) - nigdy własne brzmienie. Potem `sprawdz` (walidacja wobec planu) i `proba`
    (bez przeglądarki, atrapy) - oba czyste, zanim cokolwiek otworzysz w przeglądarce.
-4. **Nagranie.** Najpierw `npm run diagnoza -- <lekcja>`: zero BŁĘDÓW, inaczej nie nagrywasz; każdą UWAGĘ powiedz Rafałowi (np. brak sygnatur przy lekcji bez `wykonaj` jest w porządku). Przejdź z Rafałem tabelę `## Przygotowanie przed nagraniem` z konspektu (stan konta, otwarte
+4. **Przebieg próbny (przed lektorem).** Lekcja nie potrzebuje jeszcze paczki lektora - ten krok idzie zaraz po
+   zatwierdzeniu treści, zanim `/kurs-video` wygeneruje płatne audio. Lekcja, która ma już paczkę lektora (`video/lektor/spis.md`), a nie ma
+   nagrania, też przechodzi przebieg przed nagraniem; przyjęta uwaga `scenariusz` oznacza wtedy nowe audio całej lekcji -
+   uprzedź Rafała o koszcie. Najpierw `npm run diagnoza -- <lekcja>`: zero
+   BŁĘDÓW, każdą UWAGĘ powiedz Rafałowi. Przejdź z Rafałem tabelę `## Przygotowanie przed nagraniem` z konspektu
+   i zapytaj o zgodę na koszt: przebieg tworzy i uruchamia workflow jak nagranie (podaj, ile wykonań przewiduje
+   budżet grup i które węzły zużywają tokeny). Po jego "tak": `przebieg <lekcja> --przygotowane` - cała lekcja,
+   bez wideo, zrzut po każdym kroku. Wynik: `<dane>/przebiegi/<lekcja>/<czas>/` z `przebieg.json`, zrzutami
+   i `galeria.html`; komenda wypisuje niesprawdzone kroki i zasoby do usunięcia.
+   **Analiza.** Dla każdego kroku z `przebieg.json` otwórz zrzut (`Read`) i porównaj go z polami kroku: `narracja`,
+   `opis` (kroki planu, czyli `[AKCJA]`), `przyjecie` i `elementy` (lokator i widoczna nazwa). Pytania:
+   - czy wszystko, co narracja nazywa (przycisk, zakładka, pole, etykieta, sekcja), jest na ekranie pod tą nazwą;
+   - czy opisany stan się zgadza (kolor, liczba elementów, pusta lista, połączenie);
+   - czy twierdzenie o braku ("nie ma go") jest prawdą na ekranie;
+   - czy automat zadziałał na elemencie, który nazywa `[AKCJA]`.
+   Ujęcie z więcej niż 15 zrzutami analizuje subagent (jeden na ujęcie) z tymi samymi pytaniami i formatem uwagi
+   poniżej. Każdy zgłoszony rozjazd otwierasz sam na zrzucie, zanim trafi do raportu; czego nie potwierdzisz - typ
+   `niepewne`, nigdy ciche pominięcie. Krok z `zrzutBlad` (w `niesprawdzone` z powodem `brak zrzutu`) i krok z powodem
+   `grupa pominięta po wyczerpaniu budżetu` to zawsze uwaga `niepewne` dla Rafała - bez zrzutu nie ma porównania. Przebieg zatrzymany: zrzut `stop.png` i komunikat automatu oceniasz tak samo
+   (rozjazd scenariusza czy błąd automatu).
+   **Raport** `video/przebieg-probny.md` (format: spec przebiegu próbnego, część 2):
+   - frontmatter: `narzedzie: tools/nagrywanie przebieg`, `data`, `zrodla-hasz` = `zrodlaHasz` z `przebieg.json`,
+     `nagrywanie-hasz` = `hasz.model`, `przebiegi` (lista `"<numer ujęcia>: <katalog przebiegu względem <dane>>"`), `wynik`
+     (`czysty` | `rozjazdy` | `zatrzymany`), `status: do_decyzji`;
+   - `## Zatrzymanie` (jeśli było): krok, ujęcie, komunikat automatu dosłownie, zrzut, diagnoza w jednym zdaniu;
+   - uwagi `### N. Krok K (akapit S:A) - tytuł` (K to `numer` kroku automatu z `przebieg.json`, nie numer kroku planu -
+     po nim `galeria` oznacza kroki) z polami `Typ:` (`scenariusz` | `automat` | `niepewne`), `Cytat:`,
+     `Na zrzucie:`, `Propozycja:`, `Zrzut:`;
+   - `## Niesprawdzone kroki` (z `niesprawdzone`), `## Do usunięcia przed nagraniem` (z `utworzone`),
+     `## Podsumowanie` (liczba uwag na typ).
+   `wynik: czysty` tylko wtedy, gdy każde ujęcie lekcji przeszło przebieg na tym samym `zrodla-hasz`, nie ma żadnej uwagi, a
+   `niesprawdzone` zawiera wyłącznie kroki z powodem `dogrywka` albo `nieaktywny wariant`.
+   Potem `galeria <lekcja>` - oznacza kroki z uwag.
+   **BRAMKA: raport.** Pokaż Rafałowi tabelę `nr | krok | akapit | typ | rozjazd | propozycja`, zatrzymanie,
+   niesprawdzone kroki, listę do usunięcia i pełną ścieżkę `galeria.html` w bloku kodu. Rafał decyduje o każdej
+   uwadze. Brak odpowiedzi to nie zgoda.
+   **Poprawki - tylko uwagi, które Rafał przyjął:**
+   - `scenariusz`: wstaw pod zdaniem `[UWAGA: przebieg próbny, krok K: <rozjazd>. Propozycja: <brzmienie>]` i oddaj
+     lekcję do `/kurs-uwagi` (naniesie, przeniesie zmianę do artykułu i konspektu, przegeneruje plan nagrania).
+     Scenariusza nie poprawiasz sam;
+   - `automat`: popraw `nagrywanie.yaml` albo obsługę usługi, potem `sprawdz` i `proba`;
+   - potem Rafał usuwa zasoby z "Do usunięcia przed nagraniem" (podaj usługę, identyfikator i nazwę), a ty robisz
+     kolejny przebieg: całej lekcji po zmianie scenariusza, `--ujecie N` po poprawce automatu w jednym ujęciu.
+   **Scalanie po `--ujecie N`.** `przebiegi` w raporcie to lista wpisów `"<numer ujęcia>: <katalog względem <dane>>"`.
+   Najpierw porównaj `zrodlaHasz` nowego `przebieg.json` z `zrodla-hasz` raportu: różne = treść się zmieniła,
+   potrzebny przebieg całej lekcji, nie scalasz. Równe: usuń z raportu uwagi o krokach tego ujęcia (numery kroków
+   ujęcia są w `ujecia[].kroki` obu `przebieg.json`) i jego sekcję "Zatrzymanie", dopisz uwagi z nowej analizy,
+   ponumeruj wszystkie uwagi od 1 w kolejności kroków, podmień wpis tego ujęcia w `przebiegi`, przelicz
+   "Niesprawdzone kroki", "Do usunięcia przed nagraniem" i `wynik`.
+   Pętla kończy się raportem `wynik: czysty` albo "tak" Rafała dla pozostałych uwag - dopiero wtedy ustaw
+   `status: zaakceptowany` i zacommituj raport. Etap 1 `/kurs-video` (lektor) odmówi bez zaakceptowanego raportu
+   zgodnego z bieżącą treścią; `--bez-przebiegu` tylko na jawne słowo Rafała w tej rozmowie.
+5. **Nagranie (po paczce lektora).** Wymaga zaakceptowanego przebiegu próbnego (krok 4) i paczki lektora z etapu 1 `/kurs-video`; zasoby utworzone przez ostatni przebieg muszą być usunięte. Najpierw `npm run diagnoza -- <lekcja>`: zero BŁĘDÓW, inaczej nie nagrywasz; każdą UWAGĘ powiedz Rafałowi (np. brak sygnatur przy lekcji bez `wykonaj` jest w porządku). Przejdź z Rafałem tabelę `## Przygotowanie przed nagraniem` z konspektu (stan konta, otwarte
    workflow, credentials) - dopiero po jego potwierdzeniu nagrywaj ujęcie po ujęciu **do jednego przebiegu**:
    `nagraj <lekcja> --przygotowane --ujecie N --run <nazwa>` z tą samą `<nazwa>` dla wszystkich ujęć lekcji (bez
    `--przygotowane` narzędzie odmówi). Ponowne nagranie ujęcia nie nadpisuje poprzedniego (`ujecie-NN-p2`), a po
@@ -42,7 +97,7 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    i nie obchodź - pokaż komunikat Rafałowi. **BRAMKA: pierwsze ujęcie lekcji** - daj Rafałowi ścieżkę surowego
    nagrania i poproś, żeby je obejrzał; jego uwagi zmieniają `nagrywanie.yaml`, potem ujęcie od nowa. Kolejne ujęcia
    tylko po jego "tak".
-5. **EDL.** `edl <lekcja> --run <nazwa>` (wszystkie ujęcia nagrane) - granice klatek muszą zgodzić się z osią lektora (bramka narzędzia). Istniejący `edl.json` z ręcznymi
+6. **EDL.** `edl <lekcja> --run <nazwa>` (wszystkie ujęcia nagrane) - granice klatek muszą zgodzić się z osią lektora (bramka narzędzia). Istniejący `edl.json` z ręcznymi
    decyzjami nadpisuje tylko `--nadpisz` po zgodzie Rafała. Dalej `/kurs-montaz` (zoomy, ramki, plansze), potem
    `/kurs-video` etap 2.
 
@@ -105,5 +160,5 @@ Robi się przy pierwszej lekcji, która jej potrzebuje, na koncie zespołu. ⛔ 
   PRZED pierwszym prawdziwym wykonaniem** - także w sondzie, próbie obsługi usługi, przygotowaniu i resecie, nie
   dopiero przed nagraniem lekcji. Powiedz, ile wykonań przewiduje budżet grup (z resetami) i jakie węzły zużywają
   tokeny; bez zgody tylko kroki bez wykonań.
-- Surowe nagrania i profil przeglądarki nie idą do gita (mogą zawierać dane konta).
+- Surowe nagrania, zrzuty przebiegu próbnego i profil przeglądarki nie idą do gita (mogą zawierać dane konta). W raporcie `video/przebieg-probny.md` (idzie do gita) pola `Cytat:` i `Na zrzucie:` nie przepisują danych konta: adresów e-mail, nazw spoza projektu testowego, fragmentów kluczy.
 - `kursy/misja-ai-start/_nagrywanie/` to osobny, zamrożony automat Misji - ten skill go nie używa i nie zmienia.

@@ -29,4 +29,5 @@
 - [Drive konektor — konto devstock.com](drive-konektor-konto-devstock.md) — transkrypty są na dysku współdzielonym `meetings`; konektor widzi je tylko na koncie `rafal.kielbasa@devstock.com`, „not found" = sprawdź `owner` w `list_recent_files`.
 - [Board tracker — stan 2026-10-09](board-tracker-status.md) — CLI + skill + hook SessionStart na `main` (PR #597); czeka akceptacja Rafała w nowych sesjach i inwentaryzacja; kalibracja progów ~23.10.
 - [n8n MCP: renameNode nie rusza kodu](n8n-mcp-rename-node-code-refs.md) — `$('Stara nazwa')` w węzłach Code zostaje; popraw sam i sprawdź eksportem; MCP nie pokazuje credentiali.
+- [Przebieg próbny automatu — stan 2026-10-10](przebieg-probny-status.md) — `przebieg` + bramka lektora gotowe (55372b65..c13988ff, #598), zadanie 10 (test na M00L01 w n8n) odłożone przez Rafała; 8 lekcji agenty-ai ma lektora bez nagrania.
 - [n8n-prod liczy crony w UTC](n8n-prod-strefa-utc.md) — „08:00” = 10:00 Warszawa latem; `settings.timezone: Europe/Warsaw` (bez wersji, działa od razu — zgoda jak na publikację); `29`/`31` ustawione 2026-10-09.

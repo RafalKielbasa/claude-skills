@@ -44,6 +44,11 @@ przedstawione Rafałowi do bramki akceptacji.
      lektora + avatary), plik jest = finalne spięcie. Surowe
      `video/nagranie.mp4` jest materiałem roboczym Rafała do edytora —
      pipeline go nie czyta.
+     **Kurs z `nagrywanie: { automat: true }`:** etap 1 (paczka lektora, także `--plan-avatara`) wymaga
+     zaakceptowanego przebiegu próbnego: `video/przebieg-probny.md` ze `status: zaakceptowany` i `zrodla-hasz`
+     zgodnym z bieżącym scenariuszem i konspektem - `npm run video` odmówi przed pierwszym płatnym wywołaniem.
+     Brak albo odmowa = najpierw `/kurs-nagrywanie` (kroki 0-4, do zaakceptowanego raportu). `--bez-przebiegu`
+     tylko na jawne słowo Rafała w tej rozmowie.
      Dokumentem do nagrywania jest `video/plan-nagrania.md` (kroki ekranu,
      kolumna „Do wpisania" z tym, co przy kroku idzie z klawiatury, narracja
      z nazwami plików lektora, a pod tabelą segmentu bloki do wklejenia).
@@ -168,8 +173,9 @@ przedstawione Rafałowi do bramki akceptacji.
    final. Ten krok może zamiast edytora zrobić `/kurs-montaz` (montaż
    automatyczny z bramką: lekcja, nagranie, intro, outro) — zaproponuj go
    Rafałowi razem ze ścieżką spisu. **Kurs z `nagrywanie: { automat: true }`:**
-   nagrania ekranu nie robi człowiek - po paczce lektora uruchom
-   `/kurs-nagrywanie` (automat Playwrighta nagrywa ujęcia i pisze EDL), potem
+   nagrania ekranu nie robi człowiek - przebieg próbny `/kurs-nagrywanie`
+   jest już za lekcją (bramka w kroku 1); po paczce lektora uruchom
+   `/kurs-nagrywanie` od kroku 5 (automat Playwrighta nagrywa ujęcia i pisze EDL), potem
    `/kurs-montaz` od kroku zaznaczeń i plansz (EDL już wypełniony), potem etap 2. Po zmianie treści scenariusza przypomnij
    Rafałowi, że zmontowany materiał trzeba zaktualizować ręcznie — pipeline
    tego nie wykryje.
