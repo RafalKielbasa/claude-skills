@@ -335,7 +335,7 @@ powtarza jego treści.
   zadaniami na tablicy przez `zadania.yaml` — do tej zmiany żyły
   wyłącznie w tabeli notatki. Nic nie powstaje bez `status: approved`
   i odpowiedzi **Wykonaj** na ekranie końcowym bramki. Egzekucja notatki offsite trafia też przez
-  `kb-client publish` na Slacka (`#core-team`) — do tej zmiany offsite nie
+  `kb-client publish` na Slacka (`#ai_summary`) — do tej zmiany offsite nie
   publikował tam nic.
 - NIE modyfikuj `planning/02.06.2026-planning.md` (plik historyczny).
 - Odpowiedzi `sprawdź` tylko z repo — zero wiedzy z pamięci modelu.
