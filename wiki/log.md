@@ -400,3 +400,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: opcje-z-tego-co-mierzalne-nie-z-celu (drugi) — options built from the tool's guards; Rafał rejected them and asked for an autonomy level per course.
 - Wzorce repo (`Baza wiedzy/.claude/wiki/`): nowy ui-probe-before-actions-surfaces-scenario-drift — patrz log repo.
 - Sygnał globalny: brak `nawrót`; nowe porażki mają dowody z jednej sesji, opcje-z-tego-co-mierzalne-nie-z-celu z dwóch — jeszcze nie kandydaci. Kandydaci według poprzedniego wpisu logu bez zmian (pytania-niezalezne-zadawane-po-jednym-na-ture, kod-referencyjny-planu-nigdy-nie-uruchomiony, subagent-odmawia-commita-mimo-jawnego-wyjatku, ruling-z-nieweryfikowana-przeslanka, windows-path-w-literale-skryptu).
+
+## 2026-10-12 — sesja bbf04b0a-b00e-4022-825d-4502fd8b5ab5 (id claude.ai niedostępny; saas app: code-review-master `pr 202` CP-104, issue CP-108 #203 przez github-tickets, review 5491208916 wysłane)
+- założono: review-does-not-check-pr-against-its-issue (skill: code-review-master, typ: porażka) — 2 dowody z 2 sesji (PR #198 kod spoza #180, PR #202 brak wymaganych testów i `passingScore ?? 70`); obie usterki znalezione ręcznie po runie.
+- założono: codex-reviewer-delegates-back-to-claude (skill: ogólny, typ: porażka) — `codex exec` w kroku 5 github-tickets oddał review `claude -p`, ECONNREFUSED, Codex zapytał o zgodę; timeout `crm codex` tej sesji jako hipoteza niezweryfikowana.
+- dopisano dowody: review-przez-checkout-zabiera-drzewo-uzytkownika (drugi i trzeci) — tryb `pr` code-review-master czyta drzewo (`crm.mjs:223`): `pr 201` (2026-10-05, z pamięci projektu) i `pr 202` (checkout przez Rafała, potem drzewo na `main`).
+- Zapis na prośbę Rafała w trakcie `/evolve-skill code-review-master`, który nie miał w wiki podstawy do propozycji (brak strony o zgodności z issue).
+- Sygnał globalny: brak `nawrót`. Nowy kandydat: review-does-not-check-pr-against-its-issue (2 dowody z 2 sesji) → `/evolve-skill code-review-master`. review-przez-checkout-zabiera-drzewo-uzytkownika (3 dowody) dotyka trybu `pr` tego samego skilla — osobna zmiana. Kandydaci według poprzednich wpisów bez zmian.

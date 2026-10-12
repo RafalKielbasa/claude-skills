@@ -29,6 +29,17 @@ dokładnie jak wady recenzowanego PR-a.
   Po `prisma generate` zostało zero błędów. Bez rozpoznania trafiłyby do review
   jako dziewięć nieistniejących wad. Powrót kosztował przywrócenie gałęzi
   użytkownika, usunięcie gałęzi roboczej i drugi `prisma generate`.
+- 2026-10-05, `code-review-master pr 201` (z pamięci projektu saas app, notatka
+  `code-review-master-config-2026-09-07`): tryb `pr` wymaga gałęzi PR-a w drzewie,
+  klasyfikator auto mode zablokował `git checkout` („Irreversible Local
+  Destruction”), więc Rafał przełączał gałąź sam, a plan zrobiony przed checkoutem
+  został osierocony.
+- 2026-10-12, sesja bbf04b0a-b00e-4022-825d-4502fd8b5ab5: `pr 202` zaplanowany na
+  gałęzi CP-100 pokazał `size: 0` dla trzech nowych plików PR-a. `crm assemble`
+  sprawdza dowody przez `readFileSync(join(repo, path))` (`bin/crm.mjs:223`), więc
+  agenci i walidacja widzieliby kod CP-100. Rafał zrobił `gh pr checkout 202`
+  w swoim drzewie, a przed końcem sesji drzewo stało już na `main` (`b533272`):
+  gałąź użytkownika przełączana dwa razy na potrzeby jednego review.
 
 ## Rozwiązanie
 Do przeglądu cudzej gałęzi nie przełączaj drzewa, w którym pracuje użytkownik.
