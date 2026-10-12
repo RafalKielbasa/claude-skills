@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: d1166696-ae05-41e9-8848-8ed9022a56fe
-  modified: 2026-10-09T18:32:54.919Z
+  modified: 2026-10-12T12:48:03.324Z
 ---
 
 2026-10-09: Rafał: „Jeśli trafiły na branch informacje z innego zadania, to jest to
@@ -21,4 +21,5 @@ w `GET /search/courses`. Reguła nie jest jeszcze zapisana w repo (brak w
 **How to apply:** przy każdym review i recheck porównuję listę zmienionych plików z zakresem
 issue (`gh issue view <n>`), także w commitach „address review”. Znalezisko oznaczam jako
 Blocking i cytuję zdanie issue, które wyznacza zakres. Powiązane:
-[[feedback-duplication-is-blocking]], [[code-review-master-config-2026-09-07]].
+[[feedback-duplication-is-blocking]], [[code-review-master-config-2026-09-07]],
+[[feedback-unmet-issue-element-blocking]] (lustro: brakujący element issue też blokuje).
