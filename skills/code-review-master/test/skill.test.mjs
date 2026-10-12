@@ -36,6 +36,19 @@ test('send mode posts nothing before approval and anchors comments to the diff',
   assert.match(section, /never commit/i);
 });
 
+// The card move is a standing authorization for one transition only, so the
+// section must tie it to a posted REQUEST_CHANGES and resolve the option by name.
+test('send mode moves the linked card to To be fixed only after a blocking review', () => {
+  const at = TEXT.indexOf('## Mode `send`');
+  const section = TEXT.slice(at, TEXT.indexOf('## Mode `fix`'));
+  assert.match(section, /\*\*Board card\.\*\*/);
+  assert.match(section, /only when the posted review is `REQUEST_CHANGES`/i);
+  assert.match(section, /`To be fixed`/);
+  assert.match(section, /closingIssuesReferences/);
+  assert.match(section, /never hard-coded/i);
+  assert.match(section, /after a `COMMENT` review move nothing/i);
+});
+
 test('the main model is checked at entry but never blocks the run', () => {
   assert.match(TEXT, /Haiku or Sonnet/);
   assert.match(TEXT, /Never refuse over it/i);

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: reference
   originSessionId: 7844f44c-0244-4d6d-b515-5c3902552ad9
-  modified: 2026-09-02T09:44:28.619Z
+  modified: 2026-10-12T14:02:56.835Z
 ---
 
 Na tej maszynie `localhost` rozwiązuje się **najpierw do IPv6 (`::1`)**, a gniazdo
@@ -37,3 +37,11 @@ kolizji. Wymaga restartu `pnpm dev`, bo `next.config.ts` czyta `API_URL` przy st
 
 Nie myl tego z awarią aplikacji: żaden commit nie musi być winny, a testy jednostkowe
 i e2e będą zielone, bo omijają rewrite Next.js.
+
+**Wariant na porcie 3000 (2026-10-12):** `json-server` z innej sesji (Pokedex) na
+`[::1]:3000`. Middleware tenanta (`apps/web/src/proxy.ts`) robi `NextResponse.rewrite`
+na `http://localhost:3000/tenant/<sub>/...`, więc **każda strona na subdomenie** daje `{}`
+z `x-powered-by: Express`, mimo że apex działa. `next dev -H 127.0.0.1` nie pomaga
+(rewrite i tak idzie na `localhost`). Działa: `next dev -p 3002` (wolny port na obu
+stosach) + `API_URL=http://127.0.0.1:3001`; logowanie na `http://lvh.me:3002/login`.
+Obcego procesu nie ubijać — należy do innej sesji.

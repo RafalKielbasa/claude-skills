@@ -243,3 +243,50 @@ index 5374ae3..7e1f70e 100644
 +| Wpis wstawiony z adresów zebranych na starcie podsumowania | Krok 4 — świeży odczyt tuż przed zapisem i asercja wejścia; padnięta asercja = czytaj ponownie |
  | Wzorzec opisujący objaw („Claude się pomylił") | Przyczyna źródłowa: dlaczego to się stało i co to powtórzy |
 ```
+
+## 2026-10-12 — code-review-master — zaakceptowana
+- **Wzorce:** zmiana-skilla-poza-evolve-skill-bez-sladu (wpis mimo zmiany dyktowanej, nie z `/evolve-skill`)
+- **Zmiana:** tryb `send` dostał krok 9 „Board card”: tylko po wysłanym `REQUEST_CHANGES` karta każdego issue zamykanego przez PR idzie na tablicy na opcję `To be fixed` (`gh project item-edit`, identyfikatory rozwiązywane po nazwie przez GraphQL); po `COMMENT` nic się nie rusza, bo merge przesuwa kartę do Done. Dawny krok 9 to teraz 10. Test sekcji w `test/skill.test.mjs` (RED → GREEN: 169 testów, 168 pass, 0 fail, 1 skip „codex can actually be started on this machine”).
+- **Powód decyzji:** reguła dyktowana wprost przez użytkownika po review PR #202 (CP-104, review 5491208916): „Jak najbardziej w przyszłości jeśli powiązaną kartę przesuwaj do to be fixed, jeśli review było blokujące”; potem przy wyborze ścieżki „2. Rób”. Zgoda stała obejmuje tylko to jedno przejście, wyjątek od reguły board-trackera o zmianach statusu. Uwaga poboczna: `npm test` (`node --test test/`) nie działa na Node 24.20 („Cannot find module …\test”), testy uruchomione przez `node --test "test/**/*.test.mjs"`.
+- **Nawrót:** —
+
+```diff
+diff --git a/skills/code-review-master/SKILL.md b/skills/code-review-master/SKILL.md
+index 1f68f72..bcd9104 100644
+--- a/skills/code-review-master/SKILL.md
++++ b/skills/code-review-master/SKILL.md
+@@ -234,7 +234,8 @@ On success, show the user (in Polish) the path to `raport.md` and the headline c
+ 6. **Event.** `REQUEST_CHANGES` when any posted comment is `blocking`, `COMMENT` otherwise. **Never `APPROVE`** from this mode: approval is the user's judgment after reading the whole PR, not something a five-axis review earns.
+ 7. **Show, then wait.** Print the complete payload — every comment with its `path:line`, the body, the event, and the findings dropped in step 3 — and **wait for approval**. Nothing is posted before it. Apply the user's edits to the text and show it again; approval covers the text that was shown, not a later version of it.
+ 8. **Post.** Write the payload to a file in the session's scratch directory and run `gh api repos/{owner}/{repo}/pulls/<n>/reviews --input <file>` with `commit_id` set to the run's `target.head`. Show the review's `html_url`. A 422 means step 3 missed a line: report it verbatim and stop; never retry by dropping comments silently.
+-9. Dispatch no subagents in this mode, ever — the same rule as mode `ask`. Never commit.
++9. **Board card.** Only when the posted review is `REQUEST_CHANGES`: for every issue the PR closes (`gh pr view <n> --json closingIssuesReferences`), read its project items and the Status field's options through GraphQL, and move the card to the option named `To be fixed` with `gh project item-edit` — item, project, field and option ids resolved by name, never hard-coded. This is the user's standing authorization (2026-10-12) for this one transition, an exception to board-tracker's rule that status changes wait for a "tak". After a `COMMENT` review move nothing: the user merges and the board moves the card to Done by itself. An issue on no board, or a board without a `To be fixed` option, gets one line in Polish and no other status in its place. Name the moved card and its previous status in the closing summary.
++10. Dispatch no subagents in this mode, ever — the same rule as mode `ask`. Never commit.
+ 
+ ## Mode `fix`
+ 
+diff --git a/skills/code-review-master/test/skill.test.mjs b/skills/code-review-master/test/skill.test.mjs
+index 7e1f70e..2431190 100644
+--- a/skills/code-review-master/test/skill.test.mjs
++++ b/skills/code-review-master/test/skill.test.mjs
+@@ -36,6 +36,19 @@ test('send mode posts nothing before approval and anchors comments to the diff',
+   assert.match(section, /never commit/i);
+ });
+ 
++// The card move is a standing authorization for one transition only, so the
++// section must tie it to a posted REQUEST_CHANGES and resolve the option by name.
++test('send mode moves the linked card to To be fixed only after a blocking review', () => {
++  const at = TEXT.indexOf('## Mode `send`');
++  const section = TEXT.slice(at, TEXT.indexOf('## Mode `fix`'));
++  assert.match(section, /\*\*Board card\.\*\*/);
++  assert.match(section, /only when the posted review is `REQUEST_CHANGES`/i);
++  assert.match(section, /`To be fixed`/);
++  assert.match(section, /closingIssuesReferences/);
++  assert.match(section, /never hard-coded/i);
++  assert.match(section, /after a `COMMENT` review move nothing/i);
++});
++
+ test('the main model is checked at entry but never blocks the run', () => {
+   assert.match(TEXT, /Haiku or Sonnet/);
+   assert.match(TEXT, /Never refuse over it/i);
+```

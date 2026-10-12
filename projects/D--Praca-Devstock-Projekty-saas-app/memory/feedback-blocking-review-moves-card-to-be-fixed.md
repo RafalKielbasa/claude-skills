@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: bbf04b0a-b00e-4022-825d-4502fd8b5ab5
-  modified: 2026-10-12T13:09:31.299Z
+  modified: 2026-10-12T13:53:15.896Z
 ---
 
 2026-10-12, Rafał (standing authorization): when a review I send has blocking remarks
@@ -22,5 +22,6 @@ for this transition, only after a blocking review was actually posted.
 field `PVTSSF_lADOEAMo084BW9l1zhSN0dM`, option "To be fixed" = `e9d8eeda` (read 2026-10-12;
 re-read if an edit fails). The board-tracker CLI cannot set it (`status --to` knows only
 canonical states; "To be fixed" maps to in_progress), so use `gh project item-edit` with the
-issue's project item id. Report the move in the closing summary. Related:
+issue's project item id. Report the move in the closing summary. Since 2026-10-12 this is step 9
+"Board card" of `code-review-master` mode `send`. Related:
 [[feedback-unmet-issue-element-blocking]], [[code-review-master-config-2026-09-07]].
