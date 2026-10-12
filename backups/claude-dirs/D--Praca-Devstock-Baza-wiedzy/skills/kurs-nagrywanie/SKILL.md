@@ -40,7 +40,9 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    uprzedź Rafała o koszcie. Najpierw `npm run diagnoza -- <lekcja>`: zero
    BŁĘDÓW, każdą UWAGĘ powiedz Rafałowi. Przejdź z Rafałem tabelę `## Przygotowanie przed nagraniem` z konspektu
    i zapytaj o zgodę na koszt: przebieg tworzy i uruchamia workflow jak nagranie (podaj, ile wykonań przewiduje
-   budżet grup i które węzły zużywają tokeny). Po jego "tak": `przebieg <lekcja> --przygotowane` - cała lekcja,
+   budżet grup i które węzły zużywają tokeny). Lekcja ze `start_state` (kurs `autonomy: full`): przed PIERWSZYM
+   przebiegiem `preview-start-state <lekcja> --ujecie N` i **BRAMKA B4** - Rafał zatwierdza listę trwałych usunięć
+   (kolejne resety tej lekcji idą bez bramki). Po jego "tak": `przebieg <lekcja> --przygotowane` - cała lekcja,
    bez wideo, zrzut po każdym kroku. Wynik: `<dane>/przebiegi/<lekcja>/<czas>/` z `przebieg.json`, zrzutami
    i `galeria.html`; komenda wypisuje niesprawdzone kroki i zasoby do usunięcia.
    **Analiza.** Dla każdego kroku z `przebieg.json` otwórz zrzut (`Read`) i porównaj go z polami kroku: `narracja`,
@@ -77,6 +79,8 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    - `automat`: popraw `nagrywanie.yaml` albo obsługę usługi, potem `sprawdz` i `proba`;
    - potem Rafał usuwa zasoby z "Do usunięcia przed nagraniem" (podaj usługę, identyfikator i nazwę), a ty robisz
      kolejny przebieg: całej lekcji po zmianie scenariusza, `--ujecie N` po poprawce automatu w jednym ujęciu.
+     Pod `autonomy: full` z `start_state` lista "Do usunięcia przed nagraniem" jest tylko informacyjna: kolejny
+     przebieg startuje od automatycznego resetu, Rafał niczego nie usuwa.
    **Scalanie po `--ujecie N`.** `przebiegi` w raporcie to lista wpisów `"<numer ujęcia>: <katalog względem <dane>>"`.
    Najpierw porównaj `zrodlaHasz` nowego `przebieg.json` z `zrodla-hasz` raportu: różne = treść się zmieniła,
    potrzebny przebieg całej lekcji, nie scalasz. Równe: usuń z raportu uwagi o krokach tego ujęcia (numery kroków
@@ -86,7 +90,7 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    Pętla kończy się raportem `wynik: czysty` albo "tak" Rafała dla pozostałych uwag - dopiero wtedy ustaw
    `status: zaakceptowany` i zacommituj raport. Etap 1 `/kurs-video` (lektor) odmówi bez zaakceptowanego raportu
    zgodnego z bieżącą treścią; `--bez-przebiegu` tylko na jawne słowo Rafała w tej rozmowie.
-5. **Nagranie (po paczce lektora).** Wymaga zaakceptowanego przebiegu próbnego (krok 4) i paczki lektora z etapu 1 `/kurs-video`; zasoby utworzone przez ostatni przebieg muszą być usunięte. Najpierw `npm run diagnoza -- <lekcja>`: zero BŁĘDÓW, inaczej nie nagrywasz; każdą UWAGĘ powiedz Rafałowi (np. brak sygnatur przy lekcji bez `wykonaj` jest w porządku). Przejdź z Rafałem tabelę `## Przygotowanie przed nagraniem` z konspektu (stan konta, otwarte
+5. **Nagranie (po paczce lektora).** Wymaga zaakceptowanego przebiegu próbnego (krok 4) i paczki lektora z etapu 1 `/kurs-video`; zasoby utworzone przez ostatni przebieg muszą być usunięte. Pod `autonomy: full` z `start_state` nic nie sprzątasz ręcznie przed nagraniem (reset przed ujęciem robi to sam), a `--wznow` takiego ujęcia narzędzie odmawia - nagrywasz je od początku. Najpierw `npm run diagnoza -- <lekcja>`: zero BŁĘDÓW, inaczej nie nagrywasz; każdą UWAGĘ powiedz Rafałowi (np. brak sygnatur przy lekcji bez `wykonaj` jest w porządku). Przejdź z Rafałem tabelę `## Przygotowanie przed nagraniem` z konspektu (stan konta, otwarte
    workflow, credentials) - dopiero po jego potwierdzeniu nagrywaj ujęcie po ujęciu **do jednego przebiegu**:
    `nagraj <lekcja> --przygotowane --ujecie N --run <nazwa>` z tą samą `<nazwa>` dla wszystkich ujęć lekcji (bez
    `--przygotowane` narzędzie odmówi). Ponowne nagranie ujęcia nie nadpisuje poprzedniego (`ujecie-NN-p2`), a po
@@ -152,9 +156,25 @@ Robi się przy pierwszej lekcji, która jej potrzebuje, na koncie zespołu. ⛔ 
 7. **Review** tym, czego zespół używa (review AI pipeline'u albo inny model w sesji), potem zmiany do repo (gałąź i PR
    jak w zespole). Od teraz ta usługa nie wymaga przygotowania.
 
+## Kurs z `autonomy: full`
+
+Kurs z `nagrywanie.autonomy: full` w `kurs.yaml` (konto wyłącznie kursowe; reguły per poziom: `tools/nagrywanie/README.md`,
+sekcja "Poziom autonomii kursu"). Reszta procedury bez zmian.
+
+- **Automat robi sam:** reset stanu startowego konta przed ujęciem (`start_state`), okno logowania OAuth dostawcy
+  w działaniu z `okno` (zakresy i uprawnienia sprawdza rdzeń wobec listy z `kurs.yaml`) i wpisanie klucza
+  z `secrets.yaml` działaniem `type_secret`.
+- **Zostaje u Rafała:** jednorazowe zalogowanie kont w profilu kursu (`login`), ręczne wpisanie `secrets.yaml`
+  (Claude pliku nie czyta i nie prosi o klucze w rozmowie), hasło i drugi składnik, wszystkie bramki (B3, B4,
+  zatwierdzenie raportu, pierwsze ujęcie).
+- **Nowy dostawca albo nowe zakresy:** `probe-ui --usluga <nazwa> --okno <dostawca>` (P1a, bez zgody) -> bramka B3
+  (Rafał zatwierdza hosty i listę zakresów w `kurs.yaml`) -> `probe-ui ... --okno <dostawca> --zgoda` (P1b).
+- **`start_state` nowej lekcji:** `save-start-state <lekcja> --ujecie N` zapisuje migawkę; przejrzyj ją z tabelą
+  `## Przygotowanie przed nagraniem` z planu i dopiero wtedy wklej deklarację do `nagrywanie.yaml`.
+
 ## Zasady
 
-- Nic poza przeglądarką. Nic poza projektem testowym i listą dozwolonych workflow.
+- Nic poza przeglądarką. Pod `restricted`: nic poza projektem testowym i listą dozwolonych workflow; pod `full`: nic poza hostami kursu. Zasady wykonań i kosztów poniżej bez zmian.
 - Żadnego obchodzenia zabezpieczeń usługi (CAPTCHA, wykrycie automatu, wylogowanie) - zatrzymanie i komunikat.
 - Koszty: wykonania workflow z węzłami AI zużywają tokeny przy każdej próbie. **Zgoda Rafała na koszt i limit wykonań
   PRZED pierwszym prawdziwym wykonaniem** - także w sondzie, próbie obsługi usługi, przygotowaniu i resecie, nie
