@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-12T16:35:24.960Z
+  modified: 2026-10-12T17:29:33.031Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -50,6 +50,17 @@ review 5493597602 typu COMMENT, decyzja Rafała: duplikaty nieblokujące, bez po
 następne jest review końcowe. 3 uwagi (kurs zamiast `validateBelongsToTenant`, 5. kopia `P2025`, `trim` z
 `UpdateUserDto`). Celowo NIE wysłana: kopia wyznaczania odbiorców w `prisma/seed/announcements.ts:40-52`,
 bo to sprawdza zmiana wymagań A. Wstępnie „dobry junior”: schemat 8/10, serwisy 12/15.
+
+Checkpoint BE Miłosza 2026-10-12 (PR #200, tip `a34e24b`; #197 to issue CP-107): BE OK, CI zielone, bez wycieku,
+token tylko jako sha256. Review 5494000452 typu COMMENT, ta sama formuła co u Konrada, 7 uwag o duplikatach
+(`normalizeEmail` vs `auth.service`, sha256 vs refresh token, token w seedzie, reguła `super_admin`/rang vs
+`membership-rank.ts`, dwa handlery 409, odczyt nazwy szkoły, `P2002`/`P2025` → osobny ticket). Celowo NIE wysłane:
+zaszyte 7 dni w `prisma/seed/verify.ts:438` i testach, bo to sprawdza zmiana wymagań A (ważność 1/7/30 dni).
+Otwarte: Miłosz zgłosił brak `team/guards/invite-throttler.guard.ts` w `when` osi `rate-limiting` w `config.md`.
+Wstępnie: schemat 8/10, serwisy 12/15.
+
+Zmiana wymagań: decyzja Rafała z 2026-10-12, wysyłka śr 14.10 (nie wt 13.10 z vaulta); wariant jeszcze
+niewybrany (rekomendacja A dla obu).
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.
