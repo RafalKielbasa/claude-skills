@@ -31,6 +31,15 @@ ale Claude nie zagląda do niego przed twierdzeniem negatywnym.
   (idea-engine i materiały na 13.10)”) podawał to wprost. Wyszło dopiero przy
   pisaniu briefu na koniec sesji; research o dzieciach zrobiono przez to
   skillem `deep-research` zamiast w idea-engine.
+- 2026-10-12, sesja d06ea110-eacf-4754-90ea-c7b325490912 (id claude.ai
+  niedostępny): do punktu 7 agendy 13.10 Claude wpisał „W code-busters-v2 na
+  GitHubie brak PR-a, issue i gałęzi o certyfikatach”, sprawdziwszy tylko repo
+  kodu `Devstock-Academy/code-busters-v2`. Na tablicy platformy
+  `kodozercy/code-busters` leżało otwarte od 07.07 issue #1477 „Certyfikaty -
+  generowanie + weryfikacja” (plus `code-busters-mobile#183`). Wyszło turę
+  później przy `gh search issues` po wszystkich trzech organizacjach; punkt
+  poprawiony commitem `3c6eb979`. Przestrzeń tym razem: repo kodu a repo-tracker
+  tego samego produktu.
 
 ## Rozwiązanie
 Przed twierdzeniem „X nie ma” sprawdź trzy indeksy: (1) `grep -n -i "<temat>"

@@ -273,3 +273,9 @@ Format wpisu:
 - Bez nowych wzorców. Skille repo: `spotkanie` tylko edytowany (l. 338, kanał publikacji), `daily` nieużywany — zmiana dotyczyła n8n i `kb-client`, nie przebiegu skilli.
 - Wzorce globalne dotknięte w tej sesji: nowe n8n-draft-reported-as-live, n8n-change-design-misses-repo-export, board-archive-means-board-card-not-close (board-tracker).
 - Sygnał repo: bez zmian według poprzedniego wpisu — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.
+
+## 2026-10-12 — sesja d06ea110-eacf-4754-90ea-c7b325490912 (id claude.ai niedostępny) (agenda 13.10: punkt 7 o certyfikatach, statusy action items z 21.09, wątki zaparkowane; macierz odpowiedzialności — subskrypcje według produktu)
+- założono: agenda-walkthrough-started-past-point-1 (skill: spotkanie, typ: porażka) — "przejdźmy przez agendę" started at point 2 (proposals in the pre-meeting notes); Rafał meant point 1, settled items since 21.09.
+- dopisano dowód: skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo — `spotkanie` still says "commit robi Rafał"; three agenda commits made per `CLAUDE.md`.
+- Wzorce globalne dotknięte w tej sesji: nowe ranking-from-session-start-snapshot i board-tracker-cli-fails-whole-op-on-board-step (board-tracker), derived-number-in-option-not-computed; dowód do twierdzenie-negatywne-z-czesci-przestrzeni.
+- Sygnał repo: bez zmian według poprzedniego wpisu — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.

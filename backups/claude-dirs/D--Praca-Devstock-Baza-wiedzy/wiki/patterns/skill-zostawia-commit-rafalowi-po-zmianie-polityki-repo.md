@@ -24,6 +24,11 @@ Skill powtarza regułę, która ma swoje jedyne źródło w `CLAUDE.md`.
   i zacommitował agendę (`1daedb99`). Ten sam zapis jest dziś w
   `kurs-lekcja/SKILL.md:186`, `kurs-nowy:87`, `kurs-redakcja:242`,
   `kurs-video:208`, `kurs-zadania:107`, `knowledge-base-update:20`.
+- 2026-10-12, sesja d06ea110-eacf-4754-90ea-c7b325490912 (id claude.ai
+  niedostępny): `/spotkanie` przy dopisaniu punktu do agendy 13.10 — skill
+  nadal mówi „Plik zostaje niezacommitowany — commit robi Rafał”. Claude poszedł
+  za `CLAUDE.md` i zacommitował trzy zmiany agendy na gałęzi worktree
+  (`87c98345`, `3c6eb979`, `b50f3f7d`), sprawdzając gałąź przed każdym.
 
 ## Rozwiązanie
 Zastąp w skillach zdania „Zmiany zostają niezacommitowane — commit robi Rafał”

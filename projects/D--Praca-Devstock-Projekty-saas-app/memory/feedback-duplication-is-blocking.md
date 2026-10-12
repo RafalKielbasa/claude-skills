@@ -5,14 +5,14 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: ea153307-0bd7-48c2-86f5-a276b5d1a749
-  modified: 2026-10-06T12:18:35.473Z
+  modified: 2026-10-12T16:46:05.866Z
 ---
 
 2026-10-06: Rafał chce, żeby redundancja kodu była zawsze uwagą **blokującą**, a nie
 sugestią. Druga implementacja tej samej rzeczy blokuje merge także wtedy, gdy różni się
 kształtem wejścia albo zachowaniem na brzegach: istniejącą trzeba rozszerzyć albo
 sparametryzować, a nie kopiować. Reguła siedzi w `.claude/review/config.md`, w osi
-`code-quality`, jako punkt `**blocking:**`.
+`code-quality`, jako punkt `**blocking:**` (zacommitowane na `main` 2026-10-12 jako `5036d70`).
 
 **Why:** nie chce, żeby projekt rósł o kod robiący to samo. Przypadek wyzwalający: PR #198
 (CP-100), `getInitials` w `hero-info.tsx:31` to trzecia kopia, obok `user-menu.tsx:30`
