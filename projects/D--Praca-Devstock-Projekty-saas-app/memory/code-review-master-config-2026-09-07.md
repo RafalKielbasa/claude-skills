@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-09T21:48:19.284Z
+  modified: 2026-10-12T07:05:21.810Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -69,6 +69,8 @@ Recheck 2026-10-09 `recheck 198` (baza `b2e0bd0`, tip `5095627`): 3/3 uwagi nani
 spoza zakresu issue #180, zob. [[feedback-foreign-task-changes-blocking]]. Wysłane jako review
 5475666170 `CHANGES_REQUESTED`, 1 komentarz na `quizzes.controller.ts:47-53`. Sugestię
 o e-mailu w `user-menu.tsx:98` (inicjały „J” zamiast „JK”) Rafał wyciął.
+Recheck 2026-10-12: `2cb342f` usunął quizy (diff względem merge-base pusty), CI zielone. Norbert:
+kod quizów to CP-104, niezacommitowany przed przełączeniem gałęzi, i siedzi w `35db0f2`.
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)
