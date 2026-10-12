@@ -173,13 +173,11 @@ links no spec starts with `superpowers:brainstorming`; anything else starts dire
 
 Run only when Rafał asks for it. Window: the 30 days before today.
 
-1. Dispatch five parallel `Explore` subagents, one per source, each returning threads as
+1. Dispatch four parallel `Explore` subagents, one per source, each returning threads as
    `{title, evidence[], looks_done: bool}`:
    - `docs/superpowers/specs/` of `D:\Praca\Devstock\Baza wiedzy` (a spec without a plan, or a
      plan not carried out);
    - `docs/superpowers/plans/` of the same repository (unchecked `- [ ]` tasks);
-   - `D:\Notatki\notatki\praca-z-claude.md` (the newest "Następny krok" per topic; a later entry
-     supersedes an earlier one);
    - Claude project memory of the four repositories under `~/.claude/projects/` (both `d--` and
      `D--` keys): items waiting, postponed or due later;
    - `git log` of the four repositories (topics, and whether a pending item was done later).

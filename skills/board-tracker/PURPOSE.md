@@ -28,3 +28,4 @@ work through his backlog.
 ## Historia ewolucji
 
 - 2026-10-09: created.
+- 2026-10-12: inventory drops the `praca-z-claude.md` source (four sources instead of five); the session journal was deleted after session summaries moved to a plugin. Logged in `~/.claude/wiki/skill-impact.md`.

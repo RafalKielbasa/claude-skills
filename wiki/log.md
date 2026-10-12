@@ -424,3 +424,14 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: twierdzenie-negatywne-z-czesci-przestrzeni — "brak issue o certyfikatach" after searching only `code-busters-v2`; #1477 was on the `kodozercy/code-busters` tracker.
 - Wzorce repo (`Baza wiedzy/.claude/wiki/`): nowy agenda-walkthrough-started-past-point-1 (spotkanie), dowód do skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo — patrz log repo.
 - Sygnał globalny: brak `nawrót`; twierdzenie-negatywne-z-czesci-przestrzeni ma 3 dowody z 2 sesji — jeszcze nie kandydat. Kandydaci według poprzednich wpisów bez zmian.
+
+## 2026-10-12 — sesja 41420c90-30dc-4fb8-a253-35e0054ade7a (id claude.ai niedostępny; saas app: checkpoint BE egzaminu z praktyk — review PR #199 Konrada i #200 Miłosza wysłane jako COMMENT, DT-10 #646 założone i zamknięte)
+- założono: confirmation-question-answered-outside-its-frame (skill: ogólny, typ: porażka) — „…zostaje tylko ostateczne review. O ile się nie mylę, prawda?” answered „Prawie tak” with a table of exam stages; Rafał restated the scope.
+- założono: exam-assessment-material-kept-out-of-candidate-text (skill: ogólny, typ: sukces) — duplicates tested by requirement change A withheld in both reviews; DT-10 without scores, variant or withheld items after a visibility check.
+- założono: skill-invocation-rule-overrides-user-usage-limit (skill: ogólny, typ: porażka) — `code-review-master` loaded and `crm plan` run despite the 3-subagent cap; stopped before dispatch, review done inline.
+- założono: review-comments-endpoint-hides-line-anchors (skill: code-review-master, typ: porażka) — review-scoped comments endpoint returned null line fields twice; `pulls/N/comments` had the ranges.
+- dopisano dowód: windows-path-w-literale-skryptu (dwunasty) — `gh … --jq` with embedded double quotes via PowerShell 5.1 → `accepts 1 arg(s), received 3`; rerun through Bash.
+- dopisano dowód: ranking-from-session-start-snapshot (drugi, druga sesja) — binding card kept offering devstock-team#96 as ready from the session-start brief, the issue was `CLOSED`; the ranking after Done used a fresh `candidates`.
+- dopisano dowód: wyjatek-dopisany-do-bezwarunkowej-reguly-uzytkownika (drugi) — „wariant A” (my recommendation) written into memory as Rafał's decision about the date; corrected in the same turn.
+- Wiki repo: saas app nie ma `.claude/skills/`, więc nie ma wiki repo; wszystkie wzorce w wiki globalnym.
+- Sygnał globalny: brak `nawrót`. Nowe porażki mają dowody z jednej sesji; ranking-from-session-start-snapshot z dwóch — jeszcze nie kandydat. Kandydaci według poprzednich wpisów bez zmian.

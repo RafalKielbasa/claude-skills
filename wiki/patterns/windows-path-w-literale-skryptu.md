@@ -101,6 +101,14 @@ kodem i nie powinna przechodzić przez składnię języka.
   zatrzymała zapis przed zmianą pliku. Naprawa: skrypt zapisany narzędziem Write,
   ukośnik składany przez `String.fromCharCode(92)`.
 
+- 2026-10-12, sesja 41420c90-30dc-4fb8-a253-35e0054ade7a (id claude.ai niedostępny; saas app):
+  dwunasty dowód, nowy poziom cytowania. Narzędzie PowerShell (Windows PowerShell 5.1):
+  `gh api …/pulls/199/reviews/5493597602/comments --jq '.[] | "\(.path):\(.start_line // .line)-\(.line)"'`
+  padło na `accepts 1 arg(s), received 3`. PS 5.1 nie ucieka cudzysłowów podwójnych wewnątrz
+  argumentu w apostrofach przy przekazaniu do programu natywnego, więc wyrażenie jq rozpadło się na
+  trzy argumenty. Naprawa: ta sama komenda przez narzędzie Bash; filtr jq z cudzysłowami nie idzie
+  przez PowerShell.
+
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją
 w skrypcie, zamiast wklejać do literału. Skrypt ma wtedy w sobie wyłącznie

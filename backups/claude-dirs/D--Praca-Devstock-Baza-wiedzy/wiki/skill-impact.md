@@ -1250,3 +1250,31 @@ index 076939fa..3971947c 100644
    publikował tam nic.
  - NIE modyfikuj `planning/02.06.2026-planning.md` (plik historyczny).
 ```
+
+## 2026-10-12 — knowledge-base-update — zaakceptowana
+
+- **Wzorce:** brak (skutek zmiany zakresu skilla globalnego `podsumuj-sesja-claude`, nie wynika z wzorca)
+- **Zmiana:** sekcja „Granice wobec innych skilli" opisuje `podsumuj-sesja-claude` jako zapis wzorców pracy z Claude do `.claude/wiki/`, a nie brief „gdzie skończyłem" — skill globalny przestał pisać brief i dziennik sesji.
+- **Powód decyzji:** użytkownik przeszedł na wtyczkę do podsumowań sesji i kazał usunąć dziennik `praca-z-claude.md`; dotychczasowy opis granicy stał się nieprawdziwy. Zmiana poza `evolve-skill`, wpis globalny `2026-10-12 — podsumuj-sesja-claude` w `~/.claude/wiki/skill-impact.md` (sesja 66f94da0-8974-41e7-beb5-1cb4c71c880d).
+
+```diff
+diff --git a/.claude/skills/knowledge-base-update/SKILL.md b/.claude/skills/knowledge-base-update/SKILL.md
+index e8f5a225..e98cca04 100644
+--- a/.claude/skills/knowledge-base-update/SKILL.md
++++ b/.claude/skills/knowledge-base-update/SKILL.md
+@@ -35,10 +35,10 @@ Slugi projektów: `saas-app`, `codebusters-v2`, `codebusters-mobile`,
+ 
+ ## Granice wobec innych skilli
+ 
+-- **`podsumuj-sesja-claude`** pisze brief „gdzie skończyłem" — stan pracy
+-  w toku, dla Rafała na jutro, żywotność kilka dni. Ty piszesz wiedzę firmy:
+-  rzeczy zamknięte i uzasadnione, żywotność miesiące, czytane też przez
+-  agentów RAG. Nie wołasz go i nie duplikujesz jego treści.
++- **`podsumuj-sesja-claude`** zapisuje do `.claude/wiki/` wzorce pracy
++  z Claude — wiedzę o samych skillach, czytaną przez `evolve-skill`. Ty
++  piszesz wiedzę firmy: rzeczy zamknięte i uzasadnione, żywotność miesiące,
++  czytane też przez agentów RAG. Nie wołasz go i nie duplikujesz jego treści.
+ - **`/spotkanie`** zapisuje ustalenia i decyzje do `planning/*-notatka.md`.
+   Dlatego pomijasz `planning/` (patrz `## Mapa obszarów`).
+ - **`/baza-wiedzy`** jest narzędziem do operacji ręcznych na wektorach
+```

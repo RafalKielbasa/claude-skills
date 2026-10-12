@@ -100,16 +100,11 @@
 
 ## Podsumowania sesji (podsumuj-sesja-claude)
 
-- **Dziennik sesji zawsze trafia do vaulta:** `D:\Notatki\notatki\praca-z-claude.md`.
-  Dotyczy każdego projektu i każdego katalogu roboczego — niezależnie od tego, w
-  czym akurat pracujemy.
-- **Nie szukaj markera** `<!-- podsumuj-sesja-claude: … -->` i nie pytaj mnie o
-  ścieżkę. Ta zasada zastępuje Krok 1 skilla `podsumuj-sesja-claude`. Markera nie
-  odtwarzaj.
-- Reszta skilla obowiązuje bez zmian: nowy wpis **na górze** pliku, dopisujesz a
-  nie nadpisujesz, sekcja „Następny krok" obowiązkowa, twardy stan z narzędzi.
-- Vault jest repozytorium gitowym — zmianę zostawiasz niezacommitowaną (patrz
-  sekcja „Git").
+- **Dziennika sesji nie prowadzimy** (od 2026-10-12). Podsumowanie stanu sesji
+  robi wtyczka; `D:\Notatki\notatki\praca-z-claude.md` jest usunięty — nie
+  zakładasz go ponownie i nie piszesz briefów do vaulta.
+- Skill `podsumuj-sesja-claude` pisze wyłącznie do wiki (`.claude/wiki/` repo
+  i `~/.claude/wiki/`).
 
 ## Wyjaśnienia
 

@@ -290,3 +290,272 @@ index 7e1f70e..2431190 100644
    assert.match(TEXT, /Haiku or Sonnet/);
    assert.match(TEXT, /Never refuse over it/i);
 ```
+
+## 2026-10-12 — podsumuj-sesja-claude — zaakceptowana
+
+- **Wzorce:** brak (zmiana zakresu skilla na prośbę użytkownika, nie wynika z wzorca)
+- **Zmiana:** usunięte Kroki 1–4: marker ścieżki, zbiórka twardego stanu, szablon briefu i dopisywanie do dziennika `D:\Notatki\notatki\praca-z-claude.md`. Skill pisze wyłącznie do wiki; dawne podkroki 5.1–5.9 (Wiki Maintainer) są teraz Krokami 1–9, a opis skilla stracił wyzwalacze „brief na jutro" i „zapisz stan sesji". Nowy wiersz w „Częstych błędach" zakazuje pisania briefu obok wiki.
+- **Powód decyzji:** bezpośrednia prośba użytkownika („przeszedłem na wtyczkę, która ma podsumowanie sesji […] możemy kompletnie usunąć pisanie do pliku praca z Claude […] A podsumuj sesję z Claude będzie pisało do wiki"), poza ścieżką `evolve-skill`; wpis dopisany, żeby rejestr pozostał kompletny (wzorzec `zmiana-skilla-poza-evolve-skill-bez-sladu`). Sesja 66f94da0-8974-41e7-beb5-1cb4c71c880d.
+
+```diff
+diff --git a/skills/podsumuj-sesja-claude/SKILL.md b/skills/podsumuj-sesja-claude/SKILL.md
+index f69a3e5..73eee8a 100644
+--- a/skills/podsumuj-sesja-claude/SKILL.md
++++ b/skills/podsumuj-sesja-claude/SKILL.md
+@@ -1,114 +1,51 @@
+ ---
+ name: podsumuj-sesja-claude
+-description: Use when the user wants to save/close out the current Claude session as a brief for later — triggers like "podsumuj sesję", "zapisz stan sesji", "brief na jutro", "kończymy na dziś", end-of-workday wrap-up. NOT for summarizing a single file, diff, or PR.
++description: Use when the user wants to close out the current Claude session — triggers like "podsumuj sesję", "kończymy na dziś", end-of-workday wrap-up — or asks to record what the session taught about working with Claude and its skills. NOT for summarizing a single file, diff, or PR, and NOT for a "where we left off" brief.
+ ---
+ 
+ # Podsumuj sesję z Claude
+ 
+ ## Overview
+ 
+-Zapisuje stan bieżącej sesji jako **datowany brief**, z którym partner następnego dnia (albo po przerwie) w minutę wraca do kontekstu. Wpis dopisujesz do jednego, wspólnego pliku — **najnowszy na samej górze**.
++Konsoliduje doświadczenie bieżącej sesji w trwałe wzorce w wiki (`.claude/wiki/`),
++z których skill `evolve-skill` proponuje później zmiany w skillach. Cały skill to
++krok Wiki Maintainer: odpowiada na „czego się nauczyliśmy o naszej pracy", a nie
++na „gdzie jesteśmy".
+ 
+-**Zasada:** brief to punkt wznowienia, nie kronika. Ma odpowiedzieć na „gdzie jesteśmy i co robić dalej", a nie opowiadać przebieg dnia. Twardy stan (gałąź, commity, testy) bierzesz z narzędzi, nie z pamięci — pamięć po kompaktowaniu bywa nieaktualna.
+-
+-Brief to nie wszystko. Krok 5 konsoliduje doświadczenie sesji w trwałe wzorce
+-(`.claude/wiki/`), z których skill `evolve-skill` proponuje później zmiany
+-w skillach. Brief odpowiada na „gdzie jesteśmy", wiki na „czego się nauczyliśmy
+-o naszej pracy".
+-
+-## When to use
+-
+-- Partner mówi „podsumuj sesję", „zapisz stan", „brief na jutro", „kończymy na dziś".
+-- Kończycie dłuższą sesję i warto zostawić punkt wznowienia.
+-- NIE do: streszczenia pojedynczego pliku/diffa/PR-a (to zwykłe zadanie, nie ten skill).
+-
+-## Krok 1 — ustal, gdzie zapisać
+-
+-Ścieżka pliku podsumowań jest w konfiguracji projektu. Znajdź ją:
+-
+-1. Przeszukaj `CLAUDE.md` i `CLAUDE.local.md` w repo pod kątem markera:
+-   `<!-- podsumuj-sesja-claude: <ścieżka> -->`
+-2. Jeśli marker jest — zapisuj do tej ścieżki.
+-3. Jeśli markera NIE ma — zapytaj partnera o ścieżkę i zaproponuj dopisanie markera do `CLAUDE.md` (żeby następnym razem było automatycznie).
+-
+-## Krok 2 — zbierz twardy stan (nie z pamięci)
+-
+-Zanim złożysz brief, zbierz fakty z narzędzi (pomiń nietrafne dla danej sesji):
+-
+-- Repo git: `git branch --show-current`, `git log --oneline -8`, `git status --short`, ahead/behind względem `origin/<base>`.
+-- Status testów/buildów, jeśli je uruchamialiście (liczby, nie „przechodzą").
+-- Kluczowe ścieżki: nowe/zmienione pliki, artefakty, foldery eksperymentów.
+-- Otwarte wątki: co zostało nierozstrzygnięte, co czeka na decyzję partnera.
+-
+-## Krok 3 — złóż wpis wg szablonu
+-
+-Datę bierz z kontekstu sesji (dzisiejsza, `YYYY-MM-DD`). Trzymaj się kolejności sekcji — pusta sekcja niech zniknie, nie zostawiaj nagłówka bez treści.
+-
+-```markdown
+-## YYYY-MM-DD — <projekt/temat> — <TL;DR jednozdaniowy: gdzie jesteśmy>
+-
+-**Gdzie jesteśmy:** <1–2 zdania: stan na koniec dnia, czy coś jest zablokowane>
+-
+-**Zrobione:**
+-- <konkret, nie „pracowaliśmy nad X">
+-
+-**Decyzje:**
+-- <decyzja> — bo <krótkie dlaczego>
+-
+-**Stan:** gałąź `…`, commity `…`, testy `N/N`, pliki/artefakty `…`
+-
+-**Następny krok / otwarte wątki:**
+-1. <najważniejsza rzecz do zrobienia jutro — konkretna, wykonalna>
+-2. <…>
+-
+-**Pułapki / uwagi:** <gotcha, którą łatwo przeoczyć; pomiń, jeśli brak>
+-```
+-
+-## Krok 4 — dopisz na GÓRZE pliku
+-
+-- Nowy wpis idzie **nad** poprzednie (odwrotnie chronologicznie) — rano partner widzi najnowszy pierwszy.
+-- „Góra pliku" znaczy **pod nagłówkiem `# Praca z Claude — dziennik sesji`**, nie na fizycznym początku pliku. Nad tym nagłówkiem mogą leżeć inne sekcje (np. tabela pomysłów) — nie ruszasz ich i nie wstawiasz wpisu przed nimi.
+-- Jeśli plik pusty/nie istnieje: załóż go z nagłówkiem `# Praca z Claude — dziennik sesji`, potem wpis.
+-- **Dopisuj, nie nadpisuj** — starych wpisów nie kasujesz.
+-- **Wstawiaj po świeżym odczycie, jedną operacją z asercją wejścia.** Dziennik
+-  dzielisz z Obsidianem i z innymi sesjami Claude, a między odczytem na starcie
+-  podsumowania a zapisem mija runda pytań — adresy z tamtego odczytu są wtedy
+-  nieaktualne. Bezpośrednio przed zapisem przeczytaj plik ponownie i wstaw wpis
+-  jedną operacją, która sprawdza stan wejściowy (nagłówek dziennika w linii
+-  z tego odczytu, liczba linii pliku, brak Twojego wpisu) i zatrzymuje zapis,
+-  gdy coś się nie zgadza. Padnięta asercja znaczy, że plik zmienił ktoś inny:
+-  czytasz jeszcze raz i wstawiasz punktowo pod nagłówkiem — nigdy z pamięci
+-  i nigdy przez przepisanie pliku w całości.
+-- Po zapisie podaj partnerowi ścieżkę i 1-zdaniowe potwierdzenie.
+-
+-## Krok 5 — skonsoliduj doświadczenie sesji w wiki (Wiki Maintainer)
+-
+-Brief odpowiada na „gdzie jesteśmy". Ten krok odpowiada na „czego się
+-nauczyliśmy o naszej pracy". Doświadczenie sesji zamieniasz w trwałe wzorce,
+-z których później skill `evolve-skill` proponuje zmiany w skillach.
++**Briefu sesji ani dziennika ten skill nie pisze.** Od 2026-10-12 podsumowanie
++stanu sesji robi wtyczka, a dziennik `D:\Notatki\notatki\praca-z-claude.md` jest
++usunięty. Nie zakładasz go ponownie i nie piszesz briefu do żadnego innego pliku —
++jedynym zapisem tego skilla jest wiki.
+ 
+ **Zasada:** wzorzec opisuje przyczynę źródłową, nie objaw. „Claude źle odczytał
+ PDF" to objaw; „wbudowany odczyt PDF wymaga renderera, którego nie ma w tym
+ środowisku, więc każdy PDF trzeba brać przez `pdftotext`" to wzorzec.
+ 
+-### 5.1 Ustal, gdzie piszesz
++## When to use
++
++- Partner mówi „podsumuj sesję", „kończymy na dziś", koniec dnia pracy.
++- Kończycie dłuższą sesję, w której używaliście skilli albo partner coś poprawiał.
++- NIE do: streszczenia pojedynczego pliku/diffa/PR-a ani briefu „gdzie
++  skończyłem" (to robi wtyczka).
++
++## Krok 1 — ustal, gdzie piszesz
+ 
+ - **Wiki repo:** `<katalog roboczy>/.claude/wiki/`, jeśli istnieje
+   `<katalog roboczy>/.claude/skills/`. Repo bez własnych skilli nie ma wiki.
+ - **Wiki globalne:** `~/.claude/wiki/` — zawsze.
+ - Brakujący plik wiki załóż z nagłówkiem i opisem formatu wpisu, nie z
+-  pustego pliku — format bierz z tego samego Kroku 5 (szablon strony wzorca
+-  jest w 5.8), nie z kopiowania sąsiednich plików katalogu, których w nowym
++  pustego pliku — format bierz z tego skilla (szablon strony wzorca jest
++  w Kroku 8), nie z kopiowania sąsiednich plików katalogu, których w nowym
+   repo może nie być; dotyczy to `index.md`, `log.md` i `skill-impact.md` tak
+   samo, jak stron wzorców. Brakujący katalog `patterns/` utwórz.
+ 
+-### 5.2 Ustal identyfikator sesji
++## Krok 2 — ustal identyfikator sesji
+ 
+ Weź link `claude.ai/code/session_…` z kontekstu sesji. Gdy go nie ma, użyj
+ samej daty i dopisz „id niedostępny" — transkrypt i tak da się odnaleźć po
+ dacie w `~/.claude/projects/`.
+ 
+-### 5.3 Przeanalizuj sesję
++## Krok 3 — przeanalizuj sesję
+ 
+ Dla każdego skilla, który był użyty **albo powinien był zostać użyty**:
+ 
+@@ -126,13 +63,13 @@ użytkownika).
+ Nie każda sesja rodzi wzorzec. Obserwacja jednorazowa, niepowtarzalna, wynikająca
+ z jednostkowego stanu repo — pomiń.
+ 
+-### 5.4 Dopasuj do tego, co już jest
++## Krok 4 — dopasuj do tego, co już jest
+ 
+ Przeczytaj `index.md` obu wiki. Obserwacja pasująca do istniejącego wzorca →
+ **nowy dowód na jego stronie**, nie nowa strona. Duplikat wzorca jest gorszy niż
+ brak wzorca, bo rozprasza dowody.
+ 
+-### 5.5 Kieruj wzorzec do właściwego wiki
++## Krok 5 — kieruj wzorzec do właściwego wiki
+ 
+ 1. Wzorzec o skillu z tego repo → wiki repo.
+ 2. Wzorzec o skillu globalnym → wiki globalne.
+@@ -140,7 +77,7 @@ brak wzorca, bo rozprasza dowody.
+ 4. Wpis w logu repo wymienia dodatkowo wzorce globalne dotknięte w tej sesji,
+    żeby log repo był kompletnym zapisem sesji.
+ 
+-### 5.6 Rozpoznaj nawrót
++## Krok 6 — rozpoznaj nawrót
+ 
+ Wzorzec ma status `zaadresowany (YYYY-MM-DD, <skill>)`, a nowy dowód jest
+ późniejszy niż ta data → ustaw status `nawrót (data dzisiejsza)` i dopisz linię
+@@ -151,7 +88,7 @@ tego, w którym wiki leży sam wzorzec (reguła kierowania zapisu, Krok 5 skilla
+ `evolve-skill`). Nawrót jest jedyną miarą skuteczności zmiany skilla, jaką
+ mamy — nie pomijaj go.
+ 
+-### 5.7 Zapisz i wypisz, co zapisałeś
++## Krok 7 — zapisz i wypisz, co zapisałeś
+ 
+ **Zapisujesz od razu, bez pytania o zgodę.** Podgląd przed zapisem był bramką,
+ która kosztowała turę i niczego nie chroniła: wiki leży w gicie, każdy wpis da
+@@ -169,7 +106,7 @@ obserwacja wydaje Ci się wątpliwa, zapisz ją i powiedz w jednym zdaniu, że j
+ wątpliwa — decyzję o skasowaniu podejmie użytkownik, patrząc na gotowy wpis, a
+ nie na jego opis.
+ 
+-### 5.8 Zapisz
++## Krok 8 — zapisz
+ 
+ - Nowe strony wzorców w całości wg szablonu poniżej; istniejące — dopisz dowód
+   do sekcji „Dowody", resztę popraw punktowo, nie przepisuj strony od zera.
+@@ -206,38 +143,30 @@ Szablon strony wzorca (10–30 linii, `patterns/<nazwa-kebab-case>.md`):
+ <reguła w brzmieniu gotowym do wklejenia do skilla>
+ ```
+ 
+-### 5.9 Zasygnalizuj kandydatów do ewolucji
++## Krok 9 — zasygnalizuj kandydatów do ewolucji
+ 
+-Na koniec podsumowania jedno zdanie: wzorce typu **porażka** o statusie
+-`otwarty` z dowodami z **więcej niż dwóch różnych sesji**, plus wszystkie o
+-statusie `nawrót`, każdy z sugestią `/evolve-skill <skill>`. Wzorce sukcesów
+-nie generują sygnału.
++Na koniec jedno zdanie: wzorce typu **porażka** o statusie `otwarty`
++z dowodami z **więcej niż dwóch różnych sesji**, plus wszystkie o statusie
++`nawrót`, każdy z sugestią `/evolve-skill <skill>`. Wzorce sukcesów nie
++generują sygnału.
+ 
+ Gdy takich nie ma: „brak wzorców do ewolucji". Decyzja o uruchomieniu
+ `evolve-skill` należy do użytkownika — sam go nie uruchamiasz.
+ 
+-Sesja bez obserwacji wartych wzorca kończy krok wpisem `- Bez nowych wzorców`
++Sesja bez obserwacji wartych wzorca kończy skill wpisem `- Bez nowych wzorców`
+ w `log.md` obu wiki, repo i globalnego — także w tym, którego sesja w ogóle
+ nie dotknęła. Log ma być kompletny.
+ 
+ ## Zasady jakości
+ 
+-- Skanowalne i zorientowane na „następny krok" — nie ściana narracji.
+-- „Stan" z faktów (numery commitów, `N/N` testów), nie z pamięci.
+-- Żadnych sekretów (kluczy, tokenów) w briefie.
+-- Sekcja „Następny krok" jest obowiązkowa i najważniejsza — to po nią partner sięga rano.
++- Żadnych sekretów (kluczy, tokenów) we wpisach wiki.
+ 
+ ## Częste błędy
+ 
+ | Błąd | Zamiast tego |
+ |---|---|
+-| Nadpisanie pliku / kasowanie starych wpisów | Dopisuj nowy wpis na górze |
+-| „Stan" z pamięci (nieaktualny po kompaktowaniu) | `git`/testy jako źródło prawdy |
+-| Długa narracja przebiegu dnia | TL;DR + „następny krok" |
+-| Brak sekcji „następny krok" | To rdzeń briefu — zawsze ją wypełnij |
+-| Zgadywanie ścieżki pliku | Marker w `CLAUDE.md` (Krok 1) |
+-| Wstrzymanie zapisu do wiki w oczekiwaniu na zgodę | Krok 5.7 — zapisz, potem wypisz listę zmian |
+-| `index.md` przepisany w całości, gdy w wiki pisze druga sesja | Krok 5.8 — aktualizacja punktowa, cudze wpisy zostają |
+-| Wpis wstawiony z adresów zebranych na starcie podsumowania | Krok 4 — świeży odczyt tuż przed zapisem i asercja wejścia; padnięta asercja = czytaj ponownie |
++| Brief „gdzie skończyłem" albo wpis do `praca-z-claude.md` obok wiki | Briefu nie piszesz — robi to wtyczka; skill kończy się na wiki |
++| Wstrzymanie zapisu do wiki w oczekiwaniu na zgodę | Krok 7 — zapisz, potem wypisz listę zmian |
++| `index.md` przepisany w całości, gdy w wiki pisze druga sesja | Krok 8 — aktualizacja punktowa, cudze wpisy zostają |
+ | Wzorzec opisujący objaw („Claude się pomylił") | Przyczyna źródłowa: dlaczego to się stało i co to powtórzy |
+ | Nowa strona wzorca dla obserwacji, która pasuje do istniejącej | Dowód na istniejącej stronie; duplikat rozprasza dowody |
+```
+
+## 2026-10-12 — board-tracker — zaakceptowana
+
+- **Wzorce:** brak (skutek usunięcia dziennika sesji, nie wynika z wzorca)
+- **Zmiana:** inwentaryzacja traci źródło `D:\Notatki\notatki\praca-z-claude.md`; zostają cztery źródła i cztery subagenty `Explore` zamiast pięciu.
+- **Powód decyzji:** użytkownik usunął dziennik sesji, bo podsumowania przejęła wtyczka; źródło przestało istnieć. Zmiana poza `evolve-skill`, w tej samej sesji co wpis `2026-10-12 — podsumuj-sesja-claude` (sesja 66f94da0-8974-41e7-beb5-1cb4c71c880d).
+
+```diff
+diff --git a/skills/board-tracker/SKILL.md b/skills/board-tracker/SKILL.md
+index 8f5870c..9c8399e 100644
+--- a/skills/board-tracker/SKILL.md
++++ b/skills/board-tracker/SKILL.md
+@@ -173,13 +173,11 @@ links no spec starts with `superpowers:brainstorming`; anything else starts dire
+ 
+ Run only when Rafał asks for it. Window: the 30 days before today.
+ 
+-1. Dispatch five parallel `Explore` subagents, one per source, each returning threads as
++1. Dispatch four parallel `Explore` subagents, one per source, each returning threads as
+    `{title, evidence[], looks_done: bool}`:
+    - `docs/superpowers/specs/` of `D:\Praca\Devstock\Baza wiedzy` (a spec without a plan, or a
+      plan not carried out);
+    - `docs/superpowers/plans/` of the same repository (unchecked `- [ ]` tasks);
+-   - `D:\Notatki\notatki\praca-z-claude.md` (the newest "Następny krok" per topic; a later entry
+-     supersedes an earlier one);
+    - Claude project memory of the four repositories under `~/.claude/projects/` (both `d--` and
+      `D--` keys): items waiting, postponed or due later;
+    - `git log` of the four repositories (topics, and whether a pending item was done later).
+```

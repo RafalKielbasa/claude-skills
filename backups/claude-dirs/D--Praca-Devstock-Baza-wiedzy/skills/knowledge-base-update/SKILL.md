@@ -35,10 +35,10 @@ Slugi projektów: `saas-app`, `codebusters-v2`, `codebusters-mobile`,
 
 ## Granice wobec innych skilli
 
-- **`podsumuj-sesja-claude`** pisze brief „gdzie skończyłem" — stan pracy
-  w toku, dla Rafała na jutro, żywotność kilka dni. Ty piszesz wiedzę firmy:
-  rzeczy zamknięte i uzasadnione, żywotność miesiące, czytane też przez
-  agentów RAG. Nie wołasz go i nie duplikujesz jego treści.
+- **`podsumuj-sesja-claude`** zapisuje do `.claude/wiki/` wzorce pracy
+  z Claude — wiedzę o samych skillach, czytaną przez `evolve-skill`. Ty
+  piszesz wiedzę firmy: rzeczy zamknięte i uzasadnione, żywotność miesiące,
+  czytane też przez agentów RAG. Nie wołasz go i nie duplikujesz jego treści.
 - **`/spotkanie`** zapisuje ustalenia i decyzje do `planning/*-notatka.md`.
   Dlatego pomijasz `planning/` (patrz `## Mapa obszarów`).
 - **`/baza-wiedzy`** jest narzędziem do operacji ręcznych na wektorach

@@ -22,9 +22,16 @@ never reads.
   and #151/#166 to backlog the same day; found only while writing the brief, when its journal entry
   was read (`gh issue view`: #96 `CLOSED`, #151/#166 `Backlog`). The same stale view proposed
   "Do zamknięcia? #355" without knowing Rafał had chosen that morning to only archive its card.
+- 2026-10-12, sesja 41420c90-30dc-4fb8-a253-35e0054ade7a (id claude.ai niedostępny; saas app): the
+  same stale view in the binding step, not the ranking. In at least three answers the binding question
+  offered "devstock-team#96 „[D2B-292] Określenie kształtu egzaminu zaliczenowego” (ready)" from the
+  session-start brief; `gh issue view 96` checked only when Rafał asked for a new issue showed
+  `CLOSED`. In the same session the fix worked for the ranking: `candidates` was run right before the
+  ranking shown after #646 went to Done.
 
 ## Rozwiązanie
 Run `candidates` immediately before every ranking you show, including after `status --to done`; never
 reuse a list read earlier in the session or the brief's list. Before proposing "Do zamknięcia?", grep
 today's entries in `D:\Notatki\notatki\praca-z-claude.md` for the issue number; a same-day decision
-about it is shown with the proposal.
+about it is shown with the proposal. The same holds for the binding card: run `pool` again (or
+`gh issue view` on each listed ref) right before re-asking a binding question in a later answer.
