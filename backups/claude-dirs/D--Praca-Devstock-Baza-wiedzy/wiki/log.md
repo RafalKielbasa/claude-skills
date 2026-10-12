@@ -263,3 +263,8 @@ Format wpisu:
 - `/spotkanie przygotuj` przeszło gładko: projekt agendy w scratchpadzie z pełną ścieżką i tabelą punktów, zatwierdzony w jednej turze — bez osobnego wzorca.
 - Wzorce globalne dotknięte w tej sesji: nowe twierdzenie-negatywne-z-czesci-przestrzeni, rownolegli-badacze-wyczerpuja-wspolny-limit-wyszukiwan, najmocniejsze-ustalenie-sprawdzone-u-zrodla-przed-oddaniem (sukces); dowód do windows-path-w-literale-skryptu.
 - Sygnał repo: bez zmian — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.
+
+## 2026-10-12 — sesja 96436fe2-135f-4db8-9a6a-e2d0011a65cc (id claude.ai niedostępny; Baza wiedzy: przygotowanie i przebieg próbny M00L02 agenty-ai, projekt i draft specu autonomii automatu nagrywania per kurs)
+- założono: ui-probe-before-actions-surfaces-scenario-drift (skill: kurs-nagrywanie, typ: sukces) — locator probe of M00L02 showed two scenario disagreements a day before the dry pass confirmed them.
+- Wzorce globalne dotknięte w tej sesji: nowe explicit-output-path-replaced-by-inferred-path, manual-step-confirmation-checked-against-system-state (sukces); dowód do opcje-z-tego-co-mierzalne-nie-z-celu.
+- Sygnał repo: bez zmian według poprzedniego wpisu — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.

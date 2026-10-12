@@ -24,6 +24,11 @@ z inspekcji struktury nie widać, bo wymaga wiedzy spoza pliku.
   ma już sensu, implementacja była zakończona lub się zdezaktualizowały”.
   Nieaktualność treści nie występowała w żadnej z czterech opcji, mimo że
   diagnoza struktury była trafna i została później w całości potwierdzona.
+- 2026-10-12, sesja 96436fe2-135f-4db8-9a6a-e2d0011a65cc (id claude.ai niedostępny): to the question why the
+  recording automation cannot do everything on a course-only account, Claude offered "Etap 1 teraz / Etap 1 i 2
+  / Zostaje jak jest", built from the list of the tool's current guards. Rafał rejected the question and stated
+  his own goal: "Chciałbym, żeby to było konfigurowane per kurs, poziom autonomii". The options described the
+  tool's restrictions, not the policy he wanted; brainstorming was not invoked before the options.
 
 ## Rozwiązanie
 Pierwsze pytanie o cel zadawaj otwarte albo z co najmniej jedną opcją nazywającą
