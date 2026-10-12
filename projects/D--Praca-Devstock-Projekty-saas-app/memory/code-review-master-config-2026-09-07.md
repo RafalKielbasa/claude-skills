@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-12T10:25:50.550Z
+  modified: 2026-10-12T13:13:34.826Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -82,7 +82,10 @@ Siódmy przebieg `pr`: 2026-10-12 `pr 202` (CP-104 quiz builder, Norbert, tip `2
 HtcHHmhYM7z4nnY4X2uS2b). Rafał wpisał „PR104” — chodziło o CP-104 (PR #202), #104 to stary
 zmergowany docs. f-01 (blocking, `save()` bez sprawdzenia lekcji w tenancie) to resztka A1 sprzed
 PR-a — PR dotyka tylko `passingScore`. Rafał: nie blokować PR-a; naprawa (serwis + relacja po
-parze w bazie, z wideo) w CP-108 = #203, blocked by #184. Triage `deferred` wymaga `--until` — data czeka na Rafała.
+parze w bazie, z wideo) w CP-108 = #203, blocked by #184. f-01 wyłączone `rejected`/`here` (Rafał: „jest issue, wyłączamy”; `deferred` wymaga `--until`, którego nie chciał).
+Wysłane jako review 5491208916 `CHANGES_REQUESTED`, bez 422: 2 Blocking spoza runu z ręcznej kontroli
+kryteriów #184 (brak testów web; `passingScore ?? 70` nadpisuje próg), f-05 Suggestion, literówka Nitpick.
+PR ma też konflikt z `main` w `invalidation.ts` (oba eksporty zostają), zob. [[feedback-unmet-issue-element-blocking]].
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)
