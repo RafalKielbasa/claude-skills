@@ -435,3 +435,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: wyjatek-dopisany-do-bezwarunkowej-reguly-uzytkownika (drugi) — „wariant A” (my recommendation) written into memory as Rafał's decision about the date; corrected in the same turn.
 - Wiki repo: saas app nie ma `.claude/skills/`, więc nie ma wiki repo; wszystkie wzorce w wiki globalnym.
 - Sygnał globalny: brak `nawrót`. Nowe porażki mają dowody z jednej sesji; ranking-from-session-start-snapshot z dwóch — jeszcze nie kandydat. Kandydaci według poprzednich wpisów bez zmian.
+
+## 2026-10-12 — sesja e29922c9-6a91-4deb-bf7b-afd0650bc8f6 (id claude.ai niedostępny; Baza wiedzy: `/daily 2026-10-12 1110` od transkryptu do publikacji, macierz loginów)
+- założono: karta-nowe-issue-dla-rutynowego-przebiegu-skilla (skill: board-tracker, typ: porażka) — karta „Nowe issue” dla przebiegu `/daily`, w czacie bez odpowiedzi do czasu `AskUserQuestion`, potem „nie zakładaj”.
+- założono: odrzucone-wywolanie-pytania-to-nie-odmowa (skill: ogólny, typ: sukces) — trzy odrzucone `AskUserQuestion`; po „kontynuuj” to samo pytanie ponowione bez zmian dostało odpowiedź.
+- dopisano dowód: execsync-w-node-idzie-przez-cmd-nie-przez-bash — `execFileSync('npm', …, { shell: true })` z `--prefix` ze spacją: 11 × `Command failed`, `DEP0190`; naprawione `process.execPath` bez powłoki.
+- Wzorce repo (`Baza wiedzy/.claude/wiki/`): nowe flaga-niepewnosci-na-szumie-bez-tresci, drobne-zadanie-jednej-osoby-odrzucane-przy-bramce, zadanie-decyzyjne-przekierowane-do-agendy-spotkania; dowody do update-z-deduplikacji-trafia-w-caly-dokument i niepewny-fragment-cytowany-zamiast-przypisany — patrz log repo.
+- Sygnał globalny: brak `nawrót`; nowe porażki mają dowody z jednej sesji, execsync-w-node-idzie-przez-cmd-nie-przez-bash z dwóch — jeszcze nie kandydaci. Kandydaci według poprzednich wpisów bez zmian.

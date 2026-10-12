@@ -30,6 +30,13 @@ i zwraca wynik odwrotny do zamierzonego.
   `6c7bb30^` na `git rev-parse 6c7bb30~1` i użyciu wyliczonego SHA wyszło
   `7/7`, `6/6`, `0/6`, `1/6`, `1/6`. Gdyby nie sprzeczność z wcześniejszym
   pomiarem, liczby trafiłyby do wiki i do briefu jako fakt.
+- 2026-10-12, sesja e29922c9-6a91-4deb-bf7b-afd0650bc8f6: skrypt deduplikacji `/daily` wołał
+  `execFileSync('npm', ['--prefix', 'D:\Praca\Devstock\Baza wiedzy\tools\kb-client', …], { shell: true })`.
+  `shell: true` było potrzebne, bo `npm` na Windowsie to `npm.cmd`. Wszystkie 11 wywołań padło
+  `Command failed`, bo przy `shell: true` Node skleja argumenty spacjami bez cytowania i ścieżka ze
+  spacją rozpadła się na dwa argumenty (Node ostrzegł `DEP0190`). Tym razem objaw był głośny, nie
+  cichy. Naprawione wywołaniem `process.execPath` z `src/cli.js` bez powłoki i z `cwd` ustawionym
+  na katalog paczki.
 
 ## Rozwiązanie
 W `execSync`/`exec` nie podawaj revspeców ani argumentów ze znakami, które
@@ -37,6 +44,10 @@ W `execSync`/`exec` nie podawaj revspeców ani argumentów ze znakami, które
 (`git rev-parse <sha>~1`, `git rev-parse HEAD~1`) i przekazuj gotowy SHA, albo
 wymuś powłokę: `execSync(cmd, { shell: 'bash' })`. Tyldy `~` cmd nie rusza,
 więc `HEAD~1` jest bezpieczniejsze od `HEAD^` nawet bez tych zabezpieczeń.
+
+Wariant z `shell: true`: nie podawaj przez powłokę argumentu ze spacją. Wołaj binarkę bez powłoki
+(`execFileSync(process.execPath, ['skrypt.js', …])` zamiast `npm`/`npx`, które na Windowsie są
+plikami `.cmd`). Ostrzeżenie `DEP0190` w wyjściu traktuj jako sygnał, że argumenty nie są cytowane.
 
 Reguła szersza: liczba z komendy, która „wyszła ładnie", ale przeczy
 wcześniejszemu pomiarowi z tej samej sesji, jest podejrzana po stronie komendy,

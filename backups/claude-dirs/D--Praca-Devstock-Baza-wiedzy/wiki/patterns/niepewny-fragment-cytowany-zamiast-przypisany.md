@@ -20,6 +20,12 @@ jest błędne; cytat z ⚠ zostawia decyzję człowiekowi i nie wchodzi do kolej
   „…list, Mateusz" → C, „Rafał masz to na uwadze" → A); status Szymona rozbity na etykiety C, D, A
   — zacytowany, nieprzypisany. Przekręcone nazwy („Trust Loony", „Wrocławnią") rozstrzygnięte
   później z tablicy GitHub (TrustLuna, Rzęsownia) i dopiero wtedy poprawione za zgodą Rafała.
+- 2026-10-12, sesja e29922c9-6a91-4deb-bf7b-afd0650bc8f6: diaryzacja zlała Szymona i Mateusza w
+  jedną etykietę C, a dalszy ciąg statusu Szymona oznaczyła jako B (Bart). Identyfikację robiłem
+  per fragment, nie per etykietę. C to Szymon po „Szymon?” i odpowiedzi „To ja działałem cały czas
+  z mobilką”, a C to Mateusz po „dzięki Szymon i Mateusz” i odpowiedzi „Ja w zasadzie domknąłem…”.
+  Fragment z etykietą B zacytowałem z ⚠. Rafał na bramce wybrał „Zostaw jako niepewne” i przypisań
+  nie poprawiał. Reguła z kroku 5 wystarczyła także dla etykiety obejmującej dwie osoby.
 
 ## Rozwiązanie
 Utrzymać obie reguły bez złagodzeń. Niejasną nazwę własną próbować rozstrzygnąć z innego źródła w

@@ -28,6 +28,18 @@ ruszając `action` — w edytorze `update` nie wygląda na operację niszczącą
   `marketing/13-seo-i-blog.md`, `product/identyfikacja-wizualna-agenci-ai.md`) jako ryzyko nadpisania
   dokumentu repo tekstem z daily. Kontrakt deduplikacji bez zmian; nowa karta `update` pokazuje
   dopasowanie i „Akceptuj jako nowy", ale nie ostrzega, że celem jest cały dokument.
+- 2026-10-09, daily 11:31 (id sesji niedostępny; ślad w `planning/daily/2026-10-09-1131/wpisy.yaml`):
+  5 z 8 kandydatów z trafieniem w progu, w tym 3 na dokumenty repo (`sales/notatki-sprzedaz.md`
+  0,1952 i 0,2310, `dev/notatki-spotkania.md` 0,1817) i 1 na wpis z 2026-10-08 o tym samym temacie
+  (0,1349). Każdy z komentarzem „Rafał 2026-10-09: zapisać jako new, niczego nie nadpisywać".
+- 2026-10-12, sesja e29922c9-6a91-4deb-bf7b-afd0650bc8f6: 10 z 11 kandydatów dostało `update`, w tym
+  5 na fragmenty dokumentów repo (`product/notatki-spotkania.md` 0,1604 i 0,1898,
+  `product/kodozercy-research-rynku-i-oferty.md` 0,2335, `marketing/13-seo-i-blog.md` 0,2243,
+  `dev/system-wieloagentowy/PLAN-ROZWOJU-2026-H2.md` 0,2114). Karty ostrzegały w `SKUTEK`, że
+  „Nadpisz istniejący" kasuje cały dokument, a „Akceptuj jako nowy" szło jako opcja rekomendowana.
+  Rafał wybrał ją przy wszystkich 10 kartach, także przy dwóch trafieniach w wpis daily o tym samym
+  temacie (0,1348 `tempo-subskrypcji`, 0,1405 `przepisanie-platformy`), bo nowy wpis uzupełniał
+  stary, a nie go poprawiał. Opcji „Nadpisz istniejący" nie wybrał ani razu w trzech kolejnych dailych.
 
 ## Rozwiązanie
 `action: update` tylko wtedy, gdy `similar_to` jest wpisem spotkania (prefiks `planning/`) i to
@@ -35,3 +47,9 @@ ten sam temat; trafienie w `knowledge-base/*.md` albo w wpis o innym temacie →
 komentarzem nad blokiem (`similar_to`, `distance`), żeby ślad został. Przy bramce każdy `update`
 wypisać osobno z tym, co zostanie nadpisane. Pomiary z tego dnia (0,21–0,24 dla „powiązane, inne")
 wziąć do kalibracji w Task 10.
+
+Uzupełnienie po 2026-10-12: wpis z daily to datowana migawka, więc późniejsze spotkanie o tym samym
+temacie zwykle dopisuje stan, a nie poprawia poprzedni. Nawet trafienie w wpis spotkania o tym samym
+temacie domyślnie idzie jako `new` obok. `update` proponować tylko wtedy, gdy kandydat jawnie
+koryguje fakt z tamtego wpisu (inna data, cofnięta decyzja). Karta takiego kandydata ma nazwać
+korygowany fakt.

@@ -279,3 +279,13 @@ Format wpisu:
 - dopisano dowód: skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo — `spotkanie` still says "commit robi Rafał"; three agenda commits made per `CLAUDE.md`.
 - Wzorce globalne dotknięte w tej sesji: nowe ranking-from-session-start-snapshot i board-tracker-cli-fails-whole-op-on-board-step (board-tracker), derived-number-in-option-not-computed; dowód do twierdzenie-negatywne-z-czesci-przestrzeni.
 - Sygnał repo: bez zmian według poprzedniego wpisu — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.
+
+## 2026-10-12 — sesja e29922c9-6a91-4deb-bf7b-afd0650bc8f6 (id claude.ai niedostępny) (`/daily 2026-10-12 1110`: notatka, 11 wpisów do bazy, DT-11 #648, komentarz w #175, publikacja na #ai_summary; punkt do agendy 13.10; loginy Mateusza i Wiktora w macierzy)
+- dopisano dowód: update-z-deduplikacji-trafia-w-caly-dokument — 10 z 11 `update` (5 na dokumenty repo), wszystkie zamienione przy bramce na `new`; dołożony też ślad z dailego 2026-10-09 (5 z 8). 20 z 20 `update` w trzech dailych poszło jako `new`.
+- dopisano dowód: niepewny-fragment-cytowany-zamiast-przypisany (sukces) — etykieta C obejmowała Szymona i Mateusza; identyfikacja per fragment, fragment pod etykietą B zacytowany z ⚠ i zostawiony przez Rafała.
+- założono: flaga-niepewnosci-na-szumie-bez-tresci (skill: daily, typ: porażka) — Rafał usunął 4 z 6 flag ⚠, wszystkie przy fragmentach bez treści do odzyskania.
+- założono: drobne-zadanie-jednej-osoby-odrzucane-przy-bramce (skill: daily, typ: porażka) — odpisać, podesłać, ustawić alert: odrzucone 2026-10-09 i 2026-10-12. Wpis wątpliwy: powód odrzuceń nie padł wprost.
+- założono: zadanie-decyzyjne-przekierowane-do-agendy-spotkania (skill: daily, typ: porażka) — „Dopisz to do agendy na jutrzejsze spotkanie” w „Other”; agenda w worktree spotkania, commit `07df5022`.
+- Bramka punkt po punkcie przeszła w całości (6 ⚠, 11 wpisów, 5 zadań, ekran końcowy) bez zmian w skillu; `kb-client` upsert 11/11 za pierwszym razem — bez osobnego wzorca.
+- Wzorce globalne dotknięte w tej sesji: nowe karta-nowe-issue-dla-rutynowego-przebiegu-skilla (board-tracker), odrzucone-wywolanie-pytania-to-nie-odmowa (sukces); dowód do execsync-w-node-idzie-przez-cmd-nie-przez-bash.
+- Sygnał repo: update-z-deduplikacji-trafia-w-caly-dokument (porażka, 4 dowody z 4 sesji) → `/evolve-skill daily`; bez zmian agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.
