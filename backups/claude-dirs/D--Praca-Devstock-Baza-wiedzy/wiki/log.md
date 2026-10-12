@@ -268,3 +268,8 @@ Format wpisu:
 - założono: ui-probe-before-actions-surfaces-scenario-drift (skill: kurs-nagrywanie, typ: sukces) — locator probe of M00L02 showed two scenario disagreements a day before the dry pass confirmed them.
 - Wzorce globalne dotknięte w tej sesji: nowe explicit-output-path-replaced-by-inferred-path, manual-step-confirmation-checked-against-system-state (sukces); dowód do opcje-z-tego-co-mierzalne-nie-z-celu.
 - Sygnał repo: bez zmian według poprzedniego wpisu — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.
+
+## 2026-10-12 — sesja 53ceea80-28c7-4d63-82fc-8e569ddd025e (id claude.ai niedostępny) (posty Slacka pipeline'u spotkań i raportów tygodniowych z #core-team na #ai_summary, DT-8 #639)
+- Bez nowych wzorców. Skille repo: `spotkanie` tylko edytowany (l. 338, kanał publikacji), `daily` nieużywany — zmiana dotyczyła n8n i `kb-client`, nie przebiegu skilli.
+- Wzorce globalne dotknięte w tej sesji: nowe n8n-draft-reported-as-live, n8n-change-design-misses-repo-export, board-archive-means-board-card-not-close (board-tracker).
+- Sygnał repo: bez zmian według poprzedniego wpisu — agent-czyta-plik-redagowany-przez-agenta-rownoleglego (3 dowody z 3 sesji) → `/evolve-skill kurs-redakcja`.

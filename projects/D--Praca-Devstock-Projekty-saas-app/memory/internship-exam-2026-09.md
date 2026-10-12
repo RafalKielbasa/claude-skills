@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-06T13:02:06.874Z
+  modified: 2026-10-12T16:35:24.960Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -44,6 +44,12 @@ Stan 2026-10-06 wieczór: wszystkie 44 ramki zbudowane, bramki 1–4 zaakceptowa
 czeka na review. Strony: Ogłoszenia `1315:7`, Powiadomienia `1323:7`, Zespół `1327:7`, Zaproszenie `1331:7`.
 Zamiast wiadomości na Discord: linki do widoków i lista odstępstw od makiet kandydatów dopisane 2026-10-06
 na końcu sekcji „Zanim zaczniesz" w issues #196 (CP-106) i #197 (CP-107); kandydatów informuje Rafał.
+
+Checkpoint BE Konrada 2026-10-12 (PR #199, tip `ae6206f`): BE OK, CI zielone, bez wycieku tenantów. Wysłane
+review 5493597602 typu COMMENT, decyzja Rafała: duplikaty nieblokujące, bez ponownego sprawdzenia,
+następne jest review końcowe. 3 uwagi (kurs zamiast `validateBelongsToTenant`, 5. kopia `P2025`, `trim` z
+`UpdateUserDto`). Celowo NIE wysłana: kopia wyznaczania odbiorców w `prisma/seed/announcements.ts:40-52`,
+bo to sprawdza zmiana wymagań A. Wstępnie „dobry junior”: schemat 8/10, serwisy 12/15.
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.

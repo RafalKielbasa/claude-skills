@@ -27,6 +27,8 @@
 - [Bramka /daily i /spotkanie punkt po punkcie](bramka-punkt-po-punkcie.md) — od 2026-10-08 karty + jedno zatwierdzenie; pierwsze realne /daily = test akceptacyjny; daily 2026-10-08 bez znacznika `Opublikowano`.
 - [Dry run skilli — ograniczenia](dry-run-skilli-ograniczenia.md) — klasyfikator auto blokuje zapisy przez wrapper niedeterministycznie.
 - [Drive konektor — konto devstock.com](drive-konektor-konto-devstock.md) — transkrypty są na dysku współdzielonym `meetings`; konektor widzi je tylko na koncie `rafal.kielbasa@devstock.com`, „not found" = sprawdź `owner` w `list_recent_files`.
+- [Subskrypcje — kto odpowiada](subskrypcje-podzial-odpowiedzialnosci.md) — SaaS (edu_saas, „SAS:”) = Rafał, CodeBusters = Wiktor; #366 zostaje Rafała.
+- [Board tracker — fałszywy błąd przy Done](board-tracker-done-false-error.md) — `status --to done` bywa `ok:false` „Could not close the issue”, a issue jest zamknięte; nie ponawiaj, sprawdź `gh issue view`.
 - [Board tracker — stan 2026-10-09](board-tracker-status.md) — CLI + skill + hook SessionStart na `main` (PR #597); czeka akceptacja Rafała w nowych sesjach i inwentaryzacja; kalibracja progów ~23.10.
 - [n8n MCP: renameNode nie rusza kodu](n8n-mcp-rename-node-code-refs.md) — `$('Stara nazwa')` w węzłach Code zostaje; popraw sam i sprawdź eksportem; MCP nie pokazuje credentiali.
 - [Przebieg próbny automatu — stan 2026-10-10](przebieg-probny-status.md) — `przebieg` + bramka lektora gotowe (55372b65..c13988ff, #598), zadanie 10 (test na M00L01 w n8n) odłożone przez Rafała; 8 lekcji agenty-ai ma lektora bez nagrania.
