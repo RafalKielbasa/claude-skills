@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-12T07:36:25.110Z
+  modified: 2026-10-12T07:58:34.740Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -76,6 +76,12 @@ Recheck 2026-10-12 `recheck 192` (baza `1c968fb`, tip `54f91fa`): 5/5 uwag z rev
 naniesione. Z niepowtórzonych sugestii z 09-22: 3/4 naniesione; `isInSubdomain` przemianowane
 na `isCreatorView` bez odwrócenia wyrażenia (`profile.tsx:12`), więc nazwa mówi odwrotność
 wartości — review z 10-06 tego nie złapało. Nic nie wysłane.
+
+Siódmy przebieg `pr`: 2026-10-12 `pr 202` (CP-104 quiz builder, Norbert, tip `290c4d4`, run
+`20261012-074517-udwf`, 11 agentów, 12 surowych → 2 po progach, codex timeout, exit 1, artefakt
+HtcHHmhYM7z4nnY4X2uS2b). Rafał wpisał „PR104” — chodziło o CP-104 (PR #202), #104 to stary
+zmergowany docs. f-01 (blocking, `save()` bez sprawdzenia lekcji w tenancie) to resztka A1 sprzed
+PR-a — PR dotyka tylko `passingScore`; jak f-01 z `pr 164`, kandydat do triage. Decyzja czeka.
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)
