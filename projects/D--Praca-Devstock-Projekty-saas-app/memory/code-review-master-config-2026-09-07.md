@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-12T07:58:34.740Z
+  modified: 2026-10-12T10:25:50.550Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -81,7 +81,8 @@ Siódmy przebieg `pr`: 2026-10-12 `pr 202` (CP-104 quiz builder, Norbert, tip `2
 `20261012-074517-udwf`, 11 agentów, 12 surowych → 2 po progach, codex timeout, exit 1, artefakt
 HtcHHmhYM7z4nnY4X2uS2b). Rafał wpisał „PR104” — chodziło o CP-104 (PR #202), #104 to stary
 zmergowany docs. f-01 (blocking, `save()` bez sprawdzenia lekcji w tenancie) to resztka A1 sprzed
-PR-a — PR dotyka tylko `passingScore`; jak f-01 z `pr 164`, kandydat do triage. Decyzja czeka.
+PR-a — PR dotyka tylko `passingScore`. Rafał: nie blokować PR-a; naprawa (serwis + relacja po
+parze w bazie, z wideo) w CP-108 = #203, blocked by #184. Triage `deferred` wymaga `--until` — data czeka na Rafała.
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)
