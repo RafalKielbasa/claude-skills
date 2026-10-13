@@ -112,6 +112,68 @@ Not yet decided; waiting for Rafal at Task 14.
 ## S7 — write boundary of the fork
 ## S8 — role file survives /clear
 ## S9 — Codex follow-up sandbox and working directory
+
+**Question:** do a Codex consultation (`codex exec -s read-only`) and its follow-up (`codex exec resume <id> -c sandbox_mode="read-only"`) stay read-only, keep the working directory and thread context, pass Polish diacritics via stdin, and launch no other agent?
+
+**Method:** prompts `s9-first.md` / `s9-follow.md` fed through stdin; call 1 `codex exec -s read-only -C <repo> --json -o s9-1.md -`; call 2 `codex exec resume <id> -c sandbox_mode="read-only" ...`; call 3 (informational) the same resume without `-c`. Codex CLI 0.147.0, Windows 11, contract removed from `~/.codex/AGENTS.md`. Files: `C:/Users/rafal/hub-probes/data/codex/s9-{1,2,3}.{md,jsonl}`.
+
+**codex-commands.js outputs (commands shortened):**
+
+| Call | threadId | itemTypes | agentLaunches | otherToolItems | commands |
+|---|---|---|---|---|---|
+| 1 | 01a136b7-2195-70d0-8cb4-81ac73919aa0 | error 1, agent_message 3, command_execution 4 | [] | [] | 4 x powershell.exe: read of superpowers SKILL.md (exit -1, then 0), `$PWD.Path; Test-Path ...`, `Get-Content -TotalCount 1 .\README.md; $PWD.Path` |
+| 2 (resume, with override) | same | error 1, agent_message 2, command_execution 1 | [] | [] | `powershell.exe -Command '$PWD.Path'` (exit 0) |
+| 3 (resume, no override) | same | error 1, agent_message 2, command_execution 1 | [] | [] | `powershell.exe -Command '$PWD.Path'` (exit 0) |
+
+The write attempt in each call was an apply_patch, rejected by stderr: `patch rejected: writing is blocked by read-only sandbox; rejected by user approval settings` (the `error` item). In call 1 one shell command also failed with `windows sandbox: CreateProcessWithLogonW failed: 267` (exit -1), retried successfully.
+
+**Answers (verbatim):**
+
+Call 1:
+```
+# Wynik próby S9
+
+- Pierwsza linia: `# Probe sandbox`
+- Utworzenie `s9-write-1.txt`: **nie powiodło się**.
+- Bieżący katalog: `C:\Users\rafal\hub-probes\repo`
+
+zażółć gęślą jaźń.
+```
+
+Call 2:
+```
+# Wynik dalszej próby S9
+
+It did not succeed.
+
+`C:\Users\rafal\hub-probes\repo`
+
+W pierwszej wiadomości poprosiłeś o zacytowanie pierwszej linii `README.md`, próbę utworzenia `s9-write-1.txt` z treścią `x`, raport wyniku, wydrukowanie bieżącego katalogu oraz dokładne powtórzenie frazy „zażółć gęślą jaźń.”
+```
+
+Call 3:
+```
+# Wynik próby S9
+
+It did not succeed.
+
+`C:\Users\rafal\hub-probes\repo`
+
+W pierwszej wiadomości poprosiłeś o zacytowanie pierwszej linii `README.md`, próbę utworzenia `s9-write-1.txt` z treścią `x`, dosłowne podanie wyniku, wydrukowanie bieżącego katalogu oraz dokładne powtórzenie frazy „zażółć gęślą jaźń.”
+```
+
+**ls results:** after call 2 and after call 3, `ls repo/s9-write-*.txt` -> `No such file or directory`; repo contains only `CLAUDE.md`, `README.md`. No s9-write-*.txt to delete.
+
+**Verdict: pass.** Write refused in all three calls, working directory is the repo, context recalled, diacritics intact, no agent launch, no other tool items.
+
+**Fallback:** not needed (would be a fresh `codex exec -s read-only -C <dir>` per follow-up with `thread.md` as context).
+
+**Spec impact:**
+- The follow-up kept read-only with the `-c sandbox_mode="read-only"` override; keep passing it (cheap, explicit).
+- Without the override (call 3) the resumed thread was still read-only on this machine: `~/.codex/config.toml` sets no `sandbox_mode` (only a Windows `sandbox = "elevated"`), so resume evidently inherits the thread's read-only policy or the default is read-only. The cause (inheritance vs. default) was not separated; do not rely on it, keep the override.
+- `resume` takes the working directory from the shell cwd (ran from the repo); the `-C` flag was not passed on resume and cwd was correct.
+- Codex on its own reads the superpowers skill (using-superpowers SKILL.md) at the start of call 1; harmless here, but it is extra token use.
+- stderr noise (models cache `supports_parallel_tool_calls`, Figma MCP AuthRequired) does not affect results; send stderr away from stdout JSONL.
 ## S10 — background session in a new worktree
 
 **Question:** does `claude --bg -w probe-wt` start a background session in a new git worktree, and how does `claude rm` clean it up?
