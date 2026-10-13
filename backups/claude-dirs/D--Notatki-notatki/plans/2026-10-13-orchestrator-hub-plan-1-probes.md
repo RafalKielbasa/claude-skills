@@ -477,14 +477,21 @@ console.log(JSON.stringify({
 `tools/codex-commands.js`:
 
 ```js
-// Probe S9: lists the thread id and every command Codex ran, from a `codex exec --json` stream.
-// Flags commands that start another agent (claude, codex) and report them under agentLaunches.
+// Probe S9: thread id, every command Codex ran, and every other tool-like item, from a
+// `codex exec --json` stream.
+// agentLaunches: commands whose first word is claude or codex (not --help).
+// otherToolItems: completed items of any type other than plain messages, reasoning, plans and
+// commands (for example MCP tool calls); each needs a manual look before a probe can pass.
 // Usage: node codex-commands.js <stream.jsonl>
 const fs = require("fs");
 
+const NON_TOOL_ITEMS = new Set(["agent_message", "reasoning", "todo_list", "error", "command_execution"]);
 const lines = fs.readFileSync(process.argv[2], "utf8").split("\n").filter((line) => line.trim());
 let threadId = null;
 const commands = [];
+const otherToolItems = [];
+const itemTypes = {};
+const eventTypes = {};
 for (const line of lines) {
   let event;
   try {
@@ -492,12 +499,18 @@ for (const line of lines) {
   } catch {
     continue;
   }
+  eventTypes[event.type] = (eventTypes[event.type] || 0) + 1;
   if (event.type === "thread.started") threadId = event.thread_id;
-  const item = event.item || {};
-  if (event.type === "item.completed" && item.type === "command_execution") {
+  if (event.type !== "item.completed" || !event.item) continue;
+  const item = event.item;
+  itemTypes[item.type] = (itemTypes[item.type] || 0) + 1;
+  if (item.type === "command_execution") {
     commands.push({ exitCode: item.exit_code, command: String(item.command) });
+  } else if (!NON_TOOL_ITEMS.has(item.type)) {
+    otherToolItems.push({ type: item.type, summary: JSON.stringify(item).slice(0, 200) });
   }
 }
+
 // A command segment launches an agent when its first word is claude or codex (any path, .exe or
 // .cmd) and the segment does not ask for --help. A leading "powershell -Command" is skipped.
 function launchesAgent(command) {
@@ -514,7 +527,7 @@ function launchesAgent(command) {
     });
 }
 const agentLaunches = commands.filter((entry) => launchesAgent(entry.command));
-console.log(JSON.stringify({ threadId, commandCount: commands.length, agentLaunches, commands }, null, 2));
+console.log(JSON.stringify({ threadId, eventTypes, itemTypes, commandCount: commands.length, agentLaunches, otherToolItems, commands }, null, 2));
 ```
 
 `tools/marker-check.js`:
@@ -543,13 +556,26 @@ console.log(JSON.stringify({ stops: rows.length, withMarker: rows.filter((row) =
 `tools/sanitize.js`:
 
 ```js
-// Turns recorded hook events into content-free fixtures: one file per event name, every string
-// value replaced by "<string>" except the keys that identify the event, kept verbatim.
+// Turns recorded hook events into content-free fixtures, one file per event variant, and checks
+// them against the fixture matrix Plan 2 needs. Every string value becomes "<string>" except the
+// keys that identify the event, kept verbatim.
+// Variant name: <event>[-<tool_name>][-<notification_type>][-marker|-plain for Stop].
 // Usage: node sanitize.js <events-dir> <fixtures-dir>
 const fs = require("fs");
 const path = require("path");
 
 const KEEP = new Set(["hook_event_name", "tool_name", "notification_type", "matcher", "permission_mode", "source", "reason"]);
+const MARKER = "⏸ Czeka na decyzję:";
+const REQUIRED = [
+  "UserPromptSubmit",
+  "PostToolUse-Read",
+  "PostToolUse-Bash",
+  "Notification-permission_prompt",
+  "Stop-marker",
+  "Stop-plain",
+  "SessionEnd",
+  "StopFailure",
+];
 const [eventsDir, fixturesDir] = process.argv.slice(2);
 
 function strip(value, key) {
@@ -561,19 +587,32 @@ function strip(value, key) {
   return value;
 }
 
+function variant(rec) {
+  const input = rec.input || {};
+  let name = rec.event;
+  if (input.tool_name) name += `-${input.tool_name}`;
+  if (input.notification_type) name += `-${input.notification_type}`;
+  if (rec.event === "Stop") {
+    const lastLine = String(input.last_assistant_message || "").trimEnd().split("\n").pop().trim();
+    name += lastLine.startsWith(MARKER) ? "-marker" : "-plain";
+  }
+  return name;
+}
+
 fs.mkdirSync(fixturesDir, { recursive: true });
-const written = {};
+const written = new Set();
 for (const file of fs.readdirSync(eventsDir).filter((name) => name.endsWith(".jsonl"))) {
   for (const line of fs.readFileSync(path.join(eventsDir, file), "utf8").split("\n")) {
     if (!line.trim()) continue;
     const rec = JSON.parse(line);
-    const name = `${rec.event}${rec.input.tool_name ? `-${rec.input.tool_name}` : ""}`;
-    if (written[name]) continue;
-    written[name] = true;
+    const name = variant(rec);
+    if (written.has(name)) continue;
+    written.add(name);
     fs.writeFileSync(path.join(fixturesDir, `${name}.json`), JSON.stringify(strip(rec.input), null, 2) + "\n");
   }
 }
-console.log(JSON.stringify({ fixtures: Object.keys(written).sort() }));
+const fixtures = [...written].sort();
+console.log(JSON.stringify({ fixtures, missing: REQUIRED.filter((name) => !written.has(name)) }));
 ```
 
 `tools/remove-contract.js`:
@@ -690,14 +729,40 @@ fs.writeFileSync(stream, [
   JSON.stringify({ type: "item.completed", item: { type: "command_execution", exit_code: 0, command: "powershell -Command 'claude --help'" } }),
   JSON.stringify({ type: "item.completed", item: { type: "command_execution", exit_code: 1, command: "powershell -Command 'claude -p \"review\"'" } }),
   JSON.stringify({ type: "item.completed", item: { type: "command_execution", exit_code: 0, command: "rg -n foo" } }),
+  JSON.stringify({ type: "item.completed", item: { type: "command_execution", exit_code: 0, command: "powershell -Command 'Get-Command claude -All'" } }),
+  JSON.stringify({ type: "item.completed", item: { type: "mcp_tool_call", server: "x", tool: "y" } }),
+  JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "done" } }),
 ].join("\n") + "\n");
 const codex = JSON.parse(node("codex-commands.js", [stream]).stdout);
 assert.strictEqual(codex.threadId, "th-1");
-assert.strictEqual(codex.commandCount, 3);
+assert.strictEqual(codex.commandCount, 4);
 assert.strictEqual(codex.agentLaunches.length, 1);
 assert.ok(codex.agentLaunches[0].command.includes("claude -p"));
+assert.strictEqual(codex.otherToolItems.length, 1);
+assert.strictEqual(codex.otherToolItems[0].type, "mcp_tool_call");
 
-console.log("watch-probe, marker-check, codex-commands self-check: ok");
+// sanitize: variants per notification type and marker, content stripped, missing matrix entries listed.
+const rec = (event, input) => JSON.stringify({ at: "t", event, input: { hook_event_name: event, session_id: "s", ...input } });
+const sanEvents = path.join(tmp, "san-events");
+const sanFixtures = path.join(tmp, "san-fixtures");
+fs.mkdirSync(sanEvents);
+fs.writeFileSync(path.join(sanEvents, "s.jsonl"), [
+  rec("Notification", { notification_type: "idle_prompt", message: "secret text" }),
+  rec("Notification", { notification_type: "permission_prompt", message: "secret text" }),
+  rec("Stop", { last_assistant_message: "Done.\n⏸ Czeka na decyzję: A albo B" }),
+  rec("Stop", { last_assistant_message: "Done." }),
+  rec("PostToolUse", { tool_name: "Read", tool_input: { file_path: "C:\\secret.txt" } }),
+].join("\n") + "\n");
+const san = JSON.parse(node("sanitize.js", [sanEvents, sanFixtures]).stdout);
+assert.ok(san.fixtures.includes("Notification-permission_prompt"));
+assert.ok(san.fixtures.includes("Notification-idle_prompt"));
+assert.ok(san.fixtures.includes("Stop-marker") && san.fixtures.includes("Stop-plain"));
+assert.deepStrictEqual(san.missing, ["UserPromptSubmit", "PostToolUse-Bash", "SessionEnd", "StopFailure"]);
+const fixtureText = fs.readdirSync(sanFixtures).map((f) => fs.readFileSync(path.join(sanFixtures, f), "utf8")).join("");
+assert.ok(!fixtureText.includes("secret"));
+assert.ok(fixtureText.includes('"notification_type": "permission_prompt"'));
+
+console.log("watch-probe, marker-check, codex-commands, sanitize self-check: ok");
 ```
 
 - [ ] **Step 2: Run the self-checks**
@@ -710,7 +775,7 @@ Expected:
 
 ```
 probe-hook self-check: ok
-watch-probe, marker-check, codex-commands self-check: ok
+watch-probe, marker-check, codex-commands, sanitize self-check: ok
 ```
 
 - [ ] **Step 3: Confirm the contract blocks**
@@ -724,12 +789,13 @@ Expected: exactly four lines — BEGIN at `CLAUDE.md:210`, END at `CLAUDE.md:293
 - [ ] **Step 4: Back up `AGENTS.md` and remove both blocks**
 
 ```bash
-cp C:/Users/rafal/.codex/AGENTS.md C:/Users/rafal/.codex/AGENTS.md.bak-2026-10-13
+B=C:/Users/rafal/.codex/AGENTS.md.bak-2026-10-13
+if [ -e "$B" ]; then echo "backup exists, keeping it: $B"; else cp C:/Users/rafal/.codex/AGENTS.md "$B" && echo "backup written: $B"; fi
 node C:/Users/rafal/hub-probes/tools/remove-contract.js C:/Users/rafal/.claude/CLAUDE.md
 node C:/Users/rafal/hub-probes/tools/remove-contract.js C:/Users/rafal/.codex/AGENTS.md
 ```
 
-Expected: two JSON lines, each with `"removedLines":85` (measured on copies during plan writing).
+Expected: `backup written`, then two JSON lines, each with `"removedLines":85` (measured on copies during plan writing). On a re-run the backup is kept and `remove-contract.js` exits 1 with `found BEGIN=0 END=0`, which means "already removed": go on with step 5.
 
 - [ ] **Step 5: Verify the removal**
 
@@ -745,12 +811,16 @@ Expected: both counts `0`; the diff stat lists only `CLAUDE.md` with about 85 de
 - [ ] **Step 6: Move the paused Codex automation out of the active directory**
 
 ```bash
-mkdir -p C:/Users/rafal/.codex/automations-removed-2026-10-13
-mv C:/Users/rafal/.codex/automations/powiadomienie-o-pracy-claude-nad-planem-i-agentem C:/Users/rafal/.codex/automations-removed-2026-10-13/
+NAME=powiadomienie-o-pracy-claude-nad-planem-i-agentem
+SRC=C:/Users/rafal/.codex/automations/$NAME
+DST=C:/Users/rafal/.codex/automations-removed-2026-10-13
+if [ -d "$SRC" ] && [ ! -e "$DST/$NAME" ]; then mkdir -p "$DST" && mv "$SRC" "$DST/" && echo "moved"
+elif [ ! -e "$SRC" ] && [ -d "$DST/$NAME" ]; then echo "already moved"
+else echo "unexpected state, stop and show Rafal"; ls -la "$SRC" "$DST" 2>&1; fi
 ls C:/Users/rafal/.codex/automations
 ```
 
-Expected: the `ls` output no longer lists `powiadomienie-o-pracy-claude-nad-planem-i-agentem`. If the Codex desktop app still shows the automation after a restart, tell Rafal; do not edit `.codex-global-state.json`.
+Expected: `moved` (or `already moved` on a re-run), and the `ls` output no longer lists `powiadomienie-o-pracy-claude-nad-planem-i-agentem`. On `unexpected state` stop the task. If the Codex desktop app still shows the automation after a restart, tell Rafal; do not edit `.codex-global-state.json`.
 
 - [ ] **Step 7: Checkpoint** — no commit (`~/.claude` is in no-commit mode, `~/.codex` is not a repository). Note for the final report: the current session still carries the contract in its loaded instructions; new sessions do not.
 
@@ -889,18 +959,18 @@ Needs Rafal for the interactive sessions.
 - [ ] **Step 1: Ask Rafal to open the two sessions**
 
 Tell Rafal:
-1. VS Code: open the folder `C:/Users/rafal/hub-probes/repo` in a new window and start Claude Code in the panel; accept the workspace and hook trust prompts if shown.
-2. Terminal: `cd "C:/Users/rafal/hub-probes/repo with space" && claude --name probe-space`.
+1. VS Code: open the folder `C:/Users/rafal/hub-probes/repo` in a new window and start Claude Code in the panel; accept the workspace and hook trust prompts if shown; switch the panel's permission mode to the default mode (not auto, not accept edits).
+2. Terminal: `cd "C:/Users/rafal/hub-probes/repo with space" && claude --name probe-space --permission-mode default`.
 
-- [ ] **Step 2: Confirm the hooks are loaded** (Review Focus 1)
+- [ ] **Step 2: Confirm the hooks are loaded and prompts will appear** (Review Focus 1)
 
-Ask Rafal to run `/hooks` in both sessions and read back the list. Expected: `UserPromptSubmit`, `PostToolUse`, `Notification`, `Stop`, `StopFailure`, `SessionEnd` from the project settings. If missing, fix trust before going on; record what was needed.
+Ask Rafal to run `/hooks` and `/permissions` in both sessions and read back the results. Expected: `UserPromptSubmit`, `PostToolUse`, `Notification`, `Stop`, `StopFailure`, `SessionEnd` from the project settings; default permission mode; no allow rule covering `node -e` (the global `~/.claude/settings.json` had none when the plan was written). If hooks are missing, fix trust before going on; record what was needed.
 
 - [ ] **Step 3: Drive the events in both sessions, back to back** (Review Focus 4)
 
 Ask Rafal to send in both sessions, one after the other without waiting:
 1. `Przeczytaj README.md i odpowiedz jednym zdaniem.` (Read → `PostToolUse`, `Stop`)
-2. `Uruchom: node -e "require('fs').writeFileSync('probe.txt','x')"` — wait at least 10 s at the permission prompt before approving (→ `Notification` with `permission_prompt` after about 6 s)
+2. `Uruchom: node -e "require('fs').writeFileSync('probe.txt','x')"` — wait at least 10 s at the permission prompt before approving (→ `Notification` with `permission_prompt` after about 6 s). If no permission prompt appeared in the UI, the attempt is invalid: record it, re-check the mode from step 2, and repeat; never judge the `Notification` hook from an attempt without a visible prompt.
 3. `Napisz jedno zdanie: zażółć gęślą jaźń.` (diacritics in `UserPromptSubmit.prompt`, Review Focus 3)
 4. End both sessions with `/exit` (→ `SessionEnd`)
 
@@ -957,7 +1027,10 @@ Then, with the printed id:
 
 ```bash
 node C:/Users/rafal/hub-probes/tools/transcript-latency.js <session_id>
+grep -c '"event":"PostToolUse"' C:/Users/rafal/hub-probes/data/events/<session_id>.jsonl
 ```
+
+Expected: `"toolCalls":50` and a `PostToolUse` count of `50`.
 
 - [ ] **Step 3: Tool-call latency without the project hooks**
 
@@ -973,7 +1046,7 @@ Then `node C:/Users/rafal/hub-probes/tools/transcript-latency.js <session_id>` w
 
 - [ ] **Step 4: Record**
 
-Paste the three JSON outputs under `## S2`. Criterion (spec §9.2): `p95Ms` of step 1 below 500, and median latency with hooks minus median without below 100 ms. If `toolCalls` is far below 50 in either run, record it and compare on what was measured. Fallback on failure: record only Edit/Write/Bash, or drop "what it is doing now" — a scope change, mark it for Rafal.
+Paste the outputs under `## S2`. Criterion (spec §9.2): `p95Ms` of step 1 below 500, and median latency with hooks minus median without below 100 ms. The latency comparison counts only with exactly 50 paired tool calls in both runs and 50 `PostToolUse` events in the run with hooks; otherwise repeat the short run once, and if it is still short the verdict is `partial` with no threshold comparison. Fallback on failure: record only Edit/Write/Bash, or drop "what it is doing now" — a scope change, mark it for Rafal.
 
 ---
 
@@ -1212,11 +1285,15 @@ ls C:/Users/rafal/hub-probes/data/dialogs/probe/ C:/Users/rafal/hub-probes/repo/
 
 Expected for a pass: `s7-inside.md` exists, `repo/s7-outside.md` does not, the fork is not `blocked` on a permission prompt for the inside write.
 
-- [ ] **Step 3: Variant B if A failed**
+- [ ] **Step 3: Variant B if the inside write failed**
 
 If the inside write was refused or blocked: stop the fork (`claude stop <dlg-s7 id>`), change the allow rule to `Edit(//c/Users/rafal/hub-probes/data/dialogs/probe/**)`, delete any created files, and repeat step 2 with the name `dlg-s7b`.
 
-- [ ] **Step 4: Clean up and record**
+- [ ] **Step 4: Variant C if the outside file appeared**
+
+`Edit` rules are documented to cover every file-editing tool; if `repo/s7-outside.md` exists anyway (for example created through `Write`), stop the fork, delete the file, add `"Write(//C:/Users/rafal/hub-probes/data/dialogs/probe/**)"` to `allow` and `"Write(./**)"` to `deny` (keeping the path form that worked for the inside write), and repeat step 2 with the name `dlg-s7c`. The verdict always rests on the `ls` result, never on the fork's own report.
+
+- [ ] **Step 5: Clean up and record**
 
 `claude stop` every `dlg-s7*` fork; delete `repo/s7-outside.md` if it exists. Under `## S7`: the settings variant used, all outputs verbatim, the verdict. Fallback: default mode, Rafal approves each fork write himself.
 
@@ -1291,7 +1368,7 @@ node C:/Users/rafal/hub-probes/tools/codex-commands.js C:/Users/rafal/hub-probes
 cat C:/Users/rafal/hub-probes/data/codex/s9-1.md
 ```
 
-Expected: a `threadId`; `agentLaunches: []`; the answer quotes `# Probe sandbox`, reports the write as refused, prints the repo path, and repeats `zażółć gęślą jaźń` intact.
+Expected: a `threadId`; `agentLaunches: []` and `otherToolItems: []`; the answer quotes `# Probe sandbox`, reports the write as refused, prints the repo path, and repeats `zażółć gęślą jaźń` intact. Every entry in `otherToolItems` (for example an MCP tool call) is inspected by hand; one that could delegate to an agent, or whose purpose is unclear, makes the verdict `partial`.
 
 - [ ] **Step 3: Follow-up with the read-only override**
 
@@ -1303,7 +1380,7 @@ cat C:/Users/rafal/hub-probes/data/codex/s9-2.md
 ls C:/Users/rafal/hub-probes/repo/s9-write-*.txt
 ```
 
-Expected for a pass: the write refused, `ls` finds no `s9-write-*.txt`, the working directory is the repo, the answer recalls the first message, `agentLaunches: []`.
+Expected for a pass: the write refused, `ls` finds no `s9-write-*.txt`, the working directory is the repo, the answer recalls the first message, `agentLaunches: []` and `otherToolItems: []` (or each one inspected as in step 2).
 
 - [ ] **Step 4: Follow-up without the override (informational)**
 
@@ -1339,6 +1416,8 @@ claude logs probe-wt
 ```
 
 Expected for a pass: the session `cwd` is a worktree path different from the repo; `git worktree list` shows it; the log shows a branch other than the repo's default branch.
+
+Before removing, check where the worktree is: its absolute path (from the session `cwd` and `git worktree list`) must lie under `C:/Users/rafal/hub-probes/`. If it lies anywhere else, do not run `claude rm`: stop the task, record the path, and ask Rafal.
 
 - [ ] **Step 3: Remove**
 
@@ -1405,7 +1484,7 @@ node C:/Users/rafal/hub-probes/tools/sanitize.js C:/Users/rafal/hub-probes/data/
 grep -rl "zażółć\|Probe S4\|README" C:/Users/rafal/hub-probes/data/fixtures || echo "no content leaked"
 ```
 
-Expected: a `fixtures` list covering every recorded event kind; `no content leaked`.
+Expected: `no content leaked`, and `missing` contains at most `StopFailure` (triggered only by an API error). Plan 2 builds its `StopFailure` fixture by hand from the documented fields; record that in the report. Any other entry in `missing` means the matching S1 step did not happen as planned: repeat it, then rerun this step.
 
 - [ ] **Step 2: No probe session left running**
 
