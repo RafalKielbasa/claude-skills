@@ -178,21 +178,91 @@ W pierwszej wiadomości poprosiłeś o zacytowanie pierwszej linii `README.md`, 
 
 **Question:** does `claude --bg -w probe-wt` start a background session in a new git worktree, and how does `claude rm` clean it up?
 
-**Method:** brief Step 1 verbatim from C:/Users/rafal/hub-probes/repo. Before: `git worktree list` -> `C:/Users/rafal/hub-probes/repo  043c443 [master]`.
+**Method:** brief Step 1-3 verbatim from C:/Users/rafal/hub-probes/repo. Before: `git worktree list` -> `C:/Users/rafal/hub-probes/repo  043c443 [master]`. Two attempts: the first before the workspace was trusted, the second after Rafal accepted the trust prompt by running `claude` once in the repo.
 
-**Raw output (launch stdout+stderr, exit 1):**
+**Attempt 1 (untrusted workspace), launch stdout+stderr, exit 1:**
 
 ```
 Workspace not trusted. Run `claude` in C:\Users\rafal\hub-probes\repo once and accept the trust prompt, then retry.
 ```
 
-No session started: nothing to inspect, no worktree created, no `claude rm` run. `data/events/` stayed empty; `claude agents --json` lists no probe-wt.
+Finding: `claude --bg` requires workspace trust, while `claude -p` did not. No session or worktree was created.
 
-**Verdict:** not run (BLOCKED). The brief's pass criterion could not be tested. Prerequisite: interactive trust acceptance of the throwaway repo, which a non-interactive executor must not do. Finding in itself: `--bg` in a not-yet-trusted workspace fails fast with exit 1.
+**Attempt 2 (after trust), launch, exit 0:**
 
-**Fallback:** the hub creates the worktree with `git worktree add` and starts the session in it, after ensuring the workspace is trusted.
+```
+Starting background service…
+backgrounded · df73ebe4 · probe-wt
+  claude agents             list sessions
+  claude attach df73ebe4    open in this terminal
+  claude logs df73ebe4      show recent output
+  claude stop df73ebe4      stop this session
+```
 
-**Spec impact:** hub setup needs a trust step per project repo/worktree; untrusted workspaces cannot be started with `--bg`.
+`--allowedTools` and `--` were accepted; the session did not block on a permission prompt (both commands ran).
+
+**agents JSON line (after ~30 s):**
+
+```
+{"pid":32300,"id":"df73ebe4","cwd":"C:\Users\rafal\hub-probes\repo\.claude\worktrees\probe-wt","kind":"background","startedAt":1791919663452,"sessionId":"df73ebe4-e63d-4ad5-b912-1680681f9537","name":"probe-wt","status":"idle","state":"done"}
+```
+
+**`git worktree list` after launch:**
+
+```
+C:/Users/rafal/hub-probes/repo                             043c443 [master]
+C:/Users/rafal/hub-probes/repo/.claude/worktrees/probe-wt  043c443 [worktree-probe-wt] locked
+```
+
+**`claude logs probe-wt`:** raw output is a full terminal (ANSI) screen dump of ~218 KB; the relevant lines after stripping escape codes:
+
+```
+⎿ $ git rev-parse --show-toplevel; git branch --show-current
+│ git rev-parse --show-toplevel │ C:/Users/rafal/hub-probes/repo/.claude/worktrees/probe-wt │
+│ git branch --show-current     │ worktree-probe-wt │
+```
+
+The header showed the cwd `~\hub-probes\repo\.claude\worktrees\probe-wt`. Note: the session's startup git-status snapshot still described the main checkout (branch master); only the actual commands show the worktree.
+
+**Location check:** worktree path `C:/Users/rafal/hub-probes/repo/.claude/worktrees/probe-wt` lies under `C:/Users/rafal/hub-probes/` -> `claude rm` allowed.
+
+**`claude rm df73ebe4` (three runs):**
+
+Run 1, exit 1:
+```
+kept df73ebe4 — its worktree is still at “C:\Users\rafal\hub-probes\repo\.claude\worktrees\probe-wt”
+  Worktree not removed. Claude Code couldn't remove it (“some of its files could not be deleted: EBUSY; a program may have them open, so try removing it again”). The session stays until the directory is gone.
+  close anything using the directory or fix its permissions, then retry: claude rm df73ebe4 --force-remove-worktree 1da888643bec76c2c41cfef4c14fdf46
+```
+After run 1 `git worktree list` showed only the main repo, but the directory `.claude/worktrees/probe-wt` remained containing only a `.git` file.
+
+Run 2, exit 1:
+```
+kept df73ebe4 — its worktree is still at “C:\Users\rafal\hub-probes\repo\.claude\worktrees\probe-wt”
+  Worktree not removed. Refused before anything was deleted (“the repository's worktree registrations cannot be vetted before git lists them (.git is a link, a mount point, or cannot be probed)”); remove it by hand. The session stays until the directory is gone.
+  remove the directory yourself if you don't need it, then run 'claude rm df73ebe4' again
+```
+
+After `rm -rf .claude/worktrees/probe-wt` by hand (inside the throwaway repo), run 3, exit 0:
+```
+removed df73ebe4
+  worktree: “C:\Users\rafal\hub-probes\repo\.claude\worktrees\probe-wt”
+```
+
+`git worktree list` after: `C:/Users/rafal/hub-probes/repo  043c443 [master]`. The branch `worktree-probe-wt` was NOT deleted by `claude rm` (`git branch --list` still shows it). `claude agents --json` lists no probe-wt.
+
+**Events:** the session wrote 4 events (UserPromptSubmit, PostToolUse, Stop, SessionEnd) to `data/events/df73ebe4-e63d-4ad5-b912-1680681f9537.jsonl`; moved to `data/events-s10/`. Hooks from the project fired in the worktree session (project settings are inherited by the worktree checkout).
+
+**Verdict:** PASS (partial on cleanup). `--bg -w` created a background session with cwd in a new worktree under `<repo>/.claude/worktrees/<name>`, on a new branch `worktree-<name>` differing from `master`; the worktree appears in `git worktree list`. `claude rm` on Windows needed a retry: the first run hit EBUSY, leaving an empty directory that had to be removed by hand before the second pass succeeded; the branch is left behind.
+
+**Fallback:** if `claude rm` fails with EBUSY, the hub retries after the session process has exited, and deletes the leftover directory plus `git branch -D worktree-<name>` itself; alternatively create the worktree with `git worktree add` and start the session in it.
+
+**Spec impact:**
+- Hub setup needs a trust step per project repo; `--bg` fails fast with exit 1 in an untrusted workspace (observed for the repo; a worktree under the trusted repo did not need separate trust).
+- Worktree path convention: `<repo>/.claude/worktrees/<name>`, branch `worktree-<name>`, registered as locked.
+- Worktree cleanup must handle EBUSY on Windows and delete the branch explicitly.
+- `claude logs` returns a terminal screen dump, not structured text; for result extraction the hub should use the events files / transcript instead.
+
 ## S11 — gate marker smoke test
 
 ## Summary
