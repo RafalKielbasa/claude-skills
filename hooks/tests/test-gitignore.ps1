@@ -87,6 +87,7 @@ try {
         'projects/D--X/session.jsonl',
         'backups/sync.log',
         'backups/.sync.lock',
+        'backups/.last-sync',
         'docs/loose-note.md',
         'hooks/powtorki-last-check.txt',
         'some-future-claude-dir/state.json',

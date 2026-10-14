@@ -13,7 +13,9 @@ param(
     [switch]$Rescan,
     [switch]$NoPush,
     [string]$Root,
-    [string[]]$SearchRoot = @('D:\', 'C:\Users\rafal')
+    [string[]]$SearchRoot = @('D:\', 'C:\Users\rafal'),
+    [string[]]$SkipCwdRoot = @('C:\Users\rafal\hub-probes', 'C:\Users\rafal\.claude\hub'),
+    [int]$DebounceMinutes = 10
 )
 
 Set-StrictMode -Version Latest
@@ -34,6 +36,7 @@ $mirrorRoot   = Join-Path $backupsDir 'claude-dirs'
 $registryPath = Join-Path $mirrorRoot 'registry.json'
 $logPath      = Join-Path $backupsDir 'sync.log'
 $lockPath     = Join-Path $backupsDir '.sync.lock'
+$lastSyncPath = Join-Path $backupsDir '.last-sync'
 
 foreach ($dir in @($backupsDir, $mirrorRoot)) {
     if (-not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
@@ -46,6 +49,58 @@ function Write-Log {
     Write-Verbose $line
 }
 
+# --- hook guard: session ends that must not trigger a backup ---
+# Applies only when a hook payload arrives on stdin (Claude Code and Codex send
+# one on SessionEnd); a hand run has no payload and is never skipped. Skipped:
+# a /clear, because the session goes on; sessions whose cwd lies under
+# $SkipCwdRoot (the hub probe sandbox and the hub's own directory); and runs
+# within $DebounceMinutes of the last started sync - hub forks, background
+# sessions and Codex consultations end in bursts, and the first run after the
+# window mirrors everything that changed in it. The read has a timeout so an
+# inherited stdin that never closes cannot hang the hook.
+$payload = $null
+if ([Console]::IsInputRedirected) {
+    try {
+        $stdin = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
+        $readTask = $stdin.ReadToEndAsync()
+        if ($readTask.Wait(2000) -and $readTask.Result.Trim()) {
+            $payload = $readTask.Result | ConvertFrom-Json
+        }
+    } catch {
+        $payload = $null
+    }
+}
+if ($payload) {
+    $reasonProperty = $payload.PSObject.Properties['reason']
+    if ($reasonProperty -and $reasonProperty.Value -eq 'clear') {
+        Write-Log 'skip: /clear, the session goes on'
+        exit 0
+    }
+    $cwdProperty = $payload.PSObject.Properties['cwd']
+    if ($cwdProperty -and $cwdProperty.Value) {
+        try {
+            $cwdFull = [System.IO.Path]::GetFullPath([string]$cwdProperty.Value).TrimEnd('\')
+            foreach ($skipRoot in $SkipCwdRoot) {
+                $skipFull = [System.IO.Path]::GetFullPath($skipRoot).TrimEnd('\')
+                if ($cwdFull -ieq $skipFull -or
+                    $cwdFull.StartsWith($skipFull + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
+                    Write-Log ('skip: session cwd under {0}' -f $skipFull)
+                    exit 0
+                }
+            }
+        } catch {
+            Write-Log ('cwd not understood, backing up anyway: {0}' -f $cwdProperty.Value)
+        }
+    }
+    if ($DebounceMinutes -gt 0 -and (Test-Path -LiteralPath $lastSyncPath)) {
+        $sinceLast = (Get-Date) - (Get-Item -LiteralPath $lastSyncPath).LastWriteTime
+        if ($sinceLast.TotalMinutes -lt $DebounceMinutes) {
+            Write-Log ('skip: last sync started {0}s ago (debounce {1} min)' -f [int]$sinceLast.TotalSeconds, $DebounceMinutes)
+            exit 0
+        }
+    }
+}
+
 # --- lock: two sessions ending at once must not share a git index ---
 if (Test-Path -LiteralPath $lockPath) {
     $age = (Get-Date) - (Get-Item -LiteralPath $lockPath).LastWriteTime
@@ -56,6 +111,8 @@ if (Test-Path -LiteralPath $lockPath) {
     Write-Log 'stale lock discarded'
 }
 New-Item -ItemType File -Path $lockPath -Force | Out-Null
+# Start of a real sync run: the debounce window above is measured from here.
+Set-Content -LiteralPath $lastSyncPath -Value (Get-Date).ToString('o') -Encoding UTF8
 
 $exitCode = 0
 try {

@@ -30,6 +30,29 @@ function Invoke-BackupWithPush {
     return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = ($out -join "`n") }
 }
 
+$skipRoot   = Join-Path $sandbox 'skip'
+
+function Invoke-BackupHook {
+    # Runs the script the way the SessionEnd hook does: the payload arrives on stdin.
+    param([Parameter(Mandatory)][hashtable]$Payload)
+    $argv = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $scriptPath,
+              '-Root', $repo, '-NoPush', '-SearchRoot', $sandbox, '-SkipCwdRoot', $skipRoot)
+    $json = $Payload | ConvertTo-Json -Compress
+    $out = $json | & powershell.exe @argv 2>&1
+    return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = ($out -join "`n") }
+}
+
+function Set-LastSyncAge {
+    param([Parameter(Mandatory)][int]$Minutes)
+    $marker = Join-Path $repo 'backups\.last-sync'
+    if (-not (Test-Path -LiteralPath $marker)) { Set-Content -LiteralPath $marker -Value '' -Encoding UTF8 }
+    (Get-Item -LiteralPath $marker).LastWriteTime = (Get-Date).AddMinutes(-$Minutes)
+}
+
+function Get-SyncLog {
+    return (Get-Content -LiteralPath (Join-Path $repo 'backups\sync.log') -Raw)
+}
+
 function Get-CommitCount {
     Push-Location $repo
     try { return @(git log --oneline).Count } finally { Pop-Location }
@@ -53,7 +76,7 @@ try {
     git checkout -q -b main
     git config user.name 'test'; git config user.email 'test@example.com'
     git remote add origin $remote
-    Set-Content -LiteralPath (Join-Path $repo '.gitignore') -Value "/backups/sync.log`n/backups/.sync.lock" -Encoding UTF8
+    Set-Content -LiteralPath (Join-Path $repo '.gitignore') -Value "/backups/sync.log`n/backups/.sync.lock`n/backups/.last-sync" -Encoding UTF8
     git add -A; git commit -q -m 'init'
     Pop-Location
 
@@ -95,6 +118,47 @@ try {
     Remove-Item -LiteralPath (Join-Path $project '.claude\skills\second') -Recurse -Force
     Invoke-Backup | Out-Null
     Assert-Equal -Expected 1 -Actual (Get-MirroredSkillCount) -Because 'deleting a skill in a live source removes it from the mirror'
+
+    # --- hook payloads: /clear, skipped directories and the debounce window ---
+    $demoSkill = Join-Path $project '.claude\skills\demo\SKILL.md'
+    Set-Content -LiteralPath $demoSkill -Value 'hook change 1' -Encoding UTF8
+    Set-LastSyncAge -Minutes 30
+
+    $before = Get-CommitCount
+    $cleared = Invoke-BackupHook -Payload @{ hook_event_name = 'SessionEnd'; reason = 'clear'; cwd = $project }
+    Assert-Equal -Expected 0 -Actual $cleared.ExitCode -Because 'a /clear payload exits cleanly'
+    Assert-Equal -Expected 0 -Actual ((Get-CommitCount) - $before) -Because 'a /clear does not trigger a backup, the session goes on'
+    Assert-True -Condition ((Get-SyncLog) -match 'skip: /clear') -Because 'the /clear skip is logged'
+
+    $before = Get-CommitCount
+    $skipped = Invoke-BackupHook -Payload @{ hook_event_name = 'SessionEnd'; reason = 'other'; cwd = (Join-Path $skipRoot 'Sub Dir') }
+    Assert-Equal -Expected 0 -Actual $skipped.ExitCode -Because 'a payload from a skipped directory exits cleanly'
+    Assert-Equal -Expected 0 -Actual ((Get-CommitCount) - $before) -Because 'a session under a skipped directory triggers no backup'
+    Assert-True -Condition ((Get-SyncLog) -match 'skip: session cwd under') -Because 'the directory skip is logged'
+
+    $before = Get-CommitCount
+    $outsideHook = Invoke-BackupHook -Payload @{ hook_event_name = 'SessionEnd'; reason = 'other'; cwd = ($skipRoot + '-other') }
+    Assert-Equal -Expected 0 -Actual $outsideHook.ExitCode -Because 'a payload from a sibling of a skipped directory runs'
+    Assert-Equal -Expected 1 -Actual ((Get-CommitCount) - $before) -Because 'a directory that only shares a name prefix with a skipped one is backed up'
+
+    Set-Content -LiteralPath $demoSkill -Value 'hook change 2' -Encoding UTF8
+    $before = Get-CommitCount
+    $debounced = Invoke-BackupHook -Payload @{ hook_event_name = 'SessionEnd'; reason = 'other'; cwd = $project }
+    Assert-Equal -Expected 0 -Actual $debounced.ExitCode -Because 'a debounced payload exits cleanly'
+    Assert-Equal -Expected 0 -Actual ((Get-CommitCount) - $before) -Because 'a hook run within the debounce window triggers no backup'
+    Assert-True -Condition ((Get-SyncLog) -match 'skip: last sync started') -Because 'the debounce skip is logged'
+
+    Set-LastSyncAge -Minutes 30
+    $before = Get-CommitCount
+    $afterWindow = Invoke-BackupHook -Payload @{ hook_event_name = 'SessionEnd'; reason = 'other'; cwd = $project }
+    Assert-Equal -Expected 0 -Actual $afterWindow.ExitCode -Because 'a hook run after the window succeeds'
+    Assert-Equal -Expected 1 -Actual ((Get-CommitCount) - $before) -Because 'the first hook run after the window catches up the pending change'
+
+    Set-Content -LiteralPath $demoSkill -Value 'hand run change' -Encoding UTF8
+    $before = Get-CommitCount
+    $handRun = Invoke-Backup
+    Assert-Equal -Expected 0 -Actual $handRun.ExitCode -Because 'a hand run inside the window succeeds'
+    Assert-Equal -Expected 1 -Actual ((Get-CommitCount) - $before) -Because 'a hand run (no payload) is never debounced'
 
     # --- a secret in a source file aborts before committing ---
     Set-Content -LiteralPath (Join-Path $project '.claude\skills\demo\SKILL.md') `
