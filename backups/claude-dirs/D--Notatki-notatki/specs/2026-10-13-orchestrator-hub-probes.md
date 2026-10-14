@@ -23,6 +23,103 @@ fallback taken, spec impact.
   prompt Codex ran no agent while the contract was still in place.
 
 ## S1 — hooks in a VS Code panel session, payload fields
+
+**Question.** Do the project hooks fire in a VS Code panel session, including `Notification` with
+`permission_prompt`? Which identification fields do the payloads carry?
+
+**Method.** Sandbox hooks (`repo/.claude/settings.json`) recording raw inputs with
+`tools/probe-hook.js`. Sessions: VS Code panel in `C:\Users\rafal\hub-probes\repo` (session
+`05b0e316…`, ran in `auto` mode), terminal `claude --name probe-space --permission-mode default`
+in `repo with space` (session `07b604cf…`), and a VS Code panel retry in default mode
+(session `879b1201…`). Prompts: read README, run a `node -e` write (waiting at the permission
+prompt), a sentence with `zażółć gęślą jaźń`, exit. Rafal did not read back `/hooks`; hook loading
+was shown instead by `SessionEnd` events from both directories before the probe (kept in
+`data/events-trust/`). Earlier trust-run and other probes' events were moved out of `data/events`,
+so the counts below contain only S1 sessions.
+
+**Validity.** The first VS Code attempt ran in `permission_mode: "auto"`: the `node -e` command ran
+after 6 s without a prompt, so it is invalid for the `Notification` check (plan rule). The retry in
+default mode is the valid VS Code attempt.
+
+**Raw result.**
+
+```
+### stats.js
+{"event":"Notification","count":2,"sessions":2,"fields":["cwd","hook_event_name","message","notification_type","prompt_id","scratchpad_dir","session_id","transcript_path"],"uptimeP50":18,"uptimeP95":20}
+{"event":"PostToolUse","count":5,"sessions":3,"fields":["cwd","duration_ms","effort","hook_event_name","permission_mode","prompt_id","scratchpad_dir","session_id","tool_input","tool_name","tool_response","tool_use_id","transcript_path"],"uptimeP50":20,"uptimeP95":23}
+{"event":"SessionEnd","count":3,"sessions":3,"fields":["cwd","hook_event_name","prompt_id","reason","scratchpad_dir","session_id","transcript_path"],"uptimeP50":19,"uptimeP95":22}
+{"event":"Stop","count":7,"sessions":3,"fields":["background_tasks","cwd","effort","hook_event_name","last_assistant_message","permission_mode","prompt_id","scratchpad_dir","session_crons","session_id","stop_hook_active","transcript_path"],"uptimeP50":18,"uptimeP95":19}
+{"event":"UserPromptSubmit","count":7,"sessions":3,"fields":["cwd","hook_event_name","permission_mode","prompt","prompt_id","scratchpad_dir","session_id","session_title","transcript_path"],"uptimeP50":20,"uptimeP95":21}
+
+### Notification events
+2026-10-13T19:37:00.796Z session=07b604cf notification_type=permission_prompt message="Claude needs your permission" prompt_id=4e2c6a03 tool_use_id=absent
+2026-10-13T19:39:30.274Z session=879b1201 notification_type=permission_prompt message="Claude needs your permission to use PowerShell" prompt_id=a7268262 tool_use_id=absent
+
+### diacritics in UserPromptSubmit.prompt
+2
+
+### cwd values (count)
+     10 "cwd":"C:\\Users\\rafal\\hub-probes\\repo with space"
+      8 "cwd":"C:\\Users\\rafal\\hub-probes\\repo"
+      6 "cwd":"c:\\Users\\rafal\\hub-probes\\repo"
+
+### timelines (time, event, permission_mode, detail, prompt_id prefix)
+-- 05b0e316-e05a-45d0-a074-79520939aa1b.jsonl
+19:36:16 UserPromptSubmit mode=auto cwd=c:\  prompt_id=4b1c088c  
+19:36:18 PostToolUse mode=auto cwd=c:\ Read prompt_id=4b1c088c tool_use_id=present 
+19:36:20 Stop mode=auto cwd=c:\  prompt_id=4b1c088c  
+19:36:31 UserPromptSubmit mode=auto cwd=c:\  prompt_id=e085d6f4  
+19:36:37 PostToolUse mode=auto cwd=C:\ Bash prompt_id=e085d6f4 tool_use_id=present 
+19:36:44 Stop mode=auto cwd=C:\  prompt_id=e085d6f4  
+19:37:23 UserPromptSubmit mode=auto cwd=C:\  prompt_id=f497472f  
+19:37:24 Stop mode=auto cwd=C:\  prompt_id=f497472f  
+19:37:45 SessionEnd mode=- cwd=C:\ other prompt_id=ec041ecf  
+-- 07b604cf-41a9-48e2-8e55-35041cd88dc7.jsonl
+19:36:13 UserPromptSubmit mode=default cwd=C:\  prompt_id=2cb1e5a8  session_title=probe-space
+19:36:17 PostToolUse mode=default cwd=C:\ Read prompt_id=2cb1e5a8 tool_use_id=present 
+19:36:20 Stop mode=default cwd=C:\  prompt_id=2cb1e5a8  
+19:36:44 UserPromptSubmit mode=default cwd=C:\  prompt_id=4e2c6a03  session_title=probe-space
+19:37:00 Notification mode=- cwd=C:\ permission_prompt prompt_id=4e2c6a03  
+19:37:10 PostToolUse mode=default cwd=C:\ PowerShell prompt_id=4e2c6a03 tool_use_id=present 
+19:37:15 Stop mode=default cwd=C:\  prompt_id=4e2c6a03  
+19:37:26 UserPromptSubmit mode=default cwd=C:\  prompt_id=d0dee400  session_title=probe-space
+19:37:29 Stop mode=default cwd=C:\  prompt_id=d0dee400  
+19:37:50 SessionEnd mode=- cwd=C:\ prompt_input_exit prompt_id=0a4f2e09  
+-- 879b1201-0550-451f-ac27-0469787213d3.jsonl
+19:39:18 UserPromptSubmit mode=default cwd=c:\  prompt_id=a7268262  
+19:39:30 Notification mode=- cwd=c:\ permission_prompt prompt_id=a7268262  
+19:39:36 PostToolUse mode=default cwd=C:\ PowerShell prompt_id=a7268262 tool_use_id=present 
+19:39:40 Stop mode=default cwd=C:\  prompt_id=a7268262  
+19:39:42 SessionEnd mode=- cwd=C:\ other prompt_id=a7268262
+```
+
+**Verdict: pass.** Every event kind reached the event log from the VS Code panel and from the
+terminal, including `Notification` / `permission_prompt` (VS Code retry: 12 s after the prompt;
+terminal: 16 s). `StopFailure`: not triggered (no API error occurred). A working directory with a
+space and Polish diacritics in `prompt` arrive intact.
+
+**Field inventory for Plan 2.**
+
+| Item | Finding |
+|---|---|
+| Session name | Not in any payload. `UserPromptSubmit.session_title` carries the name only for the named terminal session (`probe-space`); empty for VS Code. Names must come from `claude agents --json` |
+| Tool call id | `PostToolUse.tool_use_id` present; `Notification` has **no** tool call id |
+| Correlation id | Every event carries `prompt_id`, shared by all events of one prompt (the `Notification`, the following `PostToolUse` and `Stop`) |
+| Permission mode | `permission_mode` in `UserPromptSubmit`, `PostToolUse`, `Stop` |
+| `prompt` | Present in `UserPromptSubmit` |
+| `cwd` | The drive letter's case changes **within one VS Code session** (`c:\` → `C:\`) |
+| Shell tool name | `Bash` in one session, `PowerShell` in others |
+| Content-bearing fields | `PostToolUse.tool_response`, `Stop.last_assistant_message`, `UserPromptSubmit.prompt` |
+| Notification message | Differs by client: `"Claude needs your permission"` (terminal) vs `"Claude needs your permission to use PowerShell"` (VS Code) |
+
+**Fallback taken.** Spec §9.2 S1 fallback for missing tool call ids: permission waits are cleared
+without tool call ids. `prompt_id` gives a better key than timestamps alone.
+
+**Spec impact.** §5.2 (decision for Rafal at Task 14): clear `waiting: permission` by a
+`PostToolUse` or `Stop` with the same `prompt_id` as the `Notification`, instead of a tool call id
+the `Notification` does not carry. §4.1 already requires case-insensitive path comparison; S1
+confirms it is necessary. §5.1 must keep ignoring `tool_response` (content).
+
 ## S2 — cost of the PostToolUse hook
 
 **Question:** does an asynchronous Node hook (`probe-hook.js`) on every tool call slow a Claude Code session on Windows? Criterion (spec §9.2): spawn `p95Ms` < 500 and median latency with hooks minus without < 100 ms (50 paired tool calls each, 50 `PostToolUse` events with hooks).
