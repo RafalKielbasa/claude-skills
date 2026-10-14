@@ -42,7 +42,7 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    i zapytaj o zgodę na koszt: przebieg tworzy i uruchamia workflow jak nagranie (podaj, ile wykonań przewiduje
    budżet grup i które węzły zużywają tokeny). Lekcja ze `start_state` (kurs `autonomy: full`): przed PIERWSZYM
    przebiegiem `preview-start-state <lekcja> --ujecie N` i **BRAMKA B4** - Rafał zatwierdza listę trwałych usunięć
-   (kolejne resety tej lekcji idą bez bramki). Po jego "tak": `przebieg <lekcja> --przygotowane` - cała lekcja,
+   (kolejne resety tej lekcji idą bez bramki, dopóki deklaracja `start_state` się nie zmieni - zmieniona deklaracja wymaga nowego `preview-start-state` i nowej bramki B4). Po jego "tak": `przebieg <lekcja> --przygotowane` - cała lekcja,
    bez wideo, zrzut po każdym kroku. Wynik: `<dane>/przebiegi/<lekcja>/<czas>/` z `przebieg.json`, zrzutami
    i `galeria.html`; komenda wypisuje niesprawdzone kroki i zasoby do usunięcia.
    **Analiza.** Dla każdego kroku z `przebieg.json` otwórz zrzut (`Read`) i porównaj go z polami kroku: `narracja`,
@@ -169,6 +169,17 @@ sekcja "Poziom autonomii kursu"). Reszta procedury bez zmian.
   zatwierdzenie raportu, pierwsze ujęcie).
 - **Nowy dostawca albo nowe zakresy:** `probe-ui --usluga <nazwa> --okno <dostawca>` (P1a, bez zgody) -> bramka B3
   (Rafał zatwierdza hosty i listę zakresów w `kurs.yaml`) -> `probe-ui ... --okno <dostawca> --zgoda` (P1b).
+- **Ekran zgody Google i zgoda zapamiętana:** reset kasuje credential w n8n, ale to NIE odwołuje zgody po stronie
+  Google (przebiegi 2026-10-14: po resecie raz nie było ekranu zgody, raz był wariant przyrostowy). Który wariant
+  pokaże `google_sign_in`, zależy od tego, co Google pamięta: szczegółowy z polami wyboru (pierwsza zgoda),
+  przyrostowy (tylko brakujące uprawnienia) albo brak ekranu. Teksty uprawnień rdzeń czyta z kontrolki „Zobacz
+  szczegóły dostępu” i porównuje dokładnie z listą z `kurs.yaml`. Pełny ekran zgody w nagraniu wymaga odebrania
+  n8n.cloud dostępu w koncie Google przed ujęciem (to robi Rafał). Gdy Google zgodę pamięta i ekranu nie ma - rdzeń przyjmuje to (decyzja Rafała
+  2026-10-14, znacznik `zgodaOkna: zapamietana`) tylko wtedy, gdy wszystkie adresy okna ze `scope` przeszły
+  sprawdzenie zakresów, okno wróciło na zatwierdzony host i samo się zamknęło, adres powrotu miał `code` bez `error`,
+  a naruszeń nie było; w przeciwnym razie stop. Zwykła ścieżka zgody wymaga tego samego (adres powrotu z `code`, bez `error`). Sukces `google_sign_in` to dowód n8n „Account connected”
+  po zgodzie (krok 10 M00L02: predykat `credential_account_connected`) - n8n zapisuje rekord credentiala już przy
+  kliknięciu, więc sama jego obecność niczego nie dowodzi; bez dowodu stop z nazwami credentiali utworzonych przy kliknięciu.
 - **`start_state` nowej lekcji:** `save-start-state <lekcja> --ujecie N` zapisuje migawkę; przejrzyj ją z tabelą
   `## Przygotowanie przed nagraniem` z planu i dopiero wtedy wklej deklarację do `nagrywanie.yaml`.
 
