@@ -22,8 +22,16 @@ potem bramkę na `AskUserQuestion`, karta w tekście ginie w przewiniętym czaci
   odpowiedzi przez pytanie o typ nagrania i budowę kolejek. Ponowiona jako `AskUserQuestion` przed
   bramką dostała „nie zakładaj”. Wcześniejsze daily (2026-10-08, 2026-10-09) też nie miały issue.
   Dla porównania: w sesji 53ceea80 karta włożona w `preview` pytania przeszła gładko.
+- 2026-10-14, sesja 9c60c6ac-d756-43f9-af2c-be591fa8c566: `/spotkanie transkrypt` (uzupełnienie
+  offsite'u 13.10 i egzekucja kolejek). Karta „DT-?: Notatka offsite 13.10: popołudniowa część…”
+  wydrukowana w czacie przed pierwszą zmianą pliku znów przeczekała bez odpowiedzi 6 kart ⚠,
+  13 kart kolejek i ekran końcowy. Tym razem Rafał po raporcie końcowym napisał „Załóż issue”
+  (#676, DT-34, potem Done). Przebieg `/spotkanie` z egzekucją na tablicy to inna praca niż
+  rutynowe `/daily`, więc Rafał chciał dla niej issue.
 
 ## Rozwiązanie
 Sesję, której jedyną zmianą jest przebieg `/daily` (artefakty w `planning/daily/`), a w puli nic nie
-pasuje, raportować od razu jako „Tablica: sesja bez przypięcia (daily)”, bez karty. Kartę „Nowe
-issue” zawsze zadawać przez `AskUserQuestion` z kartą w `preview`, nie drukować w czacie.
+pasuje, raportować od razu jako „Tablica: sesja bez przypięcia (daily)”, bez karty. Wyjątek nie
+obejmuje `/spotkanie`: tam Rafał założył issue (2026-10-14). Kartę „Nowe issue” zawsze zadawać przez
+`AskUserQuestion` z kartą w `preview`, nie drukować w czacie. W sesji z bramką na `AskUserQuestion`
+zadać ją przed pierwszą kartą bramki, żeby nie zginęła w przewiniętym czacie.

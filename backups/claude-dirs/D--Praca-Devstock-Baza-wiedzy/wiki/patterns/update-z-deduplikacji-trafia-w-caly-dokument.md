@@ -40,6 +40,13 @@ ruszając `action` — w edytorze `update` nie wygląda na operację niszczącą
   Rafał wybrał ją przy wszystkich 10 kartach, także przy dwóch trafieniach w wpis daily o tym samym
   temacie (0,1348 `tempo-subskrypcji`, 0,1405 `przepisanie-platformy`), bo nowy wpis uzupełniał
   stary, a nie go poprawiał. Opcji „Nadpisz istniejący" nie wybrał ani razu w trzech kolejnych dailych.
+- 2026-10-14, sesja 9c60c6ac-d756-43f9-af2c-be591fa8c566 (pierwszy raz w `/spotkanie`, offsite
+  13.10): 4 z 5 kandydatów dostały `update`, w tym 3 na fragmenty dokumentów repo
+  (`product/kodozercy-research-rynku-i-oferty.md` 0,1681, `marketing/live-agenci-ai-mapa-decyzji.md`
+  0,1652 — mapa decyzji innego live'a, `product/notatki-spotkania.md` 0,1757) i 1 na wpis daily
+  2026-10-12 o innym temacie (0,1739). Kandydaci byli długi, 5–6 tys. znaków, i dawali odległości
+  niższe niż krótkie wpisy dailych, mimo że trafienia nie były duplikatami. Rafał wybrał
+  „Akceptuj jako nowy” przy wszystkich 4 kartach.
 
 ## Rozwiązanie
 `action: update` tylko wtedy, gdy `similar_to` jest wpisem spotkania (prefiks `planning/`) i to

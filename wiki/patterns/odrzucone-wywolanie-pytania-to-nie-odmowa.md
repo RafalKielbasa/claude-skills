@@ -22,6 +22,13 @@ ma wrócić to samo pytanie.
     question… daily (Recommended)”.
   - Karta „Niepewne 1/6”: po „kontynuuj” ponowiona bez zmian, odpowiedź „Zostaw jako niepewne”.
   - Karta „Niepewne 6/6”: po „kontynuuj” ponowiona bez zmian, odpowiedź „Usuń z notatki”.
+- 2026-10-14, sesja 9c60c6ac-d756-43f9-af2c-be591fa8c566 (`/spotkanie transkrypt`):
+  - Pytanie o datę i kolejność (ustalenia wydrukowane nad pytaniem) odrzucone, potem Rafał napisał
+    „wróć”. Ponowione z tymi samymi opcjami, a stan przeniesiony do `preview`, dostało odpowiedź
+    „13.10: najpierw 14:53 (Recommended)”.
+  - Karta „Niepewne 5/6” wróciła jako „Other” bez tekstu, a po przerwaniu przyszła wiadomość
+    „pojedynki tylko dla subskrybentów”. Claude potraktował ją jako rozstrzygnięcie tej karty
+    i zapisał w notatce, bez ponownego pytania.
 
 ## Rozwiązanie
 Po odrzuconym wywołaniu pytania zatrzymać się i nic nie wykonywać. Na „kontynuuj” ponowić

@@ -442,3 +442,11 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: execsync-w-node-idzie-przez-cmd-nie-przez-bash — `execFileSync('npm', …, { shell: true })` z `--prefix` ze spacją: 11 × `Command failed`, `DEP0190`; naprawione `process.execPath` bez powłoki.
 - Wzorce repo (`Baza wiedzy/.claude/wiki/`): nowe flaga-niepewnosci-na-szumie-bez-tresci, drobne-zadanie-jednej-osoby-odrzucane-przy-bramce, zadanie-decyzyjne-przekierowane-do-agendy-spotkania; dowody do update-z-deduplikacji-trafia-w-caly-dokument i niepewny-fragment-cytowany-zamiast-przypisany — patrz log repo.
 - Sygnał globalny: brak `nawrót`; nowe porażki mają dowody z jednej sesji, execsync-w-node-idzie-przez-cmd-nie-przez-bash z dwóch — jeszcze nie kandydaci. Kandydaci według poprzednich wpisów bez zmian.
+
+## 2026-10-14 — sesja 9c60c6ac-d756-43f9-af2c-be591fa8c566 (id claude.ai niedostępny; Baza wiedzy: `/spotkanie transkrypt` 13.10 z nagrania 14:53 do publikacji, DT-34 #676, zamknięcia #369, #330, #336)
+- założono: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (skill: ogólny, typ: porażka) — `close #330; status #336 --to done` jedną komendą → „[External System Writes]”; osobno po „Spróbuj zamknąć je ponownie” przeszło. Wpis wątpliwy: przyczyna to hipoteza, trzy możliwe czynniki.
+- dopisano dowód: odrzucone-wywolanie-pytania-to-nie-odmowa (sukces) — pytanie o datę odrzucone, po „wróć” ponowione i odebrane; „Other” bez tekstu + wiadomość „pojedynki tylko dla subskrybentów” wzięta jako rozstrzygnięcie karty.
+- dopisano dowód: karta-nowe-issue-dla-rutynowego-przebiegu-skilla — karta w czacie znów przeczekała całą bramkę; tym razem Rafał „Załóż issue” (#676) — wyjątek „bez karty” ograniczony do `/daily`.
+- board-tracker poza tym gładko: Done zaproponowane i ustawione po „tak”, ranking ze świeżego `candidates`, „Do zamknięcia?” z dowodami — bez osobnego wzorca.
+- Wzorce repo (`Baza wiedzy/.claude/wiki/`): nowe drugie-nagranie-tej-samej-daty-przy-otwartej-bramce, artefakt-z-dnia-spotkania-rozstrzyga-szum-transkryptu; dowody do update-z-deduplikacji-trafia-w-caly-dokument, odczyt-tablicy-wymaga-zakresu-project, skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo — patrz log repo.
+- Sygnał globalny: brak `nawrót`; nowe i uzupełnione porażki mają dowody z 1–2 sesji — jeszcze nie kandydaci. Kandydaci według poprzednich wpisów bez zmian.
