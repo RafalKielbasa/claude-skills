@@ -326,6 +326,93 @@ state file prevented a repeat of the earlier event.
 logs, and keep a record of reported events.
 
 ## S6 — fork launch
+
+**Question.** Does `--bg` combine with `--resume <id> --fork-session`? How are a start prompt and the
+role passed? Can the fork reach the dialog directory? How does a fork of a busy session behave?
+
+**Method.** Source session: Rafal's interactive `claude --name probe-recipient` in
+`C:\Users\rafal\hub-probes\repo` (permission mode auto), given one line of history
+(`Zapamiętaj hasło: ŻURAW. Odpowiedz tylko OK.`). Forks launched by the executing session; results
+read from the forks' own hook events (`Stop.last_assistant_message`) and `claude agents --json`.
+
+**Raw result — launch with a start prompt.**
+
+```
+$ cd C:/Users/rafal/hub-probes/repo && claude --bg --resume a779a5d4-240a-404e-bc9d-8da5af3e845c --fork-session --name dlg-probe "Probe S6: you are a read-only analytical partner. Reply with ROLE OK and quote the last user message you remember."
+Starting background service…
+backgrounded · 1867e626 · dlg-probe
+  claude agents             list sessions
+  claude attach 1867e626    open in this terminal
+  claude logs 1867e626      show recent output
+  claude stop 1867e626      stop this session
+exit=0
+```
+
+`claude agents --json` (20 s later):
+`{"pid":4716,"id":"1867e626","cwd":"C:\\Users\\rafal\\hub-probes\\repo","kind":"background","startedAt":1791954387411,"sessionId":"1867e626-61a2-46aa-97ef-7e2775bf3204","name":"dlg-probe","status":"idle","state":"done"}`
+
+Fork `Stop` at 05:06:35, `last_assistant_message`: `… ROLE OK\n\nThe last user message I remember before this one:\n\n> Zapamiętaj hasło: ŻURAW. Odpowiedz tylko OK.`
+
+`claude logs dlg-probe`: 124 046 bytes of terminal screen output (ANSI), not structured text.
+
+**Raw result — dialog directory.** Rafal attached (`claude attach 1867e626`) and asked to write
+`C:/Users/rafal/hub-probes/data/dialogs/probe/decisions.md`. The fork first declined on its own,
+holding to the read-only role from its start prompt, and ended the turn with the gate marker from
+the sandbox `CLAUDE.md`:
+
+```
+⏸ Czeka na decyzję: czy zdjąć rolę read-only i zapisać `decisions.md` z linią `test`?
+```
+
+After `tak zapisz`: `PostToolUse` `Write` on `C:\Users\rafal\hub-probes\data\dialogs\probe\decisions.md`
+at 05:09:50, no `Notification` / `permission_prompt` (the fork ran in `permission_mode: "auto"`,
+inherited from the source session); the file exists with the content `test`. The fork also emitted
+`Notification` `idle_prompt` ("Claude is waiting for your input") 60 s after its first turn.
+
+**Raw result — fork of a busy session.** First attempt invalid: Rafal had restarted
+`probe-recipient` (new id `69788a55-…`, started 05:11:01) and the fork used the old, ended id
+`a779a5d4-…`; that fork (`dlg-busy`, `56a59b67`) answered from the ended session's history.
+Second attempt with the id read from `claude agents --json` right before launch:
+
+```
+05:16:29
+recipient: 69788a55-d9cd-4c61-89b1-d9d9ff4efd9e busy
+backgrounded · db9975a8 · dlg-busy2
+exit=0
+```
+
+The source session was running `node -e "setTimeout(()=>{},30000)"` (prompt 05:16:20, tool result
+05:16:54). Fork `Stop` at 05:16:50, `last_assistant_message` (start):
+`Ostatnia wiadomość od Ciebie przed tym probe to `Uruchom: node -e "setTimeout(()=>{},30000)"`. Ostatnie wywołanie narzędzia w mojej historii nie ma wyniku.`
+
+All three forks stopped: `stopped 1867e626`, `stopped 56a59b67`, `stopped db9975a8`.
+
+**Verdict: pass.**
+
+1. `--bg` combines with `--resume <id> --fork-session --name <name>` and a positional start prompt;
+   the fork gets its own id and sessionId, and the source history.
+2. The role passed in the start prompt holds: the fork refused a write until told otherwise.
+3. The fork reached a directory outside the project; in auto mode no permission prompt appeared, so
+   the write boundary has to come from settings (S7).
+4. A fork of a busy session starts and sees the history up to the running tool call, without its
+   result.
+
+**Final command for spec §6.5 step 2:**
+`claude --bg --resume <sessionId> --fork-session --name dlg-<project>-<slug> "<start prompt with the role>"`,
+run in the project directory, with `<sessionId>` read from `claude agents --json` by name right before launch.
+
+**Fallback taken.** None needed.
+
+**Spec impact (decisions for Rafal at Task 14).**
+
+- §6.5 step 1: a restart keeps the session name but changes its id, so the hub must resolve the id
+  from `claude agents --json` immediately before forking (S6 caught a stale id).
+- §6.5 step 1: forking a busy session works; the "only idle sessions" precaution can be dropped,
+  with the caveat that the fork does not see the result of a running tool call.
+- §6.5 step 2: a fork inherits the source session's permission mode (auto here), so the write
+  boundary needs explicit settings (S7).
+- §5.6: `claude logs` is a terminal screen dump; the hub reads results from `Stop` events instead.
+
 ## S7 — write boundary of the fork
 ## S8 — role file survives /clear
 ## S9 — Codex follow-up sandbox and working directory
