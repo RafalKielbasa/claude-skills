@@ -2,7 +2,8 @@
 
 **Date:** 2026-10-13
 **Status:** approved 2026-10-13, including all items of §13.1; updated 2026-10-14 with probe
-decisions D1–D14 (§13.2); ready for Plan 2 (§10).
+decisions D1–D14 (§13.2); Plan 2 done; updated 2026-10-14 with the Plan 3 additions P1–P8
+(§13.3); ready for Plan 3 (§10).
 **Owner:** Rafal Kielbasa
 **Origin:** brainstorming sessions `0e06a344` (2026-10-11, voice module), `7e84737d`
 (2026-10-12, decisions 1–9, design parts 1–2) and `c0c20a2d` (2026-10-13, decisions 10–13,
@@ -80,6 +81,7 @@ Out of scope for sub-project 1:
 | 13 | Codex–Claude execution contract | Removed entirely from `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`; it was a remnant of coordinating Claude from the Codex desktop app |
 | 14 | How many implementation plans | Three, each written after the probes it depends on (§10) |
 | 15 | Probe decisions | D1–D14 from the probe report, adopted by Rafal on 2026-10-14 as recommended; applied in place in this spec and listed in §13.2 |
+| 16 | Plan 3 additions | P1–P8: a project map with descriptive names, conversation titles from the transcript, new sessions launched from the map, a git snapshot for dialog forks, probe S12. Agreed with Rafal on 2026-10-14; applied in place and listed in §13.3 |
 
 ## 4. Components
 
@@ -89,7 +91,7 @@ Out of scope for sub-project 1:
 | Skill `hub` | `~/.claude/skills/hub/`, tracked in git through the allowlist. Pattern: `code-review-master` — Node without dependencies, tests with `node --test` | `SKILL.md` with the hub role and procedures; scripts in `bin/`. The hub never modifies its own skill at runtime; changes to the skill are separate, explicitly requested work |
 | Hook script | `~/.claude/skills/hub/bin/hub-hook.js`, registered globally in `~/.claude/settings.json` with `async: true` | Appends one event per hook call to the session's event log and, on `Stop`, writes that event's last-message file (§5.1). Works whether or not the hub runs |
 | Watcher | `~/.claude/skills/hub/bin/hub-watch.js`, started by the hub through the `Monitor` tool | Prints one line per state transition (§5.5) |
-| Hub CLI | `~/.claude/skills/hub/bin/hub.js` | Derived state and overview, last message, session registration, pre-send check, send journal, Codex threads, retention cleanup |
+| Hub CLI | `~/.claude/skills/hub/bin/hub.js` | Derived state and overview, conversation titles, the project map listing, last message, session registration, launching new sessions and dialog forks, the git snapshot for a dialog, pre-send check, send journal, Codex threads, retention cleanup |
 | Hub data | `~/.claude/hub/`, outside git | See §4.1 |
 | Dialog fork | `claude --bg --resume <sessionId> --fork-session …` in the project directory (§6.5 step 2) | Talks with Rafal; reads the repository and the session history; writes only into its dialog directory |
 | Global rules | `~/.claude/CLAUDE.md` | The gate marker (§5.3) and the isolation rule (decision 8). The Codex–Claude contract section is removed (decision 13) |
@@ -117,12 +119,15 @@ Out of scope for sub-project 1:
   registry/<session_id>.events.jsonl  # append-only event log, written only by that session's hooks
   registry/<session_id>.last/<event id>.md  # full last assistant message of one Stop event, referenced by that event
   registry/polls.jsonl                # results of `claude agents --json` polls, including errors
+  registry/titles.json                # conversation title cache: session id → title, its source, transcript size
   hub-sessions.json                   # session ids the hub registered: itself, dialog forks, background sessions
-  projects.json                       # project aliases and directories for new sessions
+  projects.json                       # the project map (§4.2), written only by Rafal
   projects/<project>/
     journal.md                        # send records: pending, sent, held, not-sent, delivery-unknown
     sent/<timestamp>.md               # exact text of every message sent to a session
     dialogs/<date>-<slug>/
+      context/                        # git snapshot of the source session's cwd, written by the hub CLI (§6.5 step 2)
+      fork-settings.json              # the fork's permission rules (§6.5 step 2)
       decisions.md                    # decision, rationale, source
       open-questions.md
       prompt.md
@@ -140,14 +145,38 @@ under a new `sessionId` (probe S8), with no step by the hub itself. The hub CLI 
 `claude --bg` prints a short id (`backgrounded · 1867e626 · dlg-probe`), and the full `sessionId`
 is the one `claude agents --json` lists under that `id` (probe S6).
 
-**Project matching.** `<project>` is the alias from `projects.json` whose root directory contains
+**Project matching.** `<project>` is the key of the project map entry (§4.2) whose `dir` contains
 the session `cwd`. Paths are compared normalised and absolute, case-insensitively on Windows, as a
 directory–descendant relation on path-segment boundaries (`C:\repo` does not match
-`C:\repo-old`). The longest matching root wins; two aliases with the same root are a
-configuration error that the hub reports. Without an alias, `<project>` is the directory name of
+`C:\repo-old`). The longest matching root wins; two entries with the same `dir` are a
+configuration error that the hub reports. Without a map entry, `<project>` is the directory name of
 the repository's main worktree (the parent of
 `git rev-parse --path-format=absolute --git-common-dir`), so sessions in worktrees land under
-their repository.
+their repository; the overview marks such a project as outside the map.
+
+A project's journal, `sent/` and `dialogs/` live under `projects/<key>/`. Plan 2 created folders
+named by the fallback rule (`projects/Baza-wiedzy/`, `projects/notatki/`, `projects/repo/`); when a
+map key differs from such a folder name, new records go to the key's folder and check 3 of §6.2
+does not see the old records. Nothing moves them; Rafal can pick keys equal to the existing folder
+names or move the folders himself.
+
+### 4.2 Project map
+
+`~/.claude/hub/projects.json` holds one object `projects`, keyed by a short kebab-case key (for
+example `baza-wiedzy`). Each entry has three fields:
+
+| Field | Use |
+|---|---|
+| `name` | Descriptive name, shown in the Project column of the overview and in watcher lines |
+| `dir` | Project root, used for project matching (§4.1) and as the working directory of new sessions (§6.6) |
+| `description` | One or two sentences on what the project is. The hub matches Rafal's wording ("start a session in the course project") against the map and asks when more than one entry fits; the description also goes into the **Kontekst** section of a new session's prompt |
+
+The key names the folder `projects/<key>/` and prefixes the names of sessions the hub launches
+(`<key>-<slug>`, dialog forks `dlg-<key>-<slug>`). Rafal writes the map; the hub never edits it.
+`HUB projects` prints the map and the projects seen in the registry without an entry. A missing
+field, a `dir` that does not exist, or two entries with the same `dir` give one error line under
+the overview, and the overview still renders, as an unreadable map does. The Plan 2 `aliases`
+object is replaced; it was empty.
 
 ## 5. Registry and statuses
 
@@ -166,7 +195,7 @@ contention on a shared target (probe S3 saw `EPERM` on concurrent renames onto o
 
 | Hook (global, `async: true`) | What the event records |
 |---|---|
-| `UserPromptSubmit` | A prompt was submitted: a SHA-256 of the prompt text, never the text; `session_title` when the payload has one (only this event carries a session name, probe S1). A prompt from another session arrives wrapped as `<cross-session-message from="…" from-name="<sender>" from-mode="…">`, with `\n` before and after the inner text (probe S4); for it the event records the wrapper's `from-name` and a SHA-256 of the inner text, never the text. The hash confirms delivery (§6.3) |
+| `UserPromptSubmit` | A prompt was submitted: a SHA-256 of the prompt text, never the text; `session_title` when the payload has one (only this event carries a session name, probe S1); `transcript_path`, for the conversation title (§5.1, titles). A prompt from another session arrives wrapped as `<cross-session-message from="…" from-name="<sender>" from-mode="…">`, with `\n` before and after the inner text (probe S4); for it the event records the wrapper's `from-name` and a SHA-256 of the inner text, never the text. The hash confirms delivery (§6.3) |
 | `PostToolUse` | Tool name, a short target — `file_path` for Read/Edit/Write, `description` for Bash/PowerShell, `pattern` for Grep/Glob — and `tool_use_id`. Full commands and `tool_response` are never recorded, so secrets do not reach the registry |
 | `Notification` | Only `notification_type: "permission_prompt"`: a permission prompt is pending. The payload carries no tool call id; the event's `prompt_id` ties it to its turn (probe S1). Every other type, including `idle_prompt` (about 60 s after a `Stop`), is ignored and writes no event |
 | `Stop` | A short summary of `last_assistant_message`, the marker text if the last line carries the gate marker, and the path of its last-message file |
@@ -180,10 +209,27 @@ The hub's own session is excluded from the overview by its `sessionId` in `hub-s
 which the hub CLI derives from the events' `cwd` = `~/.claude/hub/`, so a new id after `/clear` is
 covered too (§4.1). Dialog forks registered there are listed under their
 project with the kind `dialog`. Session names from `claude agents --json` and from
-`UserPromptSubmit.session_title` are used for display, as the `to` of `SendMessage`, and to resolve
-a fork's source session right before launch (§6.5 step 2). A send's target is the baseline
-`sessionId` (§6.2 check 1). `SendMessage` takes only a session name, so check 1 also requires that
-name to belong to exactly one live session.
+`UserPromptSubmit.session_title` are used as the `to` of `SendMessage` and to resolve a fork's
+source session right before launch (§6.5 step 2); for display the hub uses the conversation title
+(below). A send's target is the baseline `sessionId` (§6.2 check 1). `SendMessage` takes only a
+session name, so check 1 also requires that name to belong to exactly one live session. VS Code
+panel sessions are named in `claude agents --json` too, as the folder name plus two characters
+(`notatki-fa`; checked in a poll on 2026-10-14).
+
+**Conversation titles.** Names like `notatki-fa` say nothing about the work, so the overview and the
+watcher show the conversation title Claude Code keeps in the session transcript. The transcript
+(`transcript_path` of the newest `UserPromptSubmit` that carries it) holds title records
+`{"type":"ai-title","aiTitle":"…"}`, or `{"type":"custom-title","customTitle":"…"}` for a session
+started with `--name` or renamed, appended again every few tens of kilobytes (checked on
+2026-10-14: in a 113 MB transcript the largest gap between two records was about 490 KB; the hub
+session had only `custom-title` records). The hub CLI reads the transcript backwards in 1 MB chunks
+up to the newest record of either type, and caches the title with the transcript size in
+`registry/titles.json`, reading again only when the size changed. Order of sources: the transcript
+title, then `session_title`, then the name from `claude agents --json`, then nothing. A missing or
+unreadable transcript is not an error; the next source is used. The title is display only: the
+`/clear` continuation (§5.2) still pairs sessions by `session_title`, and the address stays the
+session name. Not checked: whether terminal sessions started without `--name` carry `ai-title`
+records.
 
 ### 5.2 Derived state
 
@@ -219,9 +265,9 @@ wait. The hub never sends to a waiting session without an explicit warning (§6.
 **`/clear` continuation.** `/clear` ends a session (`SessionEnd` with `reason: "clear"`) and the
 tab continues under a new `sessionId` with the same `session_title` (probe S8). The overview shows
 such a pair as a continuation of the same tab, for display only; it carries no send baseline over
-(§6.2 check 1). VS Code panel sessions carry no `session_title`, and whether
-`claude agents --json` names them was not checked, so their continuation is not recognised; that
-the new id runs in the same process is not verifiable from the events.
+(§6.2 check 1). VS Code panel sessions carry no `session_title`, so their continuation is not
+recognised; `claude agents --json` names them (§5.1), but whether that name survives `/clear` was
+not checked. That the new id runs in the same process is not verifiable from the events.
 
 A poll of `claude agents --json` that fails (non-zero exit code or unparsable output) is recorded
 with its error in `polls.jsonl` and never counts as evidence that a session vanished. A session
@@ -298,7 +344,10 @@ Three levels:
 The hub loads content into its own context only when Rafal asks. Otherwise it keeps pointers.
 
 The overview is a table with the columns: project, session, state, since, last action, waiting
-for, and the raw `state` from `claude agents --json` (§5.4).
+for, and the raw `state` from `claude agents --json` (§5.4). The project column shows the map
+`name` (§4.2), or the fallback name marked as outside the map; the session column shows the first 8
+characters of the `sessionId` and the conversation title (§5.1); "since" is local time. `HUB last`
+and `HUB judge` accept a unique `sessionId` prefix, as the overview shows it.
 
 ## 6. Command loop
 
@@ -408,12 +457,26 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
    session starts and sees the history up to the running tool call, without its result; the hub
    tells Rafal this when it forks a busy session. The evidence is one sample (probe S6,
    `dlg-busy2`).
-2. **Launching the fork.** Immediately before launch, the hub resolves session X's current
-   `sessionId` by name from `claude agents --json`: a restart keeps the name but changes the id,
-   and a fork from a stale id answers from the ended session's history (probe S6). If the name
-   matches more than one session, the hub asks Rafal which one. Resolution by name for VS Code
-   panel sessions is untested: they carry no `session_title`, and whether `claude agents --json`
-   names them was not checked. The hub then runs, in the project directory:
+2. **Launching the fork** (`HUB dialog start --session <id> --slug <slug>`). Immediately before
+   launch, the hub CLI resolves session X's current `sessionId` by name from
+   `claude agents --json`: a restart keeps the name but changes the id, and a fork from a stale id
+   answers from the ended session's history (probe S6). If the name matches more than one session,
+   the hub asks Rafal which one. VS Code panel sessions carry no `session_title`, but
+   `claude agents --json` names them (§5.1), so they resolve by that name.
+
+   **Git snapshot** (decision of open point b). Before the launch the hub CLI writes, into
+   `<dialog dir>/context/`, the output of read-only git commands run in session X's `cwd`:
+   `git status --short`, `git log --oneline -20` and `git diff HEAD`, each with
+   `--no-optional-locks`, because `git status` otherwise may refresh the repository's index file.
+   The diff excludes the
+   denylist of §7 through `:(exclude)` pathspecs (`.env*`, `*.pem`, `*.key`, `*credentials*`,
+   `*secret*`, `auth.json`, `secrets.yaml`). A `cwd` outside a git repository gives a note in
+   `context/` instead of the snapshot, and the fork still starts. The snapshot is taken once; it
+   goes stale while session X works on, and `HUB dialog refresh --dir <dialog dir>` takes a new
+   one on Rafal's command. Running git there reads the repository and writes only into the dialog
+   directory, so the §8.2 writing boundary holds.
+
+   The hub CLI then runs, in the project directory:
 
    ```
    claude --bg --resume <sessionId> --fork-session --name dlg-<project>-<slug> --settings <fork-settings.json> "<start prompt with the role>" --add-dir <dialog dir>
@@ -425,43 +488,43 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
    fork's `sessionId` in `hub-sessions.json` (§4.1).
 
    The fork runs in the mode "repository read-only, dialog directory writable", enforced by the
-   settings file:
+   settings file `<dialog dir>/fork-settings.json`, written by the hub CLI:
    - `permissions.allow`: `Edit(//C:/<absolute path of the dialog directory>/**)`;
-   - `permissions.deny`: `Edit(./**)` (it also covers `Write`) and `Bash` (it also removes the
-     `PowerShell` tool from the fork);
+   - `permissions.deny`: `Edit(./**)` (it also covers `Write`), `Bash` (it also removes the
+     `PowerShell` tool from the fork) and `EnterWorktree` (it removes that tool, probe S12);
    - `worktree.bgIsolation` is not set, so the background-session worktree guard stays on as a
      second barrier for `Write`.
 
    Tested in `auto` mode (probe S7): the deny rule alone refused a `Write` into the repository; a
    `Write` into the dialog directory succeeded; with `deny` holding only `Edit(./**)`, a
    PowerShell `Set-Content` into the repository was blocked and one into the dialog directory
-   allowed. Not tested: other shell write routes (`Out-File`, redirection, `node -e`, `git`) and
-   the Bash tool, so "the fork cannot write to the repository by any route" is not established.
-   A fork could escape the worktree guard with `EnterWorktree`; denying `EnterWorktree` too is
-   worth considering and untested. Fallback (probe S7): default permission mode, and Rafal
-   approves each fork write himself.
+   allowed. Probe S12: a `Write` into a dialog directory under `~/.claude/hub/projects/` succeeded
+   without a prompt and without a "[Self-Modification]" refusal; the fork read a context file the
+   hub had put there; with `EnterWorktree` in `deny` the tool was not available to the fork. Not
+   tested: other shell write routes (`Out-File`, redirection, `node -e`, `git`) and the Bash tool,
+   so "the fork cannot write to the repository by any route" is not established. Fallback (probe
+   S7): default permission mode, and Rafal approves each fork write himself.
 
-   Open points, settled before Plan 3 (§10):
-   - (a) the tested dialog directory was `C:/Users/rafal/hub-probes/data/dialogs/probe`; a fork
-     writing into the §4.1 location `~/.claude/hub/projects/<project>/dialogs/` is untested, and
-     in the probes the auto-mode classifier refused edits of `~/.claude/CLAUDE.md` as
-     "[Self-Modification]", so it may also block writes under `~/.claude/hub/`. Tested before
-     Plan 3;
-   - (b) with `Bash` denied the fork has no shell, so it cannot run `git log` or `git diff`
-     (step 3). Rafal decides between a fork without git and the hub putting the diff into the
-     dialog directory (untested);
+   Open points:
+   - (a) settled by probe S12: forks write into `~/.claude/hub/projects/<project>/dialogs/`;
+   - (b) decided by Rafal on 2026-10-14: the hub puts the git snapshot into the dialog directory
+     (above);
    - (c) the argument order above is the only one tested;
    - (d) "a fork inherits the source's permission mode" is not shown: the source session and the
      account default were both `auto`. The write boundary therefore comes from the settings file,
      not from the mode.
-3. **Fork role**, given in its start prompt (probe S6: the fork held a read-only role from the
-   start prompt and refused a write until told otherwise):
+3. **Fork role**, given in its start prompt, a fixed text in the skill `hub` (probe S6: the fork
+   held a read-only role from the start prompt and refused a write until told otherwise):
    - an analytical partner that changes nothing in the repository;
    - it reads every decision back to Rafal and writes it into `decisions.md` only after his
      confirmation, with rationale and source;
    - unanswered questions go into `open-questions.md`;
-   - it reads the repository and the session history with the read and search tools; it has no
-     shell (step 2, open point b).
+   - it reads the repository and the session history with the read and search tools, and the git
+     snapshot in `context/`, taken at the time the prompt names and possibly stale; it has no
+     shell (step 2);
+   - questions and gates left open in the inherited history of session X are not its gates; its
+     only gate is the review of `prompt.md` (step 5). Probe S12: a fork ended its first turn with
+     the gate marker of a question open in its source's history.
 4. **Conversation.** Rafal talks to the fork after `claude attach <fork id>`.
 5. **Prompt.** The fork writes `prompt.md` from the template and ends the turn with
    `⏸ Czeka na decyzję: prompt gotowy do przeglądu`. The registry catches it and the hub notifies
@@ -481,11 +544,45 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
   agrees. Per `claude --help`, the command "continues that session in the background under the
   same ID, or starts a copy and says so when the session is already running". If the CLI reports
   a copy, the hub quotes it and sends nothing until Rafal decides.
-- **New session:** the hub runs `claude --bg --name <project>-<slug>` in the project directory,
-  optionally with `-w <name>` for a new git worktree, with the prompt as the first message, and
-  registers the session's `sessionId` (§4.1). Permission prompts are answered after
-  `claude attach <id>` (decision 3). A worktree session is journalled with its worktree path and
-  branch.
+- **New session:** started from the project map (§4.2).
+  1. Rafal names the project and the work, for example "odpal sesję w bazie wiedzy: <zadanie>",
+     optionally "w worktree".
+  2. The hub matches the project against `HUB projects` (key, `name`, `description`) and asks
+     when more than one entry fits; it never guesses. A project outside the map gets no new
+     session; the hub asks Rafal to add it to the map.
+  3. `HUB compose --path new-session --project <key> --slug <slug> --body-file -` writes the
+     draft: the header line and the five sections of §6.1, with the project's `description` in
+     **Kontekst**.
+  4. Rafal sees the exact text and the launch parameters (directory, session name
+     `<key>-<slug>`, worktree or not) and says "wyślij".
+  5. `HUB approve` records the baseline: the project `dir`, its git branch (or SHA) and the text
+     hash.
+  6. `HUB launch <id>` checks that the directory exists, that no live session carries the name
+     `<key>-<slug>`, that the text has every section and that its hash matches the approved one.
+     It then runs `claude --bg --name <key>-<slug> [-w <key>-<slug>] "<text>"` with the project
+     `dir` as working directory, through `spawnSync` with an argument array and no shell
+     (`claude` is `claude.exe`). A text longer than 30 000 characters is refused before launch,
+     because a Windows command line holds at most 32 767.
+  7. The hub CLI reads the short id from `backgrounded · <id> · <name>`, takes the full
+     `sessionId` from `claude agents --json` (probe S6), registers it in `hub-sessions.json` with
+     the kind `background`, the project, the name and, for a worktree, its path and branch, and
+     writes a journal record `pending` with the path `new-session`.
+  8. `HUB confirm` makes the record `sent` when the new session's first `UserPromptSubmit`
+     carries a `promptHash` equal to the approved text hash. Untested: whether Claude Code passes
+     a command-line prompt unchanged (for example without trimming whitespace); a differing hash
+     is reported as `mismatched`, as for a hub message (§6.3), never as `sent`.
+  9. The session then appears in the overview under its project, titled by its name (a `--name`
+     session has a `custom-title`, §5.1); further instructions go through the direct command
+     path. Permission prompts are answered after `claude attach <id>` (decision 3); the hub gives
+     Rafal that command.
+
+  A failed launch is recorded `not-sent` with the literal error, and the hub never retries on its
+  own. Untested: the permission mode a new background session starts in (a fork in probe S7 had
+  its source's `auto`; a fresh session probably takes the account default). Rafal's backup hook
+  skips only sessions whose `cwd` lies under `C:\Users\rafal\hub-probes` or `~/.claude/hub`
+  (`backup-claude.ps1:17`), so a hub-launched session in a real repository triggers the backup
+  when it ends, limited by the 10-minute debounce (`:18`); changing that is Rafal's own work
+  (D14).
   - **Trust prerequisite.** `claude --bg` requires a trusted workspace; in an untrusted one it
     exits with code 1 and "Workspace not trusted. Run `claude` in <dir> once and accept the trust
     prompt, then retry." (probe S10). Before the first background session in a new repository,
@@ -500,8 +597,8 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
     branch with unmerged commits. `git branch -D` is proposed only after Rafal confirms that the
     branch's commits may be lost, because that branch holds the background session's work.
     `claude rm` leaves the branch in place.
-- **Projects:** the project comes from the session `cwd` (§4.1); `projects.json` holds short
-  aliases and directories for new sessions.
+- **Projects:** the project comes from the session `cwd` (§4.1); the project map (§4.2) gives
+  descriptive names, descriptions and the directories for new sessions.
 
 ## 7. Codex consultation
 
@@ -574,9 +671,9 @@ The hub never retries on its own and always quotes the literal error.
 |---|---|
 | Consent | The hub never answers permission prompts or gates, and never treats a session's reply as Rafal's consent. Watcher events are not Rafal's answers ("Events … are not replies from the user", `Monitor` tool description) |
 | Sending | Only after "wyślij" and only text Rafal has seen, header included; the Codex consultation is the read-only exception |
-| Writing | At runtime the hub writes only into `~/.claude/hub/`. It changes nothing in project repositories and commits nothing; commits belong to project sessions under each repository's rules. Worktree cleanup (`claude rm`, removing a leftover directory, `git branch -d`, and `-D` only after Rafal confirms) is proposed to Rafal and never run by the hub (§6.6). It never modifies its own skill |
+| Writing | At runtime the hub writes only into `~/.claude/hub/`. It changes nothing in project repositories and commits nothing; in a repository it runs only read-only git commands with `--no-optional-locks`, for the dialog snapshot (§6.5 step 2) and the baseline (§6.2); commits belong to project sessions under each repository's rules. Worktree cleanup (`claude rm`, removing a leftover directory, `git branch -d`, and `-D` only after Rafal confirms) is proposed to Rafal and never run by the hub (§6.6). It never modifies its own skill |
 | Isolation | Decision 8: project sessions do not message each other on their own initiative |
-| Secrets | Event logs store paths, descriptions, prompt hashes and the sender name of cross-session prompts, never full commands, tool responses or prompt text. Last-message files are local copies of what the session transcripts in `~/.claude/projects/` already hold. Codex consultations follow the denylist of §7 and contain only the element Rafal pointed at |
+| Secrets | Event logs store paths, descriptions, prompt hashes and the sender name of cross-session prompts, never full commands, tool responses or prompt text. Last-message files are local copies of what the session transcripts in `~/.claude/projects/` already hold; from a transcript the hub CLI reads only title records into `registry/titles.json`. The dialog git snapshot excludes the denylist of §7. Codex consultations follow the denylist of §7 and contain only the element Rafal pointed at |
 | Codex | First call always `-s read-only`; follow-ups always carry `-c sandbox_mode="read-only"` and run from `<dir>` (§7). Comments only |
 | Network | No component listens on a network interface. Registry, journals, dialogs and Codex threads stay on this machine; Claude Code and Codex talk to their model services as they always do |
 | Retention | The overview shows active sessions and sessions ended within the last 24 hours. The event log and the last-message directory `<session_id>.last/` of a session ended more than 14 days ago are deleted together by the hub CLI on hub start. `polls.jsonl` is truncated to the last 14 days. `journal.md`, `sent/`, `dialogs/` and `codex/` are kept indefinitely |
@@ -597,6 +694,11 @@ Node without dependencies, `node --test`.
 | Send record | Tool success alone leaves `pending`; `pending` → `sent` only on a recipient `UserPromptSubmit` with the hub's `from-name` and a matching inner-text hash (built from the S4 wrapper); a mismatched hash or another `from-name` does not confirm; held notice → `held`; refused notice → `not-sent`; `held` → `not-sent` when the recipient session ends; a tool error → `not-sent`; no evidence → `delivery-unknown`; a resend of the same hash asks, also while `held` |
 | Prompt template and answer message | A missing section blocks sending; **Oczekiwany rezultat** is mandatory; the header line is part of the approved hash |
 | Project matching | `C:\repo` vs `C:\repo-old`, case differences, the longest root wins, a duplicate root is reported |
+| Project map | The overview shows the map `name`; a session outside the map shows the fallback name marked as outside the map; a missing field, a non-existent `dir`, a duplicate `dir` and an unreadable file each give one error line and the overview still renders; `HUB projects` lists the map and the unmapped projects seen in the registry |
+| Conversation titles | `UserPromptSubmit` records `transcript_path`; the newest `custom-title` or `ai-title` record wins; a record more than 1 MB before the end is found by the chunked backward read; the cache is reused while the transcript size is unchanged and refreshed when it changes; a missing transcript falls back to `session_title`, then to the poll name; the `/clear` continuation still pairs by `session_title` |
+| Id prefix and local time | `HUB last` and `HUB judge` accept a unique `sessionId` prefix and refuse an ambiguous one; "since" renders in local time |
+| New session | `compose --path new-session` puts the project `description` into **Kontekst**; `launch` refuses a missing directory, a name already used by a live session, a missing section, a changed hash and a text over 30 000 characters; the launch runs without a shell with the project `dir` as working directory and `-w` only when asked; the short id is parsed and the full `sessionId` registered with project, name and worktree; a non-zero exit (for example "Workspace not trusted") gives `not-sent` with the literal output; `confirm` makes the record `sent` on a matching `promptHash` and reports a differing one as `mismatched` |
+| Dialog start | The source `sessionId` is resolved by name right before launch, and an ambiguous name stops the launch; `context/` holds the three git outputs, all run with `--no-optional-locks`; the diff excludes the §7 denylist; a `cwd` outside git gives a note and the fork still starts; `fork-settings.json` holds the allow rule for the dialog directory and denies `Edit(./**)`, `Bash` and `EnterWorktree`; the command keeps the S7 argument order; the start prompt carries the role, the snapshot time and the rule on inherited gates; `dialog refresh` replaces the snapshot |
 | Codex thread | `meta.json` with the thread id from `thread.started`, successive `answer-<n>.md` and `answer-<n>.err`, stdin transport with Polish diacritics and a large element, the denylist, a timeout and an empty result give "brak drugiej opinii", an `error` item in the stream with exit code 0 and a non-empty result is not a failure |
 | Retention | Deletes the event log and the `<session_id>.last/` directory of ended sessions older than 14 days together, and nothing else |
 
@@ -630,6 +732,7 @@ added.
 | S9 | Does a Codex follow-up with `codex exec resume <id> -c sandbox_mode="read-only"` keep the read-only sandbox and `<dir>` as working directory? With the contract removed, does Codex read the repository itself and launch no agent? | A write attempt in the follow-up is refused; the working directory is `<dir>`; the `--json` stream shows no agent launch | A new `codex exec -s read-only -C <dir>` call per follow-up, with `thread.md` as context | Pass for `apply_patch` writes (refusal on stderr); shell writes not attempted; `error` items are not failures (D11) |
 | S10 | Does `claude --bg -w <name>` work as a combination? | A background session in a new worktree | The hub creates the worktree with `git worktree add` and starts the session in it | Pass after workspace trust; `claude rm` needed a manual delete and left the branch (D10) |
 | S11 | Smoke test of the gate marker | The marker appears at 5 of 5 gates of different kinds (question, design section, spec review), one of them after a compaction | The marker stays an auxiliary signal; the hub always judges the last message on notification | Pass: 5 of 5 gate kinds, one after `/compact`. Queued prompts found (D12) |
+| S12 | Run after Plan 2, before Plan 3. Can a fork write into a dialog directory under `~/.claude/hub/projects/`, read a hub-placed context file, and is it kept from `EnterWorktree`? | The write succeeds without a prompt or a "[Self-Modification]" refusal; the read succeeds; `EnterWorktree` is refused or unavailable | Dialog directories outside `~/.claude` | Pass: all three; the fork ended its turn with a marker inherited from its source's history (P6) |
 
 ### 9.3 Acceptance test
 
@@ -641,7 +744,15 @@ With Rafal, on two trial projects:
 4. the questionnaire path end to end;
 5. a dialog through a fork: `prompt.md`, "wyślij", send record;
 6. a Codex consultation with one follow-up;
-7. a hub restart and state recovery.
+7. a hub restart and state recovery;
+8. the overview with project names from the map and conversation titles, one session outside the
+   map;
+9. a new session launched from the map, with the record confirmed `sent`;
+10. the hub after `/clear`: role kept, overview rebuilt, the new id excluded.
+
+Plan 2's acceptance ran items 1–3 and a direct command; Rafal ended it before item 4, the hub
+after `/clear` and item 7 (`.claude/specs/2026-10-14-orchestrator-hub-plan-2-acceptance.md`).
+Plan 3's acceptance runs items 4–10.
 
 Then one real project, chosen by Rafal, as a pilot.
 
@@ -655,7 +766,7 @@ probes it depends on have results (decision 14). Every plan goes through its own
 |---|---|---|
 | Plan 1: contract removal and probes | **Done** (2026-10-14). Removed the Codex–Claude contract from `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`, and the paused Codex automation `powiadomienie-o-pracy-claude-nad-planem-i-agentem` (decision 13). Ran probes S1–S11 in a throwaway repository. Results and fallbacks: `.claude/specs/2026-10-13-orchestrator-hub-probes.md`; decisions D1–D14 applied to this spec (§13.2) | After this spec was approved |
 | Plan 2: core | First the backup hook prerequisite below (D14). Then: hooks with per-`Stop` last-message files and cross-session prompt fields, event logs, derived state (clearing by `prompt_id`, queued prompts, `/clear` continuation, raw `state` shown, not ranked), watcher, overview, sending with send records (`held`, delivery confirmed by the recipient's `UserPromptSubmit`), the hub start with its role file, global rules (marker, isolation), the questionnaire and direct command paths. Before the delivery confirmation relies on the hash: the inner-text check of §6.3 with a multi-line message containing `<`, `&` and `"`. Optional before Plan 2: a probe of a hold between an `auto` sender and a `default` recipient (§4 hub setup). Plan 2 also takes the probe report's S1 notes: the overview and retention tolerate SessionEnd-only sessions (an event log with one `SessionEnd` and no transcript) | Now: S1–S5 and S11 have results |
-| Plan 3: dialog, Codex, new sessions | Dialog path through a fork, Codex consultation, new sessions with the worktree option, the acceptance test of §9.3. Notes: a busy session may be forked, with the caveat shown to Rafal; the evidence is one sample (§6.5 step 1, D7). The fork command, settings and open points (a)–(d) of §6.5 step 2 (D8): test (a), a fork writing under `~/.claude/hub/projects/<project>/dialogs/`, before Plan 3; Rafal decides (b), a fork without git or the hub putting the diff into the dialog directory; denying `EnterWorktree` is considered. New sessions: the trust step, and worktree cleanup only proposed by the hub (§6.6, §8.2, D10) | After the results of S6–S10 (done), the test of open point (a) and Rafal's decision on (b) |
+| Plan 3: map, titles, new sessions, dialog, Codex | In this order, each group usable on its own: (1) the project map (§4.2), conversation titles (§5.1), and Plan 2 acceptance findings A1 (id prefix in `last` and `judge`) and A2 (local time in the overview); (2) new sessions from the map with the worktree option (§6.6); after this group Rafal may pause and pilot the hub; (3) the dialog path through a fork with the git snapshot (§6.5); (4) the Codex consultation (§7); (5) the acceptance test, items 4–10 of §9.3. Notes: a busy session may be forked, with the caveat shown to Rafal; the evidence is one sample (§6.5 step 1, D7). New sessions: the trust step, and worktree cleanup only proposed by the hub (§6.6, §8.2, D10). Out of scope: the open decisions I-3, I-4 and M-2 of the Plan 2 acceptance report | Now: S6–S10 and S12 have results, and Rafal decided open point (b) on 2026-10-14 |
 
 **Prerequisite of Plan 2: the backup hook (D14).** Rafal's `SessionEnd` hook
 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\Users\rafal\.claude\hooks\backup-claude.ps1"`
@@ -775,3 +886,33 @@ Derived after the spec-update review and confirmed by Rafal on 2026-10-14: the h
 recognises the hub's sessions by the events' `cwd` = `~/.claude/hub/`, which registers the new id
 after `/clear` without a step by the hub (§4.1, §5.1); the watcher prints a `/clear` continuation
 as "continued after /clear", not as a new session (§5.5).
+
+### 13.3 Plan 3 additions (2026-10-14)
+
+Agreed with Rafal in brainstorming session `c51a0755` on 2026-10-14 (decision 16), in three design
+sections he accepted one by one, plus open point (b) and probe S12. Rafal's starting points: the
+hub needs a project map with descriptive names that he prepares; the hub should start a new
+session in a project under discussion and act through it; the session names in the overview say
+nothing about the work.
+
+| # | Addition | Sections |
+|---|---|---|
+| P1 | Project map: `projects.json` holds `projects` keyed by a kebab-case key, each entry with `name`, `dir` and `description` (variant B of three: name + directory; + description; + new-session defaults). Rafal writes it; `HUB projects` lists it with the unmapped projects; errors give lines under the overview. Replaces the empty `aliases` | §4.1, §4.2, §5.6, §6.6, §9.1 |
+| P2 | Conversation titles: the hook records `transcript_path`; the hub CLI reads the newest `custom-title` or `ai-title` record backwards in 1 MB chunks and caches it by transcript size in `registry/titles.json`; the overview and the watcher show `<8 characters of the id> <title>`; the session name stays the `SendMessage` address | §4.1, §5.1, §5.6, §8.2, §9.1 |
+| P3 | New sessions from the map: compose with the project description, "wyślij", `HUB launch` (checks, no-shell spawn, a 30 000-character limit), registration, delivery confirmed by `promptHash`; names `<key>-<slug>` | §6.6, §9.1, §9.3 |
+| P4 | Open point (b), Rafal's decision: the hub CLI puts a git snapshot (`status`, `log`, `diff HEAD`, with `--no-optional-locks`, without denylisted files) into `<dialog dir>/context/`; refreshed on Rafal's command | §4.1, §6.5, §8.2, §9.1 |
+| P5 | Probe S12: forks write into `~/.claude/hub/projects/<project>/dialogs/` (open point a settled); `EnterWorktree` joins the fork's `deny` | §6.5, §9.2 |
+| P6 | From S12: the fork's start prompt says that gates open in the inherited history are not its gates | §6.5 step 3 |
+| P7 | Plan 2 acceptance findings A1 (unique id prefix in `last` and `judge`) and A2 (local time in the overview) join Plan 3 | §5.6, §9.1, §10 |
+| P8 | Plan 3 runs in five groups (map and titles, new sessions, dialog, Codex, acceptance); the acceptance test grows to ten items and takes over the Plan 2 items not run; I-3, I-4 and M-2 stay outside Plan 3 | §9.3, §10 |
+
+**Derived while writing this amendment, not discussed explicitly:**
+
+- a project outside the map gets no new session; the hub asks Rafal to add it to the map (§6.6
+  step 2), because a launch needs the map's key and `dir`;
+- git commands in a project repository carry `--no-optional-locks`, because `git status` may
+  otherwise refresh the index file, which would be a write (§6.5 step 2, §8.2);
+- a `cwd` outside git gives a note in `context/` and the fork still starts (§6.5 step 2);
+- Plan 2's journal folders named by the fallback rule are not moved when a map key differs (§4.1);
+- VS Code panel sessions are named in `claude agents --json` (checked in a poll on 2026-10-14),
+  which closes the §6.5 step 2 caveat on resolving them by name (§5.1, §5.2, §6.5).

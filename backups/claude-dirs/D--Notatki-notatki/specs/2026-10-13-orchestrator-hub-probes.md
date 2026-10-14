@@ -930,6 +930,75 @@ produces exactly this sequence. Pairing a `UserPromptSubmit` with "its" `Stop` b
 for queued prompts. D2 is unaffected: the `Notification`, `PostToolUse` and `Stop` of one turn
 share the id (S1). Plan 2 needs a derived-state test built from this sequence.
 
+## S12 — fork writes under `~/.claude/hub/` (open point a, before Plan 3)
+
+Run on 2026-10-14 after Plan 2, approved by Rafal. Also covers the read side of open point (b),
+decided as "the hub puts the diff into the dialog directory", and the `EnterWorktree` deny that D8
+left to consider.
+
+**Question.** Can a fork launched with the D8 settings write into a dialog directory at the spec
+location `~/.claude/hub/projects/<project>/dialogs/<dir>/`, where the auto-mode classifier might
+refuse it as "[Self-Modification]"? Can it read a context file the hub put there? Does
+`deny: EnterWorktree` keep it from leaving the background worktree guard?
+
+**Method.** Dialog directory `C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-14-s12/`,
+created beforehand with `context/diff.patch` holding one line
+(`diff --git a/s12-marker.txt b/s12-marker.txt S12-CONTEXT-LINE`). Settings file
+`C:/Users/rafal/hub-probes/tools/fork-settings-s12.json`:
+
+```json
+{
+  "permissions": {
+    "allow": ["Edit(//C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-14-s12/**)"],
+    "deny": ["Edit(./**)", "Bash", "EnterWorktree"]
+  }
+}
+```
+
+Fork of the ended session `probe-a` (`1e7b7a73-e571-406b-996e-2b200a9c2f27`), run in
+`C:/Users/rafal/hub-probes/repo`, in the D8 argument order:
+
+```
+$ claude --bg --resume 1e7b7a73-e571-406b-996e-2b200a9c2f27 --fork-session --name dlg-s12 --settings C:/Users/rafal/hub-probes/tools/fork-settings-s12.json "Probe S12. Do exactly these steps and nothing else: (1) Read C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-14-s12/context/diff.patch and quote its first line. (2) Write C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-14-s12/decisions.md containing the single line inside. (3) Call the EnterWorktree tool with name s12. (4) Report literally the tool result or error of each step." --add-dir C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-14-s12
+backgrounded · 0015e1eb · dlg-s12
+```
+
+**Raw result.** Hub registry events of `0015e1eb-28a3-43c0-92b7-a399d3a04f47` (the global hub hook,
+not a probe hook): `UserPromptSubmit` 13:03:02.627Z (`sessionTitle: "dlg-s12"`); `PostToolUse`
+`Read` on `…\dialogs\2026-10-14-s12\context\diff.patch` 13:03:10.004Z; `PostToolUse` `Glob` `*`
+13:03:10.520Z; `PostToolUse` `Write` on `…\dialogs\2026-10-14-s12\decisions.md` 13:03:13.761Z;
+`Stop` 13:03:24.797Z. No `Notification`, so no permission prompt. The fork's last message
+(`registry/0015e1eb-….last/086b6093-….md`), its table verbatim:
+
+```
+| 1 | Read `diff.patch`, quote first line | `Read` | First line: `diff --git a/s12-marker.txt b/s12-marker.txt S12-CONTEXT-LINE` (the file has only this line) |
+| 2 | Write `decisions.md` | `Write` | `File created successfully at: C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-14-s12/decisions.md (file state is current in your context — no need to Read it back)` |
+| 3 | `EnterWorktree` with name `s12` | — (not called) | No tool result. Partway through this turn, the session listed `EnterWorktree` as no longer available, and `ToolSearch` won't return a match for it. No worktree was created. |
+```
+
+The same message ended with `⏸ Czeka na decyzję: do czego ma posłużyć zdanie o lesie.` and the line
+"Still open: the question about what the forest sentence is for has no answer yet". That is a
+question left open in the history of the source session `probe-a`, not part of the probe prompt.
+
+`ls`: `dialogs/2026-10-14-s12/decisions.md` exists (7 bytes, content `inside`);
+`C:/Users/rafal/hub-probes/repo/.claude/worktrees/*` does not exist. Cleanup: `stopped 0015e1eb`;
+`claude agents --json` lists no `dlg-s12` session. The dialog directory is kept as evidence.
+
+**Verdict: pass.**
+
+- (a) The `Write` tool wrote into `~/.claude/hub/projects/<project>/dialogs/<dir>/` without a
+  prompt and without a "[Self-Modification]" refusal. Only the `Write` tool was tested; the
+  permission mode of the fork is not recorded by the hub hook.
+- (b) read side: the fork read a context file the hub put into the dialog directory.
+- `deny: EnterWorktree` removes the tool from the fork, as `deny: Bash` removed `PowerShell` in
+  S7: it was not refused at call time, it was not available. No worktree was created.
+
+**Spec impact.** §6.5 step 2: add `EnterWorktree` to the fork's `deny`; the §4.1 dialog location
+stands. New for §6.5 steps 3 and 5: a fork inherits the gates still open in its source session's
+history and may end its first turn with a marker for one of them. The hub would then show the fork
+as "waiting for decision" on a question unrelated to the dialog. The fork's start prompt has to
+tell it that open questions of the source history are not its gates. One sample.
+
 ## Side effect: backup hook commits and pushes
 
 **What happened.** Rafal's own `SessionEnd` hook committed and pushed `C:/Users/rafal/.claude` after
@@ -1017,6 +1086,7 @@ commit; why was not checked.
 | S9 Codex follow-up | pass for `apply_patch` writes (no file written in 3/3 calls; refusal on stderr, not in the `error` item; shell writes not attempted) | none | §7 confirmed; keep `-c sandbox_mode="read-only"`, run resume from `<dir>`; `error` items are not failures (D11) |
 | S10 worktree session | pass after trust; cleanup needed a manual delete and left the branch | none | §6.6, with a §8.2 question on cleanup (D10) |
 | S11 gate marker | pass (5/5 gate kinds) | none | none for the marker; §5.2 / §5.5 queued prompts (D12) |
+| S12 fork writes under `~/.claude/hub/` (after Plan 2) | pass: `Write` into the dialog directory without a prompt or a "[Self-Modification]" refusal; the fork read a hub-placed context file; `deny: EnterWorktree` removed the tool | none | §6.5 step 2 (`EnterWorktree` in `deny`); §6.5 start prompt: inherited open gates are not the fork's (one sample) |
 | Side effect: backup hook | Rafal's `SessionEnd` hook committed and pushed `~/.claude` 13 times during the probes | — | outside the hub spec (D14) |
 
 ## Decisions for Rafal before Plan 2
