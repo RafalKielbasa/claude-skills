@@ -414,6 +414,82 @@ run in the project directory, with `<sessionId>` read from `claude agents --json
 - §5.6: `claude logs` is a terminal screen dump; the hub reads results from `Stop` events instead.
 
 ## S7 — write boundary of the fork
+
+**Question.** Can a fork launched with `--settings` permission rules write into its dialog directory
+but not into the project repository, given that a fork inherits the source's `auto` permission mode?
+
+**Method.** Variant A only (it decided). Settings file `C:/Users/rafal/hub-probes/tools/fork-settings.json`:
+
+```json
+{
+  "permissions": {
+    "allow": ["Edit(//C:/Users/rafal/hub-probes/data/dialogs/probe/**)"],
+    "deny": ["Edit(./**)", "Bash"]
+  }
+}
+```
+
+Fork of `probe-recipient` (id `69788a55-d9cd-4c61-89b1-d9d9ff4efd9e`, read from `claude agents --json`
+right before launch), run in `C:/Users/rafal/hub-probes/repo`. The verdict rests on `ls`.
+
+**Raw result - first attempt (invalid, command-line pitfall).** With the brief's argument order
+(`... --add-dir <dir> "<prompt>"`) the variadic `--add-dir` swallowed the prompt: the fork started
+with no task (`backgrounded · 58f7132f · dlg-s7 (idle — send a prompt to start)`), no events file
+was created, nothing was written. Stopped (`stopped 58f7132f`).
+
+**Raw result - valid attempt (prompt placed before `--add-dir`).**
+
+```
+$ claude --bg --resume 69788a55-d9cd-4c61-89b1-d9d9ff4efd9e --fork-session --name dlg-s7 --settings C:/Users/rafal/hub-probes/tools/fork-settings.json "Probe S7: write C:/Users/rafal/hub-probes/data/dialogs/probe/s7-inside.md containing inside, then try to write ./s7-outside.md containing outside, then report literally what happened to each." --add-dir C:/Users/rafal/hub-probes/data/dialogs/probe
+backgrounded · 629afdce · dlg-s7
+```
+
+`claude agents --json` (50 s later):
+`{"pid":16796,"id":"629afdce","cwd":"C:\Users\rafal\hub-probes\repo","kind":"background","startedAt":1791955149474,"sessionId":"629afdce-8397-4e4c-9cb0-e89e98abbf00","name":"dlg-s7","status":"idle","state":"done"}`
+
+Fork hook events (`data/events/629afdce-….jsonl`): `UserPromptSubmit` 05:19:10 (`permission_mode: "auto"`);
+exactly one `PostToolUse`, 05:19:13, `Write` on `C:\Users\rafal\hub-probes\data\dialogs\probe\s7-inside.md`
+(content `inside\n`); `Stop` 05:19:31; no `Notification`, no permission prompt. No `PostToolUse` for the
+outside write. Literal tool results quoted by the fork in `Stop.last_assistant_message`:
+
+```
+File created successfully at: C:\Users\rafal\hub-probes\data\dialogs\probe\s7-inside.md (file state is current in your context — no need to Read it back)
+
+<tool_use_error>This background session hasn't isolated its changes yet. Call EnterWorktree first so edits land in a worktree instead of the shared checkout, then retry this edit using the worktree path (a path inside a linked git worktree, including one you create with `git worktree add`, is accepted). (To disable this guard for this repo, set `"worktree": {"bgIsolation": "none"}` in .claude/settings.json.)</tool_use_error>
+```
+
+`ls`:
+
+```
+C:/Users/rafal/hub-probes/data/dialogs/probe/:
+s7-inside.md        (7 bytes, content "inside")
+ls: cannot access 'C:/Users/rafal/hub-probes/repo/s7-outside.md': No such file or directory
+```
+
+Variants B and C not needed (inside file exists; outside file absent). Cleanup: `stopped 629afdce`,
+`repo/s7-outside.md` absent, `claude agents --json`: no `dlg-s7*` session remains.
+
+**Verdict: pass on outcome, with one caveat.** The inside write succeeded without a prompt; the
+outside write did not happen; the fork was never `blocked` on a permission prompt.
+
+**Caveat (confound).** The outside write was refused not by the `deny` rule but by the background-session
+worktree-isolation guard ("hasn't isolated its changes yet. Call EnterWorktree first"). It is not proven
+that `Edit(./**)` deny or the `//C:/` allow form had any effect; the guard may by itself explain both
+results (and the fork would be free to call `EnterWorktree` and then write in a worktree). A control
+(settings with `"worktree": {"bgIsolation": "none"}` and the deny rule) was not run; it would isolate the
+deny rule. Also found: with `--add-dir` the prompt must precede it on the command line.
+
+**Fallback.** None taken. If the boundary must not depend on the guard: default permission mode, Rafal
+approves each fork write himself.
+
+**Spec impact (for Rafal at Task 14).**
+
+- §6.5 step 2: pass the start prompt before `--add-dir`, or the variadic option swallows it.
+- §6.5 step 2: `--settings <file>` with the `//C:/` allow form plus `deny` gives the wanted outcome,
+  but the effective barrier observed was the bg worktree guard; decide whether to rely on it or run the
+  control with `bgIsolation: none`.
+- A fork may escape the guard via `EnterWorktree`; the fork itself declined to do so unprompted.
+
 ## S8 — role file survives /clear
 ## S9 — Codex follow-up sandbox and working directory
 
