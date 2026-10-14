@@ -118,7 +118,8 @@ Data spotkania: z argumentu; brak argumentu → dziś.
 
 Wywołanie: `/spotkanie transkrypt <data>` — data jest wymagana. Transkrypt(y)
 trafiają do `planning/transkrypty/` — Rafał wgrywa je ręcznie PRZED
-wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
+wywołaniem trybu albo skill pobiera je webhookiem n8n przez `kb-client
+transcript` (krok 2).
 
 1. **Powrót do bramki, potem agenda.** Najpierw szukaj otwartej bramki tej daty: plików kolejek
    `planning/<data>-wpisy.yaml` (tryb z agendą) albo `planning/robocze/<data>-*/wpisy.yaml`
@@ -156,18 +157,39 @@ wywołaniem trybu albo skill pobiera je z Google Drive (krok 2).
      ich liczbie weź temat pierwszy — katalog ma zostać skanowalny, nie
      wyczerpujący. Deklarację nagrania (standup czy spotkanie robocze)
      sprawdzasz z treścią transkryptu w ręku, nie tutaj — patrz krok 3.
-2. **Pusta skrzynka → Google Drive.** Gdy `planning/transkrypty/` nie
-   zawiera plików (poza `.gitkeep`), poszukaj transkryptu na Google Drive
-   narzędziami Drive MCP: wyszukaj plik o nazwie `<data>-transkrypt` (tryb
-   z agendą) albo `<data>-<godzina>-transkrypt` (tryb bezagendowy, godzina
-   z kroku 1) — tworzy go pipeline n8n w dedykowanym folderze transkryptów
-   — pobierz treść i zapisz pod tą samą nazwą w `planning/transkrypty/`;
-   powiedz Rafałowi, że plik pochodzi z Drive. Plik na Drive ZOSTAJE
-   (archiwum po stronie n8n) — pobierasz kopię, niczego tam nie kasujesz.
-   - Brak narzędzi Drive w sesji → powiedz to wprost i poproś Rafała
-     o ręczne wgranie pliku do `planning/transkrypty/`, potem przerwij.
-   - Pliku nie ma też na Drive → powiedz wprost, że transkryptu nie ma
-     (n8n mógł jeszcze nie przetworzyć nagrania) i przerwij — nic nie twórz.
+2. **Pusta skrzynka → webhook n8n.** Gdy `planning/transkrypty/` nie
+   zawiera plików (poza `.gitkeep`), pobierz transkrypt webhookiem
+   `meeting-transcript` — pipeline n8n zapisuje go w folderze
+   `raw-transcripts` na Drive:
+
+       npm --prefix tools/kb-client run kb -- transcript --name <plik>
+
+   `<plik>` to `<data>-<godzina>-transkrypt.md` (kolektor zawsze wpisuje
+   godzinę, `0000` gdy jej nie zna):
+   - tryb bezagendowy: godzina z kroku 1,
+   - tryb z agendą: kandydaci to wpisy `kb-client pending --json` tej
+     daty (dla daty starszej niż 7 dni z `--since-days` sięgającym tej
+     daty, maks. 90); nazwa pliku to pole `name` wpisu. Pomiń nagrania
+     już przetworzone wg tych samych trzech sprawdzeń, których używają
+     `.claude/hooks/nagrania-check.ps1` i tryb bez argumentu `/daily`:
+     istnieje `planning/daily/<data>-<godzina>/notatka.md`, istnieje
+     `planning/robocze/<data>-<godzina>-*/notatka.md` albo któraś
+     `notatka.md` pod `planning/` wymienia tę nazwę pliku w
+     `**Źródła:**`. Pozostałe wypisz z godzinami i zapytaj Rafała (JEDNO
+     pytanie), które pobrać — także gdy zostało tylko jedno, bo w dniu
+     offsite'u to samo okno nagrań może trzymać standup albo spotkanie
+     robocze; może wskazać kilka, każde pobierasz osobnym wywołaniem;
+     czekaj na odpowiedź. Żadnego → powiedz to wprost i przerwij.
+   Komenda zapisuje plik w `planning/transkrypty/`; powiedz Rafałowi, że
+   plik pochodzi z Drive. Plik na Drive ZOSTAJE (archiwum po stronie n8n)
+   — pobierasz kopię, niczego tam nie kasujesz. Gdy komenda zakończy się
+   błędem, przeczytaj komunikat:
+   - `Brak <plik> w raw-transcripts …` → powiedz wprost, że transkryptu
+     nie ma (n8n mógł jeszcze nie przetworzyć nagrania) i przerwij — nic
+     nie twórz,
+   - każdy inny komunikat (autoryzacja, sieć, serwer) → zacytuj go,
+     poproś Rafała o ręczne wgranie pliku do `planning/transkrypty/`
+     i przerwij.
 3. **Wczytanie transkryptów.** Wczytaj wszystkie pliki z
    `planning/transkrypty/` (pomiń `.gitkeep`) — dowolna liczba, dowolne
    rozszerzenie tekstowe. Brak plików → powiedz to wprost i przerwij, nic

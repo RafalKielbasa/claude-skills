@@ -1,17 +1,28 @@
 ---
 name: drive-konektor-konto-devstock
-description: "Konektor Google Drive (claude.ai) musi być zalogowany kontem rafal.kielbasa@devstock.com — na it-chef.com nie widzi dysku współdzielonego `meetings` z transkryptami."
+description: "Transkrypty spotkań pobiera `kb-client transcript` (webhook n8n 41_meeting_transcript), nie konektor Drive — konektor claude.ai zostaje na it-chef.com i nie widzi dysku `meetings`."
 metadata:
   node_type: memory
   type: reference
   originSessionId: f7bf21f5-5b92-4551-a9f4-8f4ad317b15c
-  modified: 2026-10-14T07:23:39.271Z
+  modified: 2026-10-14T08:38:25.704Z
 ---
 
-Transkrypty spotkań kolektor n8n zapisuje w folderze `raw-transcripts` (`1m3NaruSi4Kw1BsXUi0tK_YDBZ3H2DMmI`) na dysku współdzielonym `meetings` (`0AAe3_HQ3HAOXUk9PVA`). Konektor Drive z claude.ai widzi dyski współdzielone — „Requested entity was not found" z 2026-10-08/09 wynikał wyłącznie z tego, że był zalogowany kontem `rafal-kielbasa@it-chef.com`. Po przełączeniu na `rafal.kielbasa@devstock.com` (2026-10-09) `get_file_metadata`, `search_files parentId = '1m3Naru…'` i `download_file_content` działają.
+Od 2026-10-14 `/daily` i `/spotkanie` pobierają transkrypt komendą
+`npm --prefix tools/kb-client run kb -- transcript --name <data>-<godzina>-transkrypt[-surowy].md`
+(webhook n8n `41_meeting_transcript`, id `RzlEpwubay0clYEH`, eksport w
+`devstock-team-agent/workflows/41_meeting_transcript.json`). Plik ląduje w `planning/transkrypty/`;
+komenda odmawia nadpisania istniejącego. Błąd „Brak … w raw-transcripts” = n8n nie przetworzył
+nagrania (albo zła nazwa).
 
-**Why:** dwa dni szukania obejść (dane wykonania n8n, ręczna kopia) przy błędnej diagnozie „konektor nie obsługuje dysków współdzielonych".
+Konektor Google Drive w claude.ai jest zalogowany na `rafal-kielbasa@it-chef.com` i ma tak zostać
+(decyzja Rafała 2026-10-14) — na tym koncie nie widzi dysku współdzielonego `meetings`
+(`0AAe3_HQ3HAOXUk9PVA`, folder `raw-transcripts` `1m3NaruSi4Kw1BsXUi0tK_YDBZ3H2DMmI`), więc
+„Requested entity was not found” z Drive MCP dla transkryptów jest oczekiwane, nie awaria.
 
-Przełączenie nie jest trwałe: 2026-10-14 konektor był znów na `it-chef.com` (cofnął się gdzieś między 10-09 a 10-14), więc „not found” wróciło przy `/spotkanie`. `/daily` i `/spotkanie` pobierają transkrypt tym samym konektorem, więc problem dotyczy obu naraz.
+**Why:** dwa razy (2026-10-08/09 i 2026-10-14) szukano obejść, bo konektor bywał na koncie
+it-chef.com; Rafał chce używać tego konta w Claude.
 
-**How to apply:** gdy Drive MCP zwraca „not found" dla pliku z `kb-client pending`, najpierw `list_recent_files` i sprawdź pole `owner` — konto `it-chef.com` oznacza, że Rafał musi przełączyć konektor (claude.ai → Customize → Connectors → Google Drive → Disconnect/Connect). `download_file_content` dla transkryptu przekracza limit wyniku — harness zapisuje JSON do `tool-results/`, treść to base64 w polu `content`, dekoduj Node'em do `planning/transkrypty/`.
+**How to apply:** po transkrypt sięgaj po `kb-client transcript`, nie po Drive MCP. Nie proś
+Rafała o przełączenie konektora. Gdy webhook zawiedzie z innym komunikatem niż „Brak …”, poproś
+o ręczne wgranie pliku do `planning/transkrypty/`.

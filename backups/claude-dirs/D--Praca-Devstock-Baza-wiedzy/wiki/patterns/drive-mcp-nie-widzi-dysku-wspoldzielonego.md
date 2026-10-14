@@ -42,3 +42,9 @@ oznacza, że trzeba przełączyć konektor w claude.ai (Customize → Connectors
 na czas przełączenia: treść z wykonania kolektora (`01_Process_meeting`, węzeł `Format Transcript`,
 pole `content`). `download_file_content` transkryptu przekracza limit wyniku narzędzia — harness
 zapisuje JSON do `tool-results/`, a `content` to base64 do zdekodowania do `planning/transkrypty/`.
+
+## Zamknięcie (2026-10-14)
+Krok 2 `/daily` i `/spotkanie` nie używa już konektora Drive: transkrypt pobiera
+`kb-client transcript` przez webhook n8n `meeting-transcript`
+(`docs/superpowers/specs/2026-10-14-meeting-transcript-webhook-design.md`), więc konto konektora
+w claude.ai przestało mieć znaczenie. Wzorzec jest historyczny.

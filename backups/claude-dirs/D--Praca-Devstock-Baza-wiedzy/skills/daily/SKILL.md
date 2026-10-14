@@ -60,13 +60,17 @@ instead of restating it — read it before Steps 6, 7 and 8 below.
 ## 2. Fetching the transcript
 
 If `planning/transkrypty/` already holds a file for this `<date>-<time>`, use it — do not fetch
-again. Otherwise fetch `<date>-<time>-transkrypt.md` from Drive with the Drive MCP tools into
-`planning/transkrypty/`.
+again. Otherwise fetch it through the n8n webhook `meeting-transcript`:
 
-- No Drive tooling in the session → say so plainly, ask Rafał for a manual copy into
+    npm --prefix tools/kb-client run kb -- transcript --name <date>-<time>-transkrypt.md
+
+The command writes the file into `planning/transkrypty/` and prints its path. The file on Drive
+stays where it is — it is the collector's archive. On a non-zero exit, read the message:
+
+- `Brak <file> w raw-transcripts …` → say plainly that n8n has not processed this recording yet,
+  and stop — create nothing.
+- Any other message (authorization, network, server) → quote it, ask Rafał for a manual copy into
   `planning/transkrypty/`, then stop.
-- Not on Drive either → say plainly that n8n has not processed this recording yet, and stop —
-  create nothing.
 
 ## 3. The raw transcript, when needed
 
@@ -75,8 +79,12 @@ raw `<date>-<time>-transkrypt-surowy.md`. Read the redacted file by default.
 
 Fetch the raw file only when a `— [wycięto: …] —` marker sits exactly where a finding, a decision,
 an action item or a person's status is missing — i.e. the redaction removed the one passage this
-note needs. Fetch it the same way as the redacted file (Drive MCP tools, or ask for a manual copy
-if unavailable) into `planning/transkrypty/`, read only the passage that motivated the fetch, and
+note needs. Fetch it with `npm --prefix tools/kb-client run kb -- transcript --name
+<date>-<time>-transkrypt-surowy.md` into `planning/transkrypty/`. On a non-zero exit:
+`Brak <file> w raw-transcripts …` → the raw copy is not on Drive; say so, and leave the gap in the
+note as an uncertain passage (`⚠`) — the redacted transcript is still there, so the run goes on;
+any other message → quote it and ask Rafał for a manual copy. Read only the passage that
+motivated the fetch, and
 add a short note in `notatka.md` at that point that the raw transcript was consulted. The raw file
 is deleted with everything else once Rafał accepts the note (Step 7) — it never enters git or the
 vector store, same as the redacted one.
