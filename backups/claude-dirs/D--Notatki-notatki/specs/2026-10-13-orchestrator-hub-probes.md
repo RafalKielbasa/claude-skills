@@ -721,7 +721,90 @@ removed df73ebe4
 
 ## S11 — gate marker smoke test
 
+**Question.** Does the model end gate turns with the marker `⏸ Czeka na decyzję: <one sentence>`
+from the repository `CLAUDE.md`?
+
+**Method.** Rafal ran `cd "C:/Users/rafal/hub-probes/repo" && claude --name probe-marker` (session
+`8db2b062…`) and sent five gate prompts of different kinds, answering each gate with `ok`:
+a clarifying question, a design section for approval, a spec for review, an A/B choice, and — after
+`/compact` — a next step awaiting consent. Checked with
+`node C:/Users/rafal/hub-probes/tools/marker-check.js C:/Users/rafal/hub-probes/data/events 8db2b062-008a-4985-a0a7-3cf3db807658`.
+
+**Raw result.**
+
+Prompts (`UserPromptSubmit`, UTC):
+
+```
+05:27:13 "Chcę dodać plik notes.md. Zanim cokolwiek zrobisz, zadaj mi "
+05:27:35 "ok"
+05:27:47 "Zaproponuj strukturę notes.md w jednej sekcji i poproś mnie "
+05:28:07 "ok"
+05:28:18 "Napisz krótki spec w spec.md i poproś mnie o review."
+05:29:55 "ok"
+05:30:02 "Daj mi wybór: wariant A albo B dla nazwy pliku, i poczekaj n"
+05:32:09 "ok"
+(/compact)
+05:34:03 "Zaproponuj następny krok i poczekaj na moją zgodę."
+05:39:02 SessionEnd prompt_input_exit
+```
+
+`marker-check.js` (`stops: 9, withMarker: 7`), last line of every `Stop`:
+
+| Stop (UTC) | Marker | Last line | Turn |
+|---|---|---|---|
+| 05:27:28 | yes | `⏸ Czeka na decyzję: co ma się znaleźć w `notes.md`.` | gate 1 (question) |
+| 05:27:40 | yes | `⏸ Czeka na decyzję: co ma się znaleźć w `notes.md` (pusty plik, szkielet czy konkretna treść).` | `ok` did not answer the question; asked again |
+| 05:28:05 | yes | `⏸ Czeka na decyzję: czy akceptujesz proponowaną strukturę `notes.md`.` | gate 2 (design section) |
+| 05:28:21 | no | `` `docs(notes): add notes.md skeleton` `` | work done after `ok` (file written, commit message proposed) |
+| 05:28:46 | yes | `⏸ Czeka na decyzję: review `spec.md` (akceptujesz czy coś zmienić).` | gate 3 (spec review) |
+| 05:30:02 | no | `Z tego wątku nie ma już nic do zrobienia. Jeśli chcesz, mogę dopisać pierwszy wpis do sekcji `Log`.` | work done after `ok`, ends with an optional offer |
+| 05:30:12 | yes | `⏸ Czeka na decyzję: wariant A (`notes.md`) czy B (`NOTES.md`).` | gate 4 (A/B choice) |
+| 05:32:13 | yes | `⏸ Czeka na decyzję: wariant A (`notes.md`) czy B (`NOTES.md`).` | `ok` did not pick a variant; asked again |
+| 05:34:30 | yes | `⏸ Czeka na decyzję: zgoda na dopisanie wpisów do `notes.md` oraz wybór wariantu A (`notes.md`) albo B (`NOTES.md`).` | gate 5 (after `/compact`) |
+
+**Verdict: pass.** All five gate kinds ended with the marker (5 of 5), including the one after
+compaction; the two turns that re-asked a gate also carried it. The two turns without the marker
+finished work and did not wait for a decision.
+
+**Fallback taken.** None needed.
+
+**Spec impact.** None for the marker rule. Note for §5.4: the turn at 05:30:02 ended with an optional
+offer ("Jeśli chcesz, mogę…") and no marker — the case the hub judges as "probably waiting for you"
+or "turn ended"; it stays a judgement, as the spec already says.
+
 ## Summary
 
 | Probe | Verdict | Fallback taken | Spec impact |
 |---|---|---|---|
+| S1 hooks in VS Code, payload fields | pass (first VS Code attempt invalid: auto mode) | permission waits cleared without tool call ids | §5.2 (D2); §4.1 confirmed (drive-letter case flips) |
+| S2 cost of PostToolUse | pass (p95 44 ms; +11 ms median) | none | none |
+| S3 concurrent writes, fs.watch, agents | pass (100/100, 0 broken, restart caught up) | none | §5.1 `.last.md` rename gives `EPERM` (D1) |
+| S4 SendMessage | pass (delivered / held / refused written down) | none | §6.3 (D3), §5.2 (D4), hub setup (D5) |
+| S5 Monitor expiry wake-up | pass (re-armed 9 s after wake) | none | none |
+| S6 fork launch | pass | none | §6.5 (D6, D7, D8), §5.6 (`claude logs` is a screen dump) |
+| S7 fork write boundary | pass (deny rule proven in a control run) | none | §6.5 step 2 (D8) |
+| S8 role file and /clear | pass | none | hub start (D9), §5.1/§6.2 (D6) |
+| S9 Codex follow-up | pass (read-only in 3/3 calls) | none | §7 confirmed; keep `-c sandbox_mode="read-only"`, run resume from `<dir>` (D11) |
+| S10 worktree session | pass after trust; cleanup needed a manual delete | none | §6.6 (D10) |
+| S11 gate marker | pass (5/5 gate kinds) | none | none |
+
+## Decisions for Rafal before Plan 2
+
+Each item changes the spec; the recommendation is the controller's, the decision is Rafal's.
+
+| # | From | Change to the spec | Recommendation |
+|---|---|---|---|
+| D1 | S3 | §5.1: `.last.md` written by temp file + rename fails with `EPERM` under concurrent writes on Windows. Options: (a) retry the rename with backoff; (b) one last-message file per `Stop` event (`<session_id>.last/<event id>.md`), referenced from the event | (b): it matches the append-only event log and has no contention; retention deletes the old files |
+| D2 | S1 | §5.2: `Notification` carries no tool call id but every event carries `prompt_id`; clear `waiting: permission` on a later `PostToolUse` or `Stop` with the same `prompt_id` | adopt |
+| D3 | S4 | §6.3: `SendMessage` reports success even for held and refused messages. A send becomes `sent` only when the recipient's `UserPromptSubmit` shows the hub's `<cross-session-message from-name="…">` wrapper (matched by text hash); held / refused notices set `held` / `not-sent`; otherwise `delivery-unknown` | adopt |
+| D4 | S4 | §5.2: the hook records that a prompt came from another session (wrapper and `from-name`, no text); such a prompt does not clear `waiting: decision` | adopt |
+| D5 | S4 | Hub setup: the hub runs in the same permission mode as the project sessions, otherwise every hub message is held for approval in the recipient | adopt as a documented setup rule |
+| D6 | S6, S8 | §5.1, §5.2, §6.2, §6.5: a restart or `/clear` keeps the session name but changes its id. Resolve the id by name from `claude agents --json` right before every send or fork; treat `SessionEnd` with `reason: "clear"` followed by a new id under the same name as the same tab; the hub re-registers its own id after `/clear` | adopt |
+| D7 | S6 | §6.5 step 1: drop "fork only idle sessions"; a fork of a busy session works and sees the history up to the running tool call, without its result | adopt, with the caveat shown in the dialog |
+| D8 | S6, S7 | §6.5 step 2: final fork command `claude --bg --resume <sessionId> --fork-session --name dlg-<project>-<slug> "<start prompt with role>" --settings <fork-settings.json> --add-dir <dialog dir>` (prompt before the variadic `--add-dir`); settings allow `Edit(//C:/…/dialogs/<dir>/**)` and deny `Edit(./**)` and `Bash`; the background guard is a second barrier. A fork inherits the source's permission mode | adopt; consider also denying `EnterWorktree` (untested) |
+| D9 | S8 | §4 / hub start: start the hub with `--append-system-prompt-file <hub role file>`; the role survives `/clear` without invoking the skill again | adopt |
+| D10 | S10 | §6.6 new sessions: `--bg` needs a trusted workspace (fails fast with exit 1 otherwise; a worktree under a trusted repo needed no extra trust). Worktrees land in `<repo>/.claude/worktrees/<name>` on branch `worktree-<name>`; cleanup must handle `EBUSY` on Windows and delete the branch | adopt; the hub tells Rafal to trust a new repo once before its first background session |
+| D11 | S9 | §7: keep `-c sandbox_mode="read-only"` on follow-ups (call 3 stayed read-only without it, cause not separated); `resume` takes the working directory from the shell, so run it from `<dir>` | confirm as written |
+
+Fixtures for Plan 2: `C:/Users/rafal/hub-probes/data/fixtures/` (13 variants, content-free; `StopFailure`
+not triggered — Plan 2 builds that fixture by hand from the documented fields).
