@@ -523,6 +523,50 @@ approves each fork write himself.
 - A fork may escape the guard via `EnterWorktree`; the fork itself declined to do so unprompted.
 
 ## S8 — role file survives /clear
+
+**Question.** Does a role given with `--append-system-prompt-file` survive `/clear`?
+
+**Method.** Role file `C:/Users/rafal/hub-probes/tools/role.md`:
+`You are the probe hub. When the user asks "kim jesteś?", answer exactly: HUB ROLE ACTIVE`.
+Rafal ran `cd "C:/Users/rafal/hub-probes/repo" && claude --name probe-role --append-system-prompt-file C:/Users/rafal/hub-probes/tools/role.md`,
+asked `kim jesteś?`, ran `/clear`, asked again, exited. Answers confirmed from the hook events.
+
+**Raw result.**
+
+```
+-- 41dac455-e21c-4628-94ef-d6066343bf82.jsonl
+05:25:12 UserPromptSubmit  probe-role prompt="kim jesteś" last=""
+05:25:16 Stop   prompt="" last="HUB ROLE ACTIVE"
+05:25:46 SessionEnd clear  prompt="" last=""
+-- f4622a21-c8a6-44af-b31b-53be579ee5d7.jsonl
+05:25:55 UserPromptSubmit  probe-role prompt="kim jesteś?" last=""
+05:25:59 Stop   prompt="" last="HUB ROLE ACTIVE"
+05:26:08 SessionEnd prompt_input_exit  prompt="" last=""
+```
+
+(columns: time UTC, event, reason, session_title, prompt, last assistant message)
+
+Rafal's readout: before `/clear` `HUB ROLE ACTIVE`, after `/clear` `HUB ROLE ACTIVE`. The CLI accepted
+the flag without a message.
+
+**Verdict: pass.** The role from the file answers `HUB ROLE ACTIVE` before and after `/clear`.
+
+**Side finding.** `/clear` ends the session (`SessionEnd` with `reason: "clear"`) and continues
+under a **new session id** in the same process (`41dac455…` → `f4622a21…`); the name
+(`session_title: "probe-role"`) carries over.
+
+**Fallback taken.** None needed.
+
+**Spec impact (decisions for Rafal at Task 14).**
+
+- §4 hub start: start the hub with `--append-system-prompt-file` carrying the hub role, so
+  `/clear` does not need the skill to be invoked again.
+- §5.1: the hub excludes itself by `sessionId` in `hub-sessions.json`, but `/clear` gives it a new
+  id; the hub must re-register itself after `/clear` (or be recognised by name / role).
+- §5.2 / §6.2: a `SessionEnd` with `reason: "clear"` followed by a new id under the same name is a
+  continuation of the same tab, not an ended session; the pre-send check's baseline `sessionId`
+  must be re-resolved, as in S6.
+
 ## S9 — Codex follow-up sandbox and working directory
 
 **Question:** do a Codex consultation (`codex exec -s read-only`) and its follow-up (`codex exec resume <id> -c sandbox_mode="read-only"`) stay read-only, keep the working directory and thread context, pass Polish diacritics via stdin, and launch no other agent?
