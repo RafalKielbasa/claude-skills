@@ -1,0 +1,8 @@
+{
+  "hook_event_name": "UserPromptSubmit",
+  "session_id": "ed006235-5bbf-4a61-b0a9-34754146fb4b",
+  "cwd": "C:\\Users\\rafal\\hub-probes\\repo",
+  "prompt_id": "0f4f9807-39a1-4abd-8424-1a4acda3b753",
+  "session_title": "probe-wrap",
+  "prompt": "<cross-session-message from=\"uds:\\\\.\\pipe\\LOCAL\\cc-msg-4f2bd183e38230e3700d0e561d3ecf0a\" from-name=\"notatki-7a\" from-mode=\"prompting\">\n[hub · direct · sandbox · probe-wr · 2026-10-14 12:00]\n\nWrapper check, line 2.\nSpecial characters: <tag attr=\"v\"> & \"quoted\" 'single' > end.\nPolish: zażółć gęślą jaźń.\nReply with the single word RECEIVED.\n</cross-session-message>"
+}

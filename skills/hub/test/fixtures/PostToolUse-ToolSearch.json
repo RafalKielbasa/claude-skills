@@ -1,0 +1,26 @@
+{
+  "session_id": "<string>",
+  "transcript_path": "<string>",
+  "cwd": "<string>",
+  "scratchpad_dir": "<string>",
+  "prompt_id": "<string>",
+  "permission_mode": "auto",
+  "effort": {
+    "level": "<string>"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "ToolSearch",
+  "tool_input": {
+    "query": "<string>",
+    "max_results": 1
+  },
+  "tool_response": {
+    "matches": [
+      "<string>"
+    ],
+    "query": "<string>",
+    "total_deferred_tools": 103
+  },
+  "tool_use_id": "<string>",
+  "duration_ms": 1
+}

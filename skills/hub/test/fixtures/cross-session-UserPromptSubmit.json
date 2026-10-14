@@ -1,0 +1,11 @@
+{
+  "session_id": "f27a4367-dcba-476e-9ee6-4f4525434a7b",
+  "transcript_path": "<string>",
+  "cwd": "C:\\Users\\rafal\\hub-probes\\repo",
+  "scratchpad_dir": "<string>",
+  "prompt_id": "<string>",
+  "permission_mode": "auto",
+  "hook_event_name": "UserPromptSubmit",
+  "session_title": "probe-recipient",
+  "prompt": "<cross-session-message from=\"uds:\\\\.\\pipe\\LOCAL\\cc-msg-4f2bd183e38230e3700d0e561d3ecf0a\" from-name=\"notatki-7a\" from-mode=\"prompting\">\nProbe S4: reply with the single word RECEIVED.\n</cross-session-message>"
+}

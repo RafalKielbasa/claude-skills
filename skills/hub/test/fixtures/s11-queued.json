@@ -1,0 +1,16 @@
+[
+  { "at": "2026-10-14T05:28:05.944Z", "event": "Stop", "promptId": "2e0ae0f2", "marker": "czy akceptujesz proponowaną strukturę `notes.md`." },
+  { "at": "2026-10-14T05:28:07.618Z", "event": "UserPromptSubmit", "promptId": "dfbfb101" },
+  { "at": "2026-10-14T05:28:15.356Z", "event": "PostToolUse", "promptId": "dfbfb101", "tool": "Write", "target": "notes.md" },
+  { "at": "2026-10-14T05:28:16.125Z", "event": "PostToolUse", "promptId": "dfbfb101", "tool": "Bash", "target": "git status" },
+  { "at": "2026-10-14T05:28:18.435Z", "event": "UserPromptSubmit", "promptId": "dfbfb101" },
+  { "at": "2026-10-14T05:28:21.546Z", "event": "Stop", "promptId": "dfbfb101", "marker": null },
+  { "at": "2026-10-14T05:28:36.180Z", "event": "PostToolUse", "promptId": "f229e27f", "tool": "Write", "target": "spec.md" },
+  { "at": "2026-10-14T05:28:36.384Z", "event": "PostToolUse", "promptId": "f229e27f", "tool": "Bash", "target": "git status" },
+  { "at": "2026-10-14T05:28:46.604Z", "event": "Stop", "promptId": "f229e27f", "marker": "review `spec.md` (akceptujesz czy coś zmienić)." },
+  { "at": "2026-10-14T05:29:55.050Z", "event": "UserPromptSubmit", "promptId": "617d5c90" },
+  { "at": "2026-10-14T05:30:02.718Z", "event": "UserPromptSubmit", "promptId": "617d5c90" },
+  { "at": "2026-10-14T05:30:02.964Z", "event": "Stop", "promptId": "617d5c90", "marker": null },
+  { "at": "2026-10-14T05:30:08.351Z", "event": "PostToolUse", "promptId": "df105060", "tool": "Grep", "target": "Log" },
+  { "at": "2026-10-14T05:30:12.592Z", "event": "Stop", "promptId": "df105060", "marker": "wariant A (`notes.md`) czy B (`NOTES.md`)." }
+]

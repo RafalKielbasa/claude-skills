@@ -28,6 +28,71 @@
             "timeout": 120
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/rafal/.claude/skills/hub/bin/hub-hook.mjs\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/rafal/.claude/skills/hub/bin/hub-hook.mjs\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/rafal/.claude/skills/hub/bin/hub-hook.mjs\"",
+            "async": true
+          }
+        ],
+        "matcher": "*"
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/rafal/.claude/skills/hub/bin/hub-hook.mjs\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/rafal/.claude/skills/hub/bin/hub-hook.mjs\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/rafal/.claude/skills/hub/bin/hub-hook.mjs\"",
+            "async": true
+          }
+        ]
       }
     ]
   },

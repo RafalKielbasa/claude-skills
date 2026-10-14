@@ -1,0 +1,30 @@
+{
+  "session_id": "<string>",
+  "transcript_path": "<string>",
+  "cwd": "<string>",
+  "scratchpad_dir": "<string>",
+  "prompt_id": "<string>",
+  "permission_mode": "auto",
+  "effort": {
+    "level": "<string>"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "SendMessage",
+  "tool_input": {
+    "to": "<string>",
+    "summary": "<string>",
+    "message": "<string>",
+    "type": "<string>",
+    "recipient": "<string>",
+    "recipient_kind": "<string>",
+    "content": "<string>"
+  },
+  "tool_response": {
+    "success": true,
+    "message": "<string>",
+    "display": "<string>",
+    "msg_id": "<string>"
+  },
+  "tool_use_id": "<string>",
+  "duration_ms": 10
+}

@@ -206,3 +206,15 @@ Stały szkielet, w tej kolejności:
    przypięcia” (repo spoza rejestru albo sesja bez zmian).
 5. **Następny krok** — a przy zatrzymaniu na review dodatkowo propozycja treści
    commita w Conventional Commits (patrz „Git").
+
+<!-- BEGIN hub-global-rules -->
+## Orchestrator hub
+
+- **Gate marker.** A turn that ends waiting for Rafal's decision ends with the line
+
+  ⏸ Czeka na decyzję: <one sentence>
+
+- **Isolation.** A project session does not message another project session on its own
+  initiative; the hub is the only channel between projects. Exception: Rafal asks for it
+  explicitly in that session.
+<!-- END hub-global-rules -->

@@ -1,0 +1,25 @@
+{
+  "session_id": "<string>",
+  "transcript_path": "<string>",
+  "cwd": "<string>",
+  "scratchpad_dir": "<string>",
+  "prompt_id": "<string>",
+  "permission_mode": "default",
+  "effort": {
+    "level": "<string>"
+  },
+  "hook_event_name": "PostToolUse",
+  "tool_name": "PowerShell",
+  "tool_input": {
+    "command": "<string>",
+    "description": "<string>"
+  },
+  "tool_response": {
+    "stdout": "<string>",
+    "stderr": "<string>",
+    "interrupted": false,
+    "isImage": false
+  },
+  "tool_use_id": "<string>",
+  "duration_ms": 421
+}
