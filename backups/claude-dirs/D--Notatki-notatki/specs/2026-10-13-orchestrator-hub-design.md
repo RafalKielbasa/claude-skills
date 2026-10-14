@@ -180,8 +180,10 @@ The hub's own session is excluded from the overview by its `sessionId` in `hub-s
 which the hub CLI derives from the events' `cwd` = `~/.claude/hub/`, so a new id after `/clear` is
 covered too (§4.1). Dialog forks registered there are listed under their
 project with the kind `dialog`. Session names from `claude agents --json` and from
-`UserPromptSubmit.session_title` are used for display, and otherwise only to resolve a fork's
-source session right before launch (§6.5 step 2). A send is never addressed by name (§6.2).
+`UserPromptSubmit.session_title` are used for display, as the `to` of `SendMessage`, and to resolve
+a fork's source session right before launch (§6.5 step 2). A send's target is the baseline
+`sessionId` (§6.2 check 1). `SendMessage` takes only a session name, so check 1 also requires that
+name to belong to exactly one live session.
 
 ### 5.2 Derived state
 
@@ -558,7 +560,7 @@ attempted, so they are not covered.
 | `SendMessage` failed | A tool error, or a `[Cross-session delivery notice]` that the message was refused, denied or expired — for example the recipient has `crossSessionInbound: refuse`, or a held message was refused when the recipient session ended. `crossSessionInbound: refuse` gives no tool error: the tool returns `"success":true` and the refusal arrives as a notice (probe S4) | Record `not-sent` with the literal error or notice; `prompt.md` stays; no retry |
 | Message held | A `[Cross-session delivery notice]` that the recipient holds the message: different permission modes (untested, §4 hub setup) or a session or repository set to hold every message | Record `held`; tells Rafal what is held and why; no resend while held (§6.3) |
 | Delivery outcome unknown | The send record stayed `pending`: no `UserPromptSubmit` with the hub's `from-name` and a matching hash, and no notice | Shown as `delivery-unknown`; check 3 of §6.2 asks before any resend |
-| Several sessions with the same name | The docs allow duplicate names | Sessions are addressed only by `sessionId`; names are for display and for resolving a fork's source, where a name matching several sessions makes the hub ask (§6.5 step 2) |
+| Several sessions with the same name | The docs allow duplicate names | The send target is identified by `sessionId`; a name shared by several live sessions fails check 1, because `SendMessage` cannot tell them apart; forks ask (§6.5 step 2) |
 | Codex consultation failed | Exit code, timeout, or an empty `-o` file. An `error` item in the `--json` stream is not a failure: in probe S9 every stream carried a `hooks.json` timeout warning as an `error` item | Reports "brak drugiej opinii" with the literal error, including an exceeded Codex limit; keeps `answer-<n>.err`; no retry |
 | Dialog fork died | The fork's event log | Artefacts in `dialogs/…` stay; the hub proposes a new fork from the same state |
 | `claude --bg` refused: workspace not trusted | Exit code 1 and "Workspace not trusted" (probe S10) | Quotes the message and tells Rafal to run `claude` in the repository once and accept the trust prompt (§6.6); no retry |

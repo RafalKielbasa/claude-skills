@@ -19,7 +19,9 @@
 - No commit and no push in any real repository; `C:/Users/rafal/hub-dev/` is not a repository. The acceptance report in the vault stays uncommitted; the final task proposes commit messages.
 - Code, comments and docs in English; user-facing text in Polish (the questionnaire request, the marker `⏸ Czeka na decyzję: <one sentence>`, what the hub tells Rafal).
 - Event fields, derived state, display priority, the six pre-send checks and the send record follow spec §5.1, §5.2, §5.4, §6.2 and §6.3 exactly; retention keeps 24 hours in the overview and deletes ended sessions after 14 days (§8.2).
-- Plan-level readings of the spec, flagged for Rafal at the end: records live in `journal.jsonl` with `journal.md` as the readable view; the full template (§6.1) is required for `questionnaire-answers` and `dialog`, while `direct` and `questionnaire-request` need only the header line; because `SendMessage` addresses a session by name, check 1 also requires the baseline session to be the only live session with its name; the CLI accepts `--agents-json <file>` instead of running `claude agents --json`; the watcher's first run ever records the states silently.
+- Every composed message, on every path, carries the five sections of §6.1; questionnaire answers also carry **Pytania i odpowiedzi**, and the questionnaire request lays its fixed wording (§6.4 step 2) out in the five sections.
+- `SendMessage` takes only a name from `ListAgents` as `to` (its schema, checked during plan writing: "a name from ListAgents (append its " [ref]" only when a listing or an error shows one)"); there is no address by `sessionId`. The send target is still identified by the baseline `sessionId` (check 1), and check 1 also requires that session to be the only live session with its name. Rafal adopted on 2026-10-14 the matching spec wording (§5.1 and the §8.1 row "Several sessions with the same name").
+- Plan-level additions to the spec, adopted by Rafal on 2026-10-14: records live in `journal.jsonl` with `journal.md` as the readable view; the hub's judgments of turns without the marker live in `judgments.jsonl` (state 7 of §5.4); the CLI accepts `--agents-json <file>` instead of running `claude agents --json`; the watcher's first run ever records the states silently.
 
 ## Review Focus
 
@@ -27,7 +29,7 @@
 2. **Two live sessions with the same name.** Expected: `prepare` refuses, because `SendMessage` would be ambiguous. Pinned by the check test in Task 7.
 3. **A half-written line in an event log** (a session killed mid-write). Expected: the overview still renders and the broken line is skipped. Pinned by the overview test in Task 5.
 4. **An unreadable `projects.json`.** Expected: the overview shows one error line instead of crashing. Pinned by the overview test in Task 5.
-5. **The hub restarted between `prepare` and `SendMessage`.** Expected: the record stays `pending`, and approving the same text again is refused by check 3. Pinned by the CLI test in Task 7.
+5. **The hub restarted between `prepare` and `SendMessage`.** Expected: the record stays `pending` and is shown as `delivery-unknown` ("no tool result recorded"); sending the same text again is refused by check 3 until Rafal confirms a resend. Pinned by the CLI test in Task 7.
 
 ---
 
@@ -44,6 +46,7 @@
 | `lib/derive.mjs` | Derived session state (spec §5.2) |
 | `lib/polls.mjs` | `claude agents --json` polls and the vanished rule |
 | `lib/display.mjs` | Display priority (§5.4) and `/clear` continuations |
+| `lib/judgments.mjs` | The hub's judgment of a turn without the marker (§5.4 state 7) |
 | `lib/projects.mjs` | Project of a session (§4.1) |
 | `lib/hubsessions.mjs` | `hub-sessions.json`: the hub by `cwd`, launched sessions |
 | `lib/overview.mjs` | Overview rows and the rendered table (§5.6) |
@@ -59,7 +62,26 @@
 | `test/*.test.mjs`, `test/helpers.mjs`, `test/fixtures/` | Tests and fixtures (13 probe fixtures, 3 built by hand, 2 recorded in Task 3) |
 | `D:/Notatki/notatki/.claude/specs/2026-10-14-orchestrator-hub-plan-2-acceptance.md` | Acceptance report (Task 10) |
 
-All code below was run during plan writing in a scratch copy: 56 tests passing before Task 3's recorded fixture.
+All code below was run during plan writing in a scratch copy: 62 tests passing before Task 3's recorded fixture.
+
+---
+
+### Task 0: Prerequisite — the backup hook skips hub sessions (D14)
+
+Spec §10: before the core is built, Rafal's `SessionEnd` backup hook skips or debounces sandbox and hub-launched sessions. Rafal changed `C:/Users/rafal/.claude/hooks/backup-claude.ps1` on 2026-10-14 as separate work. This task only reads.
+
+**Files:** none.
+
+- [ ] **Step 1: Check the hook and the backup repository's ignore rules**
+
+```bash
+grep -n "SkipCwdRoot = \|DebounceMinutes = " C:/Users/rafal/.claude/hooks/backup-claude.ps1
+git -C C:/Users/rafal/.claude check-ignore -v --no-index hub/registry/x.events.jsonl hub/registry/x.last/y.md hub/projects/p/journal.md hub/projects/p/sent/t.md
+```
+
+Expected: `17:    [string[]]$SkipCwdRoot = @('C:\Users\rafal\hub-probes', 'C:\Users\rafal\.claude\hub'),` and `18:    [int]$DebounceMinutes = 10`; then four lines, one per path, each naming a `.gitignore` rule (`*` or `*.jsonl`). The hub data, including the last messages of sessions, never reaches the backup repository; the skill code under `skills/hub/` does, by Rafal's `!/skills/**` rule.
+
+- [ ] **Step 2: Gate** — if either check differs, stop the plan before Task 1 and show Rafal the literal output.
 
 ---
 
@@ -70,7 +92,7 @@ All code below was run during plan writing in a scratch copy: 56 tests passing b
 - Create: `test/fixtures/` — copy of `C:/Users/rafal/hub-probes/data/fixtures/*.json` (13 files) and `test/fixtures/cross-session-UserPromptSubmit.json`
 
 **Interfaces:**
-- Produces: `hubRoot(env)`, `safeId(id)`, `safeName(name)`, `registryDir(root)`, `eventLogPath(root, sessionId)`, `lastDir(root, sessionId)`, `pollsPath(root)`, `hubSessionsPath(root)`, `projectsConfigPath(root)`, `watchStatePath(root)`, `projectDir(root, project)`, `journalJsonlPath(root, project)`, `journalMdPath(root, project)`, `sentDir(root, project)`, `draftsDir(root, project)`; `MARKER`, `canonical(text)`, `sha256(text)`, `parseCrossSession(prompt) → {from, fromName, fromMode, inner} | null`, `decodeEntities(text)`, `markerText(message) → string | null`, `summarize(message, max)`; test helpers `tempRoot()`, `fixture(name, overrides)`, `ev(event, at, fields)`.
+- Produces: `hubRoot(env)`, `safeId(id)`, `safeName(name)`, `registryDir(root)`, `eventLogPath(root, sessionId)`, `lastDir(root, sessionId)`, `pollsPath(root)`, `hubSessionsPath(root)`, `projectsConfigPath(root)`, `watchStatePath(root)`, `judgmentsPath(root)`, `projectDir(root, project)`, `journalJsonlPath(root, project)`, `journalMdPath(root, project)`, `sentDir(root, project)`, `draftsDir(root, project)`; `MARKER`, `canonical(text)`, `sha256(text)`, `parseCrossSession(prompt) → {from, fromName, fromMode, inner} | null`, `decodeEntities(text)`, `markerText(message) → string | null`, `summarize(message, max)`; test helpers `tempRoot()`, `fixture(name, overrides)`, `ev(event, at, fields)`.
 
 - [ ] **Step 1: Create the directory, copy the probe fixtures, write the hand-built fixture**
 
@@ -222,6 +244,7 @@ export const pollsPath = (root) => join(registryDir(root), 'polls.jsonl');
 export const hubSessionsPath = (root) => join(root, 'hub-sessions.json');
 export const projectsConfigPath = (root) => join(root, 'projects.json');
 export const watchStatePath = (root) => join(root, 'watch-state.json');
+export const judgmentsPath = (root) => join(root, 'judgments.jsonl');
 export const projectDir = (root, project) => join(root, 'projects', safeName(project));
 export const journalJsonlPath = (root, project) => join(projectDir(root, project), 'journal.jsonl');
 export const journalMdPath = (root, project) => join(projectDir(root, project), 'journal.md');
@@ -608,11 +631,15 @@ Polish: zażółć gęślą jaźń.
 Reply with the single word RECEIVED.
 ```
 
-- [ ] **Step 3: Send it**
+- [ ] **Step 3: Rafal approves the exact text (spec §6)**
 
-`SendMessage` to `probe-wrap` with `message` = the file content exactly. Record the tool result verbatim (expected: `"success":true` and a `msg_id`).
+Show Rafal the full content of `test/fixtures/cross-session-multiline.sent.md`, quoted verbatim with its header line, and the target `probe-wrap`. Ask whether to send it and wait for his literal "wyślij". Any other answer, silence or a tool timeout is not approval: ask again and do not send.
 
-- [ ] **Step 4: Extract the recorded prompt as a fixture**
+- [ ] **Step 4: Send it**
+
+Only after "wyślij": `SendMessage` to `probe-wrap` with `message` = the file content exactly. Record the tool result verbatim (expected: `"success":true` and a `msg_id`).
+
+- [ ] **Step 5: Extract the recorded prompt as a fixture**
 
 ```bash
 cd C:/Users/rafal/hub-probes/data/events
@@ -630,7 +657,7 @@ console.log(JSON.stringify(i.prompt));
 
 Expected: one JSON string starting with `<cross-session-message from=` and containing the sent text. Write down verbatim whether `<`, `&` and `"` inside the text appear raw or as entities.
 
-- [ ] **Step 5: Append the test to `test/hook.test.mjs`**
+- [ ] **Step 6: Append the test to `test/hook.test.mjs`**
 
 ```js
 test('the real multi-line wrapper from Task 3 confirms delivery of the sent text', () => {
@@ -641,12 +668,12 @@ test('the real multi-line wrapper from Task 3 confirms delivery of the sent text
 });
 ```
 
-- [ ] **Step 6: Run the tests**
+- [ ] **Step 7: Run the tests**
 
 Run: `cd C:/Users/rafal/hub-dev/hub && node --test`
 Expected: `ℹ pass 17`, `ℹ fail 0`. If the new test fails, the wrapper changes the text in a way neither hash covers: stop the plan and take the recorded prompt to Rafal as a spec impact on §6.3 (delivery confirmation).
 
-- [ ] **Step 7: Close the recipient** — ask Rafal to `/exit` `probe-wrap`. Note the result (raw or entities) for the final report.
+- [ ] **Step 8: Close the recipient** — ask Rafal to `/exit` `probe-wrap`. Note the result (raw or entities) for the final report.
 
 ---
 
@@ -876,11 +903,11 @@ Expected: `ℹ pass 24`, `ℹ fail 0`.
 ### Task 5: Polls, display priority, projects and the overview
 
 **Files:**
-- Create: `lib/polls.mjs`, `lib/display.mjs`, `lib/projects.mjs`, `lib/hubsessions.mjs`, `lib/overview.mjs`, `test/overview.test.mjs`
+- Create: `lib/polls.mjs`, `lib/display.mjs`, `lib/judgments.mjs`, `lib/projects.mjs`, `lib/hubsessions.mjs`, `lib/overview.mjs`, `test/overview.test.mjs`
 
 **Interfaces:**
 - Consumes: `readEvents`, `listSessionIds` (Task 2); `deriveSession` (Task 4); paths (Task 1).
-- Produces: `runPoll({run, at}) → {at, ok, sessions?, error?}`, `appendPoll(root, poll)`, `readPolls(root)`, `lastOkPoll(polls)`, `pollEntry(poll, sessionId)`, `isVanished(polls, sessionId)`; `UNCERTAIN_AFTER_MS`, `displayState(derived, {entry, vanished, now}) → {label, since, detail?, judge?}`, `linkContinuations(derivedList)`; `isWithin(child, root)`, `loadAliases(root) → {aliases, errors}`, `aliasErrors(aliases)`, `gitCommonDir(cwd)`, `projectFor(cwd, aliases, commonDirOf)`; `readHubSessions(root)`, `refreshHubSessions(root, derivedList)`, `registerLaunched(root, entry)`; `deriveAll(root)`, `buildOverview(root, {now, commonDirOf}) → {rows, pollError, configErrors}` (row fields: `project, sessionId, name, kind, state, detail, judge, since, lastAction, waitingFor, rawState, continuedFrom, lastStop`), `renderOverview(overview) → string`.
+- Produces: `runPoll({run, at}) → {at, ok, sessions?, error?}`, `appendPoll(root, poll)`, `readPolls(root)`, `lastOkPoll(polls)`, `pollEntry(poll, sessionId)`, `isVanished(polls, sessionId)`; `UNCERTAIN_AFTER_MS`, `displayState(derived, {entry, vanished, now, judgment}) → {label, since, detail?, judge?}` (`judgment` is `'question'`, `'other'` or null), `linkContinuations(derivedList)`; `VERDICTS`, `recordJudgment(root, {sessionId, stopId, verdict, at})`, `readJudgments(root)`, `judgmentFor(entries, sessionId, stopId) → verdict | null`, `pruneJudgments(root, sessionIds) → kept`; `samePath(a, b)`, `isWithin(child, root)`, `loadAliases(root) → {aliases, errors}`, `aliasErrors(aliases)`, `gitCommonDir(cwd)`, `projectFor(cwd, aliases, commonDirOf)`; `readHubSessions(root)`, `refreshHubSessions(root, derivedList)`, `registerLaunched(root, entry)`; `deriveAll(root)`, `buildOverview(root, {now, commonDirOf}) → {rows, pollError, configErrors}` (row fields: `project, sessionId, name, kind, state, detail, judge, since, lastAction, waitingFor, rawState, continuedFrom, lastStop`), `renderOverview(overview) → string`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -942,6 +969,26 @@ test('display priority: ended, problem, permission, decision, uncertain, working
   const ended = displayState({ ...base, phase: 'turn-ended' }, { entry: { status: 'idle', state: 'blocked' }, now: NOW });
   assert.equal(ended.label, 'turn ended');
   assert.equal(ended.judge, true);
+});
+
+test('turn ended without the marker: "probably waiting for you" only after the hub judged a question', () => {
+  const ended = { phase: 'turn-ended', phaseSince: '2026-10-14T11:50:00Z', lastEventAt: '2026-10-14T11:50:00Z', waiting: null, problem: null };
+  const idle = { status: 'idle' };
+  assert.equal(displayState(ended, { entry: idle, now: NOW, judgment: 'question' }).label, 'probably waiting for you');
+  const other = displayState(ended, { entry: idle, now: NOW, judgment: 'other' });
+  assert.equal(other.label, 'turn ended');
+  assert.equal(other.judge, false);
+  assert.equal(displayState(ended, { entry: idle, now: NOW, judgment: null }).judge, true);
+  assert.equal(displayState({ ...ended, waiting: { kind: 'decision', since: 's', text: 'A?' } }, { entry: idle, now: NOW, judgment: 'question' }).label, 'waiting for decision');
+});
+
+test('only a session whose cwd equals the hub root is the hub; one in a sub-directory is not', () => {
+  const root = tempRoot();
+  writeLog(root, 'hub1', [ev('UserPromptSubmit', '2026-10-14T11:00:00Z', { cwd: `${root}\\` })]);
+  writeLog(root, 'inside', [ev('UserPromptSubmit', '2026-10-14T11:00:00Z', { cwd: join(root, 'projects', 'app') })]);
+  const overview = buildOverview(root, { now: NOW, commonDirOf: () => null });
+  assert.deepEqual(readHubSessions(root).hub, ['hub1']);
+  assert.deepEqual(overview.rows.map((row) => row.sessionId), ['inside']);
 });
 
 test('a /clear pair with the same title is linked; an untitled one is not', () => {
@@ -1096,7 +1143,7 @@ export function isVanished(polls, sessionId) {
 
 export const UNCERTAIN_AFTER_MS = 10 * 60 * 1000;
 
-export function displayState(derived, { entry, vanished, now }) {
+export function displayState(derived, { entry, vanished, now, judgment = null }) {
   if (derived.phase === 'ended') return { label: 'ended', since: derived.endedAt };
   if (derived.problem || vanished) return { label: 'problem', since: derived.lastEventAt, detail: derived.problem || 'vanished' };
   if (derived.waiting?.kind === 'permission') return { label: 'waiting for permission', since: derived.waiting.since };
@@ -1106,8 +1153,11 @@ export function displayState(derived, { entry, vanished, now }) {
     return { label: 'uncertain', since: derived.lastEventAt };
   }
   if (derived.phase === 'working' || busy) return { label: 'working', since: derived.phaseSince };
-  // No marker: the hub reads the last message and judges it ("probably waiting for you" or not).
-  if (derived.phase === 'turn-ended') return { label: 'turn ended', since: derived.phaseSince, judge: true };
+  // No marker: the hub reads the last message and records its judgment of this Stop (`HUB judge`).
+  if (derived.phase === 'turn-ended') {
+    if (judgment === 'question') return { label: 'probably waiting for you', since: derived.phaseSince };
+    return { label: 'turn ended', since: derived.phaseSince, judge: !judgment };
+  }
   return { label: 'unknown', since: derived.lastEventAt };
 }
 
@@ -1127,6 +1177,57 @@ export function linkContinuations(derivedList) {
 }
 ```
 
+`lib/judgments.mjs`:
+
+```js
+// The hub's judgment of a turn that ended without the gate marker (spec §5.4 state 7). The hub
+// session reads the last message and records whether it waits for Rafal (`question`) or not
+// (`other`). A judgment belongs to one Stop event, so the next turn needs a new one.
+import { readFileSync, appendFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { judgmentsPath } from './paths.mjs';
+
+export const VERDICTS = ['question', 'other'];
+
+export function recordJudgment(root, { sessionId, stopId, verdict, at }) {
+  if (!VERDICTS.includes(verdict)) throw new Error(`unknown verdict ${verdict}; expected one of ${VERDICTS.join(', ')}`);
+  const entry = { sessionId, stopId, verdict, at };
+  mkdirSync(dirname(judgmentsPath(root)), { recursive: true });
+  appendFileSync(judgmentsPath(root), `${JSON.stringify(entry)}\n`, 'utf8');
+  return entry;
+}
+
+// A broken line is skipped, like in the event logs.
+export function readJudgments(root) {
+  if (!existsSync(judgmentsPath(root))) return [];
+  const entries = [];
+  for (const line of readFileSync(judgmentsPath(root), 'utf8').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      entries.push(JSON.parse(line));
+    } catch {
+      // skipped
+    }
+  }
+  return entries;
+}
+
+// The latest verdict for this Stop, or null when the hub has not judged it.
+export function judgmentFor(entries, sessionId, stopId) {
+  let verdict = null;
+  for (const entry of entries) if (entry.sessionId === sessionId && entry.stopId === stopId) verdict = entry.verdict;
+  return verdict;
+}
+
+// Retention: keeps only the judgments of sessions whose event log still exists.
+export function pruneJudgments(root, sessionIds) {
+  if (!existsSync(judgmentsPath(root))) return 0;
+  const kept = readJudgments(root).filter((entry) => sessionIds.has(entry.sessionId));
+  writeFileSync(judgmentsPath(root), kept.map((entry) => JSON.stringify(entry)).join('\n') + (kept.length ? '\n' : ''), 'utf8');
+  return kept.length;
+}
+```
+
 `lib/projects.mjs`:
 
 ```js
@@ -1139,6 +1240,10 @@ import { projectsConfigPath } from './paths.mjs';
 
 function norm(path) {
   return resolve(String(path)).replace(/[\\/]+$/, '').toLowerCase();
+}
+
+export function samePath(a, b) {
+  return norm(a) === norm(b);
 }
 
 export function isWithin(child, root) {
@@ -1190,11 +1295,12 @@ export function projectFor(cwd, aliases, commonDirOf = gitCommonDir) {
 `lib/hubsessions.mjs`:
 
 ```js
-// hub-sessions.json (spec §4.1): the hub's own sessions, recognised by events whose cwd lies in the
-// hub data root (this also covers the new id after /clear), and sessions the hub launched.
+// hub-sessions.json (spec §4.1): the hub's own sessions, recognised by events whose cwd equals the
+// hub data root (this also covers the new id after /clear; a session in a sub-directory is not the
+// hub), and sessions the hub launched.
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { hubSessionsPath } from './paths.mjs';
-import { isWithin } from './projects.mjs';
+import { samePath } from './projects.mjs';
 
 export function readHubSessions(root) {
   if (!existsSync(hubSessionsPath(root))) return { hub: [], launched: [] };
@@ -1211,7 +1317,7 @@ export function refreshHubSessions(root, derivedList) {
   const data = readHubSessions(root);
   const hub = new Set(data.hub);
   for (const derived of derivedList) {
-    if (derived.cwd && isWithin(derived.cwd, root)) hub.add(derived.sessionId);
+    if (derived.cwd && samePath(derived.cwd, root)) hub.add(derived.sessionId);
   }
   const next = { hub: [...hub], launched: data.launched };
   if (next.hub.length !== data.hub.length) writeHubSessions(root, next);
@@ -1239,6 +1345,7 @@ import { readPolls, lastOkPoll, pollEntry, isVanished } from './polls.mjs';
 import { displayState, linkContinuations } from './display.mjs';
 import { loadAliases, aliasErrors, projectFor, gitCommonDir } from './projects.mjs';
 import { refreshHubSessions } from './hubsessions.mjs';
+import { readJudgments, judgmentFor } from './judgments.mjs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -1255,6 +1362,7 @@ export function buildOverview(root, { now = Date.now(), commonDirOf = gitCommonD
   const hubData = refreshHubSessions(root, derivedList);
   const hubIds = new Set(hubData.hub);
   const launched = new Map(hubData.launched.map((item) => [item.sessionId, item]));
+  const judgments = readJudgments(root);
 
   const rows = [];
   for (const derived of derivedList) {
@@ -1265,6 +1373,7 @@ export function buildOverview(root, { now = Date.now(), commonDirOf = gitCommonD
       entry,
       vanished: derived.phase !== 'ended' && isVanished(polls, derived.sessionId),
       now,
+      judgment: derived.lastStop ? judgmentFor(judgments, derived.sessionId, derived.lastStop.id) : null,
     });
     rows.push({
       project: projectFor(derived.cwd, aliases, commonDirOf),
@@ -1308,7 +1417,7 @@ export function renderOverview({ rows, pollError, configErrors }) {
 - [ ] **Step 4: Run the tests**
 
 Run: `cd C:/Users/rafal/hub-dev/hub && node --test`
-Expected: `ℹ pass 33`, `ℹ fail 0`.
+Expected: `ℹ pass 35`, `ℹ fail 0`.
 
 - [ ] **Step 5: Checkpoint** — no commit.
 
@@ -1477,7 +1586,7 @@ if (!args.has('--once')) {
 - [ ] **Step 4: Run the tests**
 
 Run: `cd C:/Users/rafal/hub-dev/hub && node --test`
-Expected: `ℹ pass 36`, `ℹ fail 0`.
+Expected: `ℹ pass 38`, `ℹ fail 0`.
 
 - [ ] **Step 5: Checkpoint** — no commit.
 
@@ -1489,9 +1598,9 @@ Expected: `ℹ pass 36`, `ℹ fail 0`.
 - Create: `lib/compose.mjs`, `lib/journal.mjs`, `lib/checks.mjs`, `lib/confirm.mjs`, `lib/retention.mjs`, `bin/hub.mjs`, `test/send.test.mjs`, `test/cli.test.mjs`, `test/retention.test.mjs`
 
 **Interfaces:**
-- Consumes: Tasks 1, 2, 4 and 5 (`readEvents`, `deriveSession`, `runPoll`, `appendPoll`, `pollEntry`, `buildOverview`, `renderOverview`, `loadAliases`, `projectFor`, `registerLaunched`, `sha256`, paths).
-- Produces: `PATHS`, `SECTIONS`, `TEMPLATE_PATHS`, `headerLine({path, project, sessionId, at})`, `questionnaireRequest({topic, max})`, `composeMessage({path, project, sessionId, at, body})`, `templateProblems(text, path)`; `newRecordId(at)`, `loadRecords(root, project)`, `saveRecords(root, project, records)`, `shownState(record)`, `renderJournal(records)`, `listProjects(root)`, `findRecord(root, id)`, `findRecordByMsgId(root, msgId)`; `gitInfo(cwd, run)`, `runChecks({record, records, poll, derived, git, text, confirmWaiting}) → [{check, message, candidates?}]`; `findDelivery(record, events, hubName)`, `classifyNotice(text) → {kind, msgId}`, `applyNotice(record, notice, text)`; `RETENTION_MS`, `cleanup(root, now) → {removed, pollsKept}`; CLI commands `overview`, `last`, `compose`, `approve`, `prepare`, `result`, `notice`, `confirm`, `register`, `journal`, `cleanup` (usage in the file header).
-- Record fields: `id, project, path, sessionId, name, textFile, textHash, baseline {sessionId, name, cwd, repoRoot, branch, sha}, state ('approved'|'pending'|'sent'|'held'|'not-sent'), approvedAt, sentAt?, sentFile?, msgId?, evidence? {eventId, at}, notice?, error?`.
+- Consumes: Tasks 1, 2, 4 and 5 (`readEvents`, `deriveSession`, `runPoll`, `appendPoll`, `pollEntry`, `buildOverview`, `renderOverview`, `loadAliases`, `projectFor`, `registerLaunched`, `VERDICTS`, `recordJudgment`, `pruneJudgments`, `sha256`, paths).
+- Produces: `PATHS`, `SECTIONS`, `ANSWERS_SECTION`, `headerLine({path, project, sessionId, at})`, `questionnaireRequest({topic, max})`, `composeMessage({path, project, sessionId, at, body})`, `templateProblems(text, path)`; `newRecordId(at)`, `loadRecords(root, project)`, `saveRecords(root, project, records)`, `shownState(record)`, `renderJournal(records)`, `listProjects(root)`, `findRecord(root, id)`, `findRecordByMsgId(root, msgId)`; `gitInfo(cwd, run)`, `runChecks({record, records, poll, derived, git, text, confirmWaiting, confirmBusy, confirmResend}) → [{check, message, candidates?}]`; `findDelivery(record, events, hubName, usedIds) → latest unused matching event | null`, `classifyNotice(text) → {kind, msgId}`, `applyNotice(record, notice, text)`; `RETENTION_MS`, `cleanup(root, now) → {removed, pollsKept, judgmentsKept}`; CLI commands `overview`, `last`, `judge`, `compose`, `approve`, `prepare`, `result`, `notice`, `confirm`, `register`, `journal`, `cleanup` (usage in the file header).
+- Record fields: `id, project, path, sessionId, name, textFile, textHash, baseline {sessionId, name, cwd, repoRoot, branch, sha}, state ('approved'|'pending'|'sent'|'held'|'not-sent'; `pending` is shown as `delivery-unknown`), approvedAt, sentAt?, sentFile?, msgId?, evidence? {eventId, at}, notice?, error?`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1507,9 +1616,10 @@ import { shownState, renderJournal } from '../lib/journal.mjs';
 import { sha256 } from '../lib/text.mjs';
 
 const AT = '2026-10-14T10:00:00.000Z';
+const FIVE = '**Cel**\nx\n**Kontekst**\nx\n**Decyzje z uzasadnieniem**\nx\n**Ograniczenia**\nx\n**Oczekiwany rezultat**\nnapisz plan i stop';
 const answers = composeMessage({
   path: 'questionnaire-answers', project: 'sandbox', sessionId: 'abcdef123456', at: AT,
-  body: '**Cel**\nx\n**Kontekst**\nx\n**Decyzje z uzasadnieniem**\nx\n**Ograniczenia**\nx\n**Oczekiwany rezultat**\nnapisz plan i stop',
+  body: `${FIVE}\n**Pytania i odpowiedzi**\nTemat: nazwa pliku\n1. Jaka nazwa? → notatki.md`,
 });
 
 test('the header line opens every message and is part of the approved text', () => {
@@ -1517,25 +1627,32 @@ test('the header line opens every message and is part of the approved text', () 
   assert.throws(() => composeMessage({ path: 'other', project: 'p', sessionId: 's', at: AT, body: 'x' }), /unknown path/);
 });
 
-test('the questionnaire request keeps the fixed wording', () => {
+test('the questionnaire request keeps the fixed wording in the five sections', () => {
   const text = questionnaireRequest({ topic: 'nazwa pliku', max: 3 });
-  assert.match(text, /najwyżej 3 pytań o: nazwa pliku/);
+  assert.match(text, /decyzje o: nazwa pliku/);
+  assert.match(text, /Liczba pytań: najwyżej 3\./);
   assert.match(text, /Nie edytuj plików\./);
-  assert.match(text, /znacznikiem bramki/);
+  assert.match(text, /znacznikiem bramki i nie zaczynaj pracy/);
+  const request = composeMessage({ path: 'questionnaire-request', project: 'p', sessionId: 's1', at: AT, body: text });
+  assert.deepEqual(templateProblems(request, 'questionnaire-request'), []);
 });
 
-test('template check: composed paths need every section, direct needs only the header', () => {
+test('template check: every path needs the five sections, questionnaire answers also their block', () => {
   assert.deepEqual(templateProblems(answers, 'questionnaire-answers'), []);
   const noResult = answers.replace('**Oczekiwany rezultat**', '');
   assert.deepEqual(templateProblems(noResult, 'questionnaire-answers'), ['missing section Oczekiwany rezultat']);
-  const direct = composeMessage({ path: 'direct', project: 'p', sessionId: 's1', at: AT, body: 'Uruchom testy.' });
+  const noAnswers = composeMessage({ path: 'questionnaire-answers', project: 'p', sessionId: 's1', at: AT, body: FIVE });
+  assert.deepEqual(templateProblems(noAnswers, 'questionnaire-answers'), ['missing section Pytania i odpowiedzi']);
+  const direct = composeMessage({ path: 'direct', project: 'p', sessionId: 's1', at: AT, body: FIVE });
   assert.deepEqual(templateProblems(direct, 'direct'), []);
-  assert.deepEqual(templateProblems('Uruchom testy.', 'direct'), ['missing header line']);
+  const bare = composeMessage({ path: 'direct', project: 'p', sessionId: 's1', at: AT, body: 'Uruchom testy.' });
+  assert.equal(templateProblems(bare, 'direct').length, 5);
+  assert.deepEqual(templateProblems(FIVE, 'direct'), ['missing header line']);
 });
 
 const baseline = { sessionId: 's1', name: 'probe-a', cwd: 'C:\\repo', repoRoot: 'C:/repo', branch: 'main', sha: 'abc' };
-const record = { id: 'r1', path: 'direct', sessionId: 's1', textHash: sha256('[hub · direct · p · s1 · x]\n\nok'), baseline, state: 'approved' };
-const text = '[hub · direct · p · s1 · x]\n\nok';
+const text = composeMessage({ path: 'direct', project: 'p', sessionId: 's1', at: AT, body: FIVE });
+const record = { id: 'r1', path: 'direct', sessionId: 's1', textHash: sha256(text), baseline, state: 'approved' };
 const poll = { ok: true, sessions: [{ sessionId: 's1', name: 'probe-a', status: 'idle' }] };
 const derived = { phase: 'turn-ended', cwd: 'C:\\repo', waiting: null };
 const git = { repoRoot: 'C:/repo', branch: 'main', sha: 'abc' };
@@ -1560,17 +1677,21 @@ test('check 2: changed cwd, repository root, branch, and commit when detached', 
   assert.deepEqual(runChecks({ record: detached, records: [detached], poll, derived, git: { ...git, branch: null, sha: 'def' }, text }).map((f) => f.check), [2]);
 });
 
-test('check 3: the same text already pending, sent or held for the session', () => {
+test('check 3: the same text already pending, sent or held for the session, unless a resend was confirmed', () => {
   for (const state of ['pending', 'sent', 'held']) {
     assert.deepEqual(runChecks({ record, records: [record, { ...record, id: 'r0', state }], poll, derived, git, text }).map((f) => f.check), [3]);
   }
   assert.deepEqual(runChecks({ record, records: [record, { ...record, id: 'r0', state: 'not-sent' }], poll, derived, git, text }).map((f) => f.check), []);
+  const [unknown] = runChecks({ record, records: [record, { ...record, id: 'r0', state: 'pending' }], poll, derived, git, text });
+  assert.match(unknown.message, /delivery-unknown \(r0\)/);
+  assert.deepEqual(runChecks({ record, records: [record, { ...record, id: 'r0', state: 'pending' }], poll, derived, git, text, confirmResend: true }), []);
 });
 
-test('checks 4, 5 and 6: changed text, busy session, waiting session unless confirmed', () => {
+test('checks 4, 5 and 6: changed text, busy session unless "send now", waiting session unless confirmed', () => {
   assert.deepEqual(checks({ text: `${text} edited` }), [4]);
   assert.deepEqual(checks({ poll: { ok: true, sessions: [{ ...poll.sessions[0], status: 'busy' }] } }), [5]);
   assert.deepEqual(checks({ derived: { ...derived, phase: 'working' } }), [5]);
+  assert.deepEqual(checks({ derived: { ...derived, phase: 'working' }, poll: { ok: true, sessions: [{ ...poll.sessions[0], status: 'busy' }] }, confirmBusy: true }), []);
   assert.deepEqual(checks({ derived: { ...derived, waiting: { kind: 'decision' } } }), [6]);
   assert.deepEqual(checks({ derived: { ...derived, waiting: { kind: 'decision' } }, confirmWaiting: true }), []);
 });
@@ -1585,6 +1706,17 @@ test('delivery needs the hub from-name and a matching inner-text hash after the 
   assert.equal(findDelivery(pending, [ups({ at: '2026-10-14T09:00:00Z' })]), null);
 });
 
+test('after a confirmed resend one delivery confirms only the newest record', () => {
+  const older = { textHash: 'h1', sentAt: '2026-10-14T10:00:00Z' };
+  const newer = { textHash: 'h1', sentAt: '2026-10-14T10:10:00Z' };
+  const delivered = { id: 'e9', event: 'UserPromptSubmit', at: '2026-10-14T10:10:05Z', fromName: 'hub', innerHash: 'h1' };
+  assert.equal(findDelivery(newer, [delivered]).id, 'e9');
+  assert.equal(findDelivery(older, [delivered], 'hub', new Set(['e9'])), null);
+  const earlier = { ...delivered, id: 'e5', at: '2026-10-14T10:00:05Z' };
+  assert.equal(findDelivery(newer, [earlier, delivered]).id, 'e9');
+  assert.equal(findDelivery(older, [earlier, delivered], 'hub', new Set(['e9'])).id, 'e5');
+});
+
 test('the S4 notices are classified, with their msg_id', () => {
   const held = 'Your message to another session was held by that session (recipient: uds:\\\\.\\pipe\\LOCAL\\cc-msg-eabc; msg_id: 4b8b0732-2830-4c04-8f38-ca22dfe06e59). NOT delivered: its Claude has not seen it.';
   const refused = 'Your message to another session was refused (recipient: uds:\\\\.\\pipe\\LOCAL\\cc-msg-140f; msg_id: ae0a2392-2eee-4b3c-b277-1b34e22ccc21): that session is not accepting cross-session messages';
@@ -1595,9 +1727,11 @@ test('the S4 notices are classified, with their msg_id', () => {
   assert.equal(applyNotice({ state: 'held' }, { kind: 'released' }, 'released').state, 'pending');
 });
 
-test('a pending record shows as delivery-unknown once the tool returned a msg_id', () => {
-  assert.equal(shownState({ state: 'pending' }), 'pending');
+test('a pending record shows as delivery-unknown, also when the tool result was never stored', () => {
+  assert.equal(shownState({ state: 'pending' }), 'delivery-unknown');
   assert.equal(shownState({ state: 'pending', msgId: 'm' }), 'delivery-unknown');
+  assert.equal(shownState({ state: 'approved' }), 'approved');
+  assert.match(renderJournal([{ id: 'r2', approvedAt: AT, sessionId: 's1abcdefg', path: 'direct', state: 'pending' }]), /\| delivery-unknown \| no tool result recorded \|/);
   assert.match(renderJournal([{ id: 'r1', approvedAt: AT, sessionId: 's1abcdefg', name: 'probe-a', path: 'direct', state: 'held', notice: 'held by that session' }]), /\| r1 \| .* \| held \| held by that session \|/);
 });
 ```
@@ -1616,6 +1750,7 @@ import { sha256 } from '../lib/text.mjs';
 import { loadRecords } from '../lib/journal.mjs';
 
 const HUB = fileURLToPath(new URL('../bin/hub.mjs', import.meta.url));
+const five = (goal) => `**Cel**\n${goal}\n**Kontekst**\nx\n**Decyzje z uzasadnieniem**\nx\n**Ograniczenia**\nx\n**Oczekiwany rezultat**\nPokaż wynik.`;
 
 function setup() {
   const root = tempRoot();
@@ -1635,14 +1770,17 @@ function setup() {
   const agents = join(root, 'agents.json');
   writeFileSync(agents, JSON.stringify([{ sessionId: 's1', id: 's1', name: 'probe-a', kind: 'interactive', status: 'idle', state: null, cwd: repo }]));
   const hub = (...args) => spawnSync(process.execPath, [HUB, ...args], { encoding: 'utf8', env: { ...process.env, HUB_DATA: root } });
-  return { root, repo, log, agents, hub };
+  const draftOf = (goal) => {
+    const body = join(root, `body-${goal.length}.md`);
+    writeFileSync(body, five(goal));
+    return hub('compose', '--path', 'direct', '--session', 's1', '--body-file', body).stdout.trim();
+  };
+  return { root, repo, log, agents, hub, draftOf };
 }
 
 test('direct command: compose, approve, prepare, result, confirm by the recipient event', () => {
-  const { root, log, agents, hub } = setup();
-  const body = join(root, 'body.md');
-  writeFileSync(body, 'Uruchom testy i pokaż wynik.');
-  const draft = hub('compose', '--path', 'direct', '--session', 's1', '--body-file', body).stdout.trim();
+  const { root, log, agents, hub, draftOf } = setup();
+  const draft = draftOf('Uruchom testy.');
   assert.match(readFileSync(draft, 'utf8'), /^\[hub · direct · app · s1 · /);
 
   const approved = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draft).stdout);
@@ -1665,10 +1803,8 @@ test('direct command: compose, approve, prepare, result, confirm by the recipien
 });
 
 test('prepare refuses a duplicate and a changed text; notice moves a record to held then not-sent', () => {
-  const { root, agents, hub } = setup();
-  const body = join(root, 'body.md');
-  writeFileSync(body, 'Uruchom testy.');
-  const draft = hub('compose', '--path', 'direct', '--session', 's1', '--body-file', body).stdout.trim();
+  const { agents, hub, draftOf } = setup();
+  const draft = draftOf('Uruchom testy.');
   const first = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draft).stdout);
   assert.equal(hub('prepare', first.id, '--agents-json', agents).status, 0);
   hub('result', first.id, '--msg-id', '4b8b0732-2830-4c04-8f38-ca22dfe06e59');
@@ -1689,11 +1825,10 @@ test('prepare refuses a duplicate and a changed text; notice moves a record to h
 });
 
 test('a tool error marks the record not-sent with the literal error', () => {
-  const { root, agents, hub } = setup();
-  const draft = join(root, 'd.md');
-  writeFileSync(draft, '[hub · direct · app · s1 · x]\n\nok\n');
+  const { root, agents, hub, draftOf } = setup();
+  const draft = draftOf('Uruchom testy.');
   const record = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draft).stdout);
-  hub('prepare', record.id, '--agents-json', agents);
+  assert.equal(hub('prepare', record.id, '--agents-json', agents).status, 0);
   hub('result', record.id, '--error', 'No such agent: probe-a');
   const [saved] = loadRecords(root, 'app');
   assert.equal(saved.state, 'not-sent');
@@ -1707,7 +1842,57 @@ test('overview, last and questionnaire request through the CLI', () => {
   assert.match(overview.stdout, /\| app \| s1 probe-a \| turn ended \(judge\) \|/);
   assert.match(hub('last', 's1').stdout, /registry[\\/]s1\.last[\\/]x\.md/);
   const request = hub('compose', '--path', 'questionnaire-request', '--session', 's1', '--topic', 'nazwa pliku', '--max', '3').stdout.trim();
-  assert.match(readFileSync(request, 'utf8'), /najwyżej 3 pytań o: nazwa pliku/);
+  assert.match(readFileSync(request, 'utf8'), /decyzje o: nazwa pliku[\s\S]*Liczba pytań: najwyżej 3\./);
+});
+
+test('the hub restarted between prepare and SendMessage: delivery-unknown, and a resend needs confirmation', () => {
+  const { root, agents, hub, draftOf } = setup();
+  const draft = draftOf('Uruchom testy.');
+  const first = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draft).stdout);
+  assert.equal(hub('prepare', first.id, '--agents-json', agents).status, 0);
+  // No `result`: the hub stopped before SendMessage returned.
+  assert.match(hub('journal', '--project', 'app').stdout, new RegExp(`\\| ${first.id} \\| .* \\| delivery-unknown \\| no tool result recorded \\|`));
+
+  const second = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draft).stdout);
+  const refused = hub('prepare', second.id, '--agents-json', agents);
+  assert.equal(refused.status, 3);
+  assert.match(JSON.parse(refused.stdout).failures[0].message, /delivery-unknown/);
+  assert.equal(hub('prepare', second.id, '--confirm-resend', '--agents-json', agents).status, 0);
+  assert.deepEqual(loadRecords(root, 'app').map((r) => r.state), ['pending', 'pending']);
+});
+
+test('a busy target: "send now" passes with --confirm-busy; a delayed send runs every check again', () => {
+  const { root, repo, log, hub, draftOf } = setup();
+  const busy = join(root, 'agents-busy.json');
+  const idle = join(root, 'agents-idle.json');
+  const agentsWith = (status) => JSON.stringify([{ sessionId: 's1', id: 's1', name: 'probe-a', kind: 'interactive', status, state: null, cwd: repo }]);
+  writeFileSync(busy, agentsWith('busy'));
+  writeFileSync(idle, agentsWith('idle'));
+  log([ev('UserPromptSubmit', '2026-10-14T10:02:00Z', { cwd: repo, promptId: 'p2' })]);
+
+  const now = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draftOf('Teraz.')).stdout);
+  assert.deepEqual(JSON.parse(hub('prepare', now.id, '--agents-json', busy).stdout).failures.map((f) => f.check), [5]);
+  assert.equal(hub('prepare', now.id, '--confirm-busy', '--agents-json', busy).status, 0);
+
+  const later = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draftOf('Po turze.')).stdout);
+  assert.deepEqual(JSON.parse(hub('prepare', later.id, '--agents-json', busy).stdout).failures.map((f) => f.check), [5]);
+  log([ev('Stop', '2026-10-14T10:03:00Z', { cwd: repo, promptId: 'p2', marker: null, lastFile: 's1.last/y.md' })]);
+  spawnSync('git', ['-C', repo, 'checkout', '-q', '-b', 'feature']);
+  assert.deepEqual(JSON.parse(hub('prepare', later.id, '--agents-json', idle).stdout).failures.map((f) => f.check), [2]);
+  spawnSync('git', ['-C', repo, 'checkout', '-q', 'main']);
+  assert.equal(hub('prepare', later.id, '--agents-json', idle).status, 0);
+});
+
+test('judge: a question after a turn without the marker shows "probably waiting for you" until the next turn', () => {
+  const { repo, log, agents, hub } = setup();
+  assert.equal(hub('judge', 's1', '--verdict', 'maybe').status, 2);
+  assert.equal(JSON.parse(hub('judge', 's1', '--verdict', 'question').stdout).verdict, 'question');
+  assert.match(hub('overview', '--agents-json', agents).stdout, /\| app \| s1 probe-a \| probably waiting for you \|/);
+  log([
+    ev('UserPromptSubmit', '2026-10-14T10:05:00Z', { cwd: repo, promptId: 'p3' }),
+    ev('Stop', '2026-10-14T10:06:00Z', { cwd: repo, promptId: 'p3', marker: null, lastFile: 's1.last/z.md' }),
+  ]);
+  assert.match(hub('overview', '--agents-json', agents).stdout, /\| app \| s1 probe-a \| turn ended \(judge\) \|/);
 });
 ```
 
@@ -1720,6 +1905,7 @@ import { mkdirSync, appendFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { cleanup } from '../lib/retention.mjs';
 import { readPolls } from '../lib/polls.mjs';
+import { recordJudgment, readJudgments } from '../lib/judgments.mjs';
 import { tempRoot, ev } from './helpers.mjs';
 
 test('retention deletes old ended sessions with their last-message directory, and old polls only', () => {
@@ -1733,9 +1919,13 @@ test('retention deletes old ended sessions with their last-message directory, an
   appendFileSync(join(registry, 'polls.jsonl'), `${JSON.stringify({ at: '2026-09-01T10:00:00Z', ok: true, sessions: [] })}\n${JSON.stringify({ at: '2026-10-14T10:00:00Z', ok: true, sessions: [] })}\n`);
   mkdirSync(join(root, 'projects', 'app'), { recursive: true });
   writeFileSync(join(root, 'projects', 'app', 'journal.jsonl'), '{}\n');
+  recordJudgment(root, { sessionId: 'old', stopId: 'e1', verdict: 'question', at: '2026-09-01T10:00:00Z' });
+  recordJudgment(root, { sessionId: 'alive', stopId: 'e2', verdict: 'other', at: '2026-09-01T10:00:00Z' });
 
   const result = cleanup(root, Date.parse('2026-10-14T12:00:00Z'));
   assert.deepEqual(result.removed, ['old']);
+  assert.deepEqual(readJudgments(root).map((j) => j.sessionId), ['alive']);
+  assert.equal(result.judgmentsKept, 1);
   assert.equal(existsSync(join(registry, 'old.events.jsonl')), false);
   assert.equal(existsSync(join(registry, 'old.last')), false);
   assert.equal(existsSync(join(registry, 'recent.events.jsonl')), true);
@@ -1760,23 +1950,36 @@ Expected: FAIL — `ERR_MODULE_NOT_FOUND` for `lib/compose.mjs`.
 import { canonical } from './text.mjs';
 
 export const PATHS = ['direct', 'questionnaire-request', 'questionnaire-answers', 'dialog', 'new-session'];
+// Every composed message carries the five sections (spec §6.1); questionnaire answers also carry
+// the block with the questions and Rafal's answers (§6.1, §6.4 step 5).
 export const SECTIONS = ['Cel', 'Kontekst', 'Decyzje z uzasadnieniem', 'Ograniczenia', 'Oczekiwany rezultat'];
-// Composed messages carry the full template; a direct command and the questionnaire request carry
-// only the header line (a plan-level reading of spec §6.1, flagged for Rafal).
-export const TEMPLATE_PATHS = ['questionnaire-answers', 'dialog'];
+export const ANSWERS_SECTION = 'Pytania i odpowiedzi';
 const HEADER_PREFIX = '[hub · ';
 
 export function headerLine({ path, project, sessionId, at }) {
   return `${HEADER_PREFIX}${path} · ${project} · ${String(sessionId).slice(0, 8)} · ${at.slice(0, 16).replace('T', ' ')}]`;
 }
 
+// The fixed wording of spec §6.4 step 2, laid out in the five sections.
 export function questionnaireRequest({ topic, max }) {
   return [
-    `Przeczytaj projekt i zadaj mi najwyżej ${max} pytań o: ${topic}.`,
+    '**Cel**',
+    `Zebrać moje decyzje o: ${topic}, zanim zaczniesz pracę.`,
+    '',
+    '**Kontekst**',
+    'Przeczytaj projekt w zakresie potrzebnym do pytań.',
+    '',
+    '**Decyzje z uzasadnieniem**',
+    'Jeszcze żadnych: zapadną po moich odpowiedziach.',
+    '',
+    '**Ograniczenia**',
+    `- Liczba pytań: najwyżej ${max}.`,
     '- Pytaj tylko o to, co zmienia pracę.',
     '- Rekomendację podawaj tylko wtedy, gdy masz realny powód.',
     '- Nie edytuj plików.',
-    '- Zakończ turę znacznikiem bramki.',
+    '',
+    '**Oczekiwany rezultat**',
+    'Lista pytań. Zakończ turę znacznikiem bramki i nie zaczynaj pracy.',
   ].join('\n');
 }
 
@@ -1793,10 +1996,9 @@ export function templateProblems(text, path) {
   const lines = canonical(text).split('\n');
   const problems = [];
   if (!lines[0]?.startsWith(HEADER_PREFIX)) problems.push('missing header line');
-  if (TEMPLATE_PATHS.includes(path)) {
-    const headings = new Set(lines.map(normalizeHeading));
-    for (const section of SECTIONS) if (!headings.has(section.toLowerCase())) problems.push(`missing section ${section}`);
-  }
+  const headings = new Set(lines.map(normalizeHeading));
+  const required = path === 'questionnaire-answers' ? [...SECTIONS, ANSWERS_SECTION] : SECTIONS;
+  for (const section of required) if (!headings.has(section.toLowerCase())) problems.push(`missing section ${section}`);
   return problems;
 }
 ```
@@ -1822,9 +2024,16 @@ export function loadRecords(root, project) {
   return readFileSync(path, 'utf8').split('\n').filter((line) => line.trim()).map((line) => JSON.parse(line));
 }
 
+// A pending record has neither the delivery evidence nor a notice (spec §6.3 step 6), also when the
+// hub was interrupted before it stored the tool result; it is shown as delivery-unknown.
 export function shownState(record) {
-  if (record.state === 'pending') return record.msgId ? 'delivery-unknown' : 'pending';
-  return record.state;
+  return record.state === 'pending' ? 'delivery-unknown' : record.state;
+}
+
+function proofOf(record) {
+  if (record.evidence) return `UserPromptSubmit ${record.evidence.at}`;
+  if (record.notice ?? record.error) return record.notice ?? record.error;
+  return record.state === 'pending' && !record.msgId ? 'no tool result recorded' : '';
 }
 
 const cell = (value) => String(value ?? '').replace(/\|/g, '\\|').replace(/\s+/g, ' ');
@@ -1832,8 +2041,7 @@ const cell = (value) => String(value ?? '').replace(/\|/g, '\\|').replace(/\s+/g
 export function renderJournal(records) {
   const lines = ['| Record | Approved | Session | Path | State | Evidence or notice |', '|---|---|---|---|---|---|'];
   for (const r of records) {
-    const proof = r.evidence ? `UserPromptSubmit ${r.evidence.at}` : r.notice ?? r.error ?? '';
-    lines.push(`| ${[r.id, r.approvedAt, `${r.sessionId.slice(0, 8)} ${r.name ?? ''}`, r.path, shownState(r), proof].map(cell).join(' | ')} |`);
+    lines.push(`| ${[r.id, r.approvedAt, `${r.sessionId.slice(0, 8)} ${r.name ?? ''}`, r.path, shownState(r), proofOf(r)].map(cell).join(' | ')} |`);
   }
   return `${lines.join('\n')}\n`;
 }
@@ -1877,6 +2085,7 @@ import { spawnSync } from 'node:child_process';
 import { sha256 } from './text.mjs';
 import { pollEntry } from './polls.mjs';
 import { templateProblems } from './compose.mjs';
+import { shownState } from './journal.mjs';
 
 export function gitInfo(cwd, run = spawnSync) {
   const git = (...args) => {
@@ -1893,7 +2102,9 @@ export function gitInfo(cwd, run = spawnSync) {
 
 const ACTIVE = ['pending', 'sent', 'held'];
 
-export function runChecks({ record, records, poll, derived, git, text, confirmWaiting = false }) {
+// The confirm* flags carry Rafal's explicit answer after the hub asked (spec §6.2): resend the same
+// text (check 3), send now to a busy session (check 5), send to a waiting session (check 6).
+export function runChecks({ record, records, poll, derived, git, text, confirmWaiting = false, confirmBusy = false, confirmResend = false }) {
   const failures = [];
   const { baseline } = record;
 
@@ -1921,16 +2132,17 @@ export function runChecks({ record, records, poll, derived, git, text, confirmWa
   const now = baseline.branch ? git.branch : git.sha;
   if (before !== now) failures.push({ check: 2, message: `${baseline.branch ? 'branch' : 'commit'} changed: ${before} -> ${now}` });
 
-  // 3. No active record with the same text for this session.
+  // 3. No active record with the same text for this session (`pending` covers delivery-unknown).
   const duplicates = records.filter((r) => r.id !== record.id && r.sessionId === record.sessionId && r.textHash === record.textHash && ACTIVE.includes(r.state));
-  if (duplicates.length) failures.push({ check: 3, message: `the same text is already ${duplicates.map((r) => `${r.state} (${r.id})`).join(', ')}` });
+  if (duplicates.length && !confirmResend) failures.push({ check: 3, message: `the same text is already ${duplicates.map((r) => `${shownState(r)} (${r.id})`).join(', ')}` });
 
   // 4. Exactly the approved text, with the template it needs.
   if (sha256(text) !== record.textHash) failures.push({ check: 4, message: 'the text changed since approval' });
   for (const problem of templateProblems(text, record.path)) failures.push({ check: 4, message: problem });
 
-  // 5. Idle.
-  if (derived.phase === 'working' || (entry && entry.status !== 'idle')) {
+  // 5. Idle, unless Rafal chose "send now": the message then cuts in between tool calls and is
+  //    derived as a queued prompt (spec §5.2). A delayed send simply runs every check again.
+  if (!confirmBusy && (derived.phase === 'working' || (entry && entry.status !== 'idle'))) {
     failures.push({ check: 5, message: `the session is busy (${entry?.status ?? derived.phase})` });
   }
 
@@ -1949,11 +2161,19 @@ export function runChecks({ record, records, poll, derived, git, text, confirmWa
 // delivery: only the recipient's UserPromptSubmit with the hub's from-name and a matching
 // inner-text hash makes a record `sent`.
 
-export function findDelivery(record, events, hubName = 'hub') {
-  return events.find((event) => event.event === 'UserPromptSubmit'
-    && event.fromName === hubName
-    && (event.innerHash === record.textHash || event.innerHashDecoded === record.textHash)
-    && (!record.sentAt || event.at >= record.sentAt)) ?? null;
+// The latest matching event not already used as evidence (`usedIds`). After a confirmed resend of
+// the same text, records are confirmed newest first, so the newest record takes the newest delivery
+// and an undelivered older record stays delivery-unknown.
+export function findDelivery(record, events, hubName = 'hub', usedIds = new Set()) {
+  let found = null;
+  for (const event of events) {
+    if (event.event === 'UserPromptSubmit'
+      && event.fromName === hubName
+      && (event.innerHash === record.textHash || event.innerHashDecoded === record.textHash)
+      && (!record.sentAt || event.at >= record.sentAt)
+      && !usedIds.has(event.id)) found = event;
+  }
+  return found;
 }
 
 export function classifyNotice(text) {
@@ -1979,12 +2199,13 @@ export function applyNotice(record, { kind }, text) {
 
 ```js
 // Retention (spec §8.2): event logs and last-message directories of sessions ended more than 14
-// days ago are deleted together; polls.jsonl keeps the last 14 days. Journals, sent texts, dialogs
-// and Codex threads are never touched.
+// days ago are deleted together, with the hub's judgments of their turns; polls.jsonl keeps the
+// last 14 days. Journals, sent texts, dialogs and Codex threads are never touched.
 import { rmSync, writeFileSync, existsSync } from 'node:fs';
 import { listSessionIds, readEvents } from './registry.mjs';
 import { deriveSession } from './derive.mjs';
 import { readPolls } from './polls.mjs';
+import { pruneJudgments } from './judgments.mjs';
 import { eventLogPath, lastDir, pollsPath } from './paths.mjs';
 
 export const RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
@@ -2005,7 +2226,8 @@ export function cleanup(root, now = Date.now()) {
     writeFileSync(pollsPath(root), kept.map((poll) => JSON.stringify(poll)).join('\n') + (kept.length ? '\n' : ''), 'utf8');
     pollsKept = kept.length;
   }
-  return { removed, pollsKept };
+  const judgmentsKept = pruneJudgments(root, new Set(listSessionIds(root)));
+  return { removed, pollsKept, judgmentsKept };
 }
 ```
 
@@ -2016,17 +2238,20 @@ export function cleanup(root, now = Date.now()) {
 // Hub CLI (spec §4, §5.6, §6). The hub session calls it; every command prints plain text or JSON.
 //   overview [--no-poll] [--agents-json <file>]
 //   last <sessionId>
+//   judge <sessionId> --verdict question|other
 //   compose --path <path> --session <sessionId> (--body-file <file> | --topic <text> --max <n>) [--project <p>]
 //   approve --session <sessionId> --path <path> --text-file <file> [--project <p>]
-//   prepare <recordId> [--confirm-waiting] [--agents-json <file>]
+//   prepare <recordId> [--confirm-waiting] [--confirm-busy] [--confirm-resend] [--agents-json <file>]
 //   result <recordId> (--msg-id <id> | --error <literal error>)
 //   notice --text <literal notice>
 //   confirm [--hub-name hub]
 //   register --session <sessionId|short id> --kind dialog|background [--project <p>] [--name <n>] [--agents-json <file>]
 //   journal --project <p>
 //   cleanup
-// --agents-json reads a saved `claude agents --json` output instead of running the CLI.
+// --agents-json reads a saved `claude agents --json` output instead of running the CLI. The
+// --confirm-* flags are passed only after Rafal answered the hub's question (spec §6.2).
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import { hubRoot, draftsDir, sentDir, registryDir } from '../lib/paths.mjs';
 import { readEvents } from '../lib/registry.mjs';
@@ -2040,6 +2265,7 @@ import { newRecordId, loadRecords, saveRecords, findRecord, findRecordByMsgId, l
 import { gitInfo, runChecks } from '../lib/checks.mjs';
 import { findDelivery, classifyNotice, applyNotice } from '../lib/confirm.mjs';
 import { cleanup } from '../lib/retention.mjs';
+import { VERDICTS, recordJudgment } from '../lib/judgments.mjs';
 import { sha256 } from '../lib/text.mjs';
 
 function parseArgs(argv) {
@@ -2096,6 +2322,15 @@ switch (command) {
     console.log(join(registryDir(root), derived.lastStop.lastFile));
     break;
   }
+  case 'judge': {
+    const sessionId = positional[0] ?? fail('usage: judge <sessionId> --verdict question|other');
+    const verdict = need(options, 'verdict');
+    if (!VERDICTS.includes(verdict)) fail(`--verdict must be one of ${VERDICTS.join(', ')}`);
+    const derived = derivedOf(root, sessionId);
+    if (!derived.lastStop) fail('no Stop recorded for this session', 3);
+    console.log(JSON.stringify(recordJudgment(root, { sessionId, stopId: derived.lastStop.id, verdict, at: new Date().toISOString() })));
+    break;
+  }
   case 'compose': {
     const sessionId = need(options, 'session');
     const path = need(options, 'path');
@@ -2107,7 +2342,8 @@ switch (command) {
     const at = new Date().toISOString();
     const text = composeMessage({ path, project, sessionId, at, body });
     mkdirSync(draftsDir(root, project), { recursive: true });
-    const file = join(draftsDir(root, project), `${stamp(at)}-${path}.md`);
+    // The random suffix keeps two drafts composed within one second apart.
+    const file = join(draftsDir(root, project), `${stamp(at)}-${path}-${randomBytes(2).toString('hex')}.md`);
     writeFileSync(file, text, 'utf8');
     console.log(file);
     break;
@@ -2144,7 +2380,12 @@ switch (command) {
     const derived = derivedOf(root, record.sessionId);
     const text = readFileSync(record.textFile, 'utf8');
     if (!record.baseline.name) record.baseline.name = pollEntry(poll, record.sessionId)?.name ?? null;
-    const failures = runChecks({ record, records, poll, derived, git: gitInfo(derived.cwd), text, confirmWaiting: Boolean(options['confirm-waiting']) });
+    const failures = runChecks({
+      record, records, poll, derived, git: gitInfo(derived.cwd), text,
+      confirmWaiting: Boolean(options['confirm-waiting']),
+      confirmBusy: Boolean(options['confirm-busy']),
+      confirmResend: Boolean(options['confirm-resend']),
+    });
     if (failures.length) {
       console.log(JSON.stringify({ ok: false, failures }, null, 2));
       process.exit(3);
@@ -2183,17 +2424,19 @@ switch (command) {
     const hubName = options['hub-name'] && options['hub-name'] !== true ? options['hub-name'] : 'hub';
     const confirmed = [];
     for (const project of listProjects(root)) {
-      const records = loadRecords(root, project);
-      let changed = false;
-      const next = records.map((record) => {
-        if (record.state !== 'pending' && record.state !== 'held') return record;
-        const delivery = findDelivery(record, readEvents(root, record.sessionId).events, hubName);
-        if (!delivery) return record;
-        changed = true;
+      const next = loadRecords(root, project);
+      const before = confirmed.length;
+      // Newest first, and one event confirms one record (see findDelivery).
+      const waiting = next.filter((r) => r.state === 'pending' || r.state === 'held')
+        .sort((a, b) => String(b.sentAt).localeCompare(String(a.sentAt)));
+      for (const record of waiting) {
+        const usedIds = new Set(next.filter((r) => r.sessionId === record.sessionId && r.evidence).map((r) => r.evidence.eventId));
+        const delivery = findDelivery(record, readEvents(root, record.sessionId).events, hubName, usedIds);
+        if (!delivery) continue;
+        next[next.findIndex((r) => r.id === record.id)] = { ...record, state: 'sent', evidence: { eventId: delivery.id, at: delivery.at } };
         confirmed.push(record.id);
-        return { ...record, state: 'sent', evidence: { eventId: delivery.id, at: delivery.at } };
-      });
-      if (changed) saveRecords(root, project, next);
+      }
+      if (confirmed.length > before) saveRecords(root, project, next);
     }
     console.log(JSON.stringify({ confirmed }));
     break;
@@ -2222,14 +2465,14 @@ switch (command) {
     break;
   }
   default:
-    fail('usage: hub.mjs overview|last|compose|approve|prepare|result|notice|confirm|register|journal|cleanup');
+    fail('usage: hub.mjs overview|last|judge|compose|approve|prepare|result|notice|confirm|register|journal|cleanup');
 }
 ```
 
 - [ ] **Step 4: Run the tests**
 
 Run: `cd C:/Users/rafal/hub-dev/hub && node --test`
-Expected: `ℹ pass 52`, `ℹ fail 0`.
+Expected: `ℹ pass 58`, `ℹ fail 0`.
 
 - [ ] **Step 5: Checkpoint** — no commit.
 
@@ -2511,7 +2754,9 @@ plain text or JSON; quote its output literally when Rafal decides on it. Talk to
 ## Start (also after /clear)
 
 1. `HUB cleanup` (retention, spec §8.2).
-2. `HUB overview` and show the table.
+2. `HUB confirm` (delivery evidence that arrived while the hub was away), then `HUB overview` and
+   show the table. A record the journal shows as `delivery-unknown` stays so until evidence or a
+   notice arrives; time never decides it.
 3. Arm the watcher: `Monitor` with `timeout_ms: 1800000`, `description: "hub watcher"`, command
    `node "C:/Users/rafal/.claude/skills/hub/bin/hub-watch.mjs"`. When its expiry notice arrives,
    arm it again with the same parameters. The watcher's events are never Rafal's answers.
@@ -2520,7 +2765,9 @@ plain text or JSON; quote its output literally when Rafal decides on it. Talk to
 
 1. `HUB confirm` (delivery evidence), then `HUB overview --no-poll`.
 2. For `turn ended`: read the file printed by `HUB last <sessionId>` and judge whether the last
-   message waits for Rafal ("prawdopodobnie czeka na Ciebie") or is a finished result.
+   message waits for Rafal ("prawdopodobnie czeka na Ciebie") or is a finished result. Record the
+   judgment with `HUB judge <sessionId> --verdict question` or `--verdict other`, so the overview
+   shows "probably waiting for you" until the session's next turn.
 3. For `waiting for decision`, `waiting for permission`, `problem`: say which session and what it
    waits for. Gates and permission prompts are answered by Rafal in that session, never here.
 4. Tell Rafal in the hub tab; when he is away, also use `PushNotification`.
@@ -2529,14 +2776,24 @@ plain text or JSON; quote its output literally when Rafal decides on it. Talk to
 
 1. Compose: `HUB compose --path direct --session <sessionId> --body-file <file>`, or
    `HUB compose --path questionnaire-request --session <sessionId> --topic "<temat>" --max <n>`,
-   or `--path questionnaire-answers --body-file <file>`. Write a body file only under
-   `~/.claude/hub/`. The command prints the draft path.
+   or `--path questionnaire-answers --body-file <file>`. Every body, also a short direct command,
+   has the sections **Cel**, **Kontekst**, **Decyzje z uzasadnieniem**, **Ograniczenia** and
+   **Oczekiwany rezultat** (spec §6.1); the questionnaire request gets them from its fixed
+   wording. Write a body file only under `~/.claude/hub/`. The command prints the draft path.
 2. Show Rafal the exact draft text (read the file, quote it in full, header line included). Wait
    for "wyślij". Any other answer is not approval.
 3. `HUB approve --session <sessionId> --path <path> --text-file <draft>` → record id.
-4. `HUB prepare <id>`. If it prints failures, quote them and stop; for check 6 send only after
-   Rafal confirms again, then `HUB prepare <id> --confirm-waiting`. For check 1 with candidates,
-   show the candidate ids and wait for a new approval; never re-target on your own.
+4. `HUB prepare <id>`. If it prints failures, quote them and stop. Then, per check:
+   - check 1 with candidates: show the candidate ids and wait for a new approval; never re-target
+     on your own;
+   - check 3: run `HUB confirm` first. A `held` message is never resent. For `delivery-unknown`,
+     tell Rafal that no delivery evidence exists and ask whether to send the text again; only
+     after his explicit yes run `HUB prepare <id> --confirm-resend`;
+   - check 5 (busy): ask "czekać na koniec tury czy wysłać teraz?". "Teraz": say that the message
+     cuts into the running work between tool calls, then `HUB prepare <id> --confirm-busy`.
+     "Czekać": when the watcher reports that session's turn ended (or a wait), run
+     `HUB prepare <id>` again; it repeats all six checks, and any new failure goes back to Rafal;
+   - check 6: send only after Rafal confirms again, then `HUB prepare <id> --confirm-waiting`.
 5. `SendMessage` with `to` = the `to` name printed by prepare and `message` = the draft text
    exactly. Then `HUB result <id> --msg-id <msg_id from the tool result>`, or on a tool error
    `HUB result <id> --error "<literal error>"`.
@@ -2570,7 +2827,7 @@ message is `held`, do not resend it.
 - [ ] **Step 4: Run the tests**
 
 Run: `cd C:/Users/rafal/hub-dev/hub && node --test`
-Expected: `ℹ pass 57`, `ℹ fail 0`.
+Expected: `ℹ pass 63`, `ℹ fail 0`.
 
 - [ ] **Step 5: Dry run against the real configuration (writes nothing)**
 
@@ -2598,7 +2855,19 @@ node C:/Users/rafal/hub-dev/hub/bin/install.mjs --dry-run
 node C:/Users/rafal/hub-dev/hub/bin/install.mjs
 ```
 
-Explain each part: the dry run prints the four changes; the real run copies the skill to `~/.claude/skills/hub`, adds six async hook entries to `~/.claude/settings.json` without touching existing ones (backup `settings.json.bak-hub-<timestamp>`), writes the rules block (gate marker and isolation) between `<!-- BEGIN/END hub-global-rules -->` in `~/.claude/CLAUDE.md` (backup), and creates `~/.claude/hub/projects.json`. Undo: restore the two `.bak-hub-*` files and delete `~/.claude/skills/hub` and `~/.claude/hub`. His backup hook will commit and push the new files on the next session end.
+Explain each part: the dry run prints the four changes; the real run copies the skill to `~/.claude/skills/hub`, adds six async hook entries to `~/.claude/settings.json` without touching existing ones (backup `settings.json.bak-hub-<timestamp>`), writes the rules block (gate marker and isolation) between `<!-- BEGIN/END hub-global-rules -->` in `~/.claude/CLAUDE.md` (backup), and creates `~/.claude/hub/projects.json`. Rafal's backup hook (D14) commits and pushes `settings.json`, `CLAUDE.md` and `skills/hub/` to the `~/.claude` backup repository at the next session end outside `C:\Users\rafal\hub-probes` and `C:\Users\rafal\.claude\hub`; the hub data under `~/.claude/hub/` is git-ignored there (Task 0).
+
+Give Rafal the undo as well, for Git Bash, with what each part does:
+
+```bash
+ls C:/Users/rafal/.claude/settings.json.bak-hub-* C:/Users/rafal/.claude/CLAUDE.md.bak-hub-*
+STAMP=20261014T081530   # the suffix from the listing above
+cp "C:/Users/rafal/.claude/settings.json.bak-hub-$STAMP" C:/Users/rafal/.claude/settings.json
+cp "C:/Users/rafal/.claude/CLAUDE.md.bak-hub-$STAMP" C:/Users/rafal/.claude/CLAUDE.md
+rm -r C:/Users/rafal/.claude/skills/hub
+```
+
+The two `cp` restore the files exactly as they were before the installation; if either file changed after the installation, restoring it would drop that change, so then remove the six `hub-hook.mjs` entries and the block between `<!-- BEGIN/END hub-global-rules -->` by hand instead. `rm -r` removes only the installed skill copy (the source stays in `C:/Users/rafal/hub-dev/hub/`). The undo never touches `~/.claude/hub/` (event logs, journals, sent texts): removing it is a separate decision of Rafal's, and then first as a move that keeps a copy, `mv C:/Users/rafal/.claude/hub "C:/Users/rafal/.claude/hub.removed-$STAMP"`.
 
 - [ ] **Step 2: Verify (read-only)**
 
@@ -2609,7 +2878,7 @@ grep -c "hub-global-rules" C:/Users/rafal/.claude/CLAUDE.md
 cat C:/Users/rafal/.claude/hub/projects.json
 ```
 
-Expected: `ℹ pass 57`, `ℹ fail 0`; `6`; `2`; `{ "aliases": {} }`.
+Expected: `ℹ pass 63`, `ℹ fail 0`; `6`; `2`; `{ "aliases": {} }`.
 
 - [ ] **Step 3: The hook fires in a new session**
 
@@ -2659,17 +2928,21 @@ In `probe-b`: `Uruchom: node -e "require('fs').writeFileSync('accept.txt','x')"`
 
 - [ ] **Step 5: Direct command with delivery confirmation**
 
-Rafal asks the hub: `sesja probe-a: wyślij polecenie "Napisz jedno zdanie o pogodzie."`. Expected sequence: the hub shows the exact draft with its header line; Rafal says `wyślij`; `prepare` passes (if check 6 warns because `probe-a` still waits for the answer from Step 3, Rafal confirms); `SendMessage` succeeds; after `probe-a` receives it, `HUB confirm` marks the record `sent`; `HUB journal --project repo` shows it.
+Rafal asks the hub: `sesja probe-a: wyślij polecenie "Napisz jedno zdanie o pogodzie."`. Expected sequence: the hub shows the exact draft with its header line and the five sections (**Oczekiwany rezultat**: one sentence, then stop); Rafal says `wyślij`; `prepare` passes (if check 6 warns because `probe-a` still waits for the answer from Step 3, Rafal confirms); `SendMessage` succeeds; after `probe-a` receives it, `HUB confirm` marks the record `sent`; `HUB journal --project repo` shows it.
 
 - [ ] **Step 6: Item 4 — questionnaire path end to end**
 
 Rafal asks the hub: `sesja probe-a: pytania o nazwę pliku z notatkami, maksymalnie 2`. Expected: request shown, `wyślij`, `sent`; the watcher reports `waiting for decision`; the hub shows the questions; Rafal answers; the hub composes the answers with the five sections and **Pytania i odpowiedzi**, Rafal says `wyślij`, the record becomes `sent`, and `probe-a` acts on **Oczekiwany rezultat**.
 
-- [ ] **Step 7: Item 7 — hub restart and state recovery**
+- [ ] **Step 7: Item 7, part 1 — the hub after `/clear`**
 
 In the hub tab Rafal runs `/clear`, then types `start`. Expected: the hub still answers in its role, the overview again lists `probe-a` and `probe-b` with their current states, and the hub's new session is not in the overview (recognised by `cwd`).
 
-- [ ] **Step 8: Close and record**
+- [ ] **Step 8: Item 7, part 2 — a full hub restart and state recovery**
+
+Rafal `/exit`s the hub. While it is closed, he sends `Napisz jedno zdanie o rzece.` in `probe-b` and waits for that turn to end. Then he starts the hub again with the same command as in Step 1 and types `start`. Expected: the hub answers in its role and runs `cleanup`, `confirm` and `overview`; the overview lists `probe-a` and `probe-b` with their current states (`probe-b` shows the turn that ended while the hub was closed) and not the hub's new session; the re-armed watcher catches up from its saved state and reports `turn ended` for `probe-b`; `HUB journal --project repo` still shows the records of Steps 5 and 6 as `sent`.
+
+- [ ] **Step 9: Close and record**
 
 Ask Rafal to `/exit` the trial sessions and the hub. Write the acceptance report: for each step, the expected and the observed result quoted from the hub tab or the CLI output, and a verdict. Any failed item is a defect to fix (a new task) or a spec impact for Rafal. Finish with proposed commit messages:
 
