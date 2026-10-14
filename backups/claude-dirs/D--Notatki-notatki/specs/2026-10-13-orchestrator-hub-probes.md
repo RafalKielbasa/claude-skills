@@ -469,15 +469,47 @@ ls: cannot access 'C:/Users/rafal/hub-probes/repo/s7-outside.md': No such file o
 Variants B and C not needed (inside file exists; outside file absent). Cleanup: `stopped 629afdce`,
 `repo/s7-outside.md` absent, `claude agents --json`: no `dlg-s7*` session remains.
 
-**Verdict: pass on outcome, with one caveat.** The inside write succeeded without a prompt; the
+**Verdict: pass (updated after the control run).** The inside write succeeded without a prompt; the
 outside write did not happen; the fork was never `blocked` on a permission prompt.
 
-**Caveat (confound).** The outside write was refused not by the `deny` rule but by the background-session
+**Caveat (resolved by the control run below).** In variant A the outside write was refused not by the `deny` rule but by the background-session
 worktree-isolation guard ("hasn't isolated its changes yet. Call EnterWorktree first"). It is not proven
 that `Edit(./**)` deny or the `//C:/` allow form had any effect; the guard may by itself explain both
-results (and the fork would be free to call `EnterWorktree` and then write in a worktree). A control
-(settings with `"worktree": {"bgIsolation": "none"}` and the deny rule) was not run; it would isolate the
-deny rule. Also found: with `--add-dir` the prompt must precede it on the command line.
+results (and the fork would be free to call `EnterWorktree` and then write in a worktree). The control run isolated the deny rule. Also found: with `--add-dir` the prompt must precede it on the command line.
+
+### Control run (`dlg-s7-control`)
+
+**Purpose.** Test the deny rule without the bg worktree guard. Settings file
+`C:/Users/rafal/hub-probes/tools/fork-settings-control.json` = variant A rules plus `"worktree": {"bgIsolation": "none"}`:
+
+```json
+{
+  "permissions": {
+    "allow": ["Edit(//C:/Users/rafal/hub-probes/data/dialogs/probe/**)"],
+    "deny": ["Edit(./**)", "Bash"]
+  },
+  "worktree": {"bgIsolation": "none"}
+}
+```
+
+Launch: same command as the decisive run (prompt before `--add-dir`), `--name dlg-s7-control`, fork of
+`69788a55-…`; `s7-inside.md` deleted beforehand. Output: `backgrounded · e0c438b3 · dlg-s7-control`.
+`claude agents --json`: `{"id":"e0c438b3","sessionId":"e0c438b3-db38-4679-bd9f-5a25b156348d","name":"dlg-s7-control","status":"idle","state":"done"}`.
+
+Hook events: `UserPromptSubmit` 05:21:05 (`permission_mode: auto`); one `PostToolUse` `Write` on
+`s7-inside.md` 05:21:11; `Stop` 05:21:25; no Notification. Literal tool result of the outside write
+(from `Stop.last_assistant_message`):
+
+```
+<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>
+```
+
+`ls`: `s7-inside.md` exists (7 bytes, "inside"); `repo/s7-outside.md`: No such file or directory.
+The `worktree` key was not rejected, and the guard message no longer appeared. Cleanup: `stopped e0c438b3`,
+`s7-outside.md` absent, no `dlg-s7*` session remains.
+
+**Result.** With the worktree guard disabled, the outside write is refused by the settings `deny` rule
+(`Edit(./**)` also covers `Write`), and the `//C:/` allow form permits the inside write, in `auto` mode.
 
 **Fallback.** None taken. If the boundary must not depend on the guard: default permission mode, Rafal
 approves each fork write himself.
@@ -485,9 +517,9 @@ approves each fork write himself.
 **Spec impact (for Rafal at Task 14).**
 
 - §6.5 step 2: pass the start prompt before `--add-dir`, or the variadic option swallows it.
-- §6.5 step 2: `--settings <file>` with the `//C:/` allow form plus `deny` gives the wanted outcome,
-  but the effective barrier observed was the bg worktree guard; decide whether to rely on it or run the
-  control with `bgIsolation: none`.
+- §6.5 step 2: `--settings <file>` with the `//C:/` allow form plus `deny` (`Edit(./**)`, `Bash`) is a working
+  write boundary on its own (control run, guard disabled via `worktree.bgIsolation: none`); with the guard
+  on, it is a second, independent barrier.
 - A fork may escape the guard via `EnterWorktree`; the fork itself declined to do so unprompted.
 
 ## S8 — role file survives /clear
