@@ -1,0 +1,1 @@
+- [HUB confirm needs --hub-name](hub-confirm-hub-name.md) — hub session named hub-<n> must pass --hub-name or deliveries stay delivery-unknown
