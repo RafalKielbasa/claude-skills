@@ -204,7 +204,127 @@ second watcher: 100 {"catch-up":46,"watch":54}
 Not yet decided; waiting for Rafal at Task 14.
 
 ## S4 — SendMessage and the recipient
+
+**Question.** Does `SendMessage` trigger `UserPromptSubmit` in the recipient, and is a hub message
+distinguishable in its payload? What happens with `crossSessionInbound` set to `hold` and to
+`refuse`?
+
+**Method.** Sender: the executing session (`notatki-7a`, permission mode auto). Recipient: Rafal's
+terminal session `claude --name probe-recipient` in `C:\Users\rafal\hub-probes\repo` (permission
+mode auto, recorded by the hook). One message per variant; for `hold` and `refuse`,
+`repo/.claude/settings.local.json` held `{ "crossSessionInbound": "<value>" }` and the recipient
+was restarted. The file was deleted afterwards.
+
+**Raw result — default inbound.**
+
+`SendMessage` result:
+
+```
+{"success":true,"message":"“S4 probe default inbound” → probe-recipient (another Claude session on this machine; in that session's inbox, not yet read by its Claude — a [Cross-session delivery notice] follows if that session holds it (usually a different permission mode) or refuses it)","msg_id":"ccf00ee5-4c55-41d0-8703-f243b4e5e5c0"}
+```
+
+Recipient event (`f27a4367…`), `UserPromptSubmit` at 04:59:18, `prompt` field:
+
+```
+<cross-session-message from="uds:\\.\pipe\LOCAL\cc-msg-4f2bd183e38230e3700d0e561d3ecf0a" from-name="notatki-7a" from-mode="prompting">
+Probe S4: reply with the single word RECEIVED.
+</cross-session-message>
+```
+
+Followed by two `PostToolUse` events and `Stop`; the sender received the reply as a
+cross-session message: `RECEIVED`.
+
+**Raw result — `hold`.**
+
+`SendMessage` result: `{"success":true, … "msg_id":"4b8b0732-2830-4c04-8f38-ca22dfe06e59"}` with the
+note `Note: messaging a new session for the first time under a previously used name (was it restarted?)`.
+
+Notice in the sender session:
+
+```
+[Cross-session delivery notice] Your message to another session was held by that session (recipient: uds:\\.\pipe\LOCAL\cc-msg-eabcb0a61b06250316a032161880fa8a; msg_id: 4b8b0732-2830-4c04-8f38-ca22dfe06e59). NOT delivered: its Claude has not seen it. Do not report it as delivered, do not wait for a reply, and do not resend while held. The usual cause is that the two sessions run in different permission modes: a terminal session then asks its user to approve, but a Claude Desktop or non-interactive session cannot ask, so there the hold expires undelivered unless the modes come to match. A session can also be set to hold every message. Another notice follows on release, denial or expiry. Tell your user what is held and why, or choose another approach.
+```
+
+What the recipient showed (pasted by Rafal):
+
+```
+● Held peer message — from uds:\\.\pipe\LOCAL\cc-msg-4f2bd183e38230e3700d0e561d3ecf0a (peer claims name: notatki-7a); preview: «Probe S4 hold: reply RECEIVED.» — not delivered to Claude (1 held). This repository's settings set "crossSessionInbound" to "hold" (a repo may only tighten, so your own "accept" cannot override it); remove the repo setting or exclude it with --setting-sources.
+```
+
+No `UserPromptSubmit` in the recipient. When Rafal exited the held session (`SessionEnd`,
+`prompt_input_exit`), the held message ended as refused:
+
+```
+[Cross-session delivery notice] Your message to another session was refused (recipient: uds:\\.\pipe\LOCAL\cc-msg-eabcb0a61b06250316a032161880fa8a; msg_id: 4b8b0732-2830-4c04-8f38-ca22dfe06e59): that session is not accepting cross-session messages (the feature is off there, or a setting or policy there refuses them). Not delivered to that session's Claude. Do not wait for a reply and do not resend; tell the user, or choose another approach.
+```
+
+**Raw result — `refuse`.**
+
+`SendMessage` result: `{"success":true, … "msg_id":"ae0a2392-2eee-4b3c-b277-1b34e22ccc21"}`, then:
+
+```
+[Cross-session delivery notice] Your message to another session was refused (recipient: uds:\\.\pipe\LOCAL\cc-msg-140f081b5e1ebea74889de322c44af9c; msg_id: ae0a2392-2eee-4b3c-b277-1b34e22ccc21): that session is not accepting cross-session messages (the feature is off there, or a setting or policy there refuses them). Not delivered to that session's Claude. Do not wait for a reply and do not resend; tell the user, or choose another approach.
+```
+
+No `UserPromptSubmit` in the recipient. The refusing session was still listed by `ListAgents`.
+
+**Verdict: pass** (all three behaviours written down).
+
+1. A delivered message triggers `UserPromptSubmit` in the recipient, and it is distinguishable:
+   `prompt` is wrapped in `<cross-session-message from="…" from-name="<sender>" from-mode="…">`.
+2. `SendMessage` returns `"success":true` in every variant, including held and refused messages. The
+   real outcome arrives later, as a `[Cross-session delivery notice]` in the sender session, and
+   only for held, refused, released or expired messages; an accepted delivery has no notice.
+3. A repo-level `hold` cannot be released from the recipient UI ("a repo may only tighten"); a held
+   message is refused when the recipient session ends.
+
+Not tested: a hold caused by different permission modes. The `SendMessage` tool description says
+that a session in a different permission mode than the sender holds messages for its user's
+approval. Both sessions here ran in auto mode.
+
+**Fallback taken.** None needed.
+
+**Spec impact (decisions for Rafal at Task 14).**
+
+- §6.3 send record: tool success must not mark a record `sent`. Delivery is confirmed by the
+  recipient's `UserPromptSubmit` event carrying the hub's `from-name` wrapper (matched by the hash
+  of the inner text); a held or refused notice sets `held` / `not-sent`; with neither, the record
+  stays `delivery-unknown`.
+- §5.2: the hook can record that a prompt came from another session (the wrapper and `from-name`,
+  without the text), so a hub message no longer has to clear `waiting: decision`.
+- §5.5 / §9 (hub setup): the hub should run in the same permission mode as the project sessions,
+  otherwise every hub message is held for approval in the recipient.
+
 ## S5 — Monitor expiry wakes an idle hub
+
+**Question.** Does a `Monitor` expiry notice wake an idle session, so the hub can re-arm its watcher
+without anyone typing?
+
+**Method.** In the executing session: one event `before-1` written to `data/s5/s5.events.jsonl`;
+`Monitor` started with `timeout_ms: 60000` on
+`node C:/Users/rafal/hub-probes/tools/watch-probe.js --dir=C:/Users/rafal/hub-probes/data/s5 --seconds=3600 --emit=1 --state=C:/Users/rafal/hub-probes/data/s5-state.json`;
+Rafal asked not to type; the session ended its turn. On the expiry notice: a gap event `gap-1`
+written while no watcher ran, the same monitor re-armed, then stopped with TaskStop.
+
+**Raw result.**
+
+| Time (UTC) | What happened |
+|---|---|
+| 05:02:55 | `before-1` written |
+| ~05:03:05 | Monitor `bz03m7bb3` started; event `catch-up before-1` |
+| 05:03:08 | Turn ended; session idle, no user input |
+| ~05:04:08 | New turn without user input, started by: `[Monitor expired after 1m with 1 event delivered. Re-arm it if you still need the watch.]`; `gap-1` written (05:04:08) |
+| 05:04:17 | Monitor `bw2alyb89` re-armed; event `catch-up gap-1`; `before-1` not repeated |
+
+**Verdict: pass.** The expiry notice woke the idle session; a new monitor ran 9 s after the wake-up
+(criterion: within one minute); the catch-up reported the event written during the gap, and the
+state file prevented a repeat of the earlier event.
+
+**Fallback taken.** None needed.
+
+**Spec impact.** None. §5.5 holds as written: re-arm on the expiry notice, catch up from the event
+logs, and keep a record of reported events.
+
 ## S6 — fork launch
 ## S7 — write boundary of the fork
 ## S8 — role file survives /clear
