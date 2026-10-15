@@ -20,6 +20,7 @@ export const registryDir = (root) => join(root, 'registry');
 export const eventLogPath = (root, sessionId) => join(registryDir(root), `${safeId(sessionId)}.events.jsonl`);
 export const lastDir = (root, sessionId) => join(registryDir(root), `${safeId(sessionId)}.last`);
 export const pollsPath = (root) => join(registryDir(root), 'polls.jsonl');
+export const titlesPath = (root) => join(registryDir(root), 'titles.json');
 export const hubSessionsPath = (root) => join(root, 'hub-sessions.json');
 export const projectsConfigPath = (root) => join(root, 'projects.json');
 export const watchStatePath = (root) => join(root, 'watch-state.json');

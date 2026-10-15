@@ -17,6 +17,7 @@ export function deriveSession(events) {
     lastStop: null,
     lastPromptFromName: null,
     sessionTitle: null,
+    transcriptPath: null,
     cwd: null,
     firstAt: null,
     lastEventAt: null,
@@ -34,6 +35,7 @@ export function deriveSession(events) {
     state.firstAt ??= event.at;
     state.lastEventAt = event.at;
     if (event.cwd) state.cwd = event.cwd;
+    if (event.transcriptPath) state.transcriptPath = event.transcriptPath;
     if (event.event !== 'SessionEnd') state.activity += 1;
 
     switch (event.event) {

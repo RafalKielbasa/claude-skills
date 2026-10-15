@@ -33,6 +33,32 @@ export function findMismatch(record, events, hubName, knownHashes, usedIds) {
   return found;
 }
 
+// A launched session's first own prompt (spec §6.6 step 8): the approved text itself, given on the
+// command line, so it carries no cross-session wrapper.
+function firstPrompt(events, since) {
+  return events
+    .filter((e) => e.event === 'UserPromptSubmit' && !e.fromName && (!since || e.at >= since))
+    .sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : (a.index ?? 0) - (b.index ?? 0)))[0] ?? null;
+}
+
+// `eventsBySession`: Map sessionId → events. With record.sessionId unknown (the launch found no
+// poll entry), any session whose first prompt after sentAt carries the approved hash is the one.
+export function findLaunchDelivery(record, eventsBySession) {
+  for (const [sessionId, events] of eventsBySession) {
+    if (record.sessionId && sessionId !== record.sessionId) continue;
+    const first = firstPrompt(events, record.sentAt);
+    if (first && first.promptHash === record.textHash) return first;
+  }
+  return null;
+}
+
+// The launched session's first prompt carries another hash: Claude Code changed the command-line
+// text, or another prompt came first. Never delivery evidence.
+export function findLaunchMismatch(record, events) {
+  const first = firstPrompt(events, record.sentAt);
+  return first && first.promptHash !== record.textHash ? first : null;
+}
+
 export function classifyNotice(text) {
   const msgId = /msg_id:\s*([0-9a-f-]{36})/i.exec(text)?.[1] ?? null;
   let kind = 'unknown';

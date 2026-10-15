@@ -25,7 +25,7 @@ function setup() {
     ev('UserPromptSubmit', '2026-10-14T10:00:00Z', { cwd: repo, promptId: 'p1', sessionTitle: 'probe-a' }),
     ev('Stop', '2026-10-14T10:01:00Z', { cwd: repo, promptId: 'p1', marker: null, lastFile: 's1.last/x.md' }),
   ]);
-  writeFileSync(join(root, 'projects.json'), JSON.stringify({ aliases: { app: repo } }));
+  writeFileSync(join(root, 'projects.json'), JSON.stringify({ projects: { app: { name: 'App', dir: repo, description: 'Test app.' } } }));
   const agents = join(root, 'agents.json');
   writeFileSync(agents, JSON.stringify([{ sessionId: 's1', id: 's1', name: 'probe-a', kind: 'interactive', status: 'idle', state: null, cwd: repo }]));
   const hub = (...args) => spawnSync(process.execPath, [HUB, ...args], { encoding: 'utf8', env: { ...process.env, HUB_DATA: root } });
@@ -100,7 +100,7 @@ test('overview, last and questionnaire request through the CLI', () => {
   const { agents, hub } = setup();
   const overview = hub('overview', '--agents-json', agents);
   assert.equal(overview.status, 0, overview.stderr);
-  assert.match(overview.stdout, /\| app \| s1 probe-a \| turn ended \(judge\) \|/);
+  assert.match(overview.stdout, /\| App \| s1 probe-a \| turn ended \(judge\) \|/);
   assert.match(hub('last', 's1').stdout, /registry[\\/]s1\.last[\\/]x\.md/);
   const request = hub('compose', '--path', 'questionnaire-request', '--session', 's1', '--topic', 'nazwa pliku', '--max', '3').stdout.trim();
   assert.match(readFileSync(request, 'utf8'), /decyzje o: nazwa pliku[\s\S]*Liczba pytań: najwyżej 3\./);
@@ -148,12 +148,34 @@ test('judge: a question after a turn without the marker shows "probably waiting 
   const { repo, log, agents, hub } = setup();
   assert.equal(hub('judge', 's1', '--verdict', 'maybe').status, 2);
   assert.equal(JSON.parse(hub('judge', 's1', '--verdict', 'question').stdout).verdict, 'question');
-  assert.match(hub('overview', '--agents-json', agents).stdout, /\| app \| s1 probe-a \| probably waiting for you \|/);
+  assert.match(hub('overview', '--agents-json', agents).stdout, /\| App \| s1 probe-a \| probably waiting for you \|/);
   log([
     ev('UserPromptSubmit', '2026-10-14T10:05:00Z', { cwd: repo, promptId: 'p3' }),
     ev('Stop', '2026-10-14T10:06:00Z', { cwd: repo, promptId: 'p3', marker: null, lastFile: 's1.last/z.md' }),
   ]);
-  assert.match(hub('overview', '--agents-json', agents).stdout, /\| app \| s1 probe-a \| turn ended \(judge\) \|/);
+  assert.match(hub('overview', '--agents-json', agents).stdout, /\| App \| s1 probe-a \| turn ended \(judge\) \|/);
+});
+
+test('last and judge accept a unique id prefix and refuse an ambiguous one', () => {
+  const { root, repo, hub } = setup();
+  for (const id of ['abcdef01-1111-4111-8111-111111111111', 'abcdef02-2222-4222-8222-222222222222']) {
+    appendFileSync(join(root, 'registry', `${id}.events.jsonl`), `${JSON.stringify(ev('Stop', '2026-10-14T10:01:00Z', { sessionId: id, cwd: repo, marker: null, lastFile: `${id}.last/x.md` }))}\n`);
+  }
+  assert.match(hub('last', 'abcdef01').stdout, /abcdef01-1111-4111-8111-111111111111\.last[\\/]x\.md/);
+  assert.equal(JSON.parse(hub('judge', 'abcdef02', '--verdict', 'other').stdout).sessionId, 'abcdef02-2222-4222-8222-222222222222');
+  const ambiguous = hub('last', 'abcdef');
+  assert.equal(ambiguous.status, 3);
+  assert.match(ambiguous.stderr, /ambiguous session id abcdef: /);
+  assert.match(hub('last', 'zzz').stderr, /no session zzz in the registry/);
+});
+
+test('HUB projects prints the map and the projects seen outside it', () => {
+  const { root, hub } = setup();
+  appendFileSync(join(root, 'registry', 's9.events.jsonl'), `${JSON.stringify(ev('UserPromptSubmit', '2026-10-14T10:00:00Z', { sessionId: 's9', cwd: join(root, 'loose') }))}\n`);
+  const out = hub('projects');
+  assert.equal(out.status, 0, out.stderr);
+  assert.match(out.stdout, /\| app \| App \| .*app \| Test app\. \|/);
+  assert.match(out.stdout, /Seen in the registry, outside the map: loose/);
 });
 
 test('compose reads the body from stdin', () => {

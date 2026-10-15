@@ -4,7 +4,7 @@
 //   1. copies this skill to <claude-dir>/skills/hub
 //   2. registers hub-hook.mjs for six events in <claude-dir>/settings.json (backup first)
 //   3. writes the global rules block into <claude-dir>/CLAUDE.md (backup first)
-//   4. creates <claude-dir>/hub/ with an empty projects.json
+//   4. creates <claude-dir>/hub/ with an empty project map (projects.json)
 // Every step is idempotent; --dry-run prints what would change and writes nothing.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
@@ -66,7 +66,7 @@ const projectsPath = join(hubDir, 'projects.json');
 report.push(`hub data: ${existsSync(projectsPath) ? 'projects.json present' : `create ${projectsPath}`}`);
 if (!dryRun && !existsSync(projectsPath)) {
   mkdirSync(hubDir, { recursive: true });
-  writeFileSync(projectsPath, `${JSON.stringify({ aliases: {} }, null, 2)}\n`, 'utf8');
+  writeFileSync(projectsPath, `${JSON.stringify({ projects: {} }, null, 2)}\n`, 'utf8');
 }
 
 console.log(`${dryRun ? '[dry run] ' : ''}${report.join('\n')}`);

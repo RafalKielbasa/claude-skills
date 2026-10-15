@@ -45,6 +45,16 @@ export function listSessionIds(root) {
     .map((name) => name.slice(0, -'.events.jsonl'.length));
 }
 
+// A full sessionId, or a prefix of exactly one (the overview shows 8 characters, finding A1).
+export function resolveSessionId(root, value) {
+  const wanted = String(value ?? '');
+  const ids = listSessionIds(root);
+  if (ids.includes(wanted)) return { sessionId: wanted };
+  const hits = wanted ? ids.filter((id) => id.startsWith(wanted)) : [];
+  if (hits.length === 1) return { sessionId: hits[0] };
+  return { error: hits.length ? `ambiguous session id ${wanted}: ${hits.join(', ')}` : `no session ${wanted} in the registry` };
+}
+
 export function lastMessagePath(root, stopEvent) {
   return stopEvent?.lastFile ? join(registryDir(root), stopEvent.lastFile) : null;
 }

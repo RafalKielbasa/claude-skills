@@ -9,7 +9,7 @@ export function snapshot(rows) {
     label: row.state,
     detail: row.detail,
     name: row.name,
-    project: row.project,
+    project: row.projectName ?? row.project,
     continuedFrom: row.continuedFrom,
     // Unique per Stop: a new turn end under an unchanged label still shows as a change.
     lastStop: row.lastStop,

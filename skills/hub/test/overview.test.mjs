@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { deriveSession } from '../lib/derive.mjs';
 import { runPoll, appendPoll, readPolls, isVanished } from '../lib/polls.mjs';
 import { displayState, linkContinuations } from '../lib/display.mjs';
-import { isWithin, projectFor, aliasErrors } from '../lib/projects.mjs';
-import { buildOverview, renderOverview } from '../lib/overview.mjs';
+import { isWithin, projectFor, projectOf, mapErrors, loadProjectMap, renderProjects } from '../lib/projects.mjs';
+import { buildOverview, renderOverview, localTime } from '../lib/overview.mjs';
 import { readHubSessions } from '../lib/hubsessions.mjs';
 import { tempRoot, ev } from './helpers.mjs';
 
@@ -95,12 +95,43 @@ test('project matching: segment boundaries, case, longest root, duplicate roots,
   assert.equal(isWithin('C:\\repo\\src', 'C:\\repo'), true);
   assert.equal(isWithin('C:\\repo-old', 'C:\\repo'), false);
   assert.equal(isWithin('c:\\REPO', 'C:\\repo'), true);
-  const aliases = { outer: 'C:\\work', inner: 'C:\\work\\app' };
-  assert.equal(projectFor('C:\\work\\app\\x', aliases, () => null), 'inner');
-  assert.equal(projectFor('C:\\work\\other', aliases, () => null), 'outer');
-  assert.deepEqual(aliasErrors({ a: 'C:\\x', b: 'c:\\X\\' }), ['aliases a, b share the root c:\\x']);
-  assert.equal(projectFor('C:\\repos\\app\\.claude\\worktrees\\wt', {}, () => 'C:\\repos\\app\\.git'), 'app');
+  const map = { outer: { name: 'Outer', dir: 'C:\\work', description: 'x' }, inner: { name: 'Inner app', dir: 'C:\\work\\app', description: 'x' } };
+  assert.deepEqual(projectOf('C:\\work\\app\\x', map, () => null), { key: 'inner', name: 'Inner app', mapped: true });
+  assert.equal(projectFor('C:\\work\\other', map, () => null), 'outer');
+  const twins = { a: { name: 'A', dir: 'C:\\x', description: 'x' }, b: { name: 'B', dir: 'c:\\X\\', description: 'x' } };
+  assert.deepEqual(mapErrors(twins, { dirExists: () => true }), ['entries a, b share the dir c:\\x']);
+  assert.deepEqual(projectOf('C:\\repos\\app\\.claude\\worktrees\\wt', {}, () => 'C:\\repos\\app\\.git'), { key: 'app', name: 'app', mapped: false });
   assert.equal(projectFor('C:\\loose\\dir', {}, () => null), 'dir');
+});
+
+test('project map: every entry needs a kebab-case key, name, dir and description; a missing dir is reported', () => {
+  const errors = mapErrors({
+    'Baza wiedzy': { name: 'Baza', dir: 'C:\\b', description: 'x' },
+    vault: { name: 'Vault', dir: 'C:\\gone' },
+  }, { dirExists: (dir) => dir !== 'C:\\gone' });
+  assert.deepEqual(errors, [
+    'entry Baza wiedzy: the key must be kebab-case',
+    'entry vault: missing description',
+    'entry vault: dir does not exist: C:\\gone',
+  ]);
+  const root = tempRoot();
+  writeFileSync(join(root, 'projects.json'), JSON.stringify({ aliases: { old: 'C:\\x' }, projects: {} }));
+  assert.deepEqual(loadProjectMap(root).errors, ['`aliases` is no longer read; move its entries into `projects` (spec §4.2)']);
+  writeFileSync(join(root, 'projects.json'), JSON.stringify({ aliases: {} }));
+  assert.deepEqual(loadProjectMap(root), { projects: {}, errors: [] });
+});
+
+test('a session outside the map keeps the fallback name, marked in the overview; HUB projects lists it', () => {
+  const root = tempRoot();
+  writeLog(root, 'loose', [ev('UserPromptSubmit', '2026-10-14T11:50:00Z', { promptId: 'w1', cwd: 'C:\\loose\\dir' })]);
+  const overview = buildOverview(root, { now: NOW, commonDirOf: () => null });
+  assert.equal(overview.rows[0].mapped, false);
+  assert.match(renderOverview(overview), /\| dir \(outside the map\) \| loose /);
+  const listing = renderProjects({ projects: { app: { name: 'App', dir: 'C:\\app', description: 'Kursy | lekcje' } }, errors: ['entry x: missing dir'], unmapped: ['dir'] });
+  assert.match(listing, /\| app \| App \| C:\\app \| Kursy \\\| lekcje \|/);
+  assert.match(listing, /Seen in the registry, outside the map: dir/);
+  assert.match(listing, /projects.json: entry x: missing dir/);
+  assert.equal(renderProjects({ projects: {}, errors: [], unmapped: [] }), 'The project map is empty.');
 });
 
 test('the overview excludes the hub, SessionEnd-only logs, /clear predecessors and day-old ends', () => {
@@ -112,7 +143,7 @@ test('the overview excludes the hub, SessionEnd-only logs, /clear predecessors a
     ev('UserPromptSubmit', '2026-10-14T11:50:00Z', { promptId: 'w1', sessionTitle: 'probe-a' }),
     ev('Stop', '2026-10-14T11:51:00Z', { promptId: 'w1', marker: 'A czy B?', lastFile: 'work.last/x.md' }),
   ]);
-  writeFileSync(join(root, 'projects.json'), JSON.stringify({ aliases: { sandbox: 'C:\\repo' } }));
+  writeFileSync(join(root, 'projects.json'), JSON.stringify({ projects: { sandbox: { name: 'Sandbox repo', dir: 'C:\\repo', description: 'Probe sandbox.' } } }));
   appendPoll(root, poll('2026-10-14T11:59:00Z', [agent('work', 'idle', { state: 'blocked' })]));
 
   const overview = buildOverview(root, { now: NOW, commonDirOf: () => null });
@@ -125,7 +156,7 @@ test('the overview excludes the hub, SessionEnd-only logs, /clear predecessors a
   assert.deepEqual(readHubSessions(root).hub, ['hub1']);
 
   const text = renderOverview(overview);
-  assert.match(text, /\| sandbox \| work probe-a \| waiting for decision \|/);
+  assert.match(text, /\| Sandbox repo \| work probe-a \| waiting for decision \|/);
 });
 
 test('a broken event line and an unreadable projects.json do not break the overview', () => {
@@ -138,14 +169,22 @@ test('a broken event line and an unreadable projects.json do not break the overv
   assert.match(renderOverview(overview), /projects.json: unreadable: /);
 });
 
-test('the overview reports a failed last poll and alias errors', () => {
+test('the overview reports a failed last poll and project map errors', () => {
   const root = tempRoot();
-  writeFileSync(join(root, 'projects.json'), JSON.stringify({ aliases: { a: 'C:\\x', b: 'C:\\x' } }));
+  writeFileSync(join(root, 'projects.json'), JSON.stringify({ projects: { a: { name: 'A', dir: 'C:\\x', description: 'x' }, b: { name: 'B', dir: 'C:\\x', description: 'x' } } }));
   appendPoll(root, { at: 't', ok: false, error: 'spawn claude ENOENT' });
   const overview = buildOverview(root, { now: NOW, commonDirOf: () => null });
   const text = renderOverview(overview);
   assert.match(text, /Last poll of claude agents --json failed: spawn claude ENOENT/);
-  assert.match(text, /projects.json: aliases a, b share the root/);
+  assert.match(text, /projects.json: entries a, b share the dir/);
+});
+
+test('"since" renders in local time', () => {
+  assert.equal(localTime('2026-10-14T10:21:44.627Z', 120), '2026-10-14 12:21:44');
+  assert.equal(localTime('2026-10-14T23:30:00Z', 120), '2026-10-15 01:30:00');
+  assert.equal(localTime(''), '');
+  const offset = -new Date('2026-10-14T10:21:44Z').getTimezoneOffset();
+  assert.equal(localTime('2026-10-14T10:21:44Z'), localTime('2026-10-14T10:21:44Z', offset));
 });
 
 test('a session newer than the last two polls is not vanished', () => {

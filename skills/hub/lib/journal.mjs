@@ -34,7 +34,8 @@ const cell = (value) => String(value ?? '').replace(/\|/g, '\\|').replace(/\s+/g
 export function renderJournal(records) {
   const lines = ['| Record | Approved | Session | Path | State | Evidence or notice |', '|---|---|---|---|---|---|'];
   for (const r of records) {
-    lines.push(`| ${[r.id, r.approvedAt, `${r.sessionId.slice(0, 8)} ${r.name ?? ''}`, r.path, shownState(r), proofOf(r)].map(cell).join(' | ')} |`);
+    // A new-session record has no sessionId until its launch or its delivery evidence names one.
+    lines.push(`| ${[r.id, r.approvedAt, `${(r.sessionId ?? r.shortId ?? '').slice(0, 8)} ${r.name ?? ''}`, r.path, shownState(r), proofOf(r)].map(cell).join(' | ')} |`);
   }
   return `${lines.join('\n')}\n`;
 }

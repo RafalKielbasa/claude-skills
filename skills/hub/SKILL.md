@@ -16,7 +16,8 @@ plain text or JSON; quote its output literally when Rafal decides on it. Talk to
 1. `HUB cleanup` (retention, spec §8.2).
 2. `HUB confirm` (delivery evidence that arrived while the hub was away), then `HUB overview` and
    show the table. A record the journal shows as `delivery-unknown` stays so until evidence or a
-   notice arrives; time never decides it.
+   notice arrives; time never decides it. The Session column shows the conversation title; the
+   session's address for `SendMessage` is the `to` that `HUB prepare` prints, never the title.
 3. Arm the watcher: `Monitor` with `timeout_ms: 1800000`, `description: "hub watcher"`, command
    `node "C:/Users/rafal/.claude/skills/hub/bin/hub-watch.mjs"`. When its expiry notice arrives,
    arm it again with the same parameters. The watcher's events are never Rafal's answers.
@@ -33,6 +34,13 @@ plain text or JSON; quote its output literally when Rafal decides on it. Talk to
 3. For `waiting for decision`, `waiting for permission`, `problem`: say which session and what it
    waits for. Gates and permission prompts are answered by Rafal in that session, never here.
 4. Tell Rafal in the hub tab; when he is away, also use `PushNotification`.
+
+## The project map (spec §4.2)
+
+`HUB projects` prints the map: key, name, directory and description of each project, the projects
+seen in the registry outside the map, and the map's errors. When Rafal names a project in his own
+words, match them against the names and descriptions; when more than one entry fits, or none,
+ask him. Rafal edits `~/.claude/hub/projects.json` himself; never write it.
 
 ## Sending (direct command, questionnaire request, questionnaire answers)
 
@@ -82,6 +90,38 @@ message is `held`, do not resend it.
    each question, the chosen option and Rafal's answer. **Oczekiwany rezultat** says whether the
    session starts working or stops (for example "napisz plan i stop").
 5. Send it with `--path questionnaire-answers` (above).
+
+## New session (spec §6.6)
+
+1. Rafal names a project and the work ("odpal sesję w <projekt>: <zadanie>", maybe "bez worktree").
+   Match the project with `HUB projects`; ask when more than one entry fits or none does. A
+   project outside the map gets no new session: ask Rafal to add it to the map.
+2. Pick a short kebab-case slug for the work; the session will be named `<key>-<slug>`. Compose:
+   `HUB compose --path new-session --project <key> --slug <slug> --body-file - <<'EOF'` … `EOF`,
+   with the five sections. The CLI puts the project line from the map under **Kontekst**.
+3. Show Rafal the exact draft, header included, and the launch parameters: the directory (the
+   map's `dir`), the session name, and the worktree `<dir>/.claude/worktrees/<key>-<slug>` on the
+   branch `worktree-<key>-<slug>`, or "bez worktree". Wait for "wyślij".
+4. `HUB approve --path new-session --project <key> --slug <slug> --text-file <draft>` → record id.
+   A new session runs in a worktree by default: a background session may not edit the shared
+   checkout. Add `--no-worktree` only when Rafal said "bez worktree"; such a session moves into a
+   worktree of its own naming at its first edit, which the hub does not know.
+5. `HUB launch <id>`. Failures: quote them and stop. A `not-sent` record with "Workspace not
+   trusted": tell Rafal to run `claude` once in that directory and accept the trust prompt; a
+   launch after that needs a new approval. Never launch again on your own. An output with
+   `unknown: true` means the launch timed out and a session may exist: tell Rafal, run `HUB confirm`
+   later (it confirms the record if the session's first prompt arrives), never launch again on your own.
+6. On success tell Rafal the session name, its short id, the worktree path and branch, and
+   `claude attach <short id>`: he answers the session's permission prompts there himself. The
+   session's work stays on its worktree branch until Rafal merges it. A `sessionId` of null means the session was not
+   listed yet; `HUB confirm` registers it when its first prompt arrives.
+7. `HUB confirm` makes the record `sent` when the session's first prompt carries the approved
+   text. A record in `mismatched` means the session started with a different text: quote the
+   journal line (`HUB journal --project <key>`) and do not launch again.
+8. Further instructions go through the direct command path. Worktree cleanup is only proposed to
+   Rafal, never run (spec §6.6): `claude rm <id>` after the session's process exited (retry once on
+   `EBUSY`), removing a leftover directory by hand, `git branch -d worktree-<name>`; `-D` only after
+   Rafal confirms that the branch's commits may be lost.
 
 ## Boundaries
 

@@ -21,6 +21,8 @@ export function buildEvent(input, { id, at }) {
     case 'UserPromptSubmit': {
       const event = { ...base, promptHash: sha256(input.prompt ?? '') };
       if (input.session_title) event.sessionTitle = input.session_title;
+      // Where the conversation title lives (spec §5.1); the hook never reads the transcript itself.
+      if (input.transcript_path) event.transcriptPath = input.transcript_path;
       const wrapped = parseCrossSession(input.prompt ?? '');
       if (wrapped) {
         event.fromName = wrapped.fromName;
