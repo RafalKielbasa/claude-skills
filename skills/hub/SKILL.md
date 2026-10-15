@@ -1,6 +1,6 @@
 ---
 name: hub
-description: Use in the hub session — the Claude Code session started with `claude --name hub --append-system-prompt-file <skill>/role.md` in ~/.claude/hub — to oversee Rafal's sessions in other projects: show the overview, react to watcher events, send approved direct commands and questionnaires, and track delivery. Not for project sessions themselves.
+description: Use in the hub session — the Claude Code session started with `claude --name hub --append-system-prompt-file <skill>/role.md` in ~/.claude/hub — to oversee Rafal's sessions in other projects: show the overview, react to watcher events, send approved direct commands and questionnaires, launch new sessions from the project map, start dialog forks, consult Codex, and track delivery. Not for project sessions themselves.
 ---
 
 # Hub
@@ -106,10 +106,12 @@ message is `held`, do not resend it.
    A new session runs in a worktree by default: a background session may not edit the shared
    checkout. Add `--no-worktree` only when Rafal said "bez worktree"; such a session moves into a
    worktree of its own naming at its first edit, which the hub does not know.
-5. `HUB launch <id>`. Failures: quote them and stop. A `not-sent` record with "Workspace not
+5. `HUB launch <id>`, through Bash with `timeout: 600000`: a launch may take up to 120 s plus
+   polls, more than the default Bash timeout. Failures: quote them and stop. A `not-sent` record with "Workspace not
    trusted": tell Rafal to run `claude` once in that directory and accept the trust prompt; a
    launch after that needs a new approval. Never launch again on your own. An output with
-   `unknown: true` means the launch timed out and a session may exist: tell Rafal, run `HUB confirm`
+   `unknown: true` means the launch outcome is unknown (a timeout, or no `backgrounded` line) and
+   a session may exist: tell Rafal, run `HUB confirm`
    later (it confirms the record if the session's first prompt arrives), never launch again on your own.
 6. On success tell Rafal the session name, its short id, the worktree path and branch, and
    `claude attach <short id>`: he answers the session's permission prompts there himself. The
@@ -123,9 +125,64 @@ message is `held`, do not resend it.
    `EBUSY`), removing a leftover directory by hand, `git branch -d worktree-<name>`; `-D` only after
    Rafal confirms that the branch's commits may be lost.
 
+## Dialog through a fork (spec §6.5)
+
+1. Rafal says "omówmy wynik sesji X". Pick a kebab-case slug and run
+   `HUB dialog start --session <X> --slug <slug>` through Bash with `timeout: 600000` (a launch
+   may take up to 120 s plus polls). Then, by its output:
+   - `candidates` with several ids: ask Rafal which session, then run `HUB dialog start` again
+     with the chosen id; with none: X is not live under its name, tell him so;
+   - `twins` not empty: other live sessions carry the same name; tell Rafal that the fork started
+     from `sourceSessionId` and name the twins;
+   - `resolvedFrom` set: X restarted, and the fork starts from the live session `sourceSessionId`;
+   - `busy: true`: the fork sees X's history up to the running tool call, without its result (one
+     sample, D7);
+   - a failure with `command`: quote the error and give Rafal the command to paste into a new
+     Git Bash tab (it uses `cd`, `&&` and `$(cat …)`); never start the fork again on your own.
+   - `unknown: true`: the launch outcome is unknown (a timeout, or no `backgrounded` line) and the
+     fork may run; tell Rafal, look for `dlg-<key>-<slug>` in the overview, and never start it again on your own.
+   - `sessionId: null`, or a fork Rafal started by hand with `command`: once `claude agents --json`
+     lists it (for a fork started by hand, its short id is the `id` of the entry named `<name>`),
+     register it with `HUB register --session <short id> --kind dialog --project <key> --name <name>`,
+     where `<key>` is the folder after `projects/` in the dialog directory. `HUB register` refuses
+     a session the poll does not list yet.
+2. Tell Rafal the dialog directory and `claude attach <shortId>`: he talks to the fork there.
+3. "odśwież kontekst": `HUB dialog refresh --dir <dialog dir>`.
+4. When the watcher reports the fork `waiting for decision` with "prompt gotowy do przeglądu", ask
+   Rafal to review `<dialog dir>/prompt.md` in the editor.
+5. When he says it is ready: `HUB compose --path dialog --session <sourceSessionId> --origin dialogs/<dir name> --body-file <dialog dir>/prompt.md`,
+   then steps 2–6 of Sending (full draft, "wyślij", approve, prepare, SendMessage, result,
+   confirm).
+6. After the send, stop the fork with `claude stop <shortId>`; the dialog directory stays. Show
+   X's next result when its turn ends.
+
+## Codex consultation (spec §7)
+
+1. Rafal says "odbij od Codexa <element>: <pytanie>". The element is a session's last result
+   (`--last <sessionId>`), a dialog's `prompt.md` or `decisions.md` or a repository file
+   (`--file <path>`), or the diff of a session's branch (`--diff <range>`, for example
+   `main..HEAD`). `--session <sessionId>` names the session the element belongs to, and Codex runs
+   in its `cwd`; without a session pass `--cwd <dir>`.
+2. Run it in the background (Bash with `run_in_background: true`), the question on stdin:
+   `HUB codex ask --session <id> --slug <slug> --last <id> --question-file - <<'EOF'` … `EOF`.
+   There is no "wyślij" step: Codex only reads.
+3. A refusal for a denylisted name, or for a file outside the repository and the hub data: ask
+   Rafal; never paste or point at such a file another way.
+4. When it finishes with `ok`, read `answerFile`, show the answer verbatim, then a table: uwaga,
+   ocena huba, uzasadnienie. Record that table with
+   `HUB codex note --thread <thread> --text-file - <<'EOF'` … `EOF`. A `warning` means the thread
+   has no id: say that a follow-up is impossible there. On a failure say "brak drugiej opinii" and
+   quote `failure`; the `.err` file stays; never run it again on your own.
+5. "Codex, <pytanie>": `HUB codex follow --thread <thread> --question-file - <<'EOF'` … `EOF`, also
+   in the background, then step 4. One follow-up per thread at a time: wait for its result before
+   the next `codex follow` on the same thread (both would take the same call number in `meta.json`).
+6. A conclusion reaches `decisions.md` or a prompt only after Rafal confirms it.
+
 ## Boundaries
 
 - Write only through `HUB` into `~/.claude/hub/`. Never edit project repositories or this skill.
+- Start sessions and forks only with `HUB launch` and `HUB dialog start`, after the steps above;
+  stop a fork only with `claude stop <shortId>` after its prompt was sent or Rafal asked.
 - Never answer gates or permission prompts of other sessions.
 - If a name matches several live sessions, stop and ask Rafal; SendMessage addresses by name.
 - Quote errors literally; never retry on your own.

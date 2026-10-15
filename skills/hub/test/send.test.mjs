@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { composeMessage, questionnaireRequest, templateProblems } from '../lib/compose.mjs';
-import { runChecks } from '../lib/checks.mjs';
+import { runChecks, gitInfo } from '../lib/checks.mjs';
 import { findDelivery, classifyNotice, applyNotice } from '../lib/confirm.mjs';
 import { shownState, renderJournal } from '../lib/journal.mjs';
 import { sha256 } from '../lib/text.mjs';
@@ -67,6 +67,12 @@ test('check 2: changed cwd, repository root, branch, and commit when detached', 
   assert.deepEqual(checks({ git: { ...git, branch: 'feature' } }), [2]);
   const detached = { ...record, baseline: { ...baseline, branch: null, sha: 'abc' } };
   assert.deepEqual(runChecks({ record: detached, records: [detached], poll, derived, git: { ...git, branch: null, sha: 'def' }, text }).map((f) => f.check), [2]);
+});
+
+test('gitInfo reads the repository without optional locks', () => {
+  const calls = [];
+  gitInfo('C:\\repo', (cmd, args) => { calls.push(args); return { status: 0, stdout: 'x\n' }; });
+  assert.ok(calls.length === 3 && calls.every((args) => args[0] === '--no-optional-locks' && args[1] === '-C'));
 });
 
 test('check 3: the same text already pending, sent or held for the session, unless a resend was confirmed', () => {

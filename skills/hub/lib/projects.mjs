@@ -72,7 +72,8 @@ export function projectOf(cwd, projects, commonDirOf = gitCommonDir) {
   if (hits.length) {
     hits.sort((a, b) => norm(b[1].dir).length - norm(a[1].dir).length);
     const [key, entry] = hits[0];
-    return { key, name: entry.name || key, mapped: true };
+    // A non-string name is a map error (mapErrors); the key keeps the overview rendering (spec §4.2).
+    return { key, name: typeof entry.name === 'string' && entry.name.trim() ? entry.name : key, mapped: true };
   }
   const common = commonDirOf(cwd);
   const fallback = common ? basename(dirname(resolve(common))) : basename(resolve(cwd));

@@ -6,7 +6,15 @@
       "Edit",
       "Write",
       "Glob",
-      "Grep"
+      "Grep",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)",
+      "PowerShell(git add:*)",
+      "PowerShell(git commit:*)",
+      "PowerShell(git pull:*)",
+      "PowerShell(git push:*)"
     ],
     "additionalDirectories": [
       "D:\\Praca\\Devstock\\Projekty\\Multi agent system",

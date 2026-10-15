@@ -8,7 +8,8 @@ import { shownState } from './journal.mjs';
 
 export function gitInfo(cwd, run = spawnSync) {
   const git = (...args) => {
-    const result = run('git', ['-C', cwd, ...args], { encoding: 'utf8' });
+    // --no-optional-locks: reading a session's repository must not refresh its index file (spec §8.2).
+    const result = run('git', ['--no-optional-locks', '-C', cwd, ...args], { encoding: 'utf8' });
     return result.status === 0 ? result.stdout.trim() : null;
   };
   if (!cwd) return { repoRoot: null, branch: null, sha: null };

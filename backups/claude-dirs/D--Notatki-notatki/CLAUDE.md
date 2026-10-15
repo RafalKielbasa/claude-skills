@@ -28,6 +28,18 @@ To osobista baza wiedzy w Obsidianie — nie projekt programistyczny. Nie ma tu 
 - Styl odpowiedzi zależny od tematu: zwięźle i konkretnie przy codziennych sprawach, z kontekstem i wyjaśnieniem „dlaczego" przy nauce nowych zagadnień.
 - Odpowiadaj po polsku.
 
+## Git
+
+- Repo vaulta: `RafalKielbasa/my-second-brain` (prywatne), gałąź `main`. Z repo czyta inny system osobistej produktywności, więc zmiany mają być w remote na bieżąco. Ustalone 2026-10-15.
+- **Commituję i pushuję sam, bez pytania, po każdej zakończonej zmianie** — także w skillach (`tidy-journal`, `start-day`, `nauka-z-claude`, `sync-project` i pozostałych) i w subagentach. Zakończona zmiana to plik w stanie, który ma sens bez dalszych kroków (zapisana pozycja powtórki, rozlokowany dziennik), nie każda pojedyncza edycja w środku operacji. Zgoda na zmianę w notatce (patrz „Zasady współpracy") dalej obowiązuje — commit idzie po zapisie, nie zamiast pytania.
+- **Tylko pliki zmienione w tej sesji:** `git add <ścieżki>`, nigdy `git add -A` ani `git add .`. Pliki ruszane przez inną sesję albo ręcznie w Obsidianie zostawiam — ręczne edycje wypycha plugin Obsidian Git.
+- Kolejność: `git branch --show-current` (inna gałąź niż `main` → zatrzymuję się i pytam) → `git add <pliki>` → `git commit` w Conventional Commits (np. `docs(learning): …`, `docs(tasks): …`) → `git push`. Push odrzucony, bo remote ma nowsze commity → `git pull --rebase --autostash`, potem ponowny `git push`. Rebase dotyczy tu wyłącznie moich niewypchniętych commitów i jest częścią tej reguły.
+- **Indeks jest wspólny z innymi sesjami.** Przed `git commit` sprawdzam `git diff --cached --name-only`: lista ma zawierać wyłącznie moje ścieżki. Cudzy plik w indeksie → nie commituję, nie zdejmuję go z indeksu, zatrzymuję się i pytam. (Powód: 2026-10-15 commit `d11bc2a` zgarnął spec i plan orchestrator-hub, które zaindeksowała inna sesja.)
+- Konflikt przy rebase → `git rebase --abort`, raport z dosłownym komunikatem i czekam na decyzję. Force push nigdy.
+- Nic do zacommitowania (plik zgarnął już Obsidian Git) → commit pomijam, ale sprawdzam, czy `main` nie jest przed `origin/main`, i wtedy pushuję.
+- Plik wyglądający na sekret (`.env`, klucz, token) nie trafia do commita — zatrzymuję się i pytam.
+- W raporcie podaję gałąź, hash i wynik pusha.
+
 ## Konwencje Obsidiana
 
 - Linki wewnętrzne w składni Obsidiana `[[Wikilink]]`, nie w standardowym Markdownie.

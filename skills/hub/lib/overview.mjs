@@ -62,7 +62,7 @@ export function buildOverview(root, { now = Date.now(), commonDirOf = gitCommonD
       lastStop: derived.lastStop?.lastFile ?? null,
     });
   }
-  rows.sort((a, b) => a.projectName.localeCompare(b.projectName) || String(b.since).localeCompare(String(a.since)));
+  rows.sort((a, b) => String(a.projectName).localeCompare(String(b.projectName)) || String(b.since).localeCompare(String(a.since)));
   return {
     rows,
     pollError: lastPoll && !lastPoll.ok ? lastPoll.error : null,

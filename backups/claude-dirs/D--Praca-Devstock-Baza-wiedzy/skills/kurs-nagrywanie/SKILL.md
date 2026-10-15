@@ -31,7 +31,9 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    od razu.
 3. **Konfiguracja lekcji.** Napisz `video/nagrywanie.yaml` z planu nagrania: każdy krok planu jako działania usługi
    w kolejności planu, akapit lektora, warunek przyjęcia (`sprawdz`: nazwany predykat - to on rozstrzyga, nie opis),
-   grupy prób z budżetem, warianty narracji, ujęcia, dogrywki. Treść do wpisania bierz dosłownie z planu (kolumna
+   grupy prób z budżetem, warianty narracji, ujęcia, dogrywki. Dwie usługi w jednym ujęciu (np. n8n i arkusz) to dwie karty ujęcia (`karta` + `karty`) i przejścia między nimi
+   działaniem `switch_tab: { tab: <karta> }`, nie `goto` na adres drugiej usługi - `goto` przeładowuje stronę w filmie
+   (README `tools/nagrywanie`, sekcja „Przełączanie kart”). Treść do wpisania bierz dosłownie z planu (kolumna
    "Do wpisania" i bloki pod tabelą) - nigdy własne brzmienie. Potem `sprawdz` (walidacja wobec planu) i `proba`
    (bez przeglądarki, atrapy) - oba czyste, zanim cokolwiek otworzysz w przeglądarce.
 4. **Przebieg próbny (przed lektorem).** Lekcja nie potrzebuje jeszcze paczki lektora - ten krok idzie zaraz po

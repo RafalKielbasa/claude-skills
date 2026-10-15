@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, appendFileSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdirSync, appendFileSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tempRoot, ev } from './helpers.mjs';
@@ -93,7 +93,10 @@ test('new session end to end: compose with the project, approve, launch, confirm
   assert.deepEqual(call.args, ['--bg', '--name', 'baza-awatary', '-w', 'baza-awatary', text]);
   assert.equal(call.cwd.toLowerCase(), repo.toLowerCase());
   assert.deepEqual(readHubSessions(root).launched.map((l) => [l.sessionId, l.kind, l.project]), [[out.sessionId, 'background', 'baza']]);
-  assert.equal(loadRecords(root, 'baza')[0].state, 'pending');
+  const [launchedRecord] = loadRecords(root, 'baza');
+  assert.equal(launchedRecord.state, 'pending');
+  assert.match(launchedRecord.sentAt, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(readFileSync(launchedRecord.sentFile, 'utf8'), text);
 
   assert.deepEqual(JSON.parse(hub(['confirm']).stdout).confirmed, []);
   appendFileSync(join(root, 'registry', `${out.sessionId}.events.jsonl`), `${JSON.stringify(ev('UserPromptSubmit', new Date(Date.now() + 1000).toISOString(), { sessionId: out.sessionId, cwd: repo, promptHash: sha256(text) }))}\n`);
@@ -170,4 +173,39 @@ test('refusals: a project outside the map, a bad slug, a live name, an untrusted
   assert.match(record.error, /^exit 1: Workspace not trusted/);
   assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 1);
   assert.match(hub(['launch', first.id, '--agents-json', agents]).stderr, /record is not-sent, not approved/);
+});
+
+test('exit 0 without a "backgrounded" line is an unknown outcome: the record stays pending, not not-sent', () => {
+  const garbled = runClaude(['--bg'], { run: () => ({ status: 0, stdout: 'something else' }), env: {} });
+  assert.equal(garbled.ok, false);
+  assert.equal(garbled.unknown, true);
+  assert.match(garbled.error, /the launch outcome is unknown: something else$/);
+
+  const { root, agents, log, hub, draft } = setup();
+  const file = draft().stdout.trim();
+  const approved = JSON.parse(hub(['approve', '--path', 'new-session', '--project', 'baza', '--slug', 'awatary', '--text-file', file]).stdout);
+  const launched = hub(['launch', approved.id, '--agents-json', agents], { env: { FAKE_CLAUDE_GARBLED: '1' } });
+  assert.equal(launched.status, 3);
+  const out = JSON.parse(launched.stdout);
+  assert.equal(out.unknown, true);
+  assert.match(out.error, /the launch outcome is unknown: started$/);
+  assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 1);
+  const [record] = loadRecords(root, 'baza');
+  assert.equal(record.state, 'pending');
+  assert.ok(existsSync(record.sentFile));
+  assert.match(hub(['journal', '--project', 'baza']).stdout, /\| new-session \| delivery-unknown \| no "backgrounded" line in the output; the launch outcome is unknown: started \|/);
+});
+
+test('approve refuses a draft composed for another slug; a key that is not kebab-case gets no new session', () => {
+  const { root, repo, hub, draft } = setup();
+  const file = draft('x', 'a').stdout.trim();
+  const refused = hub(['approve', '--path', 'new-session', '--project', 'baza', '--slug', 'b', '--text-file', file]);
+  assert.equal(refused.status, 3);
+  assert.match(refused.stderr, /the draft was composed for baza-a, not baza-b/);
+  assert.deepEqual(loadRecords(root, 'baza'), []);
+
+  writeFileSync(join(root, 'projects.json'), JSON.stringify({ projects: { 'Baza X': { name: 'Baza', dir: repo, description: 'x' } } }));
+  const badKey = hub(['compose', '--path', 'new-session', '--project', 'Baza X', '--slug', 'a', '--body-file', '-'], { input: five('x') });
+  assert.equal(badKey.status, 3);
+  assert.match(badKey.stderr, /project Baza X: the map key must be kebab-case/);
 });

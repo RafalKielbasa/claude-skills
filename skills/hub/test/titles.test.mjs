@@ -6,6 +6,7 @@ import { readTitle, resolveTitles } from '../lib/titles.mjs';
 import { buildEvent } from '../lib/events.mjs';
 import { buildOverview, renderOverview } from '../lib/overview.mjs';
 import { registerLaunched } from '../lib/hubsessions.mjs';
+import { appendPoll } from '../lib/polls.mjs';
 import { cleanup } from '../lib/retention.mjs';
 import { tempRoot, fixture, ev } from './helpers.mjs';
 
@@ -74,6 +75,14 @@ test('the overview shows the transcript title, falls back to session_title, and 
   const text = renderOverview(buildOverview(root, { now: NOW, commonDirOf: () => null }));
   assert.match(text, /\| titled Hub: mapa projektów i tytuły sesji \|/);
   assert.match(text, /\| plain probe-a \[background\] \|/);
+});
+
+test('a session with neither a transcript title nor a session_title shows its poll name', () => {
+  const root = tempRoot();
+  mkdirSync(join(root, 'registry'), { recursive: true });
+  appendFileSync(join(root, 'registry', 'panel.events.jsonl'), line(ev('UserPromptSubmit', '2026-10-14T11:50:00Z', { sessionId: 'panel', cwd: 'C:\\repo' })));
+  appendPoll(root, { at: '2026-10-14T11:55:00Z', ok: true, sessions: [{ sessionId: 'panel', id: 'panel', name: 'vs-panel', kind: 'interactive', status: 'busy', state: null, cwd: 'C:\\repo' }] });
+  assert.match(renderOverview(buildOverview(root, { now: NOW, commonDirOf: () => null })), /\| panel vs-panel \|/);
 });
 
 test('retention drops the cached titles of deleted sessions', () => {

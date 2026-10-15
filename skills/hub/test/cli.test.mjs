@@ -178,6 +178,20 @@ test('HUB projects prints the map and the projects seen outside it', () => {
   assert.match(out.stdout, /Seen in the registry, outside the map: loose/);
 });
 
+test('HUB projects lists an unmapped project of a session that ended days ago, but not the hub itself', () => {
+  const { root, hub } = setup();
+  const daysAgo = (n) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+  const cwd = join(root, 'archived');
+  appendFileSync(join(root, 'registry', 's8.events.jsonl'), [
+    ev('UserPromptSubmit', daysAgo(3.1), { sessionId: 's8', cwd }),
+    ev('SessionEnd', daysAgo(3), { sessionId: 's8', cwd, reason: 'other' }),
+  ].map((e) => `${JSON.stringify(e)}\n`).join(''));
+  appendFileSync(join(root, 'registry', 'hub1.events.jsonl'), `${JSON.stringify(ev('UserPromptSubmit', daysAgo(0), { sessionId: 'hub1', cwd: root }))}\n`);
+  const out = hub('projects');
+  assert.equal(out.status, 0, out.stderr);
+  assert.match(out.stdout, /^Seen in the registry, outside the map: archived$/m);
+});
+
 test('compose reads the body from stdin', () => {
   const { root } = setup();
   const body = five('Uruchom testy.');

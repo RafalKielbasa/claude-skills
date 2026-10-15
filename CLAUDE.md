@@ -31,6 +31,10 @@
   `.claude/settings.json` albo `.claude/settings.local.json`:
   - „Baza wiedzy" (`D:\Praca\Devstock\Baza wiedzy`) — **commituję sam, bez
     pytania**, w całym repo łącznie z `tools/`.
+  - vault „Notatki" (`D:\Notatki\notatki`, repo `my-second-brain`) —
+    **commituję i pushuję sam, bez pytania, po każdej zmianie**, wyłącznie
+    pliki zmienione w danej sesji; szczegóły w `.claude/CLAUDE.md` vaulta.
+    (Ustalone 2026-10-15.)
   - repo z kodem (devstock-team-agent, company-agent-chat, saas app,
     code-busters-v2, code-busters-mobile) — **domyślnie nie commituję**;
     commit ma tam regułę `ask`, więc gdy mi każesz, dostajesz prompt
@@ -38,7 +42,8 @@
 - **Pusha nie robię nigdy domyślnie**, w żadnym repo — także w „Bazie wiedzy".
   Wykonuję go tylko po Twoim jawnym zdaniu w danej rozmowie („commituj
   i wypychaj"); zgoda dotyczy tej prośby, nie całej sesji. `git push` ma
-  wszędzie regułę `ask`.
+  wszędzie regułę `ask`. Jedyny wyjątek: vault „Notatki" (wyżej), gdzie push
+  jest domyślny i ma regułę `allow`.
 - **Domyślną znosisz w rozmowie w obie strony** — „commituj" włącza commity
   tam, gdzie są wyłączone, „nie commituj" wyłącza je tam, gdzie są domyślnie
   włączone. Obowiązuje do końca tej rozmowy.
@@ -47,7 +52,8 @@
   sesją i commit potrafi wylądować na cudzej gałęzi.
 - Dotyczy to również subagentów i skilli: **idą za domyślną repo, ale nie
   pushują nigdy**. Jeśli plan, skill albo instrukcja każą pushować, **pomiń
-  ten krok** i powiedz o tym wprost w podsumowaniu.
+  ten krok** i powiedz o tym wprost w podsumowaniu. Wyjątek: w vaultcie
+  „Notatki" subagenci i skille pushują tak jak sesja główna.
 - Tworzenie PR-ów i tagów robisz sam.
 - Operacje odwracalne na historii (`git reset`, `git revert`, `rebase`) tylko na wyraźną prośbę.
 - **Sugerowana treść commita przy bramce.** W repo, gdzie commit jest
@@ -127,17 +133,43 @@
 ## Forma odpowiedzi
 
 Sekcja ogólna, obowiązuje w każdej odpowiedzi. „Wyjaśnienia" ją zawężają, gdy
-proszę o wytłumaczenie — przy konflikcie wygrywają „Wyjaśnienia".
+proszę o wytłumaczenie — przy konflikcie wygrywają „Wyjaśnienia" (dotyczą sekcji
+📄 TREŚĆ).
 
-### Struktura
+### Protokół odpowiedzi (BLUF)
 
-- **Odpowiedź w pierwszym zdaniu.** Wniosek, decyzja albo „nie da się" idzie na
-  początek, uzasadnienie potem. Bez preambuł i bez powtarzania mojego pytania.
-- **Stała kolejność:** (1) odpowiedź, (2) uzasadnienie albo dowód, (3) zastrzeżenia
-  i to, czego nie sprawdziłeś, (4) następny krok. Sekcję pomijasz, gdy jest pusta —
-  nie wypełniasz jej watą.
-- **Nagłówki dopiero od trzech sekcji.** Krótka odpowiedź to akapit i ewentualnie
-  lista, nie dokument.
+Każda odpowiedź idzie w tym schemacie, wniosek albo pytanie zawsze na początku
+(Bottom Line Up Front). Bez uprzejmości, bez wstępów („Przeanalizowałem
+sytuację…"), bez powtarzania mojego pytania i bez podsumowań na końcu.
+
+1. **`---` i `## <temat i intencja>`.** Linia odcina odpowiedź od poprzedniej
+   wiadomości, nagłówek nazywa **temat i intencję** — np. „Tłumaczenie
+   architektury aplikacji", „Pytania do specu onboardingu", „Raport z migracji
+   bazy", „Propozycja: cache zapytań". Sam temat bez intencji („Architektura
+   aplikacji") to za mało — z nagłówka ma wynikać, czy tłumaczysz, pytasz,
+   raportujesz, czy proponujesz.
+2. **`### 🎯 STATUS / DECYZJA`** — jedno zdanie: wynik, wniosek, „nie da się"
+   albo konkretna decyzja, której ode mnie potrzebujesz. Zawsze, także w
+   odpowiedzi jednozdaniowej.
+3. **`### 📌 SEDNO (TL;DR)`** — 1–3 punkty, każdy w jednej linii: fakt albo
+   wniosek, w tym zastrzeżenia i to, czego nie sprawdziłeś. Pomijasz, gdy 🎯
+   mówi wszystko.
+4. **`### 📄 TREŚĆ`** — tylko gdy prosiłem o treść, której nie da się zwinąć do
+   sedna: wyjaśnienie, tabela z review, przegląd sesji. Obowiązują tu
+   „Wyjaśnienia" i „Prezentacja kodu".
+5. **`### ❓ PYTANIE I WARIANTY`** — tylko gdy potrzebujesz mojej decyzji, w
+   formacie z „Decyzje: Recommendation-First".
+6. **`<details><summary>Szczegóły…</summary> … </details>`** — dosłowne wyniki
+   narzędzi, logi, pełne dane, lista zmienionych plików, propozycja commita.
+   Kodu nie wklejasz także tutaj. Pomijasz, gdy nie ma czego włożyć.
+7. **Marker `⏸ Czeka na decyzję: …`** — gdy tura czeka na mnie, zawsze w
+   ostatniej linii, za `</details>`. Hub czyta marker wyłącznie z ostatniej
+   linii.
+
+Sekcję spoza punktów 1–2 pomijasz, gdy jest pusta — nie wypełniasz jej watą.
+
+### Struktura treści
+
 - **Domyślną formą jest lista punktowana.** Proza tylko wtedy, gdy treść jest
   jednym ciągiem myśli, którego rozbicie na punkty by go zepsuło. Ciąg zdań
   opisujących osobne rzeczy zawsze rozbijasz na punkty.
@@ -145,17 +177,28 @@ proszę o wytłumaczenie — przy konflikcie wygrywają „Wyjaśnienia".
   ale też przy listach plików ze zmianami, uwagach z review, wynikach testów,
   wariantach do wyboru — wszędzie, gdzie punkty mają powtarzalną strukturę.
   Listę punktowaną zostawiasz tam, gdzie punkty nie dzielą wspólnych kolumn.
-- **Każda odpowiedź zaczyna się od poziomej linii `---` i nagłówka.** Linia odcina
-  ją od poprzedniej wiadomości, nagłówek nazywa **temat i intencję** tej konkretnej
-  odpowiedzi — np. „Tłumaczenie architektury aplikacji", „Pytania do specu
-  onboardingu", „Raport z migracji bazy", „Propozycja: cache zapytań". Sam temat
-  bez intencji („Architektura aplikacji") to za mało — z nagłówka ma wynikać, czy
-  tłumaczysz, pytasz, raportujesz, czy proponujesz.
-- **Nagłówek otwierający jest bezwarunkowy** — dajesz go też przy odpowiedzi
-  jednozdaniowej, i nie zwalnia Cię z reguły „Odpowiedź w pierwszym zdaniu":
-  wniosek idzie zaraz pod nagłówkiem.
-- **Wewnątrz odpowiedzi też odcinasz bloki tematyczne linią `---`.** Ma być widać,
+- **Wewnątrz sekcji 📄 odcinasz bloki tematyczne linią `---`.** Ma być widać,
   gdzie kończy się jedna myśl, a zaczyna następna — bez wczytywania się w treść.
+
+### Decyzje: Recommendation-First
+
+- **Gdy potrzebujesz mojej decyzji, nigdy nie zadajesz pytania otwartego.**
+  Dajesz konkretne warianty i swoją rekomendację.
+- **Kolejność:** najpierw **Rekomendacja agenta** — który wariant i dlaczego,
+  jedno zdanie; potem warianty `[A]`, `[B]`… — rekomendowany zawsze jako `[A]`;
+  na końcu `[Domyślnie] Wpisz "OK", aby przejść do realizacji wariantu
+  rekomendowanego.`
+- **Wariant to konkretne działanie ze skutkiem.** Przy nieodwracalnym piszesz,
+  czego nie da się cofnąć.
+- **Kilka decyzji naraz numerujesz** `D1`, `D2`…; „OK" przyjmuje wszystkie
+  rekomendacje, „D2 B" zmienia jedną.
+- **W narzędziu do pytań** (AskUserQuestion) rekomendowana opcja idzie pierwsza,
+  z dopiskiem „(Rekomendowane)".
+- **„OK" to moja odpowiedź.** Cisza, timeout i „proceed using your best
+  judgment" nie są „OK" — obowiązuje „Czekanie na moją odpowiedź".
+- **Wyjątki od zakazu pytań otwartych:** pytania sprawdzające wiedzę (skill
+  `nauka-z-claude`) i prośba o dane, których nie da się wyliczyć (ścieżka,
+  nazwa, treść) — wtedy domysł, jeśli go masz, podajesz jako `[A]`.
 
 ### Prezentacja kodu
 
@@ -177,8 +220,9 @@ proszę o wytłumaczenie — przy konflikcie wygrywają „Wyjaśnienia".
   fakty.
 - **Nie streszczaj tego, co przed chwilą pokazałeś.** Po tabeli, diffie albo bloku
   kodu nie przepisujesz ich treści prozą.
-- **Nie wyliczaj alternatyw.** Rekomendacja plus jedno zdanie o odrzuconej opcji
-  tylko wtedy, gdy odrzucenie jest nieoczywiste.
+- **Nie wyliczaj alternatyw** poza wariantami decyzji w sekcji ❓. Rekomendacja
+  plus jedno zdanie o odrzuconej opcji tylko wtedy, gdy odrzucenie jest
+  nieoczywiste.
 - **Rozwinięcie na żądanie.** Gdy świadomie ucinasz coś istotnego, dopisz jedną
   linię „mogę rozwinąć: X" zamiast rozwijać z własnej inicjatywy.
 
@@ -195,7 +239,9 @@ proszę o wytłumaczenie — przy konflikcie wygrywają „Wyjaśnienia".
 
 ### Raport po zadaniu
 
-Stały szkielet, w tej kolejności:
+Stały szkielet, w tej kolejności, osadzony w protokole: 🎯 to wynik zadania,
+SEDNO to punkty 1, 3 i 5 (po jednej linii), a punkty 2 i 4 oraz propozycja
+commita idą do `<details>`.
 
 1. **Co zrobione** — jedno zdanie na wątek.
 2. **Pliki** — po jednej linii na plik: `ścieżka:linia` i co się zmieniło.

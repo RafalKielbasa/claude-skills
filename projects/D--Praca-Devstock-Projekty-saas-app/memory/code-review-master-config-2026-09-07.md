@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-12T13:13:34.826Z
+  modified: 2026-10-15T09:33:46.829Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -86,6 +86,10 @@ parze w bazie, z wideo) w CP-108 = #203, blocked by #184. f-01 wyłączone `reje
 Wysłane jako review 5491208916 `CHANGES_REQUESTED`, bez 422: 2 Blocking spoza runu z ręcznej kontroli
 kryteriów #184 (brak testów web; `passingScore ?? 70` nadpisuje próg), f-05 Suggestion, literówka Nitpick.
 PR ma też konflikt z `main` w `invalidation.ts` (oba eksporty zostają), zob. [[feedback-unmet-issue-element-blocking]].
+Recheck 2026-10-15 `recheck 202` (baza `290c4d4`, tip `f82bbca`, CI zielone): 4/5 naniesione; test
+„pytanie bez treści” (`quiz.test.tsx:64-89`) sprawdza tylko istnienie inputu, więc nic nie testuje.
+Wysłane jako review 5531002103 `CHANGES_REQUESTED` (1 Blocking + Nitpick o martwym `data-testId`),
+karta #184 Second review → To be fixed. Rafał powiedział „wyślij”, więc payload poszedł bez pokazania.
 
 Decyzje Rafała spoza pliku (2026-09-07):
 - `budget.slots: 5` mimo że na PR-ze API osie domenowe (`payments-stripe`, `auth-session`)

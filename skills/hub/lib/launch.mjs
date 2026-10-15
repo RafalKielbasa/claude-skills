@@ -36,7 +36,8 @@ export function runClaude(args, { cwd, env = process.env, run = spawnSync } = {}
   if (result.error) return { ok: false, output, error: result.error.message };
   if (result.status !== 0) return { ok: false, output, error: `exit ${result.status}: ${output}` };
   const parsed = parseBackgrounded(output);
-  return parsed ? { ok: true, output, ...parsed } : { ok: false, output, error: `no "backgrounded" line in the output: ${output}` };
+  // Exit 0 without the line: the background service may have started a session (spec §6.3 step 6).
+  return parsed ? { ok: true, output, ...parsed } : { ok: false, unknown: true, output, error: `no "backgrounded" line in the output; the launch outcome is unknown: ${output}` };
 }
 
 // The worktree layout of `-w <name>` (probe S10).

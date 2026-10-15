@@ -169,6 +169,16 @@ test('a broken event line and an unreadable projects.json do not break the overv
   assert.match(renderOverview(overview), /projects.json: unreadable: /);
 });
 
+test('a non-string name in projects.json falls back to the key, and the overview still renders', () => {
+  const root = tempRoot();
+  writeFileSync(join(root, 'projects.json'), JSON.stringify({ projects: { app: { name: 5, dir: 'C:\\repo', description: 'x' }, other: { name: ['B'], dir: 'C:\\other', description: 'x' } } }));
+  writeLog(root, 'in-other', [ev('UserPromptSubmit', '2026-10-14T11:50:00Z', { promptId: 'o1', cwd: 'C:\\other' })]);
+  writeLog(root, 'in-app', [ev('UserPromptSubmit', '2026-10-14T11:51:00Z', { promptId: 'a1', cwd: 'C:\\repo\\src' })]);
+  const overview = buildOverview(root, { now: NOW, commonDirOf: () => null });
+  assert.deepEqual(overview.rows.map((row) => row.projectName), ['app', 'other']);
+  assert.match(renderOverview(overview), /projects.json: entry app: missing name/);
+});
+
 test('the overview reports a failed last poll and project map errors', () => {
   const root = tempRoot();
   writeFileSync(join(root, 'projects.json'), JSON.stringify({ projects: { a: { name: 'A', dir: 'C:\\x', description: 'x' }, b: { name: 'B', dir: 'C:\\x', description: 'x' } } }));

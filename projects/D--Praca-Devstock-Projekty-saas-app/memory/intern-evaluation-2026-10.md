@@ -19,6 +19,8 @@ Wnioski: Norbert ~75% przepustowości kolegów przy tym samym stażu, bez wzrost
 najszybszy i najpełniej reagujący, płytki jako recenzent. Pierwszego (wcześniejszego) sprawdzenia Konrada
 i Miłosza nie znaleziono nigdzie.
 
+Decyzja Rafała 2026-10-15: moduł 5 Norberta niezadowalający, przed modułem 6 weryfikacja 4 celów (obce pliki, uwaga = klasa błędu / ≤1 runda CR, AC z dowodem, odpowiedź na każdą uwagę); szkic dla Norberta w vaulcie `feedback-norbert-modul-5.md`, termin weryfikacji nieustalony. Wpis też w `edu-saas.md` (postępy + planowane prace).
+
 Niezgłoszona regresja: merge `eaac0ea` Norberta w #192 cofnął na `main` poprawkę Miłosza z #191 w
 `apps/web/src/app/tenant/[subdomain]/creator/layout.tsx:22` (`flex ... flex-col` → `min-w-0 flex-1`).
 

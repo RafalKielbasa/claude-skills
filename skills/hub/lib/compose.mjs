@@ -10,9 +10,9 @@ export const ANSWERS_SECTION = 'Pytania i odpowiedzi';
 const HEADER_PREFIX = '[hub · ';
 
 // `target` names the recipient: the first 8 characters of its sessionId, or the name of a session
-// still to be launched (spec §6.6).
-export function headerLine({ path, project, sessionId, target, at }) {
-  return `${HEADER_PREFIX}${path} · ${project} · ${target ?? String(sessionId).slice(0, 8)} · ${at.slice(0, 16).replace('T', ' ')}]`;
+// still to be launched (spec §6.6). `origin` names the dialog directory a prompt came from (§6.1).
+export function headerLine({ path, project, sessionId, target, origin, at }) {
+  return `${HEADER_PREFIX}${path} · ${project} · ${target ?? String(sessionId).slice(0, 8)} · ${at.slice(0, 16).replace('T', ' ')}${origin ? ` · ${origin}` : ''}]`;
 }
 
 // The fixed wording of spec §6.4 step 2, laid out in the five sections.
@@ -38,9 +38,9 @@ export function questionnaireRequest({ topic, max }) {
   ].join('\n');
 }
 
-export function composeMessage({ path, project, sessionId, target, at, body }) {
+export function composeMessage({ path, project, sessionId, target, origin, at, body }) {
   if (!PATHS.includes(path)) throw new Error(`unknown path ${path}; expected one of ${PATHS.join(', ')}`);
-  return `${headerLine({ path, project, sessionId, target, at })}\n\n${canonical(body)}\n`;
+  return `${headerLine({ path, project, sessionId, target, origin, at })}\n\n${canonical(body)}\n`;
 }
 
 function normalizeHeading(line) {
