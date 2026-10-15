@@ -76,6 +76,11 @@ niepowodzenie całej operacji.
   (`check_runs.py`) drukował linie ze znakiem ⚠ (U+26A0); przy przekierowaniu wyjścia do pliku padł
   `UnicodeEncodeError: 'charmap'`. Naprawione `sys.stdout.reconfigure(encoding="utf-8")` na początku
   skryptu.
+- 2026-10-14, sesja e61003ff (id claude.ai niedostępny): siódmy dowód, dwa razy w jednej sesji
+  i oba po wykonanej pracy. `python -c` aktualizujący ślad issue zapisał `trail-665.md` i padł na
+  `print(s)` (`'charmap' codec can't encode character 'ą'`); kontrola odnośników konceptu
+  wypisała wynik i padła na drukowaniu „Rafał”. Stan plików sprawdzony przed powtórzeniem —
+  powtarzać nie było czego; dalsze wypisy tylko ASCII.
 
 ## Rozwiązanie
 Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie

@@ -108,6 +108,12 @@ kodem i nie powinna przechodzić przez składnię języka.
   argumentu w apostrofach przy przekazaniu do programu natywnego, więc wyrażenie jq rozpadło się na
   trzy argumenty. Naprawa: ta sama komenda przez narzędzie Bash; filtr jq z cudzysłowami nie idzie
   przez PowerShell.
+- 2026-10-14, sesja e61003ff (id claude.ai niedostępny; Baza wiedzy, makiety kierunków szaty):
+  trzynasty dowód, dwa wystąpienia. Heredoc `python - <<'EOF'` z regułami CSS i literałem
+  zawierającym ukośnik-n dał ostrzeżenie `here-document … delimited by end-of-file` i
+  `SyntaxError: unterminated string literal` — skrypt się nie wykonał. Później `sed -i`, którego zamiennik miał
+  zawierać sekwencję ukośnik-n, wstawił do skryptu prawdziwą nową linię w środku literału. Naprawa za każdym
+  razem: skrypt zapisany narzędziem Write i uruchomiony z pliku, znak nowej linii jako `chr(10)`.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją

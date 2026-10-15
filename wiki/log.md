@@ -450,3 +450,12 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - board-tracker poza tym gładko: Done zaproponowane i ustawione po „tak”, ranking ze świeżego `candidates`, „Do zamknięcia?” z dowodami — bez osobnego wzorca.
 - Wzorce repo (`Baza wiedzy/.claude/wiki/`): nowe drugie-nagranie-tej-samej-daty-przy-otwartej-bramce, artefakt-z-dnia-spotkania-rozstrzyga-szum-transkryptu; dowody do update-z-deduplikacji-trafia-w-caly-dokument, odczyt-tablicy-wymaga-zakresu-project, skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo — patrz log repo.
 - Sygnał globalny: brak `nawrót`; nowe i uzupełnione porażki mają dowody z 1–2 sesji — jeszcze nie kandydaci. Kandydaci według poprzednich wpisów bez zmian.
+
+## 2026-10-14 — sesja e61003ff-24d4-4c9c-b348-1f5d5b47cf57 (id claude.ai niedostępny; Baza wiedzy: #665 propozycje szaty graficznej Kodożerców — 7 kierunków, makieta i PNG renderowane Playwrightem)
+- założono: playwright-goto-z-samym-hashem-nie-przeladowuje (skill: ogólny, typ: porażka) — trzy kierunki landingu wyszły jako kierunek 1; `about:blank` przed `goto` i `hashchange`.
+- założono: zrzut-elementu-wyzszego-niz-okno-wywoluje-resize (skill: ogólny, typ: porażka) — zestawienie landingu web złe od `c98eff01` do `30e9d544`; `resize` kasował `zoom`, kontrola po MD5 tego nie złapała.
+- założono: python-write-text-na-windows-zmienia-konce-linii (skill: ogólny, typ: porażka) — diff całego `zadania.js` i 2214 linii `makieta.html` zamiast 22.
+- dopisano dowód: windows-path-w-literale-skryptu (trzynasty) — heredoc z ukośnikiem-n i `sed -i` z `newline=` rozbiły skrypty; naprawa przez Write i `chr(10)`.
+- dopisano dowód: python-na-windows-drukuje-w-cp1252 (siódmy) — dwa `print` polskiego tekstu po wykonanej pracy.
+- Wzorce repo (`Baza wiedzy/.claude/wiki/`): nowe font-dekoracyjny-sprawdzony-renderem-znakow, pixel-art-w-ksztaltach-nie-w-tresci, konsultant-nie-ma-trybu-kierunkow-szaty, audyt-i-niezalezne-review-przed-bramka-konceptu, clip-path-na-elemencie-interaktywnym-obcina-fokus — patrz log repo.
+- Sygnał globalny: brak `nawrót`. windows-path-w-literale-skryptu i python-na-windows-drukuje-w-cp1252 to porażki z wielu sesji, ale bez skilla (`ogólny`) — kandydaci do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Kandydaci według poprzednich wpisów bez zmian.

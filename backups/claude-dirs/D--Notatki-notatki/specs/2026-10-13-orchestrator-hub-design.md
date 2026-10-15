@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-13
 **Status:** approved 2026-10-13, including all items of §13.1; updated 2026-10-14 with probe
-decisions D1–D14 (§13.2); Plan 2 done; updated 2026-10-14 with the Plan 3 additions P1–P8
+decisions D1–D14 (§13.2); Plan 2 done; updated 2026-10-14 with the Plan 3 additions P1–P9
 (§13.3); ready for Plan 3 (§10).
 **Owner:** Rafal Kielbasa
 **Origin:** brainstorming sessions `0e06a344` (2026-10-11, voice module), `7e84737d`
@@ -81,7 +81,7 @@ Out of scope for sub-project 1:
 | 13 | Codex–Claude execution contract | Removed entirely from `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`; it was a remnant of coordinating Claude from the Codex desktop app |
 | 14 | How many implementation plans | Three, each written after the probes it depends on (§10) |
 | 15 | Probe decisions | D1–D14 from the probe report, adopted by Rafal on 2026-10-14 as recommended; applied in place in this spec and listed in §13.2 |
-| 16 | Plan 3 additions | P1–P8: a project map with descriptive names, conversation titles from the transcript, new sessions launched from the map, a git snapshot for dialog forks, probe S12. Agreed with Rafal on 2026-10-14; applied in place and listed in §13.3 |
+| 16 | Plan 3 additions | P1–P9: a project map with descriptive names, conversation titles from the transcript, new sessions launched from the map, by default in a worktree, a git snapshot for dialog forks, probe S12. Agreed with Rafal on 2026-10-14; applied in place and listed in §13.3 |
 
 ## 4. Components
 
@@ -545,8 +545,8 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
   same ID, or starts a copy and says so when the session is already running". If the CLI reports
   a copy, the hub quotes it and sends nothing until Rafal decides.
 - **New session:** started from the project map (§4.2).
-  1. Rafal names the project and the work, for example "odpal sesję w bazie wiedzy: <zadanie>",
-     optionally "w worktree".
+  1. Rafal names the project and the work, for example "odpal sesję w bazie wiedzy: <zadanie>".
+     The session runs in a worktree by default; "bez worktree" turns that off (P9).
   2. The hub matches the project against `HUB projects` (key, `name`, `description`) and asks
      when more than one entry fits; it never guesses. A project outside the map gets no new
      session; the hub asks Rafal to add it to the map.
@@ -554,12 +554,14 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
      draft: the header line and the five sections of §6.1, with the project's `description` in
      **Kontekst**.
   4. Rafal sees the exact text and the launch parameters (directory, session name
-     `<key>-<slug>`, worktree or not) and says "wyślij".
+     `<key>-<slug>`, the worktree `<dir>/.claude/worktrees/<key>-<slug>` on the branch
+     `worktree-<key>-<slug>`, or "bez worktree") and says "wyślij".
   5. `HUB approve` records the baseline: the project `dir`, its git branch (or SHA) and the text
      hash.
   6. `HUB launch <id>` checks that the directory exists, that no live session carries the name
      `<key>-<slug>`, that the text has every section and that its hash matches the approved one.
-     It then runs `claude --bg --name <key>-<slug> [-w <key>-<slug>] "<text>"` with the project
+     It then runs `claude --bg --name <key>-<slug> -w <key>-<slug> "<text>"` (without `-w` after
+     "bez worktree") with the project
      `dir` as working directory, through `spawnSync` with an argument array and no shell
      (`claude` is `claude.exe`). A text longer than 30 000 characters is refused before launch,
      because a Windows command line holds at most 32 767.
@@ -590,6 +592,15 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
     trusted repository needed no separate trust; this rests on a single launch.
   - **Worktree layout.** `-w <name>` creates `<repo>/.claude/worktrees/<name>` on a new branch
     `worktree-<name>`, registered in git as locked (probe S10).
+  - **Why a worktree by default (P9).** A background session may not edit the shared checkout:
+    its first edit there is refused with "This background session hasn't isolated its changes
+    yet. Call EnterWorktree first…" (probe S7, seen in a fork). A session launched "bez worktree"
+    is therefore expected to move into a worktree of its own naming at its first edit, which the
+    hub does not know; this is inferred from S7 and untested for a new session. A worktree the hub
+    names is journalled with its path and branch, and its cleanup can be proposed. The session's
+    work stays on its worktree branch until Rafal merges it. A repository where hub sessions
+    should edit the shared checkout can set `"worktree": {"bgIsolation": "none"}` in its
+    `.claude/settings.json`; that is Rafal's configuration, outside the hub (§8.2).
   - **Worktree cleanup.** The hub only proposes the cleanup commands to Rafal and runs none of
     them itself (§8.2): retry `claude rm <id>` after the session process has exited (on Windows
     the first run hit `EBUSY` and the second refused, probe S10); remove a leftover worktree
@@ -905,6 +916,7 @@ nothing about the work.
 | P6 | From S12: the fork's start prompt says that gates open in the inherited history are not its gates | §6.5 step 3 |
 | P7 | Plan 2 acceptance findings A1 (unique id prefix in `last` and `judge`) and A2 (local time in the overview) join Plan 3 | §5.6, §9.1, §10 |
 | P8 | Plan 3 runs in five groups (map and titles, new sessions, dialog, Codex, acceptance); the acceptance test grows to ten items and takes over the Plan 2 items not run; I-3, I-4 and M-2 stay outside Plan 3 | §9.3, §10 |
+| P9 | Rafal's decision (variant b of three: as before, worktree by default, `bgIsolation: none` per repository): a new session runs in a worktree by default and "bez worktree" turns that off, because a background session may not edit the shared checkout (probe S7) and only a worktree the hub names can be journalled and proposed for cleanup | §6.6 |
 
 **Derived while writing this amendment, not discussed explicitly:**
 

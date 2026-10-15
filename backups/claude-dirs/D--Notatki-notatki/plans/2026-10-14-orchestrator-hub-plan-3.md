@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node v24.20.0 (checked), `node:test`, Git Bash on Windows 11, Claude Code CLI (`claude --bg`, `claude agents --json`, `claude attach`, `claude stop`), Codex CLI 0.147.0 (`codex exec`, `codex exec resume`).
 
-**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md` — §4.1, §4.2, §5.1 (conversation titles), §5.6, §6.5, §6.6, §7, §8.2, §9.1, §9.3, §10 "Plan 3", §13.3 (P1–P8). Probe evidence: `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-probes.md` (S6, S7, S9, S10, S12). Plan 2 for the existing code and conventions: `D:/Notatki/notatki/.claude/plans/2026-10-14-orchestrator-hub-plan-2-core.md`.
+**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md` — §4.1, §4.2, §5.1 (conversation titles), §5.6, §6.5, §6.6, §7, §8.2, §9.1, §9.3, §10 "Plan 3", §13.3 (P1–P9). Probe evidence: `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-probes.md` (S6, S7, S9, S10, S12). Plan 2 for the existing code and conventions: `D:/Notatki/notatki/.claude/plans/2026-10-14-orchestrator-hub-plan-2-core.md`.
 
 ## Global Constraints
 
@@ -19,8 +19,10 @@
 - No commit and no push in any real repository; `C:/Users/rafal/hub-dev/` is not a repository. Documents in the vault stay uncommitted; Task 9 proposes commit messages.
 - Code, comments and docs in English; user-facing text in Polish (the project line in a new session's **Kontekst**, "brak drugiej opinii", the marker `⏸ Czeka na decyzję: prompt gotowy do przeglądu`, what the hub tells Rafal).
 - The project map, titles, new sessions, dialog and Codex follow spec §4.2, §5.1, §6.6, §6.5 and §7 exactly: map entries `name`, `dir`, `description` under a kebab-case key; title order transcript title → `session_title` → poll name; `claude --bg --name <key>-<slug> [-w <key>-<slug>] "<text>"` with at most 30 000 characters; fork command `claude --bg --resume <id> --fork-session --name dlg-<key>-<slug> --settings <file> "<prompt>" --add-dir <dir>`; fork `deny` `Edit(./**)`, `Bash`, `EnterWorktree`; git snapshot with `--no-optional-locks` and the §7 denylist excluded; Codex first call `codex exec -s read-only -C <dir> --json -o <answer> -`, follow-up `codex exec resume <id> -c sandbox_mode="read-only" --json -o <answer> -` from `<dir>`.
+- A new session runs in a worktree by default (`claude --bg -w <key>-<slug>`); `--no-worktree` only when Rafal says "bez worktree" (spec §6.6, P9, Rafal's decision of 2026-10-14).
 - Every message on every path still carries the five sections of §6.1; the hub sends nothing Rafal has not approved with "wyślij", and launches a new session only after that approval.
-- Plan-level additions, for Rafal to accept in the plan review: the unique id prefix (finding A1) is accepted by every `--session` option, not only by `last` and `judge`; `HUB codex note` records the hub's assessment in `thread.md`; `thread.md` keeps the full prompt in a `<details>` block; the fork's start prompt is also kept as `start-prompt.md`, and the fallback command reads it with `$(cat …)`; the overview marks launched sessions `[background]` or `[dialog]`; `status.txt` of the snapshot also leaves out the denylisted names; the Codex command is `codex.js` under `%APPDATA%\npm\node_modules\@openai\codex\bin\` run with Node, because Node 24 cannot spawn the `codex.cmd` shim without a shell; timeouts: 120 s for `claude --bg`, 15 minutes for a Codex call.
+- The §8.2 writing boundary holds for paths named on the command line: `dialog refresh --dir` and `codex follow|note --thread` accept only the hub's own `projects/<project>/dialogs/<name>` and `projects/<project>/codex/<name>` directories (after `..` and links are resolved, `ownedDir`); `codex ask --file` accepts only files inside the session's repository or the hub data, a relative path taken from the session's `cwd` (from the Codex review of this plan).
+- Plan-level additions, for Rafal to accept in the plan review: the unique id prefix (finding A1) is accepted by every `--session` option, not only by `last` and `judge`; `HUB codex note` records the hub's assessment in `thread.md`; `thread.md` keeps the full prompt in a `<details>` block; the fork's start prompt is also kept as `start-prompt.md`, and the fallback command reads it with `$(cat …)`; the overview marks launched sessions `[background]` or `[dialog]`; `status.txt` of the snapshot also leaves out the denylisted names; a Codex answer whose stream has no `thread.started` is kept and marked with a `warning` (no follow-up possible) instead of failing; the Codex command is `codex.js` under `%APPDATA%\npm\node_modules\@openai\codex\bin\` run with Node, because Node 24 cannot spawn the `codex.cmd` shim without a shell; timeouts: 120 s for `claude --bg`, 15 minutes for a Codex call.
 
 ## Review Focus
 
@@ -42,7 +44,7 @@
 | `bin/install.mjs` | A fresh install writes an empty `projects` map | 1 |
 | `lib/titles.mjs` | Newest title record from a transcript, cached by size; retention pruning | 2 |
 | `lib/events.mjs`, `lib/derive.mjs` | `UserPromptSubmit` records `transcriptPath`; derived state keeps it | 2 |
-| `lib/paths.mjs` | `titlesPath`, `dialogsDir`, `codexDir` | 2, 6, 7 |
+| `lib/paths.mjs` | `titlesPath`, `dialogsDir`, `codexDir`, `ownedDir` (the write-boundary check) | 2, 6, 7 |
 | `lib/retention.mjs` | Drops cached titles of deleted sessions | 2 |
 | `lib/registry.mjs` | `resolveSessionId`: full id or unique prefix | 3 |
 | `lib/compose.mjs` | Header `target` and `origin`; the project line under **Kontekst** | 4, 6 |
@@ -58,7 +60,7 @@
 | `test/overview.test.mjs`, `test/cli.test.mjs`, `test/titles.test.mjs`, `test/launch.test.mjs`, `test/dialog.test.mjs`, `test/codex.test.mjs` | Tests | 1–7 |
 | `D:/Notatki/notatki/.claude/specs/2026-10-14-orchestrator-hub-plan-3-acceptance.md` | Acceptance report | 9 |
 
-All code below was run during plan writing in a scratch copy of the hub, task after task: 105 tests passing at the end (71 before). Every "Modify" block is a unified diff against the state the previous task leaves; apply it by hand with Edit (each hunk's context lines are unique in the file).
+All code below was run during plan writing in a scratch copy of the hub, task after task: 109 tests passing at the end (71 before). Every "Modify" block is a unified diff against the state the previous task leaves; apply it by hand with Edit (each hunk's context lines are unique in the file).
 
 ---
 
@@ -1194,7 +1196,7 @@ Spec §6.6 "New session" steps 1–9, §9.1 row "New session", Review Focus 1, 4
 
 **Interfaces:**
 - Consumes: `loadProjectMap`, `templateProblems`, `sha256`, `gitInfo`, `registerLaunched`, `readHubSessions`, `findRecord`, `saveRecords`, `listSessionIds`, `readEvents`, the CLI helper `freshPoll(root, options)`.
-- Produces: `headerLine({ path, project, sessionId, target, at })` and `composeMessage({ …, target })` (target = a name instead of 8 id characters); `withProjectContext(body, entry) → body` (throws `missing section Kontekst`); `MAX_PROMPT_CHARS = 30000`, `LAUNCH_TIMEOUT_MS`, `SLUG`, `claudeCommand(env)`, `newSessionArgs({ name, worktree, text })`, `parseBackgrounded(output) → { shortId, name } | null`, `runClaude(args, { cwd, env, run }) → { ok, output, shortId?, name?, error? }`, `worktreeOf(dir, name) → { path, branch }`, `launchChecks({ record, poll, text, dirExists }) → [{ check, message }]`, `findLaunched(pollOnce, shortId, { attempts, waitMs }) → sessionId | null`; `findLaunchDelivery(record, Map<sessionId, events>)`, `findLaunchMismatch(record, events)`. CLI: `compose --path new-session --project <key> --slug <slug> --body-file <file|->`, `approve --path new-session --project <key> --slug <slug> --text-file <file> [--worktree]`, `launch <recordId> [--agents-json <file>]`. A new-session record has `sessionId: null`, `name: <key>-<slug>`, `worktree: boolean`, and after the launch `shortId`, `sessionId` (or null), `worktreePath`, `worktreeBranch`. `fakes/claude.mjs` reads `FAKE_CLAUDE_LOG`, `FAKE_AGENTS`, `FAKE_CLAUDE_ID`, `FAKE_CLAUDE_EXIT`, `FAKE_CLAUDE_MESSAGE`.
+- Produces: `headerLine({ path, project, sessionId, target, at })` and `composeMessage({ …, target })` (target = a name instead of 8 id characters); `withProjectContext(body, entry) → body` (throws `missing section Kontekst`); `MAX_PROMPT_CHARS = 30000`, `LAUNCH_TIMEOUT_MS`, `SLUG`, `claudeCommand(env)`, `newSessionArgs({ name, worktree, text })`, `parseBackgrounded(output) → { shortId, name } | null`, `runClaude(args, { cwd, env, run }) → { ok, output, shortId?, name?, error? }`, `worktreeOf(dir, name) → { path, branch }`, `launchChecks({ record, poll, text, dirExists }) → [{ check, message }]`, `findLaunched(pollOnce, shortId, { attempts, waitMs }) → sessionId | null`; `findLaunchDelivery(record, Map<sessionId, events>)`, `findLaunchMismatch(record, events)`. CLI: `compose --path new-session --project <key> --slug <slug> --body-file <file|->`, `approve --path new-session --project <key> --slug <slug> --text-file <file> [--no-worktree]`, `launch <recordId> [--agents-json <file>]`. A new-session record has `sessionId: null`, `name: <key>-<slug>`, `worktree: boolean` (true unless `--no-worktree`, P9), and after the launch `shortId`, `sessionId` (or null), `worktreePath`, `worktreeBranch`. `fakes/claude.mjs` reads `FAKE_CLAUDE_LOG`, `FAKE_AGENTS`, `FAKE_CLAUDE_ID`, `FAKE_CLAUDE_EXIT`, `FAKE_CLAUDE_MESSAGE`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1277,7 +1279,8 @@ test('new session end to end: compose with the project, approve, launch, confirm
   assert.match(text, /^\[hub · new-session · baza · baza-awatary · /);
   assert.match(text, /Projekt: Baza wiedzy Devstock \(.*Baza wiedzy\)\. Kursy i lekcje Devstock\./);
 
-  const approved = JSON.parse(hub(['approve', '--path', 'new-session', '--project', 'baza', '--slug', 'awatary', '--worktree', '--text-file', file]).stdout);
+  // A worktree by default (P9): no flag needed.
+  const approved = JSON.parse(hub(['approve', '--path', 'new-session', '--project', 'baza', '--slug', 'awatary', '--text-file', file]).stdout);
   assert.equal(approved.baseline.cwd, repo);
   const launched = hub(['launch', approved.id, '--agents-json', agents]);
   assert.equal(launched.status, 0, launched.stdout + launched.stderr);
@@ -1297,6 +1300,17 @@ test('new session end to end: compose with the project, approve, launch, confirm
   assert.deepEqual(JSON.parse(hub(['confirm']).stdout).confirmed, [approved.id]);
   assert.equal(loadRecords(root, 'baza')[0].state, 'sent');
   assert.match(hub(['journal', '--project', 'baza']).stdout, /\| 1a2b3c4d baza-awatary \| new-session \| sent \| UserPromptSubmit /);
+});
+
+test('"bez worktree": --no-worktree launches without -w and journals no worktree', () => {
+  const { root, agents, log, hub, draft } = setup();
+  const file = draft().stdout.trim();
+  const approved = JSON.parse(hub(['approve', '--path', 'new-session', '--project', 'baza', '--slug', 'awatary', '--no-worktree', '--text-file', file]).stdout);
+  const out = JSON.parse(hub(['launch', approved.id, '--agents-json', agents]).stdout);
+  assert.equal(out.worktree, null);
+  assert.deepEqual(JSON.parse(readFileSync(log, 'utf8').trim()).args.slice(0, 3), ['--bg', '--name', 'baza-awatary']);
+  assert.equal(JSON.parse(readFileSync(log, 'utf8').trim()).args.includes('-w'), false);
+  assert.deepEqual([loadRecords(root, 'baza')[0].worktree, loadRecords(root, 'baza')[0].worktreePath], [false, null]);
 });
 
 test('quotes, backticks, $ and % in the prompt reach the CLI unchanged; no shell expands them', () => {
@@ -1369,27 +1383,31 @@ Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…\lib\launch.mjs'
 Modify `SKILL.md` (unified diff against the state after the previous task):
 
 ````diff
-@@ -91,6 +91,32 @@ message is `held`, do not resend it.
+@@ -91,6 +91,36 @@ message is `held`, do not resend it.
     session starts working or stops (for example "napisz plan i stop").
  5. Send it with `--path questionnaire-answers` (above).
  
 +## New session (spec §6.6)
 +
-+1. Rafal names a project and the work ("odpal sesję w <projekt>: <zadanie>", maybe "w worktree").
++1. Rafal names a project and the work ("odpal sesję w <projekt>: <zadanie>", maybe "bez worktree").
 +   Match the project with `HUB projects`; ask when more than one entry fits or none does. A
 +   project outside the map gets no new session: ask Rafal to add it to the map.
 +2. Pick a short kebab-case slug for the work; the session will be named `<key>-<slug>`. Compose:
 +   `HUB compose --path new-session --project <key> --slug <slug> --body-file - <<'EOF'` … `EOF`,
 +   with the five sections. The CLI puts the project line from the map under **Kontekst**.
 +3. Show Rafal the exact draft, header included, and the launch parameters: the directory (the
-+   map's `dir`), the session name and whether it runs in a worktree. Wait for "wyślij".
-+4. `HUB approve --path new-session --project <key> --slug <slug> --text-file <draft>`, with
-+   `--worktree` only when Rafal asked for one → record id.
++   map's `dir`), the session name, and the worktree `<dir>/.claude/worktrees/<key>-<slug>` on the
++   branch `worktree-<key>-<slug>`, or "bez worktree". Wait for "wyślij".
++4. `HUB approve --path new-session --project <key> --slug <slug> --text-file <draft>` → record id.
++   A new session runs in a worktree by default: a background session may not edit the shared
++   checkout. Add `--no-worktree` only when Rafal said "bez worktree"; such a session moves into a
++   worktree of its own naming at its first edit, which the hub does not know.
 +5. `HUB launch <id>`. Failures: quote them and stop. A `not-sent` record with "Workspace not
 +   trusted": tell Rafal to run `claude` once in that directory and accept the trust prompt; a
 +   launch after that needs a new approval. Never launch again on your own.
-+6. On success tell Rafal the session name, its short id, and `claude attach <short id>`: he answers
-+   the session's permission prompts there himself. A `sessionId` of null means the session was not
++6. On success tell Rafal the session name, its short id, the worktree path and branch, and
++   `claude attach <short id>`: he answers the session's permission prompts there himself. The
++   session's work stays on its worktree branch until Rafal merges it. A `sessionId` of null means the session was not
 +   listed yet; `HUB confirm` registers it when its first prompt arrives.
 +7. `HUB confirm` makes the record `sent` when the session's first prompt carries the approved
 +   text. A record in `mismatched` means the session started with a different text: quote the
@@ -1412,7 +1430,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
  //     (--body-file - reads the body from stdin)
  //   approve --session <sessionId> --path <path> --text-file <file> [--project <p>]
 +//   compose --path new-session --project <key> --slug <slug> --body-file <file|->
-+//   approve --path new-session --project <key> --slug <slug> --text-file <file> [--worktree]
++//   approve --path new-session --project <key> --slug <slug> --text-file <file> [--no-worktree]
 +//   launch <recordId> [--agents-json <file>]
  //   prepare <recordId> [--confirm-waiting] [--confirm-busy] [--confirm-resend] [--agents-json <file>]
  //   result <recordId> (--msg-id <id> | --error <literal error>)
@@ -1514,7 +1532,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
      mkdirSync(draftsDir(root, project), { recursive: true });
      // The random suffix keeps two drafts composed within one second apart.
      const file = join(draftsDir(root, project), `${stamp(at)}-${path}-${randomBytes(2).toString('hex')}.md`);
-@@ -124,26 +168,69 @@ switch (command) {
+@@ -124,26 +168,71 @@ switch (command) {
      break;
    }
    case 'approve': {
@@ -1539,9 +1557,11 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
 +    let record;
 +    if (options.path === 'new-session') {
 +      // The baseline of a session still to be launched is the project directory (spec §6.6 step 5).
++      // A worktree by default: a background session may not edit the shared checkout (probe S7),
++      // and only a worktree the hub names is one it can journal and propose to clean up (P9).
 +      const { key, entry, name } = newSessionTarget(root, options);
 +      record = {
-+        id: newRecordId(at), project: key, path: 'new-session', sessionId: null, name, worktree: Boolean(options.worktree),
++        id: newRecordId(at), project: key, path: 'new-session', sessionId: null, name, worktree: !options['no-worktree'],
 +        textFile, textHash, baseline: { sessionId: null, name, cwd: entry.dir, ...gitInfo(entry.dir) }, state: 'approved', approvedAt: at,
 +      };
 +    } else {
@@ -1601,7 +1621,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
      break;
    }
    case 'prepare': {
-@@ -208,9 +295,13 @@ switch (command) {
+@@ -208,9 +297,13 @@ switch (command) {
          .sort((a, b) => String(b.sentAt).localeCompare(String(a.sentAt)));
        for (const record of waiting) {
          const usedIds = new Set(next.filter((r) => r.sessionId === record.sessionId && r.evidence).map((r) => r.evidence.eventId));
@@ -1617,7 +1637,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
          confirmed.push(record.id);
          changed = true;
        }
-@@ -221,7 +312,9 @@ switch (command) {
+@@ -221,7 +314,9 @@ switch (command) {
          const sessionRecords = next.filter((r) => r.sessionId === record.sessionId);
          const usedIds = new Set(sessionRecords.filter((r) => r.evidence).map((r) => r.evidence.eventId));
          const known = new Set(sessionRecords.map((r) => r.textHash));
@@ -1628,7 +1648,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
          if (!odd) continue;
          next[index] = { ...next[index], mismatch: { eventId: odd.id, at: odd.at } };
          mismatched.push(record.id);
-@@ -262,5 +355,5 @@ switch (command) {
+@@ -262,5 +357,5 @@ switch (command) {
      break;
    }
    default:
@@ -1836,7 +1856,7 @@ export function findLaunched(pollOnce, shortId, { attempts = 5, waitMs = 1000 } 
 - [ ] **Step 4: Run the tests to see them pass**
 
 Run: `node --test 2>&1 | grep -E "^ℹ (pass|fail)"`
-Expected: `ℹ pass 91`, `ℹ fail 0`.
+Expected: `ℹ pass 92`, `ℹ fail 0`.
 
 ---
 
@@ -1867,7 +1887,7 @@ node C:/Users/rafal/.claude/skills/hub/bin/hub.mjs projects
 node C:/Users/rafal/.claude/skills/hub/bin/hub.mjs overview --no-poll
 ```
 
-Expected: `ℹ pass 91`, `ℹ fail 0`; `The project map is empty.` plus `Seen in the registry, outside the map: …` listing the repositories Rafal works in; an overview whose Project column says `(outside the map)` and whose Session column shows conversation titles where a session's hook has recorded `transcriptPath` (a session shows its title from its next prompt on).
+Expected: `ℹ pass 92`, `ℹ fail 0`; `The project map is empty.` plus `Seen in the registry, outside the map: …` listing the repositories Rafal works in; an overview whose Project column says `(outside the map)` and whose Session column shows conversation titles where a session's hook has recorded `transcriptPath` (a session shows its title from its next prompt on).
 
 - [ ] **Step 3: Rafal writes the map**
 
@@ -1908,7 +1928,7 @@ Spec §6.5 steps 1–9, §8.2 (writing and secrets rows), §9.1 row "Dialog star
 
 **Interfaces:**
 - Consumes: `runClaude`, `findLaunched`, `SLUG` (Task 4); `sessionArg` (Task 3); `projectOf`, `loadProjectMap` (Task 1); `registerLaunched`; `fakes/claude.mjs`.
-- Produces: `DENYLIST`, `isDenied(path) → boolean`, `excludePathspecs() → string[]`; `PROMPT_READY`; `takeSnapshot(cwd, contextDir, { at, run }) → { at, cwd, git }` (writes `status.txt`, `log.txt`, `diff.patch` or `NO-GIT.txt`, and `snapshot.json`); `forkSettings(dialogDir)`; `forkArgs({ sessionId, name, settingsPath, prompt, dialogDir })`; `forkStartPrompt({ projectName, sourceName, sourceId, dialogDir, snapshot })`; `fallbackCommand({ cwd, sessionId, name, settingsPath, promptPath, dialogDir })`; `dialogsDir(root, project)`; `headerLine`/`composeMessage` option `origin`. CLI: `dialog start --session <id> --slug <slug> [--agents-json <file>]` printing `{ ok, dialogDir, name, shortId, sessionId, sourceSessionId, resolvedFrom, busy, attach }` (or `{ ok: false, candidates }` / `{ ok: false, error, command }`), `dialog refresh --dir <dialog dir>`, `compose … --origin <text>`. A registered fork entry has `kind: 'dialog'`, `dialogDir`, `sourceSessionId`. `lib/denylist.mjs` is also used by Task 7.
+- Produces: `DENYLIST`, `isDenied(path) → boolean`, `excludePathspecs() → string[]`; `PROMPT_READY`; `takeSnapshot(cwd, contextDir, { at, run }) → { at, cwd, git }` (writes `status.txt`, `log.txt`, `diff.patch` or `NO-GIT.txt`, and `snapshot.json`); `forkSettings(dialogDir)`; `forkArgs({ sessionId, name, settingsPath, prompt, dialogDir })`; `forkStartPrompt({ projectName, sourceName, sourceId, dialogDir, snapshot })`; `fallbackCommand({ cwd, sessionId, name, settingsPath, promptPath, dialogDir })`; `dialogsDir(root, project)`; `ownedDir(root, dir, kind) → canonical path | null` (exactly `<root>/projects/<project>/<kind>/<name>`, also used by Task 7); `headerLine`/`composeMessage` option `origin`. CLI: `dialog start --session <id> --slug <slug> [--agents-json <file>]` printing `{ ok, dialogDir, name, shortId, sessionId, sourceSessionId, resolvedFrom, busy, attach }` (or `{ ok: false, candidates }` / `{ ok: false, error, command }`), `dialog refresh --dir <dialog dir>` (refuses any directory `ownedDir` rejects), `compose … --origin <text>`. A registered fork entry has `kind: 'dialog'`, `dialogDir`, `sourceSessionId`. `lib/denylist.mjs` is also used by Task 7.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2062,6 +2082,18 @@ test('a failed fork launch prints the command to paste; dialog refresh takes a n
   assert.match(readFileSync(join(out.dialogDir, 'context', 'diff.patch'), 'utf8'), /v3 after the fork started/);
 });
 
+test('dialog refresh writes only into a dialog directory of the hub data (spec §8.2)', () => {
+  const { root, repo, hub } = dialogSetup();
+  mkdirSync(join(repo, 'context'), { recursive: true });
+  writeFileSync(join(repo, 'context', 'snapshot.json'), JSON.stringify({ cwd: repo }));
+  for (const dir of [repo, join(root, 'projects', 'app', 'dialogs', '..', '..', '..', '..'), join(root, 'projects', 'app'), join(root, 'nope')]) {
+    const refused = hub('dialog', 'refresh', '--dir', dir);
+    assert.equal(refused.status, 3, dir);
+    assert.match(refused.stderr, /--dir must be a dialog directory under /);
+  }
+  assert.equal(existsSync(join(repo, 'context', 'diff.patch')), false);
+});
+
 test('compose --origin puts the dialog directory into the header line', () => {
   const { root, hub } = dialogSetup();
   const body = join(root, 'prompt.md');
@@ -2081,7 +2113,7 @@ Expected: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '…\lib\denylist.mj
 Modify `SKILL.md` (unified diff against the state after the previous task):
 
 ````diff
-@@ -117,6 +117,27 @@ message is `held`, do not resend it.
+@@ -121,6 +121,27 @@ message is `held`, do not resend it.
     `EBUSY`), removing a leftover directory by hand, `git branch -d worktree-<name>`; `-D` only after
     Rafal confirms that the branch's commits may be lost.
  
@@ -2123,7 +2155,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
  //     (--body-file - reads the body from stdin)
  //   approve --session <sessionId> --path <path> --text-file <file> [--project <p>]
  //   compose --path new-session --project <key> --slug <slug> --body-file <file|->
- //   approve --path new-session --project <key> --slug <slug> --text-file <file> [--worktree]
+ //   approve --path new-session --project <key> --slug <slug> --text-file <file> [--no-worktree]
  //   launch <recordId> [--agents-json <file>]
 +//   dialog start --session <sessionId> --slug <slug> [--agents-json <file>]
 +//   dialog refresh --dir <dialog dir>
@@ -2135,7 +2167,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
  import { randomBytes } from 'node:crypto';
  import { join } from 'node:path';
 -import { hubRoot, draftsDir, sentDir, registryDir } from '../lib/paths.mjs';
-+import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir } from '../lib/paths.mjs';
++import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir, ownedDir } from '../lib/paths.mjs';
  import { readEvents, resolveSessionId, listSessionIds } from '../lib/registry.mjs';
  import { deriveSession } from '../lib/derive.mjs';
  import { runPoll, appendPoll, pollEntry } from '../lib/polls.mjs';
@@ -2162,13 +2194,13 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
      }
      mkdirSync(draftsDir(root, project), { recursive: true });
      // The random suffix keeps two drafts composed within one second apart.
-@@ -233,6 +237,60 @@ switch (command) {
+@@ -235,6 +239,60 @@ switch (command) {
      console.log(JSON.stringify({ ok: true, id: record.id, shortId: launched.shortId, sessionId, name: record.name, worktree, attach: `claude attach ${launched.shortId}` }, null, 2));
      break;
    }
 +  case 'dialog': {
 +    if (positional[0] === 'refresh') {
-+      const dir = need(options, 'dir');
++      const dir = ownedDir(root, need(options, 'dir'), 'dialogs') ?? fail(`--dir must be a dialog directory under ${join(root, 'projects', '<project>', 'dialogs')}`, 3);
 +      let previous;
 +      try {
 +        previous = JSON.parse(readFileSync(join(dir, 'context', 'snapshot.json'), 'utf8'));
@@ -2223,7 +2255,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
    case 'prepare': {
      const found = findRecord(root, positional[0] ?? fail('usage: prepare <recordId>'));
      if (!found) fail('record not found', 3);
-@@ -355,5 +413,5 @@ switch (command) {
+@@ -357,5 +415,5 @@ switch (command) {
      break;
    }
    default:
@@ -2356,17 +2388,44 @@ export function fallbackCommand({ cwd, sessionId, name, settingsPath, promptPath
 Modify `lib/paths.mjs` (unified diff against the state after the previous task):
 
 ````diff
-@@ -30,3 +30,4 @@ export const journalJsonlPath = (root, project) => join(projectDir(root, project
+@@ -1,7 +1,8 @@
+ // Locations of the hub data (spec §4.1). Every function takes the data root explicitly, so tests
+ // run against a temporary directory and never touch the real ~/.claude/hub (HUB_DATA overrides it).
+ import { homedir } from 'node:os';
+-import { join } from 'node:path';
++import { realpathSync } from 'node:fs';
++import { join, resolve, dirname, basename } from 'node:path';
+ 
+ export function hubRoot(env = process.env) {
+   return env.HUB_DATA || join(homedir(), '.claude', 'hub');
+@@ -30,3 +31,21 @@ export const journalJsonlPath = (root, project) => join(projectDir(root, project
  export const journalMdPath = (root, project) => join(projectDir(root, project), 'journal.md');
  export const sentDir = (root, project) => join(projectDir(root, project), 'sent');
  export const draftsDir = (root, project) => join(projectDir(root, project), 'drafts');
 +export const dialogsDir = (root, project) => join(projectDir(root, project), 'dialogs');
++
++// A directory a command names on its command line and then writes into must be exactly
++// <root>/projects/<project>/<kind>/<name>, after `..` and links are resolved: the hub writes only
++// into its data root (spec §8.2). The canonical path, or null.
++export function ownedDir(root, dir, kind) {
++  let real;
++  let base;
++  try {
++    real = realpathSync.native(resolve(String(dir)));
++    base = realpathSync.native(resolve(root));
++  } catch {
++    return null;
++  }
++  const same = (a, b) => a.toLowerCase() === b.toLowerCase();
++  const kindDir = dirname(real);
++  return same(basename(kindDir), kind) && same(dirname(dirname(kindDir)), join(base, 'projects')) ? real : null;
++}
 ````
 
 - [ ] **Step 4: Run the tests to see them pass**
 
 Run: `node --test 2>&1 | grep -E "^ℹ (pass|fail)"`
-Expected: `ℹ pass 100`, `ℹ fail 0`.
+Expected: `ℹ pass 102`, `ℹ fail 0`.
 
 ---
 
@@ -2380,8 +2439,8 @@ Spec §7 steps 1–6, §8.1 row "Codex consultation failed", §8.2 Codex row, §
 - Test: `test/codex.test.mjs`
 
 **Interfaces:**
-- Consumes: `isDenied`, `excludePathspecs` (Task 6); `isWithin` (Task 1); `sessionArg` (Task 3); `SLUG` (Task 4); `registryDir`.
-- Produces: `CODEX_TIMEOUT_MS`; `codexCommand(env) → string[]`; `REVIEWER_ROLE`; `DeniedError`; `describeElement(element, hubRoot) → string` for `{ kind: 'file', path }` or `{ kind: 'diff', range }`; `firstPrompt({ question, elementText })`; `parseThreadId(stream)`; `askArgs({ cwd, answerFile })`; `followArgs({ threadId, answerFile })`; `runCodex({ args, cwd, input, answerFile, errFile, env, run, timeoutMs }) → { ok, failure, threadId, answer }`; `threadEntry({ n, question, prompt, at, outcome })`; `codexDir(root, project)`. CLI: `codex ask (--session <id> | --cwd <dir>) --slug <slug> (--file <path> | --diff <range> | --last <id>) --question-file <file|-> [--project <p>]`, `codex follow --thread <dir> --question-file <file|->`, `codex note --thread <dir> --text-file <file|->`, each printing `{ ok, thread, n, threadId, answerFile, errFile, failure? }` (exit 3 on a failure). Thread files: `meta.json` (`threadId`, `element`, `sessionId`, `cwd`, `project`, `createdAt`, `calls`), `thread.md`, `answer-<n>.md`, `answer-<n>.err`. `fakes/codex.mjs` reads `FAKE_CODEX_LOG`, `FAKE_CODEX_EXIT`, `FAKE_CODEX_EMPTY`.
+- Consumes: `isDenied`, `excludePathspecs`, `ownedDir` (Task 6); `isWithin` (Task 1); `sessionArg` (Task 3); `SLUG` (Task 4); `gitInfo` (Plan 2); `registryDir`.
+- Produces: `CODEX_TIMEOUT_MS`; `codexCommand(env) → string[]`; `REVIEWER_ROLE`; `DeniedError`; `describeElement(element, hubRoot) → string` for `{ kind: 'file', path }` or `{ kind: 'diff', range }`; `firstPrompt({ question, elementText })`; `parseThreadId(stream)`; `askArgs({ cwd, answerFile })`; `followArgs({ threadId, answerFile })`; `runCodex({ args, cwd, input, answerFile, errFile, env, run, timeoutMs }) → { ok, failure, threadId, answer }`; `threadEntry({ n, question, prompt, at, outcome })`; `codexDir(root, project)`. CLI: `codex ask (--session <id> | --cwd <dir>) --slug <slug> (--file <path> | --diff <range> | --last <id>) --question-file <file|-> [--project <p>]`, `codex follow --thread <dir> --question-file <file|->`, `codex note --thread <dir> --text-file <file|->`, each printing `{ ok, thread, n, threadId, answerFile, errFile, failure?, warning? }` (exit 3 on a failure; `warning` when the stream had no `thread.started`). In `bin/hub.mjs`: `threadArg(options)` (a `--thread` that `ownedDir` accepts, else exit 3) and `fileElementPath(file, cwd)` (relative to `cwd`, links resolved, inside the repository root or the hub data, else exit 3). Thread files: `meta.json` (`threadId`, `element`, `sessionId`, `cwd`, `project`, `createdAt`, `calls`), `thread.md`, `answer-<n>.md`, `answer-<n>.err`. `fakes/codex.mjs` reads `FAKE_CODEX_LOG`, `FAKE_CODEX_EXIT`, `FAKE_CODEX_EMPTY`, `FAKE_CODEX_NO_THREAD`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -2497,6 +2556,43 @@ test('codex refusals and failures: a denylisted file, an existing thread, a fail
   assert.equal(calls().length, 1);
   assert.match(hub(['codex', 'ask', '--cwd', repo, '--slug', 'limit', '--file', join(repo, 'README.md'), '--question-file', '-'], 'Znowu?').stderr, /the Codex thread exists/);
 });
+
+test('codex writes only into its own threads and reads only repository or hub files (spec §7, §8.2)', () => {
+  const { root, repo, hub, calls } = codexSetup();
+  mkdirSync(join(repo, 'src'), { recursive: true });
+  writeFileSync(join(repo, 'src', 'app.ts'), 'x');
+  // A relative --file is taken from the session's cwd, not from the hub's working directory.
+  const relative = JSON.parse(hub(['codex', 'ask', '--cwd', repo, '--slug', 'rel', '--file', 'src/app.ts', '--question-file', '-'], 'Ok?').stdout);
+  assert.match(calls()[0].input, new RegExp(`Element: the file ${join(repo, 'src', 'app.ts').replace(/\\/g, '\\\\')}\\. Read it yourself\\.`));
+  const outside = join(tempRoot(), 'other.txt');
+  writeFileSync(outside, 'x');
+  for (const file of [outside, '../../outside.txt']) {
+    const refused = hub(['codex', 'ask', '--cwd', repo, '--slug', `out-${file.length}`, '--file', file, '--question-file', '-'], 'Ok?');
+    assert.equal(refused.status, 3, file);
+    assert.match(refused.stderr, /lies outside the repository/);
+  }
+  // Threads named on the command line must be the hub's own.
+  writeFileSync(join(repo, 'meta.json'), JSON.stringify({ threadId: 't', cwd: repo, calls: 1 }));
+  for (const args of [['follow', '--thread', repo, '--question-file', '-'], ['note', '--thread', repo, '--text-file', '-'], ['note', '--thread', join(relative.thread, '..', '..', '..', '..'), '--text-file', '-']]) {
+    const refused = hub(['codex', ...args], 'x');
+    assert.equal(refused.status, 3, args.join(' '));
+    assert.match(refused.stderr, /--thread must be a Codex thread under /);
+  }
+  assert.equal(existsSync(join(repo, 'thread.md')), false);
+  assert.equal(calls().length, 1);
+});
+
+test('an answer without thread.started is kept with a warning, and a follow-up is refused', () => {
+  const { repo, hub } = codexSetup();
+  const asked = hub(['codex', 'ask', '--cwd', repo, '--slug', 'bez-watku', '--file', join(repo, 'README.md'), '--question-file', '-'], 'Opinia?', { FAKE_CODEX_NO_THREAD: '1' });
+  assert.equal(asked.status, 0, asked.stderr);
+  const out = JSON.parse(asked.stdout);
+  assert.equal(out.threadId, null);
+  assert.match(out.warning, /a follow-up is impossible/);
+  const follow = hub(['codex', 'follow', '--thread', out.thread, '--question-file', '-'], 'Dalej?');
+  assert.equal(follow.status, 3);
+  assert.match(follow.stderr, /has no Codex thread id/);
+});
 ````
 
 - [ ] **Step 2: Run the tests to see them fail**
@@ -2517,7 +2613,7 @@ Modify `SKILL.md` (unified diff against the state after the previous task):
  ---
  
  # Hub
-@@ -138,9 +138,30 @@ message is `held`, do not resend it.
+@@ -142,9 +142,32 @@ message is `held`, do not resend it.
  6. After the send, stop the fork with `claude stop <shortId>`; the dialog directory stays. Show
     X's next result when its turn ends.
  
@@ -2531,11 +2627,13 @@ Modify `SKILL.md` (unified diff against the state after the previous task):
 +2. Run it in the background (Bash with `run_in_background: true`), the question on stdin:
 +   `HUB codex ask --session <id> --slug <slug> --last <id> --question-file - <<'EOF'` … `EOF`.
 +   There is no "wyślij" step: Codex only reads.
-+3. A refusal for a denylisted name: ask Rafal; never paste or point at such a file another way.
++3. A refusal for a denylisted name, or for a file outside the repository and the hub data: ask
++   Rafal; never paste or point at such a file another way.
 +4. When it finishes with `ok`, read `answerFile`, show the answer verbatim, then a table: uwaga,
 +   ocena huba, uzasadnienie. Record that table with
-+   `HUB codex note --thread <thread> --text-file - <<'EOF'` … `EOF`. On a failure say "brak drugiej
-+   opinii" and quote `failure`; the `.err` file stays; never run it again on your own.
++   `HUB codex note --thread <thread> --text-file - <<'EOF'` … `EOF`. A `warning` means the thread
++   has no id: say that a follow-up is impossible there. On a failure say "brak drugiej opinii" and
++   quote `failure`; the `.err` file stays; never run it again on your own.
 +5. "Codex, <pytanie>": `HUB codex follow --thread <thread> --question-file - <<'EOF'` … `EOF`, also
 +   in the background, then step 4.
 +6. A conclusion reaches `decisions.md` or a prompt only after Rafal confirms it.
@@ -2563,20 +2661,26 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
  //   prepare <recordId> [--confirm-waiting] [--confirm-busy] [--confirm-resend] [--agents-json <file>]
  //   result <recordId> (--msg-id <id> | --error <literal error>)
  //   notice --text <literal notice>
-@@ -22,10 +25,10 @@
+@@ -22,15 +25,15 @@
  // Every <sessionId> also takes a unique prefix, such as the 8 characters the overview shows.
  // --agents-json reads a saved `claude agents --json` output instead of running the CLI. The
  // --confirm-* flags are passed only after Rafal answered the hub's question (spec §6.2).
 -import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from 'node:fs';
-+import { readFileSync, writeFileSync, appendFileSync, mkdirSync, copyFileSync, existsSync } from 'node:fs';
++import { readFileSync, writeFileSync, appendFileSync, mkdirSync, copyFileSync, existsSync, realpathSync } from 'node:fs';
  import { randomBytes } from 'node:crypto';
 -import { join } from 'node:path';
--import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir } from '../lib/paths.mjs';
+-import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir, ownedDir } from '../lib/paths.mjs';
 +import { join, resolve } from 'node:path';
-+import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir, codexDir } from '../lib/paths.mjs';
++import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir, codexDir, ownedDir } from '../lib/paths.mjs';
  import { readEvents, resolveSessionId, listSessionIds } from '../lib/registry.mjs';
  import { deriveSession } from '../lib/derive.mjs';
  import { runPoll, appendPoll, pollEntry } from '../lib/polls.mjs';
+ import { buildOverview, renderOverview } from '../lib/overview.mjs';
+-import { loadProjectMap, projectFor, projectOf, renderProjects } from '../lib/projects.mjs';
++import { loadProjectMap, projectFor, projectOf, renderProjects, isWithin } from '../lib/projects.mjs';
+ import { registerLaunched, readHubSessions } from '../lib/hubsessions.mjs';
+ import { composeMessage, questionnaireRequest, withProjectContext } from '../lib/compose.mjs';
+ import { newRecordId, loadRecords, saveRecords, findRecord, findRecordByMsgId, listProjects, renderJournal } from '../lib/journal.mjs';
 @@ -38,6 +41,7 @@ import { gitInfo, runChecks } from '../lib/checks.mjs';
  import { findDelivery, findMismatch, findLaunchDelivery, findLaunchMismatch, classifyNotice, applyNotice } from '../lib/confirm.mjs';
  import { SLUG, newSessionArgs, runClaude, worktreeOf, launchChecks, findLaunched } from '../lib/launch.mjs';
@@ -2585,7 +2689,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
  import { cleanup } from '../lib/retention.mjs';
  import { VERDICTS, recordJudgment } from '../lib/judgments.mjs';
  import { sha256 } from '../lib/text.mjs';
-@@ -99,7 +103,17 @@ function newSessionTarget(root, options) {
+@@ -99,7 +103,32 @@ function newSessionTarget(root, options) {
    return { key, entry, name: `${key}-${slug}` };
  }
  
@@ -2594,24 +2698,39 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
 +const given = (options, key) => (options[key] && options[key] !== true ? options[key] : null);
 +
 +// One Codex call's result; a failure is "brak drugiej opinii" with the literal error (spec §8.1).
++// An answer without a thread id is kept, but marked: no follow-up can resume it (spec §7 step 3).
 +function reportCodex({ outcome, thread, n, threadId }) {
 +  console.log(JSON.stringify({
 +    ok: outcome.ok, thread, n, threadId, answerFile: join(thread, `answer-${n}.md`), errFile: join(thread, `answer-${n}.err`),
 +    ...(outcome.ok ? {} : { failure: `brak drugiej opinii: ${outcome.failure}` }),
++    ...(outcome.ok && !threadId ? { warning: 'no thread.started in the stream: a follow-up is impossible; ask again in a new thread' } : {}),
 +  }, null, 2));
 +  if (!outcome.ok) process.exit(3);
++}
++
++// A Codex thread named on the command line must be one of the hub's (spec §8.2).
++const threadArg = (options) => ownedDir(root, need(options, 'thread'), 'codex') ?? fail(`--thread must be a Codex thread under ${join(root, 'projects', '<project>', 'codex')}`, 3);
++
++// A file element is a repository file or a hub file (spec §7 step 1): a relative path is taken
++// from the session's cwd, links are resolved, and anything outside both is refused.
++function fileElementPath(file, cwd) {
++  const path = resolve(cwd, file);
++  const real = existsSync(path) ? realpathSync.native(path) : path;
++  const repo = gitInfo(cwd).repoRoot ?? cwd;
++  if (!isWithin(real, repo) && !isWithin(real, root)) fail(`the element ${real} lies outside the repository ${repo} and the hub data`, 3);
++  return real;
 +}
  
  // Every session id's events, or only the launched one's when the launch learned it.
  function launchCandidates(root, record) {
-@@ -291,6 +305,61 @@ switch (command) {
+@@ -293,6 +322,61 @@ switch (command) {
      }, null, 2));
      break;
    }
 +  case 'codex': {
 +    const sub = positional[0];
 +    if (sub === 'note') {
-+      const thread = need(options, 'thread');
++      const thread = threadArg(options);
 +      const meta = JSON.parse(readFileSync(join(thread, 'meta.json'), 'utf8'));
 +      appendFileSync(join(thread, 'thread.md'), `## Hub assessment ${meta.calls}\n\n${readBody(options, 'text-file').trim()}\n\n`, 'utf8');
 +      console.log(JSON.stringify({ ok: true, thread, n: meta.calls }));
@@ -2621,7 +2740,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
 +    const question = readBody(options, 'question-file');
 +    const at = new Date().toISOString();
 +    if (sub === 'follow') {
-+      const thread = need(options, 'thread');
++      const thread = threadArg(options);
 +      const meta = JSON.parse(readFileSync(join(thread, 'meta.json'), 'utf8'));
 +      if (!meta.threadId) fail('the thread has no Codex thread id (its first call failed before thread.started); start a new thread', 3);
 +      const n = meta.calls + 1;
@@ -2638,7 +2757,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
 +    const slug = need(options, 'slug');
 +    if (!SLUG.test(slug)) fail(`--slug must be kebab-case: ${slug}`);
 +    let element;
-+    if (given(options, 'file')) element = { kind: 'file', path: resolve(options.file) };
++    if (given(options, 'file')) element = { kind: 'file', path: fileElementPath(options.file, cwd) };
 +    else if (given(options, 'diff')) element = { kind: 'diff', range: options.diff };
 +    else if (given(options, 'last')) {
 +      const derived = derivedOf(root, sessionArg(root, options.last, 'missing --last'));
@@ -2666,7 +2785,7 @@ Modify `bin/hub.mjs` (unified diff against the state after the previous task):
    case 'prepare': {
      const found = findRecord(root, positional[0] ?? fail('usage: prepare <recordId>'));
      if (!found) fail('record not found', 3);
-@@ -413,5 +482,5 @@ switch (command) {
+@@ -415,5 +499,5 @@ switch (command) {
      break;
    }
    default:
@@ -2680,7 +2799,8 @@ Create `fakes/codex.mjs`:
 ````js
 // A stand-in for `codex` in consultation tests (HUB_CODEX_CMD): logs its arguments, working
 // directory and stdin, prints a --json stream with thread.started and an `error` item, and writes
-// the answer to the -o file. FAKE_CODEX_EXIT fails it; FAKE_CODEX_EMPTY leaves the answer empty.
+// the answer to the -o file. FAKE_CODEX_EXIT fails it; FAKE_CODEX_EMPTY leaves the answer empty;
+// FAKE_CODEX_NO_THREAD leaves out thread.started.
 import { appendFileSync, writeFileSync } from 'node:fs';
 
 const args = process.argv.slice(2);
@@ -2690,7 +2810,7 @@ process.stdin.on('data', (chunk) => { input += chunk; });
 process.stdin.on('end', () => {
   appendFileSync(process.env.FAKE_CODEX_LOG, `${JSON.stringify({ args, cwd: process.cwd(), input })}\n`);
   const thread = args[1] === 'resume' ? args[2] : '01a136b7-2195-70d0-8cb4-81ac73919aa0';
-  console.log(JSON.stringify({ type: 'thread.started', thread_id: thread }));
+  if (!process.env.FAKE_CODEX_NO_THREAD) console.log(JSON.stringify({ type: 'thread.started', thread_id: thread }));
   console.log(JSON.stringify({ type: 'item.completed', item: { id: 'item_0', type: 'error', message: 'clamping SessionEnd hook timeout to 3s' } }));
   if (process.env.FAKE_CODEX_EXIT) {
     process.stderr.write('ERROR: usage limit reached');
@@ -2789,17 +2909,20 @@ export function threadEntry({ n, question, prompt, at, outcome }) {
 Modify `lib/paths.mjs` (unified diff against the state after the previous task):
 
 ````diff
-@@ -31,3 +31,4 @@ export const journalMdPath = (root, project) => join(projectDir(root, project),
+@@ -32,6 +32,7 @@ export const journalMdPath = (root, project) => join(projectDir(root, project),
  export const sentDir = (root, project) => join(projectDir(root, project), 'sent');
  export const draftsDir = (root, project) => join(projectDir(root, project), 'drafts');
  export const dialogsDir = (root, project) => join(projectDir(root, project), 'dialogs');
 +export const codexDir = (root, project) => join(projectDir(root, project), 'codex');
+ 
+ // A directory a command names on its command line and then writes into must be exactly
+ // <root>/projects/<project>/<kind>/<name>, after `..` and links are resolved: the hub writes only
 ````
 
 - [ ] **Step 4: Run the tests to see them pass**
 
 Run: `node --test 2>&1 | grep -E "^ℹ (pass|fail)"`
-Expected: `ℹ pass 105`, `ℹ fail 0`.
+Expected: `ℹ pass 109`, `ℹ fail 0`.
 
 - [ ] **Step 5: The whole development tree against the reference copy**
 
@@ -2816,7 +2939,7 @@ Expected, in any order: `differ` for `SKILL.md`, `bin/hub.mjs`, `bin/install.mjs
 Same command, explanation and undo as Task 5 Step 1; the tree now also has `lib/denylist.mjs`, `lib/dialog.mjs`, `lib/codex.mjs` and `fakes/codex.mjs` (add them to the `rm -r` of the undo).
 
 - [ ] **Step 1: Rafal installs** — `node C:/Users/rafal/hub-dev/hub/bin/install.mjs --dry-run`, then without `--dry-run`.
-- [ ] **Step 2: Verify** — `cd C:/Users/rafal/.claude/skills/hub && node --test 2>&1 | grep -E "^ℹ (pass|fail)"`. Expected: `ℹ pass 105`, `ℹ fail 0`.
+- [ ] **Step 2: Verify** — `cd C:/Users/rafal/.claude/skills/hub && node --test 2>&1 | grep -E "^ℹ (pass|fail)"`. Expected: `ℹ pass 109`, `ℹ fail 0`.
 - [ ] **Step 3: The hub picks up the new skill** — `/clear` in the hub tab, then `start`.
 
 ---
@@ -2855,27 +2978,31 @@ Plan 2 acceptance Step 6, unchanged: `sesja probe-a: pytania o nazwę pliku z no
 
 - [ ] **Step 4: Item 9 — a new session from the map**
 
-Rafal: `odpal sesję w sondach huba: przeczytaj README i napisz w odpowiedzi jedno zdanie o tym, do czego służy repozytorium`. Expected: the hub matches `sondy`, shows the draft (header `[hub · new-session · sondy · sondy-<slug> · …]`, the project line under **Kontekst**) with directory, name and "bez worktree"; `wyślij`; `HUB launch` prints the short id and `claude attach <id>`; the overview lists `sondy-<slug> [background]`; after its first prompt `HUB confirm` lists the record in `confirmed` (the `promptHash` of the real `claude.exe` command-line prompt equals the approved hash — Review Focus 1). If `confirm` lists it in `mismatched` instead, record it as a defect with the journal line: the command-line prompt was changed on the way.
+Rafal: `odpal sesję w sondach huba bez worktree: przeczytaj README i napisz w odpowiedzi jedno zdanie o tym, do czego służy repozytorium`. Expected: the hub matches `sondy`, shows the draft (header `[hub · new-session · sondy · sondy-<slug> · …]`, the project line under **Kontekst**) with directory, name and "bez worktree" (`approve … --no-worktree`); `wyślij`; `HUB launch` prints the short id and `claude attach <id>`; the overview lists `sondy-<slug> [background]`; after its first prompt `HUB confirm` lists the record in `confirmed` (the `promptHash` of the real `claude.exe` command-line prompt equals the approved hash — Review Focus 1). If `confirm` lists it in `mismatched` instead, record it as a defect with the journal line: the command-line prompt was changed on the way.
 
-- [ ] **Step 5: Item 5 — dialog through a fork**
+- [ ] **Step 5: Item 9 with a worktree, and the cleanup only proposed**
+
+Rafal: `odpal sesję w sondach huba: dopisz do pliku notes/plan-3.md jedno zdanie o dzisiejszej dacie`. Expected: a worktree by default (P9): the draft shows the worktree path and branch and the name `sondy-<slug>`; `wyślij`; `HUB launch` prints `worktree.path` = `C:\Users\rafal\hub-probes\repo\.claude\worktrees\sondy-<slug>` and `worktree.branch` = `worktree-sondy-<slug>`; read-only checks: `git -C C:/Users/rafal/hub-probes/repo worktree list` lists that path on that branch, `claude agents --json` shows the session's `cwd` inside it, and after its first prompt `HUB confirm` lists the record in `confirmed`; the file lands in the worktree, not in `repo/notes/`. Then Rafal: `posprzątaj po sesji sondy-<slug>`. Expected: the hub only proposes the commands of spec §6.6 (`claude stop` / `claude rm <id>` after the process exited, removing a leftover directory by hand, `git branch -d worktree-sondy-<slug>`, `-D` only after Rafal confirms the commits may be lost) and runs none of them; Rafal decides and runs them himself.
+
+- [ ] **Step 6: Item 5 — dialog through a fork**
 
 Rafal: `omówmy wynik sesji probe-a`. Expected: `HUB dialog start` prints the dialog directory and `claude attach <id>`; `context/` holds `status.txt`, `log.txt`, `diff.patch`. Rafal attaches in a terminal, talks, asks for the prompt; the fork writes `prompt.md` and ends with `⏸ Czeka na decyzję: prompt gotowy do przeglądu`; the watcher reports it; Rafal reviews `prompt.md`; the hub composes with `--path dialog --origin dialogs/<dir>` and shows the full message; `wyślij`; `sent`; the hub stops the fork with `claude stop <id>`. Also check: the fork's first turn does not end with a marker inherited from `probe-a`'s history (P6), and the fork cannot write into `repo/` (ask it to; expect a refusal).
 
-- [ ] **Step 6: Item 6 — Codex with one follow-up**
+- [ ] **Step 7: Item 6 — Codex with one follow-up**
 
 Rafal: `odbij od Codexa ostatni wynik probe-a: czy jest kompletny?`, then `Codex, a co z testami?`. Expected: both calls run in the background; the hub shows each answer verbatim with its assessment table and records it with `HUB codex note`; `thread.md`, `meta.json` (with the thread id), `answer-1.md`, `answer-2.md` and their `.err` files exist under `projects/sondy/codex/<date>-<slug>/`.
 
-- [ ] **Step 7: Item 10 — the hub after `/clear`**
+- [ ] **Step 8: Item 10 — the hub after `/clear`**
 
 Plan 2 acceptance Step 7, unchanged: `/clear` in the hub tab, then `start`. Expected: the role kept, the overview rebuilt with titles and map names, the hub's new id not listed.
 
-- [ ] **Step 8: Item 7 — a full restart and state recovery**
+- [ ] **Step 9: Item 7 — a full restart and state recovery**
 
-Plan 2 acceptance Step 8, unchanged: `/exit` the hub; send `Napisz jedno zdanie o rzece.` in `probe-b` and wait for the turn to end; start the hub again with `cd C:/Users/rafal/.claude/hub && claude --name hub --append-system-prompt-file C:/Users/rafal/.claude/skills/hub/role.md` and type `start`. Expected: the re-armed watcher reports `turn ended` for `probe-b`; `HUB journal --project sondy` still shows the records of Steps 3–5.
+Plan 2 acceptance Step 8, unchanged: `/exit` the hub; send `Napisz jedno zdanie o rzece.` in `probe-b` and wait for the turn to end; start the hub again with `cd C:/Users/rafal/.claude/hub && claude --name hub --append-system-prompt-file C:/Users/rafal/.claude/skills/hub/role.md` and type `start`. Expected: the re-armed watcher reports `turn ended` for `probe-b`; `HUB journal --project sondy` still shows the records of Steps 3–6.
 
-- [ ] **Step 9: Close and record**
+- [ ] **Step 10: Close and record**
 
-Ask Rafal to `/exit` the trial sessions, to stop the launched session (`claude stop <id>`), to remove the trial map entry, and to decide about the worktree cleanup if one was created (the hub only proposes it, spec §6.6). Write the acceptance report: per step the expected and the observed result, quoted from the hub tab or the CLI output, and a verdict; any failure becomes a defect task or a spec impact for Rafal. Finish with proposed commit messages:
+Ask Rafal to `/exit` the trial sessions, to stop the session launched in Step 4 (`claude stop <id>`), and to remove the trial map entry. Write the acceptance report: per step the expected and the observed result, quoted from the hub tab or the CLI output, and a verdict; any failure becomes a defect task or a spec impact for Rafal. Finish with proposed commit messages:
 
 ```
 docs(orchestrator): plan 3 acceptance report
