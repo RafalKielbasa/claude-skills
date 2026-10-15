@@ -108,6 +108,15 @@ wierność jest tym, o co się go prosi.
   W egzekucji wyszły: `IndexError` przy krótszym przebiegu (indeksowanie kart), crash cp1252 przy
   przekierowaniu wyjścia i dwie błędne wartości oczekiwane (15 zamiast 16 kart, `## Statusy` jako dowód
   pokazania notatki) — każda kosztowała ruling. Zob. asercja-testu-na-sygnale-zastepczym.
+- 2026-10-15, sesja ad16420c-5965-4484-a54d-32148a48f6ea (id claude.ai niedostępny), repo Baza wiedzy:
+  jedenasty dowód, plan `2026-10-15-nagrywanie-przelaczanie-kart` (tools/nagrywanie, 8 zadań, review
+  codex przeszło). Trzy defekty w kodzie testów planu, żaden nie wykonany przed briefem: helper `piksel`
+  z `-ss t` zwracał NASTĘPNĄ klatkę (ffmpeg daje pierwszą z pts ≥ t), więc test z planu padł w Tasku 1
+  i implementer poprawił seek; próg `sprawdzone > 20` przy próbkach co 100 ms na okresie 500 ms zależał
+  od fazy zegara (2 albo 3 trafienia na 5, ~21 próbek) i padł dopiero w siódmym pełnym przebiegu;
+  klasyfikator koloru karty liczył magentę jako kartę `b`, więc E2E nie mogło wykryć mignięcia planszy
+  (znalazło to review całej gałęzi). Nowe: defekty **numeryczne/czasowe** w kodzie testu (semantyka seek,
+  liczność próbek) — tych nie łapie ani lektura, ani pojedynczy zielony przebieg.
 
 ## Rozwiązanie
 
