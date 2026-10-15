@@ -23,7 +23,8 @@ Decyzja Rafała 2026-10-15: moduł 5 Norberta niezadowalający, przed modułem 6
 
 Niezgłoszona regresja: merge `eaac0ea` Norberta w #192 cofnął na `main` poprawkę Miłosza z #191 w
 `apps/web/src/app/tenant/[subdomain]/creator/layout.tsx:22` (`flex ... flex-col` → `min-w-0 flex-1`).
+Issue założone 2026-10-15: #204 CP-109 (epik #178, `frontend`), przypisane Norbertowi z komentarzem o pochodzeniu regresji (issuecomment-6189152351).
 
-**Why:** decyzja o module 5 Norberta i feedback dla K/M opierają się na tych liczbach; regresja na `main` czeka na ticket.
+**Why:** decyzja o module 5 Norberta i feedback dla K/M opierają się na tych liczbach; regresja na `main` ma ticket #204 (CP-109, Norbert).
 **How to apply:** przy feedbacku dla K/M nie zdradzać zmiany wymagań A (zob. [[internship-exam-2026-09]]);
 przed ponownym cytowaniem liczb przelicz je, bo PR-y #199/#200/#202 wciąż się zmieniają.

@@ -60,6 +60,10 @@ says so. Lines marked with a date came from a finding on that date.
       source: "no accepted plan" is a different rule from "no submitted plan",
       and a ticket that tightens or loosens a rule contradicts the document it
       points at.
+- [ ] **(2026-10-15)** A claim about several elements at once ("X, Y and Z do W")
+      is checked per element in the code. A reviewer's summary that groups them
+      is a hypothesis for each one: in CP-109 a review comment said three state
+      screens were "not centered", but the loading skeleton never centres.
 
 ## Per batch
 
