@@ -2939,7 +2939,7 @@ Expected, in any order: `differ` for `SKILL.md`, `bin/hub.mjs`, `bin/install.mjs
 Same command, explanation and undo as Task 5 Step 1; the tree now also has `lib/denylist.mjs`, `lib/dialog.mjs`, `lib/codex.mjs` and `fakes/codex.mjs` (add them to the `rm -r` of the undo).
 
 - [ ] **Step 1: Rafal installs** — `node C:/Users/rafal/hub-dev/hub/bin/install.mjs --dry-run`, then without `--dry-run`.
-- [ ] **Step 2: Verify** — `cd C:/Users/rafal/.claude/skills/hub && node --test 2>&1 | grep -E "^ℹ (pass|fail)"`. Expected: `ℹ pass 109`, `ℹ fail 0`.
+- [ ] **Step 2: Verify** — `cd C:/Users/rafal/.claude/skills/hub && node --test 2>&1 | grep -E "^ℹ (pass|fail)"`. Expected: `ℹ pass 123`, `ℹ fail 0` (updated during execution: 109 planned, +1 Task 6 review fix, +13 final-review fix wave; see the SDD ledger).
 - [ ] **Step 3: The hub picks up the new skill** — `/clear` in the hub tab, then `start`.
 
 ---

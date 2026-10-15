@@ -24,11 +24,11 @@
     "figma@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\figma\\2.2.127",
-        "version": "2.2.127",
+        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\figma\\2.2.157",
+        "version": "2.2.157",
         "installedAt": "2026-06-05T07:34:24.064Z",
-        "lastUpdated": "2026-10-08T05:19:23.270Z",
-        "gitCommitSha": "f0493295acf5f7cbdebcbcc483c06de814420cb1"
+        "lastUpdated": "2026-10-15T08:04:17.514Z",
+        "gitCommitSha": "f2789420e7e8b4e2465dfeb1e12e1fc6a31397e5"
       }
     ],
     "obsidian@obsidian-skills": [
