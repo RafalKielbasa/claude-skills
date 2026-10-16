@@ -17,6 +17,18 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   - obliczenia sum kontrolnych i upload do HeyGen;
   - analiza `dopasowanie.md` i STT;
   - czytanie indeksów wiki.
+- 2026-10-16, sesja a7fb8394-0358-4975-bc18-9da4d6298a8a (id claude.ai niedostępny; Baza wiedzy, krok wiki
+  `podsumuj-sesja-claude` po kompakcji): cztery przypomnienia w jednym kroku. Za każdym razem padło po 3–6
+  wywołaniach bez tekstu: przeszukiwanie transkryptu skryptem, czytanie stron wzorców, sprawdzanie commitów,
+  odczyt indeksów. Reguła z tej strony była w indeksie, który czytałem w pierwszym wywołaniu kroku. Linię
+  statusu pisałem dopiero po przypomnieniu, nie przed nim.
+- 2026-10-16, sesja d92b17c0-d005-44e9-a147-6183eb2f8eb1 (id claude.ai niedostępny; vault, pytanie „W jakich
+  sytuacjach z huba będę mógł odpowiedzieć do innej sesji?”): jedno przypomnienie po pięciu turach narzędzi
+  bez tekstu. Były to odczyty specu `hub-core-design.md` (§3, §5.3–§6.6, §8), `SKILL.md` huba i raportów
+  akceptacji Planów 2–3. Linię statusu („Sprawdzam jeszcze, czy ścieżkę kwestionariusza…”) napisałem
+  dopiero po przypomnieniu. W kroku wiki tej samej sesji pierwszą linię napisałem po czterech wywołaniach.
+  Drugie przypomnienie przyszło po kolejnych czterech wywołaniach bez tekstu (dopisanie logów, sprawdzenie
+  indeksu gita, commit i push), już po zapisaniu tego dowodu.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

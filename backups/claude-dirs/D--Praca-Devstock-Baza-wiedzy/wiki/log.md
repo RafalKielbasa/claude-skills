@@ -331,3 +331,18 @@ Format wpisu:
 - zaakceptowana: deduplikacja wiedzy — `action: update` tylko dla korekty wpisu spotkania (`planning/`) na ten sam temat; każde inne trafienie w progu → `action: new` z komentarzem `#`. Zmiana w `docs/spotkania-kolejki.md` („Deduplication before the gate”, kontrakt wspólny ze `/spotkanie`) i w streszczeniu `daily/SKILL.md`; założony `daily/PURPOSE.md`; wpis z pełnym diffem w `skill-impact.md`.
 - status: update-z-deduplikacji-trafia-w-caly-dokument → zaadresowany (2026-10-16, daily). Miara skuteczności: najbliższe `/daily` i `/spotkanie` z trafieniami w `knowledge-base/*.md` mają przyjść do bramki jako `new` z komentarzem; karta `update` na dokument repo = nawrót.
 - Bez commitu (krok 5 `evolve-skill`); decyzja o gałęzi czeka razem z wiki z podsumowania sesji.
+
+## 2026-10-16 — sesja a7fb8394-0358-4975-bc18-9da4d6298a8a (id claude.ai niedostępny; ponowny render lekcji agenty-ai 1.2 na lektorze V4, tor B z automatem: migracja konspektu, plansze, rozszerzenie obsługi n8n o czat i podwęzły agenta, przebieg próbny w 3 rundach, efekt `rozmycie`, montaż, `final.mp4` zaakceptowany; #695 DT-40 Done; commity `7301021a`…`3efe390a`)
+- założono: pauza-przed-zdaniem-akcji-puszcza-obraz-przed-narracje (skill: kurs-montaz, typ: porażka) — pauza po „Pytam wprost.” puściła wpisanie i wykonanie czatu przed narracją; `sprawdz` czysty, rozjazd zobaczył Rafał ok. 8:02.
+- założono: stan-ui-w-profilu-przezywa-reset-konta (skill: kurs-nagrywanie, typ: porażka) — panel czatu i Logs z poprzedniego przebiegu otwarte na starcie następnego; `localStorage` profilu przeżywa reset `start_state`.
+- założono: inwentarz-wymowy-od-listy-gubi-akronim-spoza-niej (skill: kurs-video, typ: porażka) — „API” bez wpisu w `wymowa.md` przeczytane „A PE I”; poprawka po nagraniu kosztowała lektora, avatar, przebieg i ujęcie.
+- założono: cache-klipow-montazu-przezywa-poprawke-filtra (skill: kurs-montaz, typ: porażka) — poprawka yuv444p niewidoczna, dopóki `WERSJA_RENDERU` nie poszło z 5 na 6.
+- dopisano dowód: ui-probe-before-actions-surfaces-scenario-drift — przypadek odwrotny: nowe działania n8n bez sondy kosztowały 11 zatrzymanych przebiegów.
+- dopisano dowód: skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo — `kurs-uwagi:133`, migracja w `kurs-lekcja:256` i `kurs-montaz:262` każą zostawić zmiany Rafałowi; commity według `CLAUDE.md` na gałęzi dnia.
+- Gładko, bez osobnych wzorców:
+  - obsługa n8n rozszerzona offline w TDD z atrapą `ctx` (17 testów czatu), zanim ruszył pierwszy przebieg;
+  - analiza zrzutów przebiegu przez subagenta, a każdy zgłoszony rozjazd sprawdzony na zrzucie przed raportem (reguła z kroku 4 `kurs-nagrywanie`);
+  - poprawka 8:02 objęła całą klasę (6:4, 6:5, 7:2), nie tylko wskazane miejsce;
+  - board-tracker: DT-40 założone na „A”, ślad kumulatywny, Done dopiero na „przesuń”.
+- Wzorce globalne dotknięte w tej sesji: nowy ffmpeg-drawtext-segfault-bez-fontconfig; dowody do windows-path-w-literale-skryptu, cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan i dlugi-lancuch-narzedzi-bez-linii-statusu — patrz log globalny.
+- Sygnał repo: skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo (porażka, 5 dowodów z 5 sesji) → `/evolve-skill spotkanie` i rodzina `kurs-*` (`kurs-video`, `kurs-uwagi`, `kurs-lekcja`, `kurs-montaz`); bez zmian agent-czyta-plik-redagowany-przez-agenta-rownoleglego → `/evolve-skill kurs-redakcja`. Nowe porażki mają dowody z jednej sesji — jeszcze nie kandydaci.

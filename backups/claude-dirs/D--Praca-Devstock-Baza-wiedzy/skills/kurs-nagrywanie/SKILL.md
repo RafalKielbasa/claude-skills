@@ -214,9 +214,15 @@ Kilka sesji dzieli jedno konto kursu (profil, n8n, konto Google, arkusz). Stanow
   (b) martwe wpisy kolejki przed lekcją („..., ale jej oczekiwanie już nie działa”: proces oczekiwania nie żyje albo
   nie odpytał od 2 min, np. po zamknięciu sesji) - Rafał decyduje o `station-leave` albo
   `station-reorder --position N` dla tamtych lekcji. Na „czekaj” uruchom w tle komendę z końca komunikatu
-  (`Czekać dalej: npm run nagrywanie -- station-wait ... --ack "<token>"`). Bez jego słowa niczego z tego nie robisz.
-  Dopóki czekasz na jego decyzję, twoja lekcja stoi w kolejce bez działającego oczekiwania, więc lekcja za tobą może
-  zgłosić ją jako martwy wpis - to ta sama sytuacja, powiedz o tym Rafałowi.
+  (`Czekać dalej: npm run nagrywanie -- station-wait ... --ack "<token>"`), także gdy Rafał rozstrzygnął tylko część
+  (np. `station-leave` martwej lekcji) - ten token nie zgłosi ponownie tego, co zostało. Bez jego słowa niczego
+  z tego nie robisz. Jedna sytuacja to jedna bramka: dopóki Rafał decyduje, twoja lekcja zachowuje miejsce
+  w kolejce, a lekcje za nią nie zgłaszają jej jako martwej - najwyżej 30 min od zgłoszenia bez ponownego
+  `station-wait`; potem lekcja za tobą zgłosi ją jako martwy wpis.
+  Po odpowiedzi Rafała na twoją bramkę - jakakolwiek by była (`czekaj`, `zwolnij`, `station-leave` albo
+  `station-reorder` martwych lekcji) - wykonaj jego decyzję i od razu uruchom własne `station-wait` ponownie w tle
+  (`--ack "<token>"` tylko po „czekaj”). Ponowne dołączenie czyści znacznik „zgłoszona”; bez niego twoja lekcja
+  stoi w kolejce bez działającego oczekiwania, a będąc pierwszą przy wolnym koncie, blokuje je do 30 min.
 - **Punkty zwolnienia (`station-release <lekcja>`).** Po `preview-start-state` (B4 zatwierdza Rafał bez trzymanego
   konta); po każdym `przebieg` od razu, gdy komenda się skończy - analizę zrzutów i raport robisz bez konta, a kolejny
   przebieg po poprawkach to nowe dołączenie; po nagraniu ujęć, przed bramką pierwszego ujęcia - każde dalsze ujęcie

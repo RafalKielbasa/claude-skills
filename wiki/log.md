@@ -487,3 +487,19 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Gładko, bez osobnych wzorców: kod Planu 4 uruchomiony w kopii roboczej przed zapisaniem planu (reguła z kod-referencyjny-planu-nigdy-nie-uruchomiony) — reviewer opus potwierdził identyczność plików, a defekt I1 był w specu, nie w kodzie planu; review Codexa planu z izolacją (3 uwagi, 2 wcielone, 1 odrzucona z powodem); decyzje D1–D4 i warianty A/B odpowiadane jednym „A"/„OK".
 - Wzorce repo (`D:/Notatki/notatki/.claude/wiki/`): bez nowych — patrz log repo.
 - Sygnał globalny: brak `nawrót`. windows-path-w-literale-skryptu (14) i cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (15) to porażki z wielu sesji, ale `ogólny` — kandydaci do reguły w `CLAUDE.md`, nie do `/evolve-skill`. codex-exec-dziedziczy-hooki-i-mcp-uzytkownika — kandydat do poprawki przykładowej komendy review w `CLAUDE.md` (sekcja „Plany implementacyjne"). Kandydaci według poprzednich wpisów bez zmian, w tym kod-referencyjny-planu-nigdy-nie-uruchomiony → `/evolve-skill superpowers:writing-plans`.
+
+## 2026-10-16 — sesja a7fb8394-0358-4975-bc18-9da4d6298a8a (id claude.ai niedostępny; repo Baza wiedzy: ponowny render lekcji agenty-ai 1.2, #695)
+- założono: ffmpeg-drawtext-segfault-bez-fontconfig (skill: ogólny, typ: porażka) — `drawtext` na klatkach kontrolnych dał dwa segfaulty po „Fontconfig error”; klatki bez podpisów.
+- dopisano dowód: windows-path-w-literale-skryptu (piętnasty) — heredoc zjadł ukośniki w regexie skryptu inwentarza wymowy, mimo wpisu w pamięci projektu.
+- dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (szesnasty) — dwa zbędne `cd` w kroku wiki, bez szkody.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (druga sesja) — cztery przypomnienia harnessu w samym kroku wiki.
+- Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): 4 nowe, 2 dowody — patrz log repo.
+- Sygnał globalny: brak `nawrót`. windows-path-w-literale-skryptu (15), cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (16) i dlugi-lancuch-narzedzi-bez-linii-statusu (2 sesje) to porażki `ogólny` — kandydaci do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Kandydaci według poprzednich wpisów bez zmian, w tym kod-referencyjny-planu-nigdy-nie-uruchomiony → `/evolve-skill superpowers:writing-plans`.
+
+## 2026-10-16 — sesja d92b17c0-d005-44e9-a147-6183eb2f8eb1 (id claude.ai niedostępny; vault: pytania o projekt hub — co zostało do zrobienia i kiedy hub wysyła do innej sesji; bez zmian w plikach poza wiki)
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (trzecia sesja) — przypomnienie harnessu po pięciu turach odczytów specu, `SKILL.md` huba i raportów akceptacji; linia statusu dopiero po nim.
+- dopisano dowód: nowe-polecenie-przy-otwartej-bramce-nie-jest-zgoda (sukces, drugi) — nowe pytanie po bramce „Pilot przed poprawkami” nie wzięte za decyzję; marker przeniesiony do następnej odpowiedzi.
+- dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (siedemnasty) — `cd` do wiki w kroku wiki, „Shell cwd was reset”, bez szkody.
+- Gładko, bez osobnych wzorców: `project-index` uruchomiony od razu na „co zostało w hubie”, odpowiedź z indeksu (procedura 7) bez zmian w plikach, kody otwartych punktów z nazwami; odpowiedź o wysyłce oparta na specu, `SKILL.md` i raportach akceptacji z `plik:linia` i oddzielonym „nietestowane”.
+- Wzorce repo (`D:/Notatki/notatki/.claude/wiki/`): bez nowych — patrz log repo.
+- Sygnał globalny: brak `nawrót`. dlugi-lancuch-narzedzi-bez-linii-statusu ma teraz dowody z trzech sesji (próg przekroczony), ale jest `ogólny` — kandydat do reguły w `CLAUDE.md`, nie do `/evolve-skill`; tak samo windows-path-w-literale-skryptu (15) i cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (17). Kandydaci według poprzednich wpisów bez zmian, w tym kod-referencyjny-planu-nigdy-nie-uruchomiony → `/evolve-skill superpowers:writing-plans`.

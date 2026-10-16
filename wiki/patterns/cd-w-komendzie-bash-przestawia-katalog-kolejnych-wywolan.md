@@ -148,6 +148,11 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
 
   Bez szkody, ale to czysty odruch: `cd` nie było potrzebne ani razu, bo ścieżki i tak były bezwzględne.
 
+- 2026-10-16, sesja d92b17c0-d005-44e9-a147-6183eb2f8eb1 (id claude.ai niedostępny; vault, krok wiki skilla
+  `podsumuj-sesja-claude`): siedemnasty dowód. Przy `cd /c/Users/rafal/.claude/wiki && cat patterns/… ; tail …`
+  harness od razu zwrócił „Shell cwd was reset to d:\Notatki\notatki”. Szkody nie było, bo dalsze ścieżki
+  były bezwzględne. Wzorzec miał wtedy w indeksie 16 dowodów i był czytany w tym samym kroku.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:

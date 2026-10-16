@@ -35,3 +35,8 @@ Format wpisu:
 - Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmieniły się `.claude/specs/` i `.claude/plans/` huba orkiestratora, a poza vaultem globalny `CLAUDE.md` i skill `hub`)
 - Wzorce globalne dotknięte w tej sesji: codex-exec-dziedziczy-hooki-i-mcp-uzytkownika (założony), zlozona-komenda-git-z-cd-poza-regulami-allow (założony), komenda-do-wklejenia-zaklada-git-bash (założony), windows-path-w-literale-skryptu (dopisany dowód), manual-step-confirmation-checked-against-system-state (dopisany dowód), cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (dopisany dowód)
 - Sygnał: brak
+
+## 2026-10-16 — sesja d92b17c0-d005-44e9-a147-6183eb2f8eb1 (id claude.ai niedostępny)
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; tylko odczyt indeksu `.claude/projects/hub.md`, specu i raportów akceptacji `hub-core` oraz globalnych skilli `project-index` i `hub`)
+- Wzorce globalne dotknięte w tej sesji: dlugi-lancuch-narzedzi-bez-linii-statusu (dopisany dowód), nowe-polecenie-przy-otwartej-bramce-nie-jest-zgoda (dopisany dowód), cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (dopisany dowód)
+- Sygnał: brak
