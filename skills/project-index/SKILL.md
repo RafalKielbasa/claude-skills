@@ -69,7 +69,8 @@ and **Teraz**; `## Części` (table `Część | Status | Dokumenty | Co zostało
    sentence, the first part, and Meta: the parts Rafal named as the finish line, or „czeka na
    decyzję „<name>”” and that decision under Decyzje czekające.
 2. **Add a part.** One row in Części, its stages in Oś (above or below the META line), Teraz if it
-   is the part in progress.
+   is the part in progress. Re-read Decyzje czekające: a decision whose variants or recommendation
+   name the parts (for example the finish line) gets the new part added to its wording.
 3. **Register a document.** Link a new or renamed spec, plan or report in its part's Dokumenty
    cell and add or update its Oś line with the date.
 4. **Update status.** Set the part's Status and Co zostało, the Oś mark, Teraz and Następny krok.

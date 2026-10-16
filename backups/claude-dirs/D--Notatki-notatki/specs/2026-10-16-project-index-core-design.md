@@ -2,8 +2,7 @@
 
 **Project / part:** `project-index` / `project-index-core`
 **Date:** 2026-10-16
-**Index:** `.claude/projects/project-index.md`, created by the first plan. Until then this spec is a
-draft for Rafal's approval.
+**Index:** [.claude/projects/project-index.md](../projects/project-index.md)
 **Origin:** brainstorming in session `2b64d06b` (2026-10-16), after an assessment of what is left
 to finish the orchestrator hub.
 
