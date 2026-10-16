@@ -47,6 +47,7 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    (kolejne resety tej lekcji idą bez bramki, dopóki deklaracja `start_state` się nie zmieni - zmieniona deklaracja wymaga nowego `preview-start-state` i nowej bramki B4). Po jego "tak": `przebieg <lekcja> --przygotowane` - cała lekcja,
    bez wideo, zrzut po każdym kroku. Wynik: `<dane>/przebiegi/<lekcja>/<czas>/` z `przebieg.json`, zrzutami
    i `galeria.html`; komenda wypisuje niesprawdzone kroki i zasoby do usunięcia.
+   Konto kursu współdzielą równoległe lekcje: `preview-start-state` i każdy `przebieg` zajmują je i oddają według sekcji „Lekcje równolegle”.
    **Analiza.** Dla każdego kroku z `przebieg.json` otwórz zrzut (`Read`) i porównaj go z polami kroku: `narracja`,
    `opis` (kroki planu, czyli `[AKCJA]`), `przyjecie` i `elementy` (lokator i widoczna nazwa). Pytania:
    - czy wszystko, co narracja nazywa (przycisk, zakładka, pole, etykieta, sekcja), jest na ekranie pod tą nazwą;
@@ -103,6 +104,7 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    i nie obchodź - pokaż komunikat Rafałowi. **BRAMKA: pierwsze ujęcie lekcji** - daj Rafałowi ścieżkę surowego
    nagrania i poproś, żeby je obejrzał; jego uwagi zmieniają `nagrywanie.yaml`, potem ujęcie od nowa. Kolejne ujęcia
    tylko po jego "tak".
+   Konto kursu zajmujesz i oddajesz według sekcji „Lekcje równolegle” (kolejka, zwolnienie przed bramką pierwszego ujęcia).
 6. **EDL.** `edl <lekcja> --run <nazwa>` (wszystkie ujęcia nagrane) - granice klatek muszą zgodzić się z osią lektora (bramka narzędzia). Istniejący `edl.json` z ręcznymi
    decyzjami nadpisuje tylko `--nadpisz` po zgodzie Rafała. Dalej `/kurs-montaz` (zoomy, ramki, plansze), potem
    `/kurs-video` etap 2.
@@ -184,6 +186,50 @@ sekcja "Poziom autonomii kursu"). Reszta procedury bez zmian.
   kliknięciu, więc sama jego obecność niczego nie dowodzi; bez dowodu stop z nazwami credentiali utworzonych przy kliknięciu.
 - **`start_state` nowej lekcji:** `save-start-state <lekcja> --ujecie N` zapisuje migawkę; przejrzyj ją z tabelą
   `## Przygotowanie przed nagraniem` z planu i dopiero wtedy wklej deklarację do `nagrywanie.yaml`.
+
+## Lekcje równolegle
+
+Kilka sesji dzieli jedno konto kursu (profil, n8n, konto Google, arkusz). Stanowisko, kolejka i komunikaty: README
+`tools/nagrywanie`, sekcja „Kolejka do konta kursu”. Kolejność zgłoszeń, bez przeskakiwania.
+
+- **Lekcja wchodzi do kolejki dopiero gotowa.** Wcześniej zamknij każdą bramkę, która nie potrzebuje konta: zgodę na
+  koszt i limit wykonań, tabelę `## Przygotowanie przed nagraniem`, a przed nagraniem (krok 5) także paczkę lektora
+  i avatary. Do `dry-pass` i `recording` każde ujęcie lekcji musi mieć `start_state`; bez niego `station-wait` z tym
+  celem odmawia (najpierw `save-start-state` i bramka B4). `preview` i `other` tego wymogu nie mają.
+- **Dołączanie.** `station-wait <lekcja> --purpose <preview|dry-pass|recording|other>` uruchom narzędziem Bash z
+  `run_in_background: true` (nie `Monitor` - kończy komendę po najwyżej 30 min). Powiedz w jednej linii, na której
+  pozycji stoisz i kto trzyma konto (`station-show <lekcja>`), i zakończ turę BEZ znacznika bramki (nie czekasz na
+  Rafała). W kolejce nie robisz nic innego. Jeśli Rafał zagadnie sesję o cokolwiek innego, najpierw
+  `station-leave <lekcja>` (tracisz miejsce) - to kończy też działające w tle `station-wait` tej lekcji kodem 4, bez
+  zajmowania konta - i dołączasz ponownie, gdy lekcja jest gotowa. To samo, gdy sesja musi z innego powodu przestać
+  czekać: `station-leave`, żeby lekcja nie została martwa w kolejce. Gdy `station-leave` odpowie, że lekcja „nie
+  stała w kolejce”, sprawdź `station-show <lekcja>`: jeśli oczekiwanie zdążyło zająć konto, oddaj je
+  (`station-release <lekcja>`).
+- **Wynik `station-wait`.** Kod 0 - konto jest twoje, kontynuuj krok z kontem na zgodach, które już masz. Kod 4 -
+  lekcja wyszła z kolejki (`station-leave`), konto nie jest twoje; dołączasz ponownie dopiero gotowa. Kod 1 - zacytuj
+  Rafałowi komunikat dosłownie i zrób `station-leave <lekcja>`, zanim spróbujesz ponownie. Kod 3 - powiedz Rafałowi
+  ze znacznikiem bramki, cytując komunikat dosłownie. Zgłasza pierwsza żywa lekcja w kolejce (wszystkie wpisy przed
+  nią są martwe), jednym komunikatem, który może nazwać obie sprawy naraz: (a) trzymający MOŻLIWIE MARTWY (komunikat
+  podaje lekcję i cel trzymającego) - na „zwolnij” `station-force-release <lekcja>`, wyłącznie na jego jawne słowo;
+  (b) martwe wpisy kolejki przed lekcją („..., ale jej oczekiwanie już nie działa”: proces oczekiwania nie żyje albo
+  nie odpytał od 2 min, np. po zamknięciu sesji) - Rafał decyduje o `station-leave` albo
+  `station-reorder --position N` dla tamtych lekcji. Na „czekaj” uruchom w tle komendę z końca komunikatu
+  (`Czekać dalej: npm run nagrywanie -- station-wait ... --ack "<token>"`). Bez jego słowa niczego z tego nie robisz.
+  Dopóki czekasz na jego decyzję, twoja lekcja stoi w kolejce bez działającego oczekiwania, więc lekcja za tobą może
+  zgłosić ją jako martwy wpis - to ta sama sytuacja, powiedz o tym Rafałowi.
+- **Punkty zwolnienia (`station-release <lekcja>`).** Po `preview-start-state` (B4 zatwierdza Rafał bez trzymanego
+  konta); po każdym `przebieg` od razu, gdy komenda się skończy - analizę zrzutów i raport robisz bez konta, a kolejny
+  przebieg po poprawkach to nowe dołączenie; po nagraniu ujęć, przed bramką pierwszego ujęcia - każde dalsze ujęcie
+  (ponowne nagranie albo kolejne) to nowe `station-wait --purpose recording`, a konto przywraca reset `start_state`
+  tego ujęcia. B4 zatwierdza deklarację `start_state` lekcji; że reset skasuje też to, co zostawiły inne lekcje, jest
+  oczekiwane i nie wymaga nowej bramki.
+- **Przygotowanie konta przez Rafała** (np. odebranie dostępu n8n w koncie Google przed ujęciem) dzieje się przy
+  trzymanym koncie: `station-mark <lekcja> --state waiting`, zakończ turę ze znacznikiem bramki, po jego odpowiedzi
+  `station-mark <lekcja> --state working`.
+- **Pliki wspólne kursu** - `kurs.yaml`, `_nagrywanie/uslugi/*`, `_nagrywanie/dzialania.js`, `tools/nagrywanie/src/*` -
+  zmieniasz tylko trzymając konto. Poprawka „automat” z przebiegu: po ponownym dołączeniu, gdy `station-wait` odda ci
+  konto (kod 0), przed kolejnym `przebieg`.
+- **Commity:** tylko ścieżki własnej lekcji, dodawane pojedynczo, nigdy `git add -A` (folder jest wspólny).
 
 ## Zasady
 

@@ -176,7 +176,7 @@ przedstawione Rafałowi do bramki akceptacji.
    nagrania ekranu nie robi człowiek - przebieg próbny `/kurs-nagrywanie`
    jest już za lekcją (bramka w kroku 1); po paczce lektora uruchom
    `/kurs-nagrywanie` od kroku 5 (automat Playwrighta nagrywa ujęcia i pisze EDL), potem
-   `/kurs-montaz` od kroku zaznaczeń i plansz (EDL już wypełniony), potem etap 2. Po zmianie treści scenariusza przypomnij
+   `/kurs-montaz` od kroku zaznaczeń i plansz (EDL już wypełniony), potem etap 2. Kroki z kontem kursu w `/kurs-nagrywanie` idą przez kolejkę (sekcja „Lekcje równolegle”). Po zmianie treści scenariusza przypomnij
    Rafałowi, że zmontowany materiał trzeba zaktualizować ręcznie — pipeline
    tego nie wykryje.
 4b. **Kontrola lektora (objęta zgodą z bramki 2):**

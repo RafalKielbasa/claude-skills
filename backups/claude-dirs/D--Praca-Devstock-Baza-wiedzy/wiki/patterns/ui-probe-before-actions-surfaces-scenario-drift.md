@@ -19,6 +19,16 @@ probe is an early, partial dry pass.
   `json` key and the credential field with "Sign in with Google" instead of a missing-credential message. The
   dry pass of take 1 the next day confirmed both as scenario disagreements (steps 3 and 8) and added step 4
   (Schema shows values).
+- 2026-10-16, sesja a7fb8394-0358-4975-bc18-9da4d6298a8a (id claude.ai niedostępny), the converse case: lesson
+  agenty-ai 1.2 needed new n8n actions (chat trigger, AI Agent sub-nodes, own Anthropic credential, chat message).
+  They were written offline with stubbed `ctx` tests and no probe. The dry pass then stopped 11 times, once per
+  wrong assumption about the UI:
+  - "Chat" → "On new Chat event" sub-view;
+  - "Gateway credits" instead of "Set up credential";
+  - an unlabelled send button;
+  - `/run` answering `waitingForWebhook` without an `executionId`.
+  Round 1 also carried 8 scenario findings, all of the kind a probe would have shown. Without the probe, each
+  disagreement costs a full run instead of one screenshot.
 
 ## Rozwiązanie
 In `/kurs-nagrywanie`, when a lesson needs new service actions, run the locator probe along the whole lesson

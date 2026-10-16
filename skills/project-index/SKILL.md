@@ -19,6 +19,8 @@ section „Indeks projektu”; the design is
    the vault „Notatki”, `docs/superpowers/` in most code repositories, `docs/` when specs live in
    `docs/specs/`. Use the layout the repository already has; never create a second one.
 3. No `specs/` folder anywhere in the repository: stop and ask Rafal where specs live. Write nothing.
+   More than one `specs/` folder (for example `.claude/specs/` and `docs/superpowers/specs/`) and
+   no rule here that names the repository: ask Rafal which one is the docs root.
 4. The index is `<docs root>/projects/<project>.md`.
 
 ## Naming
@@ -42,7 +44,8 @@ section „Indeks projektu”; the design is
 
 ## Choosing the project
 
-- The document's name starts with `<project>-`, or the request names the project: that project.
+- The document's name, after the date, begins with `<project>-` (`2026-10-16-hub-core-design.md`
+  belongs to `hub`), or the request names the project: that project.
 - New work that belongs to no existing project: create a project (procedure 1).
 - The work could belong to two or more existing projects, or it is unclear which: ask Rafal which
   one, and write nothing until he answers.

@@ -52,7 +52,7 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
   decision table and wait for Rafal's text "dalej" (A), or proceed at once on decisions confirmed
   by voice, with `prompt.md` written only when the conversation ends in a work order (B, as
   decision 4C of 2026-10-11)? Recommended: B. Irreversible actions stay in text in both.
-- **Claude proposing voice at gates.** Decision A of 2026-10-11 is to be asked again separately.
+- **Claude proposing voice at gates.** The decision "Who starts voice" of 2026-10-11 (Claude proposes voice at gates, Rafal confirms) is to be asked again separately.
 - **Voice layer.** GPT-Live-1 versus alternatives (OpenAI Realtime `gpt-realtime-2.1`, Gemini
   Live, ElevenLabs Agents with Claude as the LLM were compared on 2026-10-11). The API facts must be
   re-verified before asking.

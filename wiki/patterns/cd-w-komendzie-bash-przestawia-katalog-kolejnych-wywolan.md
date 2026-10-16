@@ -140,6 +140,14 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `Everything up-to-date`. Zmiana specu nie poszła; wyszło to dopiero z wyniku commita.
   Naprawa: `git add` ze ścieżką względem bieżącego cwd, potem komendy git zawsze z katalogu repo.
 
+- 2026-10-16, sesja a7fb8394-0358-4975-bc18-9da4d6298a8a (id claude.ai niedostępny; repo Baza wiedzy,
+  krok wiki skilla `podsumuj-sesja-claude`): szesnasty dowód, dwa razy w jednym kroku.
+  - `cd ".../.claude/wiki" && ls && cat index.md` — harness od razu zwrócił „Shell cwd was reset”.
+  - `cd "D:/Praca/Devstock/Baza wiedzy" 2>/dev/null; git -C … grep …` — `cd` do katalogu, który już był
+    bieżący, przy komendach z `git -C`, które go nie potrzebowały.
+
+  Bez szkody, ale to czysty odruch: `cd` nie było potrzebne ani razu, bo ścieżki i tak były bezwzględne.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:

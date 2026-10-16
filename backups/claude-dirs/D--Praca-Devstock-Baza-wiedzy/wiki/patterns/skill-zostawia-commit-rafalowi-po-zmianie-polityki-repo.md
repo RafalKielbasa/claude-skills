@@ -1,6 +1,6 @@
 # skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo
 
-- **Skill:** spotkanie (też kurs-lekcja, kurs-nowy, kurs-redakcja, kurs-video, kurs-zadania, knowledge-base-update)
+- **Skill:** spotkanie (też kurs-lekcja, kurs-nowy, kurs-redakcja, kurs-video, kurs-zadania, kurs-uwagi, kurs-montaz, knowledge-base-update)
 - **Typ:** porażka
 - **Status:** otwarty
 
@@ -39,6 +39,15 @@ Skill powtarza regułę, która ma swoje jedyne źródło w `CLAUDE.md`.
   lekcji agenty-ai 0.3 i 1.1. Claude poszedł za `CLAUDE.md` i zacommitował `lekcja.yaml`
   (`68df44de`, `86e9946a`) oraz poprawki treści filmu (`d9acb5fe` slajd 5, `6106bacd` kotwice odsłon)
   na gałęzi dnia, za każdym razem sprawdzając gałąź. Pierwszy dowód z rodziny `kurs-*`.
+- 2026-10-16, sesja a7fb8394-0358-4975-bc18-9da4d6298a8a (id claude.ai niedostępny): ponowny render lekcji
+  agenty-ai 1.2. Trzy kolejne skille z tym samym zapisem:
+  - `/kurs-uwagi` krok 11, `kurs-uwagi/SKILL.md:133` („Changes stay uncommitted — Rafał commits”);
+  - migracja w `/kurs-lekcja`, `kurs-lekcja/SKILL.md:256` („Zmiany zostają niezacommitowane”);
+  - `/kurs-montaz` krok 8, `kurs-montaz/SKILL.md:262`.
+
+  Claude poszedł za `CLAUDE.md` i commitował na gałęzi dnia `rafal-kielbasa/16-10-2026`, np. `884376b9` (uwagi),
+  `a0ed9773` (wymowa) i `3efe390a` (akceptacja wideo). Lista dotkniętych skilli rośnie z każdą sesją, która używa
+  nowego skilla z rodziny.
 
 ## Rozwiązanie
 Zastąp w skillach zdania „Zmiany zostają niezacommitowane — commit robi Rafał”

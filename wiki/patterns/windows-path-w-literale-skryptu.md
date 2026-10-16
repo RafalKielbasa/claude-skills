@@ -125,6 +125,12 @@ kodem i nie powinna przechodzić przez składnię języka.
   Naprawa: kod przez Edit; mutacja jako skrypt zapisany heredokiem `<<'EOF'` do pliku, kotwica
   w `String.raw`, z asercją, że podmiana zaszła. Nowa lekcja: skrypt, który coś podmienia,
   sprawdza, że podmiana zaszła — inaczej błąd escapowania udaje sukces.
+- 2026-10-16, sesja a7fb8394-0358-4975-bc18-9da4d6298a8a (id claude.ai niedostępny; repo Baza wiedzy,
+  render lekcji agenty-ai 1.2): piętnasty dowód. Skrypt Node do inwentarza wymowy (regex po scenariuszu)
+  podany heredokiem w Bash stracił ukośniki w wyrażeniu regularnym. Wynik wyglądał na zły, zanim cokolwiek
+  zapisał. Naprawa: skrypt przez Write do scratchpada; tak samo wszystkie późniejsze skrypty w tej sesji.
+  Ta reguła jest już w pamięci projektu (`bash-heredoc-backslash-halved`), a odruch heredoku i tak wrócił
+  przy pierwszym skrypcie.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją
