@@ -1,7 +1,7 @@
 # Orchestrator hub — Plan 3 acceptance report
 
-Date: 2026-10-15/16 (times below in UTC; local time is UTC+2). Plan: `.claude/plans/2026-10-14-orchestrator-hub-plan-3.md`, Task 9.
-Spec: `.claude/specs/2026-10-13-orchestrator-hub-design.md` §9.3 items 4–10.
+Date: 2026-10-15/16 (times below in UTC; local time is UTC+2). Plan: `.claude/plans/2026-10-14-hub-core-plan-3.md`, Task 9.
+Spec: `.claude/specs/2026-10-13-hub-core-design.md` §9.3 items 4–10.
 Installed skill: `C:/Users/rafal/.claude/skills/hub/` (identical to the dev tree, 123 tests passing); hub data: `C:/Users/rafal/.claude/hub/`.
 Sessions: hub in a VS Code panel in `C:\Users\rafal\.claude\hub` (`e682d10c`, after `/clear` `08a01e2a`, after the restart `2107c049`); `probe-a` `15c3c83f` (terminal, `C:\Users\rafal\hub-probes\repo`); trial map entry `sondy` → that directory.
 

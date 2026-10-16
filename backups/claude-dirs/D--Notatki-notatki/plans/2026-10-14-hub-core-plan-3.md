@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node v24.20.0 (checked), `node:test`, Git Bash on Windows 11, Claude Code CLI (`claude --bg`, `claude agents --json`, `claude attach`, `claude stop`), Codex CLI 0.147.0 (`codex exec`, `codex exec resume`).
 
-**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md` — §4.1, §4.2, §5.1 (conversation titles), §5.6, §6.5, §6.6, §7, §8.2, §9.1, §9.3, §10 "Plan 3", §13.3 (P1–P9). Probe evidence: `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-probes.md` (S6, S7, S9, S10, S12). Plan 2 for the existing code and conventions: `D:/Notatki/notatki/.claude/plans/2026-10-14-orchestrator-hub-plan-2-core.md`.
+**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-design.md` — §4.1, §4.2, §5.1 (conversation titles), §5.6, §6.5, §6.6, §7, §8.2, §9.1, §9.3, §10 "Plan 3", §13.3 (P1–P9). Probe evidence: `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-probes.md` (S6, S7, S9, S10, S12). Plan 2 for the existing code and conventions: `D:/Notatki/notatki/.claude/plans/2026-10-14-hub-core-plan-2-core.md`.
 
 ## Global Constraints
 
@@ -58,7 +58,7 @@
 | `fakes/claude.mjs`, `fakes/codex.mjs` | Fake CLIs for the tests | 4, 7 |
 | `SKILL.md` | Procedures: project map, titles, new session, dialog, Codex | 1, 2, 4, 6, 7 |
 | `test/overview.test.mjs`, `test/cli.test.mjs`, `test/titles.test.mjs`, `test/launch.test.mjs`, `test/dialog.test.mjs`, `test/codex.test.mjs` | Tests | 1–7 |
-| `D:/Notatki/notatki/.claude/specs/2026-10-14-orchestrator-hub-plan-3-acceptance.md` | Acceptance report | 9 |
+| `D:/Notatki/notatki/.claude/specs/2026-10-14-hub-core-plan-3-acceptance.md` | Acceptance report | 9 |
 
 All code below was run during plan writing in a scratch copy of the hub, task after task: 109 tests passing at the end (71 before). Every "Modify" block is a unified diff against the state the previous task leaves; apply it by hand with Edit (each hunk's context lines are unique in the file).
 
@@ -2949,7 +2949,7 @@ Same command, explanation and undo as Task 5 Step 1; the tree now also has `lib/
 Executed by the controller with Rafal: spec §9.3 items 4–10 (items 1–3 and the direct command passed in Plan 2's acceptance).
 
 **Files:**
-- Create: `D:/Notatki/notatki/.claude/specs/2026-10-14-orchestrator-hub-plan-3-acceptance.md`
+- Create: `D:/Notatki/notatki/.claude/specs/2026-10-14-hub-core-plan-3-acceptance.md`
 
 - [ ] **Step 1: Trial sessions and a trial map entry**
 

@@ -1,7 +1,7 @@
 # Orchestrator hub — probe report
 
-**Spec:** `2026-10-13-orchestrator-hub-design.md` §9.2
-**Plan:** `.claude/plans/2026-10-13-orchestrator-hub-plan-1-probes.md`
+**Spec:** `2026-10-13-hub-core-design.md` §9.2
+**Plan:** `.claude/plans/2026-10-13-hub-core-plan-1-probes.md`
 **Sandbox:** `C:/Users/rafal/hub-probes/`
 
 Each section: question, method, raw result (verbatim), verdict (pass / fail / partial),
@@ -1092,7 +1092,7 @@ commit; why was not checked.
 ## Decisions for Rafal before Plan 2
 
 Each item needs Rafal's decision; the recommendation is the controller's. The column "Approved
-rule" names the rule of the approved spec (`2026-10-13-orchestrator-hub-design.md`) the item keeps,
+rule" names the rule of the approved spec (`2026-10-13-hub-core-design.md`) the item keeps,
 fills, changes or reverses; D5 and D14 propose no spec change.
 
 | # | From | Proposal | Approved rule | Recommendation |

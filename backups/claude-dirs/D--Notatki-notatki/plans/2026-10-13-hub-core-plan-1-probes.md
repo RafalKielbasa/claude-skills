@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node v24 (checked: `v24.20.0`), Git Bash on Windows 11, Claude Code CLI, Codex CLI `0.147.0`.
 
-**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md` (§9.2 probes, §10 rollout, §13 approved items).
+**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-design.md` (§9.2 probes, §10 rollout, §13 approved items).
 
 ## Global Constraints
 
@@ -51,7 +51,7 @@
 | `C:/Users/rafal/hub-probes/tools/self-check.js`, `self-check-2.js` | Self-checks of the tools |
 | `C:/Users/rafal/hub-probes/repo/`, `C:/Users/rafal/hub-probes/repo with space/` | Throwaway git repositories with probe hooks and the marker rule |
 | `C:/Users/rafal/hub-probes/data/` | Recorded events, burst data, Codex streams, fixtures |
-| `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-probes.md` | Probe report |
+| `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-probes.md` | Probe report |
 | `C:/Users/rafal/.claude/CLAUDE.md:210-293`, `C:/Users/rafal/.codex/AGENTS.md:215-298` | Contract blocks removed in Task 1 |
 
 The tool sources below were run during plan writing (self-checks and dry runs in a scratch directory); see "Preliminary findings" in the report skeleton.
@@ -831,7 +831,7 @@ Expected: `moved` (or `already moved` on a re-run), and the `ls` output no longe
 **Files:**
 - Create: `C:/Users/rafal/hub-probes/repo/{README.md,CLAUDE.md,.claude/settings.json}`
 - Create: `C:/Users/rafal/hub-probes/repo with space/{README.md,CLAUDE.md,.claude/settings.json}`
-- Create: `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-probes.md`
+- Create: `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-probes.md`
 
 **Interfaces:**
 - Consumes: `tools/probe-hook.js` (Task 1).
@@ -851,7 +851,7 @@ Write `README.md` in both repositories:
 ```markdown
 # Probe sandbox
 
-Throwaway repository for the orchestrator hub probes (spec 2026-10-13-orchestrator-hub-design.md).
+Throwaway repository for the orchestrator hub probes (spec 2026-10-13-hub-core-design.md).
 Nothing here is real work.
 ```
 
@@ -896,13 +896,13 @@ Expected: one commit line per repository.
 
 - [ ] **Step 3: Write the report skeleton**
 
-Create `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-probes.md`:
+Create `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-probes.md`:
 
 ```markdown
 # Orchestrator hub — probe report
 
-**Spec:** `2026-10-13-orchestrator-hub-design.md` §9.2
-**Plan:** `.claude/plans/2026-10-13-orchestrator-hub-plan-1-probes.md`
+**Spec:** `2026-10-13-hub-core-design.md` §9.2
+**Plan:** `.claude/plans/2026-10-13-hub-core-plan-1-probes.md`
 **Sandbox:** `C:/Users/rafal/hub-probes/`
 
 Each section: question, method, raw result (verbatim), verdict (pass / fail / partial),

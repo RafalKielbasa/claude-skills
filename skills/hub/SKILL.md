@@ -6,7 +6,7 @@ description: Use in the hub session — a Claude Code session, in a VS Code pane
 # Hub
 
 The hub watches other Claude Code sessions through a registry that a global hook fills, and sends
-them messages only after Rafal approves the exact text. Design: `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md`.
+them messages only after Rafal approves the exact text. Design: `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-design.md`.
 
 `HUB` below means `node "C:/Users/rafal/.claude/skills/hub/bin/hub.mjs"`. Every command prints
 plain text or JSON; quote its output literally when Rafal decides on it. Talk to Rafal in Polish.

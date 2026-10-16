@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node v24.20.0 (checked), `node:test`, Git Bash on Windows 11, Claude Code CLI (`claude agents --json`, `SendMessage`, `Monitor`).
 
-**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md` (§4, §4.1, §5, §6.1–§6.4, §8, §9.1, §9.3, §10 "Plan 2"). Probe evidence: `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-probes.md`.
+**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-design.md` (§4, §4.1, §5, §6.1–§6.4, §8, §9.1, §9.3, §10 "Plan 2"). Probe evidence: `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-probes.md`.
 
 ## Global Constraints
 
@@ -60,7 +60,7 @@
 | `lib/install.mjs`, `bin/install.mjs` | Hook registration, rules block, skill copy; run by Rafal |
 | `role.md`, `SKILL.md` | The hub role file (`--append-system-prompt-file`) and procedures |
 | `test/*.test.mjs`, `test/helpers.mjs`, `test/fixtures/` | Tests and fixtures (13 probe fixtures, 3 built by hand, 2 recorded in Task 3) |
-| `D:/Notatki/notatki/.claude/specs/2026-10-14-orchestrator-hub-plan-2-acceptance.md` | Acceptance report (Task 10) |
+| `D:/Notatki/notatki/.claude/specs/2026-10-14-hub-core-plan-2-acceptance.md` | Acceptance report (Task 10) |
 
 All code below was run during plan writing in a scratch copy: 62 tests passing before Task 3's recorded fixture.
 
@@ -2746,7 +2746,7 @@ description: Use in the hub session — the Claude Code session started with `cl
 # Hub
 
 The hub watches other Claude Code sessions through a registry that a global hook fills, and sends
-them messages only after Rafal approves the exact text. Design: `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md`.
+them messages only after Rafal approves the exact text. Design: `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-design.md`.
 
 `HUB` below means `node "C:/Users/rafal/.claude/skills/hub/bin/hub.mjs"`. Every command prints
 plain text or JSON; quote its output literally when Rafal decides on it. Talk to Rafal in Polish.
@@ -2900,7 +2900,7 @@ Expected: at least one `<sessionId>.events.jsonl`, and an overview table without
 Executed by the controller with Rafal (spec §9.3 items 1–4 and 7 — the Plan 2 scope — plus the direct command path).
 
 **Files:**
-- Create: `D:/Notatki/notatki/.claude/specs/2026-10-14-orchestrator-hub-plan-2-acceptance.md`
+- Create: `D:/Notatki/notatki/.claude/specs/2026-10-14-hub-core-plan-2-acceptance.md`
 
 - [ ] **Step 1: Start the hub and two trial sessions**
 

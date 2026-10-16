@@ -93,4 +93,4 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
 - Hub registry `~/.claude/hub/registry/4bd8c564-b370-43d3-aa7b-3d173fe69a18.last/`:
   `f888b356-79cf-4cf2-ba09-f7bdb696ecc8.md` (no spec, plan or code) and
   `cdf89b65-bcfe-42a3-b942-7439f80fd817.md` (proposal of a separate voice session).
-- Hub spec `.claude/specs/2026-10-13-orchestrator-hub-design.md` §1, §2, §6.5, §8.2, §9.2 (S12).
+- Hub spec `.claude/specs/2026-10-13-hub-core-design.md` §1, §2, §6.5, §8.2, §9.2 (S12).

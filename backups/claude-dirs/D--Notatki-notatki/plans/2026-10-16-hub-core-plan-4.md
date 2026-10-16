@@ -8,7 +8,7 @@
 
 **Tech Stack:** Node v24.20.0, `node:test`, Git Bash on Windows 11, PowerShell 5.1 (`Get-CimInstance Win32_Process`), Claude Code CLI, Codex CLI 0.147.0.
 
-**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md` — §4 (hub row and hub setup), §4.1, §5.5 ("The watcher stops with its hub session"), §5.6, §6.1, §7 step 3 ("Isolation from Rafal's Codex setup"), §8.1, §8.2, §9.1, §9.3 ("Plan 4's acceptance"), §10 "Plan 4", §13.4 (P10–P15). Evidence: `D:/Notatki/notatki/.claude/specs/2026-10-14-orchestrator-hub-plan-3-acceptance.md` (findings B1, B2, B3, B6). Plan 3 for the code conventions: `D:/Notatki/notatki/.claude/plans/2026-10-14-orchestrator-hub-plan-3.md`.
+**Spec:** `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-design.md` — §4 (hub row and hub setup), §4.1, §5.5 ("The watcher stops with its hub session"), §5.6, §6.1, §7 step 3 ("Isolation from Rafal's Codex setup"), §8.1, §8.2, §9.1, §9.3 ("Plan 4's acceptance"), §10 "Plan 4", §13.4 (P10–P15). Evidence: `D:/Notatki/notatki/.claude/specs/2026-10-14-hub-core-plan-3-acceptance.md` (findings B1, B2, B3, B6). Plan 3 for the code conventions: `D:/Notatki/notatki/.claude/plans/2026-10-14-hub-core-plan-3.md`.
 
 ## Global Constraints
 
@@ -44,7 +44,7 @@
 | `bin/hub-watch.mjs` | Owner lookup, `--owner-pid`, `--owner-check-ms`, exit without writing when the owner is gone | 3 |
 | `lib/text.mjs`, `lib/overview.mjs`, `lib/compose.mjs` | `localTime` shared; the header line in local time | 4 |
 | `test/install.test.mjs`, `test/skill.test.mjs`, `test/codex.test.mjs`, `test/owner.test.mjs` (new), `test/watch.test.mjs`, `test/send.test.mjs` | Tests | 1–4 |
-| `D:/Notatki/notatki/.claude/specs/2026-10-16-orchestrator-hub-plan-4-acceptance.md` | Acceptance report | 6 |
+| `D:/Notatki/notatki/.claude/specs/2026-10-16-hub-core-plan-4-acceptance.md` | Acceptance report | 6 |
 
 All code below was run during plan writing in a scratch copy of the hub, task after task: 131 tests passing at the end (123 before). Every "Modify" block is a unified diff against the state the previous task leaves; apply it by hand with Edit (each hunk's context lines are unique in the file). The Codex isolation was also run against the real Codex CLI 0.147.0 (a first call and a follow-up with exactly the arguments `isolationArgs()` builds on this machine: answers "ONE" and "TWO", `answer-1.err` held only the models-cache warning, `answer-2.err` was empty, and the review-reminder hook's state file kept its time), and the owner lookup against the real process table (590 ms, 457 processes, the owner found was this session's `claude.exe`).
 
@@ -959,8 +959,8 @@ Rafal closes the hub's panel and opens a new Claude conversation in the VS Code 
 Spec §9.3, "Plan 4's acceptance". One trial session `probe-a` in `C:\Users\rafal\hub-probes\repo` (outside the map, so its threads land under `projects/repo/`).
 
 **Files:**
-- Create: `D:/Notatki/notatki/.claude/specs/2026-10-16-orchestrator-hub-plan-4-acceptance.md`
-- Modify: `D:/Notatki/notatki/.claude/specs/2026-10-13-orchestrator-hub-design.md` (status line, §10 row "Plan 4")
+- Create: `D:/Notatki/notatki/.claude/specs/2026-10-16-hub-core-plan-4-acceptance.md`
+- Modify: `D:/Notatki/notatki/.claude/specs/2026-10-13-hub-core-design.md` (status line, §10 row "Plan 4")
 
 - [ ] **Step 1: Trial session**
 

@@ -1,16 +1,13 @@
 # Orchestrator hub — design
 
 **Date:** 2026-10-13
-**Status:** approved 2026-10-13, including all items of §13.1; updated 2026-10-14 with probe
-decisions D1–D14 (§13.2); Plan 2 done; updated 2026-10-14 with the Plan 3 additions P1–P9
-(§13.3); Plan 3 done and accepted; updated 2026-10-16 with the acceptance amendments P10–P15
-(§13.4); Plan 4 done and accepted on 2026-10-16 (§10).
+**Index:** [.claude/projects/hub.md](../projects/hub.md)
 **Owner:** Rafal Kielbasa
 **Origin:** brainstorming sessions `0e06a344` (2026-10-11, voice module), `7e84737d`
 (2026-10-12, decisions 1–9, design parts 1–2) and `c0c20a2d` (2026-10-13, decisions 10–13,
 design parts 3–5, Firehose review, Codex review of this spec).
 **Probes:** Plan 1, 2026-10-13 and 2026-10-14; results in
-`.claude/specs/2026-10-13-orchestrator-hub-probes.md` (the probe report).
+`.claude/specs/2026-10-13-hub-core-probes.md` (the probe report).
 
 One place to coordinate many Claude Code sessions working in different repositories: see what
 each session is doing, read its results, think a result through in a separate dialog, and send
@@ -795,7 +792,7 @@ queued-prompt sequence from the S11 events, and a cross-session `UserPromptSubmi
 
 **Done.** Probes S1–S11 ran on 2026-10-13 and 2026-10-14 (Plan 1) in the throwaway repository
 `C:/Users/rafal/hub-probes/`. Raw results, verdicts and fallbacks are in the probe report
-(`.claude/specs/2026-10-13-orchestrator-hub-probes.md`); the decisions they led to are D1–D14
+(`.claude/specs/2026-10-13-hub-core-probes.md`); the decisions they led to are D1–D14
 (§13.2). The only fallback taken is S1's: permission waits are cleared without tool call ids, by
 `prompt_id` (§5.2). The table below is kept as the record of what was asked, with each verdict
 added.
@@ -832,9 +829,9 @@ With Rafal, on two trial projects:
 10. the hub after `/clear`: role kept, overview rebuilt, the new id excluded.
 
 Plan 2's acceptance ran items 1–3 and a direct command; Rafal ended it before item 4, the hub
-after `/clear` and item 7 (`.claude/specs/2026-10-14-orchestrator-hub-plan-2-acceptance.md`).
+after `/clear` and item 7 (`.claude/specs/2026-10-14-hub-core-plan-2-acceptance.md`).
 Plan 3's acceptance runs items 4–10. It ran on 2026-10-15 and 2026-10-16
-(`.claude/specs/2026-10-14-orchestrator-hub-plan-3-acceptance.md`): items 4–6 and 8–10 passed,
+(`.claude/specs/2026-10-14-hub-core-plan-3-acceptance.md`): items 4–6 and 8–10 passed,
 item 6 with finding B1, item 10 after the fix B3, and item 7 in part (B2).
 
 Plan 4's acceptance, with one trial session:
@@ -857,10 +854,12 @@ probes it depends on have results (decision 14). Every plan goes through its own
 
 | Plan | Content | Written when |
 |---|---|---|
-| Plan 1: contract removal and probes | **Done** (2026-10-14). Removed the Codex–Claude contract from `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`, and the paused Codex automation `powiadomienie-o-pracy-claude-nad-planem-i-agentem` (decision 13). Ran probes S1–S11 in a throwaway repository. Results and fallbacks: `.claude/specs/2026-10-13-orchestrator-hub-probes.md`; decisions D1–D14 applied to this spec (§13.2) | After this spec was approved |
+| Plan 1: contract removal and probes | Removed the Codex–Claude contract from `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`, and the paused Codex automation `powiadomienie-o-pracy-claude-nad-planem-i-agentem` (decision 13). Ran probes S1–S11 in a throwaway repository. Results and fallbacks: `.claude/specs/2026-10-13-hub-core-probes.md`; decisions D1–D14 applied to this spec (§13.2) | After this spec was approved |
 | Plan 2: core | First the backup hook prerequisite below (D14). Then: hooks with per-`Stop` last-message files and cross-session prompt fields, event logs, derived state (clearing by `prompt_id`, queued prompts, `/clear` continuation, raw `state` shown, not ranked), watcher, overview, sending with send records (`held`, delivery confirmed by the recipient's `UserPromptSubmit`), the hub start with its role file, global rules (marker, isolation), the questionnaire and direct command paths. Before the delivery confirmation relies on the hash: the inner-text check of §6.3 with a multi-line message containing `<`, `&` and `"`. Optional before Plan 2: a probe of a hold between an `auto` sender and a `default` recipient (§4 hub setup). Plan 2 also takes the probe report's S1 notes: the overview and retention tolerate SessionEnd-only sessions (an event log with one `SessionEnd` and no transcript) | Now: S1–S5 and S11 have results |
-| Plan 3: map, titles, new sessions, dialog, Codex | In this order, each group usable on its own: (1) the project map (§4.2), conversation titles (§5.1), and Plan 2 acceptance findings A1 (id prefix in `last` and `judge`) and A2 (local time in the overview); (2) new sessions from the map with the worktree option (§6.6); after this group Rafal may pause and pilot the hub; (3) the dialog path through a fork with the git snapshot (§6.5); (4) the Codex consultation (§7); (5) the acceptance test, items 4–10 of §9.3. Notes: a busy session may be forked, with the caveat shown to Rafal; the evidence is one sample (§6.5 step 1, D7). New sessions: the trust step, and worktree cleanup only proposed by the hub (§6.6, §8.2, D10). Out of scope: the open decisions I-3, I-4 and M-2 of the Plan 2 acceptance report | **Done** (2026-10-16): 123 tests; acceptance report `.claude/specs/2026-10-14-orchestrator-hub-plan-3-acceptance.md` |
-| Plan 4: acceptance fixes | The installer writes `~/.claude/hub/CLAUDE.md` and `SKILL.md` describes the start without flags (P10); Codex calls isolated from Rafal's Codex hooks, plugins, apps and MCP servers (P13); the watcher stops with its hub session (P14); local time in the header line (P15); then the Plan 4 acceptance of §9.3. P11 and P12 are already in the Plan 3 code and only recorded in this spec. Out of scope: B5 ("wyslij" without diacritics), B7 (re-arm noise), I-3, I-4, M-2 | **Done** (2026-10-16): 132 tests; the final review added hub from-names from the polls (§6.3); acceptance report `.claude/specs/2026-10-16-orchestrator-hub-plan-4-acceptance.md` |
+| Plan 3: map, titles, new sessions, dialog, Codex | In this order, each group usable on its own: (1) the project map (§4.2), conversation titles (§5.1), and Plan 2 acceptance findings A1 (id prefix in `last` and `judge`) and A2 (local time in the overview); (2) new sessions from the map with the worktree option (§6.6); after this group Rafal may pause and pilot the hub; (3) the dialog path through a fork with the git snapshot (§6.5); (4) the Codex consultation (§7); (5) the acceptance test, items 4–10 of §9.3. Notes: a busy session may be forked, with the caveat shown to Rafal; the evidence is one sample (§6.5 step 1, D7). New sessions: the trust step, and worktree cleanup only proposed by the hub (§6.6, §8.2, D10). Out of scope: the open decisions I-3, I-4 and M-2 of the Plan 2 acceptance report | — |
+| Plan 4: acceptance fixes | The installer writes `~/.claude/hub/CLAUDE.md` and `SKILL.md` describes the start without flags (P10); Codex calls isolated from Rafal's Codex hooks, plugins, apps and MCP servers (P13); the watcher stops with its hub session (P14); local time in the header line (P15); then the Plan 4 acceptance of §9.3. P11 and P12 are already in the Plan 3 code and only recorded in this spec. Out of scope: B5 ("wyslij" without diacritics), B7 (re-arm noise), I-3, I-4, M-2 | — |
+
+The status of every plan is kept in [.claude/projects/hub.md](../projects/hub.md).
 
 **Prerequisite of Plan 2: the backup hook (D14).** Rafal's `SessionEnd` hook
 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\Users\rafal\.claude\hooks\backup-claude.ps1"`
@@ -1016,7 +1015,7 @@ nothing about the work.
 
 From the rulings made while executing Plan 3 (session `c51a0755`; its working ledger was deleted
 after these amendments, so this table is their record) and the findings
-of the Plan 3 acceptance report (`.claude/specs/2026-10-14-orchestrator-hub-plan-3-acceptance.md`).
+of the Plan 3 acceptance report (`.claude/specs/2026-10-14-hub-core-plan-3-acceptance.md`).
 Rafal chose on 2026-10-16 to record them in this spec and to fix B1–B3 and B6 in a fourth plan
 (decision 17). P11 and P12 describe code that Plan 3 already ships; P10, P13, P14 and P15 are
 Plan 4's work.

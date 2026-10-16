@@ -1,7 +1,7 @@
 # Orchestrator hub — Plan 4 acceptance report
 
-Date: 2026-10-16 (times in UTC; local time is UTC+2). Plan: `.claude/plans/2026-10-16-orchestrator-hub-plan-4.md`, Task 6.
-Spec: `.claude/specs/2026-10-13-orchestrator-hub-design.md` §9.3 "Plan 4's acceptance", §13.4 (P10, P13, P14, P15).
+Date: 2026-10-16 (times in UTC; local time is UTC+2). Plan: `.claude/plans/2026-10-16-hub-core-plan-4.md`, Task 6.
+Spec: `.claude/specs/2026-10-13-hub-core-design.md` §9.3 "Plan 4's acceptance", §13.4 (P10, P13, P14, P15).
 Installed skill: `C:/Users/rafal/.claude/skills/hub/` (identical to the dev tree, 132 tests passing); hub data: `C:/Users/rafal/.claude/hub/`; `hub/CLAUDE.md` written by the installer (backup of the hand-written file: `CLAUDE.md.bak-hub-20261016T074730`).
 Sessions: hubs in a VS Code panel in `C:\Users\rafal\.claude\hub` — `2107c049` (`hub-28`, started before the install), `3155bd50` (Step 2), `5ba668c4` (`hub-db`, Step 5); trial session `probe-a` `15c3c83f` (terminal, `C:\Users\rafal\hub-probes\repo`, outside the map, project `repo`).
 

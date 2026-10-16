@@ -1,7 +1,7 @@
 # Orchestrator hub — Plan 2 acceptance report
 
-Date: 2026-10-14. Plan: `.claude/plans/2026-10-14-orchestrator-hub-plan-2-core.md`, Task 10.
-Spec: `.claude/specs/2026-10-13-orchestrator-hub-design.md` §9.3.
+Date: 2026-10-14. Plan: `.claude/plans/2026-10-14-hub-core-plan-2-core.md`, Task 10.
+Spec: `.claude/specs/2026-10-13-hub-core-design.md` §9.3.
 Installed skill: `C:/Users/rafal/.claude/skills/hub/` (71 tests passing); hub data: `C:/Users/rafal/.claude/hub/`.
 Sessions: hub `4e2a7dbc` (cwd `C:\Users\rafal\.claude\hub`), `probe-a` `1e7b7a73` (`C:\Users\rafal\hub-probes\repo`), `probe-b` `0863515e` (`C:\Users\rafal\hub-probes\repo with space`, `--permission-mode default`).
 
