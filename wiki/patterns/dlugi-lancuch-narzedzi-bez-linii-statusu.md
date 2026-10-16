@@ -29,6 +29,9 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   dopiero po przypomnieniu. W kroku wiki tej samej sesji pierwszą linię napisałem po czterech wywołaniach.
   Drugie przypomnienie przyszło po kolejnych czterech wywołaniach bez tekstu (dopisanie logów, sprawdzenie
   indeksu gita, commit i push), już po zapisaniu tego dowodu.
+- 2026-10-16, sesja 7875e423-9ae8-4e55-a56b-31766c608f4e (id claude.ai niedostępny): dwa przypomnienia harnessu w jednej sesji — po zapisie indeksu projektu,
+  commicie i czterech śladach board-tracker (pięć wywołań bez tekstu) i w kroku wiki po trzech
+  odczytach; linia statusu za każdym razem dopiero po przypomnieniu.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

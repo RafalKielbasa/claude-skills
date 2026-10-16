@@ -83,8 +83,10 @@ and **Teraz**; `## Części` (table `Część | Status | Dokumenty | Co zostało
 6. **Resolve a decision.** Remove it from Decyzje czekające, add one dated line under Rozstrzygnięte
    (name, outcome, link to where the outcome is recorded), and apply its effect (Meta, a part's
    status, Następny krok).
-7. **Answer about a project.** Read the index and answer from it. Change nothing.
-8. **Backfill a family.** For an old family of documents with work in progress: list its files by
+7. **Postpone a decision.** Keep it under Decyzje czekające and append „Odłożona RRRR-MM-DD do
+   <termin albo warunek>.” with the reason in a few words; Meta and statuses stay as they are.
+8. **Answer about a project.** Read the index and answer from it. Change nothing.
+9. **Backfill a family.** For an old family of documents with work in progress: list its files by
    slug, propose their assignment to parts under the family's existing slug as the project key, and
    ask Rafal. Write the index only after he confirms. Finished families get no index.
 

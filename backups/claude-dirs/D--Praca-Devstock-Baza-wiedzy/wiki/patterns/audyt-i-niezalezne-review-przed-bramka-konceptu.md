@@ -24,6 +24,12 @@ ani oddać oceny komuś bez kontekstu tworzenia.
   Wszystko wprowadzone przed zapisem do `platforma/`.
 - Ta sama sesja: audyt miał własną lukę (tło w `::before` niewidoczne → 21 fałszywych błędów
   na przyciskach); poprawiony w kodzie audytu, a nie wyjaśniony słownie.
+- 2026-10-16, sesja 7875e423-9ae8-4e55-a56b-31766c608f4e (id claude.ai niedostępny): pakiet ekranów dla niezalogowanego (oś czasu, próbka, koniec próbki,
+  rejestracja z planem, przebudowany landing i katalog) przygotowany przez subagenta z audytem
+  kontrastu w obu motywach kierunku 8: 0 błędów w nowych miejscach, a audyt wskazał problem
+  istniejący już w makiecie — etykieta zakładki mobile w motywie jasnym 4,19:1, poprawka:
+  etykieta w kolorze `text`. Motywu jasnego nikt jeszcze nie oglądał poza makietą, więc audyt był
+  jedynym pomiarem jego czytelności przed bramką.
 
 ## Rozwiązanie
 Przed bramką konceptu z wieloma ekranami: (1) zmierz automatycznie kontrast każdego tekstu

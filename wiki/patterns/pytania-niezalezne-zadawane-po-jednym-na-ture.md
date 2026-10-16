@@ -50,6 +50,13 @@ preferencja użytkownika idzie w drugą stronę niż instrukcja skilla.
     Pytanie o scalanie zależało od odczytu historii, więc osobna tura była
     tam uzasadniona.
 
+- 2026-10-16, sesja 7875e423-9ae8-4e55-a56b-31766c608f4e (id claude.ai niedostępny): czwarty dowód, czwarta sesja, rozwiązanie zastosowane w tekście zamiast
+  `AskUserQuestion`. Trzy niezależne decyzje („Klucz i zakres projektu”, „Meta projektu” i pytanie
+  specu „Lista komponentów v1” z brainstormingu biblioteki) poszły w jednej wiadomości jako
+  warianty z rekomendacją i „OK = wszystkie [A]”; Rafał odpowiedział jednym „ok”. Brainstorming
+  7.0.0 każe kończyć wiadomość jednym pytaniem bez listy odpowiedzi; poszły warianty według
+  „Recommendation-First” z `CLAUDE.md`, bo instrukcja użytkownika wygrywa ze skillem.
+
 ## Rozwiązanie
 Przed zadaniem pytań rozstrzygnąć, czy odpowiedź na którekolwiek zmienia
 brzmienie albo opcje pozostałych. Pytania zależne zadawać po jednym, zgodnie

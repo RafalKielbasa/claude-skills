@@ -828,11 +828,10 @@ With Rafal, on two trial projects:
 9. a new session launched from the map, with the record confirmed `sent`;
 10. the hub after `/clear`: role kept, overview rebuilt, the new id excluded.
 
-Plan 2's acceptance ran items 1–3 and a direct command; Rafal ended it before item 4, the hub
-after `/clear` and item 7 (`.claude/specs/2026-10-14-hub-core-plan-2-acceptance.md`).
-Plan 3's acceptance runs items 4–10. It ran on 2026-10-15 and 2026-10-16
-(`.claude/specs/2026-10-14-hub-core-plan-3-acceptance.md`): items 4–6 and 8–10 passed,
-item 6 with finding B1, item 10 after the fix B3, and item 7 in part (B2).
+Plan 3's acceptance runs items 4–10, together with the items Plan 2's acceptance did not run.
+The results are in the acceptance reports (`.claude/specs/2026-10-14-hub-core-plan-2-acceptance.md`,
+`.claude/specs/2026-10-14-hub-core-plan-3-acceptance.md`); the status of each plan is kept in
+[.claude/projects/hub.md](../projects/hub.md).
 
 Plan 4's acceptance, with one trial session:
 

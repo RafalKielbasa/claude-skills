@@ -189,7 +189,8 @@ A new section in `~/.claude/CLAUDE.md` (Polish, as that file is). Draft:
 >   `-plan-<n>`, `-plan-<n>-acceptance`). Projekt i część po angielsku, kebab-case.
 > - Sesja, która tworzy albo zmienia spec, plan, raport sond albo akceptacji, albo rozstrzyga lub
 >   odkłada decyzję zmieniającą zakres, aktualizuje indeks projektu w tym samym commicie, skillem
->   `project-index`. Dotyczy też subagentów i skilli, także `superpowers:*`.
+>   `project-index` (nie przy każdym odhaczonym kroku planu). Dotyczy też subagentów i skilli,
+>   także `superpowers:*`.
 > - Status projektu i jego części żyje tylko w indeksie. Spec nie prowadzi własnej tabeli
 >   statusu; linkuje do indeksu.
 > - Kod decyzji albo ustalenia (`D5`, `P13`, `B2`, `I-3`, `S12`) nigdy nie stoi sam: zawsze z
@@ -220,6 +221,7 @@ Procedures:
 | Update status | Sets a part's status, Co zostało, Teraz and Następny krok |
 | Open a decision | Adds it to Decyzje czekające by name |
 | Resolve a decision | Moves it to Rozstrzygnięte as one line and applies its effect (for example the finish line) |
+| Postpone a decision | Keeps it under Decyzje czekające with a dated note of the postponement and its condition; Meta and statuses stay |
 | Answer about a project | Reads the index and answers from it; changes nothing |
 | Backfill a family | For an old family with work in progress: lists its files by slug, proposes their assignment to parts and asks Rafal before writing, because membership is a judgment |
 

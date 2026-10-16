@@ -346,3 +346,9 @@ Format wpisu:
   - board-tracker: DT-40 założone na „A”, ślad kumulatywny, Done dopiero na „przesuń”.
 - Wzorce globalne dotknięte w tej sesji: nowy ffmpeg-drawtext-segfault-bez-fontconfig; dowody do windows-path-w-literale-skryptu, cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan i dlugi-lancuch-narzedzi-bez-linii-statusu — patrz log globalny.
 - Sygnał repo: skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo (porażka, 5 dowodów z 5 sesji) → `/evolve-skill spotkanie` i rodzina `kurs-*` (`kurs-video`, `kurs-uwagi`, `kurs-lekcja`, `kurs-montaz`); bez zmian agent-czyta-plik-redagowany-przez-agenta-rownoleglego → `/evolve-skill kurs-redakcja`. Nowe porażki mają dowody z jednej sesji — jeszcze nie kandydaci.
+
+## 2026-10-16 — sesja 7875e423-9ae8-4e55-a56b-31766c608f4e (id claude.ai niedostępny; kierunek 8 „Pikselowe pola” docelowy z motywem jasnym, plan pracy równoległej dla platformy Kodożerców, indeks `kodozercy-platform`, spec biblioteki w brainstormingu; commity `253b2de1`, `fbfc5b39`, `790031f0`)
+- dopisano dowód: audyt-i-niezalezne-review-przed-bramka-konceptu (sukces, trzeci) — pakiet ekranów dla niezalogowanego z audytem kontrastu obu motywów: 0 błędów w nowych miejscach, wskazana etykieta zakładki mobile 4,19:1 w motywie jasnym.
+- Bez wzorca: błąd budowy kierunku 8 w makiecie (reguły kierunku 7 z list selektorów nie obejmowały 8, `253b2de1`, poprawione w `fbfc5b39`) — obserwacja jednorazowa, zależna od budowy tej makiety.
+- Wzorce globalne dotknięte w tej sesji: 3 nowe (kod-decyzji-numerowany-od-nowa-koliduje-w-sesji, klucz-projektu-szerszy-niz-slug-rodziny, agent-w-tle-wznowiony-przez-sendmessage) i dowody do 4 — patrz log globalny.
+- Sygnał repo: bez zmian według poprzedniego wpisu (skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo → `/evolve-skill spotkanie` i rodzina `kurs-*`; agent-czyta-plik-redagowany-przez-agenta-rownoleglego → `/evolve-skill kurs-redakcja`).

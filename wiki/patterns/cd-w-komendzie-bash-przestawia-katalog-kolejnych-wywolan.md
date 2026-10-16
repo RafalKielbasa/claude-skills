@@ -152,6 +152,9 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `podsumuj-sesja-claude`): siedemnasty dowód. Przy `cd /c/Users/rafal/.claude/wiki && cat patterns/… ; tail …`
   harness od razu zwrócił „Shell cwd was reset to d:\Notatki\notatki”. Szkody nie było, bo dalsze ścieżki
   były bezwzględne. Wzorzec miał wtedy w indeksie 16 dowodów i był czytany w tym samym kroku.
+- 2026-10-16, sesja 7875e423-9ae8-4e55-a56b-31766c608f4e (id claude.ai niedostępny): osiemnasty dowód — `cd` do repo kodu przy odczycie tokenów („Shell cwd was
+  reset”) i `cd` do wiki repo w kroku wiki przestawiły katalog roboczy sesji; bez szkody, bo
+  kolejne komendy miały ścieżki bezwzględne.
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
