@@ -34,14 +34,14 @@ import { deriveSession } from '../lib/derive.mjs';
 import { runPoll, appendPoll, readPolls, pollEntry } from '../lib/polls.mjs';
 import { buildOverview, renderOverview, deriveAll } from '../lib/overview.mjs';
 import { loadProjectMap, projectFor, projectOf, renderProjects, isWithin, samePath } from '../lib/projects.mjs';
-import { registerLaunched, readHubSessions } from '../lib/hubsessions.mjs';
+import { registerLaunched, readHubSessions, hubSenderNames } from '../lib/hubsessions.mjs';
 import { composeMessage, questionnaireRequest, withProjectContext } from '../lib/compose.mjs';
 import { newRecordId, loadRecords, saveRecords, findRecord, findRecordByMsgId, listProjects, renderJournal } from '../lib/journal.mjs';
 import { gitInfo, runChecks } from '../lib/checks.mjs';
 import { findDelivery, findMismatch, findLaunchDelivery, findLaunchMismatch, classifyNotice, applyNotice } from '../lib/confirm.mjs';
 import { SLUG, newSessionArgs, runClaude, worktreeOf, launchChecks, findLaunched } from '../lib/launch.mjs';
 import { takeSnapshot, forkSettings, forkArgs, forkStartPrompt, fallbackCommand } from '../lib/dialog.mjs';
-import { describeElement, firstPrompt, askArgs, followArgs, runCodex, threadEntry } from '../lib/codex.mjs';
+import { describeElement, firstPrompt, askArgs, followArgs, isolationArgs, runCodex, threadEntry } from '../lib/codex.mjs';
 import { cleanup } from '../lib/retention.mjs';
 import { VERDICTS, recordJudgment } from '../lib/judgments.mjs';
 import { sha256 } from '../lib/text.mjs';
@@ -381,7 +381,7 @@ switch (command) {
       if (!meta.threadId) fail('the thread has no Codex thread id (its first call failed before thread.started); start a new thread', 3);
       const n = meta.calls + 1;
       const answerFile = join(thread, `answer-${n}.md`);
-      const outcome = runCodex({ args: followArgs({ threadId: meta.threadId, answerFile }), cwd: meta.cwd, input: question, answerFile, errFile: join(thread, `answer-${n}.err`) });
+      const outcome = runCodex({ args: followArgs({ threadId: meta.threadId, answerFile, isolation: isolationArgs() }), cwd: meta.cwd, input: question, answerFile, errFile: join(thread, `answer-${n}.err`) });
       writeFileSync(join(thread, 'meta.json'), `${JSON.stringify({ ...meta, calls: n }, null, 2)}\n`, 'utf8');
       appendFileSync(join(thread, 'thread.md'), threadEntry({ n, question, prompt: question, at, outcome }), 'utf8');
       reportCodex({ outcome, thread, n, threadId: meta.threadId });
@@ -411,7 +411,7 @@ switch (command) {
     mkdirSync(thread, { recursive: true });
     const prompt = firstPrompt({ question, elementText });
     const answerFile = join(thread, 'answer-1.md');
-    const outcome = runCodex({ args: askArgs({ cwd, answerFile }), cwd, input: prompt, answerFile, errFile: join(thread, 'answer-1.err') });
+    const outcome = runCodex({ args: askArgs({ cwd, answerFile, isolation: isolationArgs() }), cwd, input: prompt, answerFile, errFile: join(thread, 'answer-1.err') });
     const meta = { threadId: outcome.threadId, element, sessionId, cwd, project, createdAt: at, calls: 1 };
     writeFileSync(join(thread, 'meta.json'), `${JSON.stringify(meta, null, 2)}\n`, 'utf8');
     writeFileSync(join(thread, 'thread.md'), `# Codex: ${slug}\n\n${threadEntry({ n: 1, question, prompt, at, outcome })}`, 'utf8');
@@ -469,7 +469,9 @@ switch (command) {
     break;
   }
   case 'confirm': {
-    const hubName = options['hub-name'] && options['hub-name'] !== true ? options['hub-name'] : 'hub';
+    // The hub's from-names (spec §6.3, P10); --hub-name adds one more.
+    const hubName = hubSenderNames(root);
+    if (options['hub-name'] && options['hub-name'] !== true) hubName.add(options['hub-name']);
     const confirmed = [];
     const mismatched = [];
     for (const project of listProjects(root)) {

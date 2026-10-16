@@ -4,7 +4,7 @@ import { composeMessage, questionnaireRequest, templateProblems } from '../lib/c
 import { runChecks, gitInfo } from '../lib/checks.mjs';
 import { findDelivery, classifyNotice, applyNotice } from '../lib/confirm.mjs';
 import { shownState, renderJournal } from '../lib/journal.mjs';
-import { sha256 } from '../lib/text.mjs';
+import { sha256, localTime } from '../lib/text.mjs';
 
 const AT = '2026-10-14T10:00:00.000Z';
 const FIVE = '**Cel**\nx\n**Kontekst**\nx\n**Decyzje z uzasadnieniem**\nx\n**Ograniczenia**\nx\n**Oczekiwany rezultat**\nnapisz plan i stop';
@@ -13,8 +13,12 @@ const answers = composeMessage({
   body: `${FIVE}\n**Pytania i odpowiedzi**\nTemat: nazwa pliku\n1. Jaka nazwa? → notatki.md`,
 });
 
-test('the header line opens every message and is part of the approved text', () => {
-  assert.match(answers, /^\[hub · questionnaire-answers · sandbox · abcdef12 · 2026-10-14 10:00\]\n\n\*\*Cel\*\*/);
+test('the header line opens every message, shows local time and is part of the approved text (P15)', () => {
+  const at = (offsetMinutes) => composeMessage({ path: 'direct', project: 'sandbox', sessionId: 'abcdef123456', at: AT, offsetMinutes, body: FIVE });
+  assert.match(at(120), /^\[hub · direct · sandbox · abcdef12 · 2026-10-14 12:00\]\n\n\*\*Cel\*\*/);
+  assert.match(at(-90), /^\[hub · direct · sandbox · abcdef12 · 2026-10-14 08:30\]/);
+  // Without an offset the machine's time zone decides, as in the overview.
+  assert.match(answers, new RegExp(`^\\[hub · questionnaire-answers · sandbox · abcdef12 · ${localTime(AT).slice(0, 16)}\\]\\n\\n\\*\\*Cel\\*\\*`));
   assert.throws(() => composeMessage({ path: 'other', project: 'p', sessionId: 's', at: AT, body: 'x' }), /unknown path/);
 });
 

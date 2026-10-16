@@ -14,11 +14,11 @@
     "superpowers@claude-plugins-official": [
       {
         "scope": "user",
-        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\superpowers\\6.4.1",
-        "version": "6.4.1",
+        "installPath": "C:\\Users\\rafal\\.claude\\plugins\\cache\\claude-plugins-official\\superpowers\\7.0.0",
+        "version": "7.0.0",
         "installedAt": "2026-04-20T12:06:36.431Z",
-        "lastUpdated": "2026-10-05T04:56:54.528Z",
-        "gitCommitSha": "5bf4e78011075bcfc0dc295f0724994cd123ee71"
+        "lastUpdated": "2026-10-16T05:17:54.263Z",
+        "gitCommitSha": "bb92a77741419a4ab5f06e711a283343f1ada0c3"
       }
     ],
     "figma@claude-plugins-official": [

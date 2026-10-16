@@ -34,6 +34,11 @@ Skill powtarza regułę, która ma swoje jedyne źródło w `CLAUDE.md`.
   egzekucja. Claude poszedł za `CLAUDE.md` i zacommitował notatkę z kolejkami przed bramką
   (`5e7957af`) i po egzekucji (`9545d6f9`) na gałęzi dnia `rafal-kielbasa/14-10-2026`, za każdym
   razem sprawdzając gałąź.
+- 2026-10-15/16, sesja 96436fe2-135f-4db8-9a6a-e2d0011a65cc (id claude.ai niedostępny):
+  `/kurs-video`, krok 6 („Zmiany zostają niezacommitowane — commit robi Rafał”) przy akceptacji
+  lekcji agenty-ai 0.3 i 1.1. Claude poszedł za `CLAUDE.md` i zacommitował `lekcja.yaml`
+  (`68df44de`, `86e9946a`) oraz poprawki treści filmu (`d9acb5fe` slajd 5, `6106bacd` kotwice odsłon)
+  na gałęzi dnia, za każdym razem sprawdzając gałąź. Pierwszy dowód z rodziny `kurs-*`.
 
 ## Rozwiązanie
 Zastąp w skillach zdania „Zmiany zostają niezacommitowane — commit robi Rafał”

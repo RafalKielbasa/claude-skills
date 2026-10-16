@@ -61,6 +61,24 @@ test('direct command: compose, approve, prepare, result, confirm by the recipien
   assert.match(readFileSync(join(root, 'projects', 'app', 'journal.md'), 'utf8'), /\| sent \| UserPromptSubmit /);
 });
 
+test('confirm recognises a hub started without a name by the names its polls give it (P10)', () => {
+  const { root, log, agents, hub, draftOf } = setup();
+  const draft = draftOf('Uruchom lint.');
+  const approved = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draft).stdout);
+  hub('prepare', approved.id, '--agents-json', agents);
+  hub('result', approved.id, '--msg-id', '11111111-2222-3333-4444-555555555555');
+  // The hub runs as a VS Code panel session in ~/.claude/hub, which claude agents --json names hub-ba.
+  writeFileSync(join(root, 'hub-sessions.json'), JSON.stringify({ hub: ['h1-panel'], launched: [] }));
+  appendFileSync(join(root, 'registry', 'polls.jsonl'), `${JSON.stringify({ at: new Date().toISOString(), ok: true, sessions: [{ sessionId: 'h1-panel', name: 'hub-ba' }, { sessionId: 'x9', name: 'hub-zz' }, { sessionId: 's1', name: 'probe-a' }] })}\n`);
+  const hash = sha256(readFileSync(draft, 'utf8'));
+  // A session that is not the hub never confirms, whatever its name.
+  log([ev('UserPromptSubmit', new Date(Date.now() + 1000).toISOString(), { promptId: 'p2', fromName: 'hub-zz', innerHash: hash })]);
+  assert.deepEqual(JSON.parse(hub('confirm').stdout).confirmed, []);
+  log([ev('UserPromptSubmit', new Date(Date.now() + 2000).toISOString(), { promptId: 'p3', fromName: 'hub-ba', innerHash: hash })]);
+  assert.deepEqual(JSON.parse(hub('confirm').stdout).confirmed, [approved.id]);
+  assert.equal(loadRecords(root, 'app')[0].state, 'sent');
+});
+
 test('prepare refuses a duplicate and a changed text; notice moves a record to held then not-sent', () => {
   const { agents, hub, draftOf } = setup();
   const draft = draftOf('Uruchom testy.');

@@ -2,7 +2,7 @@
 
 - **Skill:** daily (kontrakt `docs/spotkania-kolejki.md`, wspólny ze `spotkanie`)
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-10-16, daily)
 
 ## Opis
 `kb-client similar` zwraca najbliższe chunki, a kontrakt każe każdy kandydat z `distance <= 0.25`

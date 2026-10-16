@@ -52,6 +52,15 @@ export function upsertRulesBlock(text, block = RULES_BLOCK) {
   return `${text.replace(/\s*$/, '')}\n\n${block}\n`;
 }
 
+// The hub session's role (spec §4 hub setup, P10): ~/.claude/hub/CLAUDE.md holds the text of the
+// skill's role.md itself, because an @import from outside that folder is not expanded in a VS Code
+// panel session (Plan 3 acceptance, B3).
+export const HUB_ROLE_HEADER = "<!-- Written by the hub installer from the skill's role.md (spec §4, P10). Edit role.md and reinstall. -->";
+
+export function hubClaudeMd(role) {
+  return `${HUB_ROLE_HEADER}\n\n${role.replace(/\r\n/g, '\n').replace(/\s*$/, '')}\n`;
+}
+
 export function copySkill(srcDir, destDir) {
   mkdirSync(destDir, { recursive: true });
   cpSync(srcDir, destDir, { recursive: true, filter: (path) => !/[\\/](node_modules|\.git)([\\/]|$)/.test(path) });

@@ -41,6 +41,14 @@ export function markerText(message) {
   return lastLine.startsWith(MARKER) ? lastLine.slice(MARKER.length).trim() : null;
 }
 
+// Event times are UTC; the overview (finding A2) and the header line of a composed message (P15)
+// show them in local time. The offset is a parameter so tests do not depend on the time zone.
+export function localTime(iso, offsetMinutes = iso ? -new Date(iso).getTimezoneOffset() : 0) {
+  const ms = Date.parse(iso ?? '');
+  if (Number.isNaN(ms)) return String(iso ?? '');
+  return new Date(ms + offsetMinutes * 60000).toISOString().slice(0, 19).replace('T', ' ');
+}
+
 export function summarize(message, max = 200) {
   const oneLine = String(message ?? '').replace(/\s+/g, ' ').trim();
   return oneLine.length > max ? `${oneLine.slice(0, max - 1)}…` : oneLine;

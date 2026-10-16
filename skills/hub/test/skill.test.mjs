@@ -15,6 +15,13 @@ test('SKILL.md names the skill hub and every command it uses exists in the CLI u
   assert.ok(existsSync(fileURLToPath(new URL('../bin/hub-watch.mjs', import.meta.url))));
 });
 
+test('SKILL.md describes the hub session without start flags (P10)', () => {
+  const description = read('../SKILL.md').split('\n').find((line) => line.startsWith('description: '));
+  assert.match(description, /working directory is ~\/\.claude\/hub/);
+  assert.match(description, /~\/\.claude\/hub\/CLAUDE\.md gives it the hub role/);
+  assert.doesNotMatch(description, /--append-system-prompt-file|--name hub/);
+});
+
 test('the role file carries the hard rules and points at the skill', () => {
   const role = read('../role.md');
   assert.match(role, /invoke the skill `hub`/);

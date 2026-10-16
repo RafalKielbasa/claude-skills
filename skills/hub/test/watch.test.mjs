@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, spawn } from 'node:child_process';
 import { mkdirSync, appendFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,6 +62,70 @@ test('the error reporter prints a repeated error once and again after a good tic
   const r = errorReporter((line) => lines.push(line));
   r.fail('a'); r.fail('a'); r.fail('b'); r.ok(); r.fail('b');
   assert.deepEqual(lines, ['watcher error: a', 'watcher error: b', 'watcher error: b']);
+});
+
+const waitFor = async (check, ms = 15000) => {
+  const end = Date.now() + ms;
+  while (!check()) {
+    if (Date.now() > end) throw new Error('timed out');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+};
+
+test('a running watcher reports while its owner lives, then stops without writing its state (P14)', async () => {
+  const root = tempRoot();
+  mkdirSync(join(root, 'registry'), { recursive: true });
+  const log = join(root, 'registry', 'w1.events.jsonl');
+  const add = (event) => appendFileSync(log, `${JSON.stringify(event)}\n`);
+  const t = () => new Date().toISOString();
+  const env = { ...process.env, HUB_DATA: root };
+  add(ev('UserPromptSubmit', t(), { sessionId: 'w1', promptId: 'p1', sessionTitle: 'probe-a' }));
+  add(ev('Stop', t(), { sessionId: 'w1', promptId: 'p1', marker: null, lastFile: 'w1.last/a.md' }));
+  spawnSync(process.execPath, [WATCH, '--once', '--no-poll'], { env });
+
+  const owner = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)']);
+  // A 1 s rescan catches an event appended before fs.watch was registered, as the 2-minute rescan
+  // does in production (final review M3).
+  const watcher = spawn(process.execPath, [WATCH, '--no-poll', `--owner-pid=${owner.pid}`, '--owner-check-ms=100', '--interval-ms=1000'], { env });
+  let out = '';
+  watcher.stdout.on('data', (chunk) => { out += chunk; });
+  const exited = new Promise((resolve) => watcher.on('exit', resolve));
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    add(ev('UserPromptSubmit', t(), { sessionId: 'w1', promptId: 'p2' }));
+    add(ev('Stop', t(), { sessionId: 'w1', promptId: 'p2', marker: null, lastFile: 'w1.last/b.md' }));
+    await waitFor(() => /turn ended: .* w1 probe-a/.test(out));
+
+    const ownerGone = new Promise((resolve) => owner.on('exit', resolve));
+    owner.kill();
+    await ownerGone;
+    add(ev('UserPromptSubmit', t(), { sessionId: 'w1', promptId: 'p3' }));
+    add(ev('Stop', t(), { sessionId: 'w1', promptId: 'p3', marker: null, lastFile: 'w1.last/c.md' }));
+    assert.equal(await Promise.race([exited, new Promise((resolve) => setTimeout(() => resolve('still running'), 10000))]), 0);
+  } finally {
+    owner.kill();
+    watcher.kill();
+  }
+  assert.match(out, new RegExp(`watcher stopped: its hub session \\(process ${owner.pid}\\) has ended`));
+  assert.equal(out.match(/turn ended/g).length, 1);
+  // The orphan wrote nothing, so the next watcher still reports the turn that ended after it.
+  assert.match(spawnSync(process.execPath, [WATCH, '--once', '--no-poll'], { encoding: 'utf8', env }).stdout, /^turn ended: .* w1 probe-a/m);
+});
+
+test('a running watcher without a claude ancestor says so once and keeps running (P14)', async () => {
+  const root = tempRoot();
+  mkdirSync(join(root, 'registry'), { recursive: true });
+  const watcher = spawn(process.execPath, [WATCH, '--no-poll'], { env: { ...process.env, HUB_DATA: root, HUB_PROCESS_TABLE: '[]' } });
+  let out = '';
+  watcher.stdout.on('data', (chunk) => { out += chunk; });
+  try {
+    await waitFor(() => out.includes('\n'));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert.equal(out, 'watcher: no claude process among its ancestors; it will not stop with the hub session\n');
+    assert.equal(watcher.exitCode, null);
+  } finally {
+    watcher.kill();
+  }
 });
 
 test('a re-armed watcher reports a turn that ended while it was down, also when the saved label was already "turn ended"', () => {

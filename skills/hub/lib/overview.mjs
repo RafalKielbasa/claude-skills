@@ -9,6 +9,7 @@ import { loadProjectMap, projectOf, gitCommonDir } from './projects.mjs';
 import { refreshHubSessions } from './hubsessions.mjs';
 import { readJudgments, judgmentFor } from './judgments.mjs';
 import { resolveTitles } from './titles.mjs';
+import { localTime } from './text.mjs';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -75,13 +76,7 @@ export function buildOverview(root, { now = Date.now(), commonDirOf = gitCommonD
 
 const cell = (value) => String(value ?? '').replace(/\|/g, '\\|').replace(/\s+/g, ' ');
 
-// Event times are UTC; the overview shows them in local time (finding A2). The offset is a
-// parameter so tests do not depend on the machine's time zone.
-export function localTime(iso, offsetMinutes = iso ? -new Date(iso).getTimezoneOffset() : 0) {
-  const ms = Date.parse(iso ?? '');
-  if (Number.isNaN(ms)) return String(iso ?? '');
-  return new Date(ms + offsetMinutes * 60000).toISOString().slice(0, 19).replace('T', ' ');
-}
+export { localTime };
 
 export function renderOverview({ rows, pollError, configErrors }) {
   const lines = ['| Project | Session | State | Since | Last action | Waiting for | Raw state |', '|---|---|---|---|---|---|---|'];

@@ -5,12 +5,13 @@
 //   2. registers hub-hook.mjs for six events in <claude-dir>/settings.json (backup first)
 //   3. writes the global rules block into <claude-dir>/CLAUDE.md (backup first)
 //   4. creates <claude-dir>/hub/ with an empty project map (projects.json)
+//   5. writes <claude-dir>/hub/CLAUDE.md, the hub session's role, from role.md (backup first)
 // Every step is idempotent; --dry-run prints what would change and writes nothing.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { hookCommand, mergeHooks, upsertRulesBlock, copySkill } from '../lib/install.mjs';
+import { hookCommand, mergeHooks, upsertRulesBlock, hubClaudeMd, copySkill } from '../lib/install.mjs';
 
 const argv = process.argv.slice(2);
 const dirIndex = argv.indexOf('--claude-dir');
@@ -36,6 +37,7 @@ try {
 }
 const claudeMdPath = join(claudeDir, 'CLAUDE.md');
 const before = existsSync(claudeMdPath) ? readFileSync(claudeMdPath, 'utf8') : '';
+const role = readFileSync(join(srcDir, 'role.md'), 'utf8');
 
 // 1. skill
 if (resolve(srcDir) === resolve(skillDir)) report.push(`skill: already running from ${skillDir}`);
@@ -67,6 +69,17 @@ report.push(`hub data: ${existsSync(projectsPath) ? 'projects.json present' : `c
 if (!dryRun && !existsSync(projectsPath)) {
   mkdirSync(hubDir, { recursive: true });
   writeFileSync(projectsPath, `${JSON.stringify({ projects: {} }, null, 2)}\n`, 'utf8');
+}
+
+// 5. the hub session's role
+const rolePath = join(hubDir, 'CLAUDE.md');
+const wanted = hubClaudeMd(role);
+const current = existsSync(rolePath) ? readFileSync(rolePath, 'utf8') : null;
+report.push(`hub CLAUDE.md: ${current === wanted ? 'role unchanged' : current === null ? `create ${rolePath}` : 'role rewritten from role.md'}`);
+if (!dryRun && current !== wanted) {
+  if (current !== null) backup(rolePath);
+  mkdirSync(hubDir, { recursive: true });
+  writeFileSync(rolePath, wanted, 'utf8');
 }
 
 console.log(`${dryRun ? '[dry run] ' : ''}${report.join('\n')}`);

@@ -142,8 +142,11 @@ ambiguous fit is a best guess corrected by Rafał at the gate, not a question as
   current numbers in `docs/spotkania-kolejki.md`'s "Thresholds" section — that document is the
   only place the two values live, so read it fresh each time rather than trusting a number written
   here. A match inside the upper bound comes back as `action: update` (`similar_to`,
-  `similar_text`, `distance` filled), for Rafał to judge at the gate rather than being
-  auto-classified `duplicate`; outside it, or no match, is `action: new`.
+  `similar_text`, `distance` filled) only under the narrow condition in that document's
+  "Deduplication before the gate" section (a meeting entry, same topic, an explicit correction of
+  a fact), for Rafał to judge at the gate rather than being auto-classified `duplicate`; any other
+  match inside the bound is `action: new` with the match named in a `#` comment above the block.
+  Outside the bound, or no match, is `action: new`.
 - Tasks: one read of the kanban board — target repository and board named once in
   `docs/spotkania-kolejki.md`'s "Deduplication before the gate" section, not restated here —
   matching by topic, drafts included. A match is `duplicate` (left `proposed`; the gate offers keeping it rejected first); a

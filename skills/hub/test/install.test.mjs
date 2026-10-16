@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mergeHooks, upsertRulesBlock, hookCommand, RULES_BEGIN, HOOK_EVENTS } from '../lib/install.mjs';
+import { mergeHooks, upsertRulesBlock, hookCommand, hubClaudeMd, HUB_ROLE_HEADER, RULES_BEGIN, HOOK_EVENTS } from '../lib/install.mjs';
 import { tempRoot } from './helpers.mjs';
 
 const INSTALL = fileURLToPath(new URL('../bin/install.mjs', import.meta.url));
@@ -55,6 +55,34 @@ test('install.mjs on a temporary claude dir: dry run writes nothing, a real run 
   const again = spawnSync(process.execPath, [INSTALL, '--claude-dir', claude], { encoding: 'utf8' });
   assert.match(again.stdout, /0 hook entries added/);
   assert.match(again.stdout, /rules block unchanged/);
+});
+
+test('install.mjs writes the hub role into hub/CLAUDE.md, leaves an identical one, rewrites a changed one (P10)', () => {
+  const claude = tempRoot();
+  const rolePath = join(claude, 'hub', 'CLAUDE.md');
+  const wanted = hubClaudeMd(readFileSync(new URL('../role.md', import.meta.url), 'utf8'));
+  assert.match(wanted, /^<!-- Written by the hub installer from the skill's role\.md/);
+  assert.match(wanted, /Hard rules, also when the skill is not loaded:/);
+  assert.equal(wanted.includes('\r'), false);
+  // role.md checked out with CRLF (core.autocrlf) gives the same file as with LF.
+  assert.equal(hubClaudeMd('a\r\nb\r\n\r\n'), `${HUB_ROLE_HEADER}\n\na\nb\n`);
+
+  const dry = spawnSync(process.execPath, [INSTALL, '--claude-dir', claude, '--dry-run'], { encoding: 'utf8' });
+  assert.match(dry.stdout, /hub CLAUDE\.md: create .*CLAUDE\.md/);
+  assert.equal(existsSync(rolePath), false);
+
+  const real = spawnSync(process.execPath, [INSTALL, '--claude-dir', claude], { encoding: 'utf8' });
+  assert.equal(real.status, 0, real.stderr);
+  assert.equal(readFileSync(rolePath, 'utf8'), wanted);
+  assert.match(spawnSync(process.execPath, [INSTALL, '--claude-dir', claude], { encoding: 'utf8' }).stdout, /hub CLAUDE\.md: role unchanged/);
+
+  writeFileSync(rolePath, '@C:/Users/rafal/.claude/skills/hub/role.md\n', 'utf8');
+  const rewritten = spawnSync(process.execPath, [INSTALL, '--claude-dir', claude], { encoding: 'utf8' });
+  assert.match(rewritten.stdout, /hub CLAUDE\.md: role rewritten from role\.md/);
+  assert.equal(readFileSync(rolePath, 'utf8'), wanted);
+  const backups = readdirSync(join(claude, 'hub')).filter((name) => name.startsWith('CLAUDE.md.bak-hub-'));
+  assert.equal(backups.length, 1);
+  assert.equal(readFileSync(join(claude, 'hub', backups[0]), 'utf8'), '@C:/Users/rafal/.claude/skills/hub/role.md\n');
 });
 
 test('a malformed settings.json stops the installer before any write', () => {

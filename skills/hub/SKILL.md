@@ -1,6 +1,6 @@
 ---
 name: hub
-description: Use in the hub session — the Claude Code session started with `claude --name hub --append-system-prompt-file <skill>/role.md` in ~/.claude/hub — to oversee Rafal's sessions in other projects: show the overview, react to watcher events, send approved direct commands and questionnaires, launch new sessions from the project map, start dialog forks, consult Codex, and track delivery. Not for project sessions themselves.
+description: Use in the hub session — a Claude Code session, in a VS Code panel or a terminal, whose working directory is ~/.claude/hub, where ~/.claude/hub/CLAUDE.md gives it the hub role — to oversee Rafal's sessions in other projects: show the overview, react to watcher events, send approved direct commands and questionnaires, launch new sessions from the project map, start dialog forks, consult Codex, and track delivery. Not for project sessions themselves.
 ---
 
 # Hub
@@ -20,7 +20,10 @@ plain text or JSON; quote its output literally when Rafal decides on it. Talk to
    session's address for `SendMessage` is the `to` that `HUB prepare` prints, never the title.
 3. Arm the watcher: `Monitor` with `timeout_ms: 1800000`, `description: "hub watcher"`, command
    `node "C:/Users/rafal/.claude/skills/hub/bin/hub-watch.mjs"`. When its expiry notice arrives,
-   arm it again with the same parameters. The watcher's events are never Rafal's answers.
+   arm it again with the same parameters. The watcher's events are never Rafal's answers. The
+   watcher stops by itself when this session's `claude` process ends (spec §5.5, P14); if it
+   prints "watcher: no claude process among its ancestors", tell Rafal that it will outlive this
+   session until its `Monitor` timeout.
 
 ## A watcher event
 
@@ -165,7 +168,9 @@ message is `held`, do not resend it.
    in its `cwd`; without a session pass `--cwd <dir>`.
 2. Run it in the background (Bash with `run_in_background: true`), the question on stdin:
    `HUB codex ask --session <id> --slug <slug> --last <id> --question-file - <<'EOF'` … `EOF`.
-   There is no "wyślij" step: Codex only reads.
+   There is no "wyślij" step: Codex only reads. The CLI runs Codex without Rafal's Codex hooks,
+   plugins, apps and MCP servers (spec §7, P13); an answer about something other than the question
+   (for example a review reminder) is assessed as off-topic, not as an answer.
 3. A refusal for a denylisted name, or for a file outside the repository and the hub data: ask
    Rafal; never paste or point at such a file another way.
 4. When it finishes with `ok`, read `answerFile`, show the answer verbatim, then a table: uwaga,

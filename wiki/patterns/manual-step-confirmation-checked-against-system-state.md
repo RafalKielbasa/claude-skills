@@ -20,6 +20,14 @@ describes what the person did, not what the system holds.
   "Google - Zielony Ogrod", select in the node). The n8n API read showed first no credential, then
   `Google Sheets account 2` not renamed and `cred=null` on the node. Take 2 was not started; its steps 12, 24
   and 28 would have failed on that state.
+- 2026-10-15/16, session c51a0755-8b46-4b7b-bca0-4c9d99ee48bd (id claude.ai niedostępny; vault, hub
+  acceptance of Plans 3 and 4): four of Rafał's confirmations checked against the system, each different
+  from the claim. After "uruchomiłem hub od nowa" and "zrobione" (twice) `claude agents --json` showed
+  `hub-d0`, then `hub-94`, and the `hub-94` transcript's first prompt was literally `start --name hub` (the
+  flags went into the session, not the shell). After "krok 3 gotowy" the `probe-a` transcript held the
+  prompt `krok 3 gotowyt` (wrong window) and the journal had no answers record. After "krok 6 gotowy" the
+  fork had no event after its first turn and no `prompt.md`. Each time the next step waited, and the reply
+  named the cause with a table "where to type what" instead of asking in general terms.
 
 ## Rozwiązanie
 After a user confirms a manual change that an automated step depends on, read the state from the system (API,

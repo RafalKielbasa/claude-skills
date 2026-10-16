@@ -28,6 +28,14 @@ dwa różne łańcuchy.
   realnie przeliczone, nie odtworzone z cache. Ok. 3,4 tys. znaków zapłacone
   dwa razy, czyli ~20% narzutu wobec ścieżki `api`. Rafał wybierał silnik,
   mając przed sobą wyłącznie oś „plan konta kontra kredyty API".
+- 2026-10-15, sesja 96436fe2-135f-4db8-9a6a-e2d0011a65cc (id claude.ai
+  niedostępny): lekcja `agenty-ai` 1.1, trzy segmenty avatarowe (1, 6, 8),
+  ~3,3 tys. z ~9,45 tys. znaków lekcji. Pełny render nadpisał `01.mp3`
+  (993 114 → 1 001 891 B), `06.mp3` (1 072 526 → 1 098 021 B) i `08.mp3`
+  (986 844 → 989 352 B), więc narzut wyniósł ~35%. Moja własna bramka podała
+  „TTS całej lekcji ~9 450 znaków (~1 $)”, bez podwójnego TTS avatarów, czyli
+  ten sam brak, tym razem w treści bramki, którą napisałem sam. Skutek uboczny
+  tego samego mechanizmu: `druga-kontrola-lektora-ocenia-audio-avatarow-spoza-filmu`.
 
 ## Rozwiązanie
 Do opisu opcji `mcp` w bramce kroku 2 dopisać jedno zdanie: „chunki avatarowe

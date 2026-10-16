@@ -1278,3 +1278,50 @@ index e8f5a225..e98cca04 100644
    Dlatego pomijasz `planning/` (patrz `## Mapa obszarów`).
  - **`/baza-wiedzy`** jest narzędziem do operacji ręcznych na wektorach
 ```
+
+## 2026-10-16 — daily — zaakceptowana
+- **Wzorce:** update-z-deduplikacji-trafia-w-caly-dokument
+- **Zmiana:** Deduplikacja wiedzy: trafienie w progu (0,25) daje `action: update` tylko wtedy, gdy jest wpisem spotkania (`planning/`) na ten sam temat, a kandydat jawnie koryguje w nim fakt; karta nazywa korygowany fakt. Każde inne trafienie (fragment dokumentu z `knowledge-base/*.md`, wpis o innym temacie, wpis tylko uzupełniany) daje `action: new` z `similar_to: null`, `distance` zachowanym i komentarzem `#` nad blokiem. Reguła zmieniona we wspólnym kontrakcie `docs/spotkania-kolejki.md` („Deduplication before the gate”), więc działa też w `/spotkanie`; streszczenie w `daily/SKILL.md` dopasowane. Założony `daily/PURPOSE.md`.
+- **Powód decyzji:** zaakceptowana przez Rafała („A”) — 5 dowodów z 5 sesji; w trzech ostatnich bramkach przy 19 kartach `update` ani razu „Nadpisz istniejący”. Sesja 96436fe2-135f-4db8-9a6a-e2d0011a65cc (id claude.ai niedostępny).
+
+```diff
+diff --git a/.claude/skills/daily/SKILL.md b/.claude/skills/daily/SKILL.md
+index 71dfc6ea..2cc74d63 100644
+--- a/.claude/skills/daily/SKILL.md
++++ b/.claude/skills/daily/SKILL.md
+@@ -142,8 +142,11 @@ ambiguous fit is a best guess corrected by Rafał at the gate, not a question as
+   current numbers in `docs/spotkania-kolejki.md`'s "Thresholds" section — that document is the
+   only place the two values live, so read it fresh each time rather than trusting a number written
+   here. A match inside the upper bound comes back as `action: update` (`similar_to`,
+-  `similar_text`, `distance` filled), for Rafał to judge at the gate rather than being
+-  auto-classified `duplicate`; outside it, or no match, is `action: new`.
++  `similar_text`, `distance` filled) only under the narrow condition in that document's
++  "Deduplication before the gate" section (a meeting entry, same topic, an explicit correction of
++  a fact), for Rafał to judge at the gate rather than being auto-classified `duplicate`; any other
++  match inside the bound is `action: new` with the match named in a `#` comment above the block.
++  Outside the bound, or no match, is `action: new`.
+ - Tasks: one read of the kanban board — target repository and board named once in
+   `docs/spotkania-kolejki.md`'s "Deduplication before the gate" section, not restated here —
+   matching by topic, drafts included. A match is `duplicate` (left `proposed`; the gate offers keeping it rejected first); a
+diff --git a/docs/spotkania-kolejki.md b/docs/spotkania-kolejki.md
+index cdd6de82..10f2a18d 100644
+--- a/docs/spotkania-kolejki.md
++++ b/docs/spotkania-kolejki.md
+@@ -121,7 +121,15 @@ path; a shell mangles backticks and quotes sitting inside a `--text` argument, s
+ different string to the embedding than the one that gets upserted. `--text` stays only for a
+ short ad-hoc check typed straight on the command line. At or below the single interim bound (see
+ "Thresholds") the candidate becomes `action: update`, with `similar_text` filled from the match,
+-for Rafał to judge at the gate; above it, or with no match, it becomes `action: new`.
++for Rafał to judge at the gate — but only when the match is a meeting entry (`similar_to` starts
++with `planning/`), on the same topic, and the candidate explicitly corrects a fact in it (another
++date, a reversed decision); the card then names the corrected fact. Any other match inside the
++bound becomes `action: new` with `similar_to: null`, `similar_text: null` and `distance` kept, plus
++one `#` comment above the block naming the match and its distance: a fragment of a document
++indexed from `knowledge-base/*.md` (one `entry_id` is the whole file, so an `update` would replace
++it with one paragraph), a meeting entry on another topic, or a same-topic entry the candidate only
++adds to (a meeting entry is a dated snapshot; a later meeting adds state next to it). Above the
++bound, or with no match, it becomes `action: new`.
+ `action: duplicate` is not reachable until Task 10 calibrates the second bound — see
+ "Thresholds"; do not classify a candidate `duplicate` before then.
+ 
+```

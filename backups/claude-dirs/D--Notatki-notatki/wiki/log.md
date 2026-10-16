@@ -30,3 +30,8 @@ Format wpisu:
 - Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; powstał skill globalny `code-review-master` w `~/.claude/skills/`, a w vaultcie zmieniły się tylko `.claude/specs/`, `.claude/plans/` i `praca-z-claude.md`)
 - Wzorce globalne dotknięte w tej sesji: kod-referencyjny-planu-nigdy-nie-uruchomiony (założony), brief-nieaktualny-po-zmianie-planu (założony), konfiguracja-z-katalogu-domowego-wchodzi-do-testow (założony), furtka-testowa-w-strazniku-produkcyjnym (założony), subagent-zglasza-sprzecznosc-zamiast-dopasowac-test (założony), windows-path-w-literale-skryptu (dopisany dowód), mutacja-przed-dispatchem-lapie-wlasne-bledy (dopisany dowód), powershell-semantyka-wymaga-sondy-nie-czytania (dopisany dowód), twierdzenie-o-pliku-bez-odczytu (dopisany dowód), review-pr-bez-skilla-odtwarzany-za-kazdym-razem (dopisany dowód)
 - Sygnał: windows-path-w-literale-skryptu (dowody z trzech różnych sesji, próg przekroczony; wzorzec globalny, decyzja o `/evolve-skill` po stronie użytkownika)
+
+## 2026-10-15/16 — sesja c51a0755-8b46-4b7b-bca0-4c9d99ee48bd (id claude.ai niedostępny)
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmieniły się `.claude/specs/` i `.claude/plans/` huba orkiestratora, a poza vaultem globalny `CLAUDE.md` i skill `hub`)
+- Wzorce globalne dotknięte w tej sesji: codex-exec-dziedziczy-hooki-i-mcp-uzytkownika (założony), zlozona-komenda-git-z-cd-poza-regulami-allow (założony), komenda-do-wklejenia-zaklada-git-bash (założony), windows-path-w-literale-skryptu (dopisany dowód), manual-step-confirmation-checked-against-system-state (dopisany dowód), cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (dopisany dowód)
+- Sygnał: brak

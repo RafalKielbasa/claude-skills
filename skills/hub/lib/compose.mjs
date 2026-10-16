@@ -1,6 +1,6 @@
 // Messages the hub sends (spec §6.1, §6.4): the origin header line, the fixed questionnaire request
 // and the prompt template check. User-facing text stays in Polish.
-import { canonical } from './text.mjs';
+import { canonical, localTime } from './text.mjs';
 
 export const PATHS = ['direct', 'questionnaire-request', 'questionnaire-answers', 'dialog', 'new-session'];
 // Every composed message carries the five sections (spec §6.1); questionnaire answers also carry
@@ -11,8 +11,9 @@ const HEADER_PREFIX = '[hub · ';
 
 // `target` names the recipient: the first 8 characters of its sessionId, or the name of a session
 // still to be launched (spec §6.6). `origin` names the dialog directory a prompt came from (§6.1).
-export function headerLine({ path, project, sessionId, target, origin, at }) {
-  return `${HEADER_PREFIX}${path} · ${project} · ${target ?? String(sessionId).slice(0, 8)} · ${at.slice(0, 16).replace('T', ' ')}${origin ? ` · ${origin}` : ''}]`;
+// The time is local, like the times the message body quotes (P15).
+export function headerLine({ path, project, sessionId, target, origin, at, offsetMinutes }) {
+  return `${HEADER_PREFIX}${path} · ${project} · ${target ?? String(sessionId).slice(0, 8)} · ${localTime(at, offsetMinutes).slice(0, 16)}${origin ? ` · ${origin}` : ''}]`;
 }
 
 // The fixed wording of spec §6.4 step 2, laid out in the five sections.
@@ -38,9 +39,9 @@ export function questionnaireRequest({ topic, max }) {
   ].join('\n');
 }
 
-export function composeMessage({ path, project, sessionId, target, origin, at, body }) {
+export function composeMessage({ path, project, sessionId, target, origin, at, offsetMinutes, body }) {
   if (!PATHS.includes(path)) throw new Error(`unknown path ${path}; expected one of ${PATHS.join(', ')}`);
-  return `${headerLine({ path, project, sessionId, target, origin, at })}\n\n${canonical(body)}\n`;
+  return `${headerLine({ path, project, sessionId, target, origin, at, offsetMinutes })}\n\n${canonical(body)}\n`;
 }
 
 function normalizeHeading(line) {

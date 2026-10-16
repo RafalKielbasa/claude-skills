@@ -114,6 +114,17 @@ kodem i nie powinna przechodzić przez składnię języka.
   `SyntaxError: unterminated string literal` — skrypt się nie wykonał. Później `sed -i`, którego zamiennik miał
   zawierać sekwencję ukośnik-n, wstawił do skryptu prawdziwą nową linię w środku literału. Naprawa za każdym
   razem: skrypt zapisany narzędziem Write i uruchomiony z pliku, znak nowej linii jako `chr(10)`.
+- 2026-10-15/16, sesja c51a0755-8b46-4b7b-bca0-4c9d99ee48bd (id claude.ai niedostępny; vault, hub
+  Plan 4): czternasty dowód, trzy wystąpienia w jednej sesji. (1) `node - <<'EOF'` z funkcją
+  `edit(file, from, to)` wstawiającą kod z literałem szablonu: ukośniki przed `r`, `n` i `s`
+  zniknęły, więc do `lib/install.mjs` weszło wyrażenie regularne rozbite prawdziwą nową linią,
+  a dalsza część skryptu padła na `anchor not found` — plik został w połowie zmieniony. (2) `sed -i`
+  jako mutacja sprawdzająca, czy test łapie brak normalizacji CRLF, nie dopasował wzorca i niczego
+  nie zmienił; oba przebiegi testu „przeszły" na nietkniętym kodzie, czyli kontrola była fałszywie
+  zielona. (3) `node -e` z tą samą kotwicą zatrzymał się na własnej asercji `no mutation`.
+  Naprawa: kod przez Edit; mutacja jako skrypt zapisany heredokiem `<<'EOF'` do pliku, kotwica
+  w `String.raw`, z asercją, że podmiana zaszła. Nowa lekcja: skrypt, który coś podmienia,
+  sprawdza, że podmiana zaszła — inaczej błąd escapowania udaje sukces.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją

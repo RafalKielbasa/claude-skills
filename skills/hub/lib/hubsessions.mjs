@@ -4,6 +4,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { hubSessionsPath } from './paths.mjs';
 import { samePath } from './projects.mjs';
+import { readPolls } from './polls.mjs';
 
 // A corrupt file yields empty lists and an error line instead of throwing; refreshHubSessions rewrites it.
 export function readHubSessions(root) {
@@ -30,6 +31,18 @@ export function refreshHubSessions(root, derivedList) {
   const next = { hub: [...hub], launched: data.launched };
   if (data.error || next.hub.length !== data.hub.length) writeHubSessions(root, next);
   return { ...next, error: data.error ?? null };
+}
+
+// The from-names the hub's own messages carry (spec §6.3, P10): `hub` for a hub started with
+// --name hub, and every name the polls gave a session registered as hub. A hub started without a
+// name, for example in a VS Code panel, is called <folder>-<2 hex> (hub-ba).
+export function hubSenderNames(root, polls = readPolls(root)) {
+  const ids = new Set(readHubSessions(root).hub);
+  const names = new Set(['hub']);
+  for (const poll of polls) {
+    for (const session of poll.sessions ?? []) if (ids.has(session.sessionId) && session.name) names.add(session.name);
+  }
+  return names;
 }
 
 export function registerLaunched(root, entry) {

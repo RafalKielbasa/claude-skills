@@ -19,7 +19,7 @@
 ## Język
 
 - **Cały kod zawsze po angielsku** — identyfikatory, komentarze, testy, konfiguracja, seedy. Nazwy opisowe tłumacz (`suspended`, nie `zawieszona`).
-- **Skille, specy i plany też po angielsku.** Po polsku zostaje wyłącznie treść ticketów i rozmowa ze mną. Istniejących polskich speców nie tłumaczysz, reguła dotyczy nowych. (Ustalone 2026-09-03.)
+- **Skille, specy i plany też po angielsku.** Po polsku zostaje wyłącznie treść ticketów, indeksów projektów i rozmowa ze mną. Istniejących polskich speców nie tłumaczysz, reguła dotyczy nowych. (Ustalone 2026-09-03.)
 - Identyfikatory mogą cytować nazwy własne z danych (tenant o subdomenie `kuznia` zostaje `kuznia` w kodzie) — to dane, nie słownictwo.
 - Teksty widoczne dla użytkownika zostają w języku produktu.
 
@@ -103,6 +103,22 @@
   i czekasz na mnie.
 - Po tabeli przejdź do pytania o tryb egzekucji (Execution Handoff z
   `writing-plans`).
+
+## Indeks projektu
+
+- Każda praca, która dostaje spec, należy do projektu. Projekt ma jeden plik-indeks
+  `projects/<projekt>.md` obok folderów `specs/` i `plans/` repo (w vaultcie „Notatki”
+  `.claude/projects/`, w repo z kodem `docs/superpowers/projects/`).
+- Nazwy speców, planów i raportów: `RRRR-MM-DD-<projekt>-<część>-…` (`-design`, `-probes`,
+  `-plan-<n>`, `-plan-<n>-acceptance`). Projekt i część po angielsku, kebab-case.
+- Sesja, która tworzy albo zmienia spec, plan, raport sond albo akceptacji, albo rozstrzyga lub
+  odkłada decyzję zmieniającą zakres, aktualizuje indeks projektu w tym samym commicie, skillem
+  `project-index`. Dotyczy też subagentów i skilli, także `superpowers:*`.
+- Status projektu i jego części żyje tylko w indeksie. Spec nie prowadzi własnej tabeli
+  statusu; linkuje do indeksu.
+- Kod decyzji albo ustalenia (`D5`, `P13`, `B2`, `I-3`, `S12`) nigdy nie stoi sam: zawsze z
+  nazwą, w plikach i w rozmowie ze mną, np. „Zakres wersji finalnej (D5)”.
+- Indeks jest po polsku; nazwy części i plików zostają po angielsku.
 
 ## Podsumowania sesji (podsumuj-sesja-claude)
 

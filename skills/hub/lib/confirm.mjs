@@ -7,11 +7,14 @@
 // The latest matching event not already used as evidence (`usedIds`). After a confirmed resend of
 // the same text, records are confirmed newest first, so the newest record takes the newest delivery
 // and an undelivered older record stays delivery-unknown.
+// `hubName` is one from-name or a Set of them (a hub without --name has a poll name, P10).
+const isHub = (hubName, fromName) => (hubName instanceof Set ? hubName.has(fromName) : fromName === hubName);
+
 export function findDelivery(record, events, hubName = 'hub', usedIds = new Set()) {
   let found = null;
   for (const event of events) {
     if (event.event === 'UserPromptSubmit'
-      && event.fromName === hubName
+      && isHub(hubName, event.fromName)
       && event.innerHash === record.textHash
       && (!record.sentAt || event.at >= record.sentAt)
       && !usedIds.has(event.id)) found = event;
@@ -25,7 +28,7 @@ export function findMismatch(record, events, hubName, knownHashes, usedIds) {
   let found = null;
   for (const event of events) {
     if (event.event === 'UserPromptSubmit'
-      && event.fromName === hubName
+      && isHub(hubName, event.fromName)
       && (!record.sentAt || event.at >= record.sentAt)
       && !usedIds.has(event.id)
       && !knownHashes.has(event.innerHash)) found = event;

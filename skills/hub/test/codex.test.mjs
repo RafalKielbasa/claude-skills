@@ -5,10 +5,58 @@ import { mkdirSync, appendFileSync, writeFileSync, readFileSync, existsSync } fr
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tempRoot, ev } from './helpers.mjs';
-import { codexCommand, describeElement, runCodex, parseThreadId, REVIEWER_ROLE, DeniedError } from '../lib/codex.mjs';
+import { codexCommand, describeElement, runCodex, parseThreadId, mcpServerNames, isolationArgs, REVIEWER_ROLE, DeniedError } from '../lib/codex.mjs';
 
 const HUB = fileURLToPath(new URL('../bin/hub.mjs', import.meta.url));
 const FAKE = fileURLToPath(new URL('../fakes/codex.mjs', import.meta.url));
+const FEATURES_OFF = ['-c', 'features.hooks=false', '-c', 'features.plugins=false', '-c', 'features.apps=false'];
+// A config shaped like Rafal's ~/.codex/config.toml: two servers, one with an env subtable.
+const CONFIG = [
+  'notify = ["x.exe", "turn-ended"]',
+  '[projects."d:\\\\praca\\\\baza wiedzy"]',
+  'trust_level = "trusted"',
+  '[mcp_servers.n8n]',
+  'url = "http://localhost:5678/mcp-server/http"',
+  '[mcp_servers.node_repl] # computer use',
+  'command = "node_repl.exe"',
+  '[mcp_servers.node_repl.env]',
+  'CODEX_HOME = "C:\\\\Users\\\\rafal\\\\.codex"',
+  '[mcp_servers."my server"]',
+  "[mcp_servers.'lit server']",
+  '[mcp_servers."esc\\"aped"]',
+  '[mcp_servers."quoted-ok"]',
+  "[mcp_servers.'lit_ok']",
+  '[mcp_servers."n8n"]',
+  '[mcp_servers.n8n]',
+].join('\r\n');
+
+function codexHome(config) {
+  const home = tempRoot();
+  if (config !== undefined) writeFileSync(join(home, 'config.toml'), config);
+  return home;
+}
+
+test('isolation (P13): hooks, plugins and apps off, every MCP server table of $CODEX_HOME/config.toml disabled', () => {
+  assert.deepEqual(mcpServerNames(CONFIG), ['n8n', 'node_repl', '"my server"', "'lit server'", '"quoted-ok"', "'lit_ok'", '"n8n"']);
+  // Codex keeps quotes in a -c key path (`mcp_servers."x"` is a new server "x", and the call fails
+  // with "invalid transport"), so a quoted name goes unquoted when it is a bare key and is skipped
+  // otherwise; "n8n" and n8n are one server.
+  assert.deepEqual(isolationArgs({ CODEX_HOME: codexHome(CONFIG) }), [
+    ...FEATURES_OFF,
+    '-c', 'mcp_servers.n8n.enabled=false',
+    '-c', 'mcp_servers.node_repl.enabled=false',
+    '-c', 'mcp_servers.quoted-ok.enabled=false',
+    '-c', 'mcp_servers.lit_ok.enabled=false',
+  ]);
+  assert.deepEqual(isolationArgs({ CODEX_HOME: codexHome() }), FEATURES_OFF);
+  assert.deepEqual(isolationArgs({ CODEX_HOME: codexHome('') }), FEATURES_OFF);
+});
+
+test('isolation with an unreadable config.toml keeps the features off and does not throw (M5)', () => {
+  const home = tempRoot();
+  mkdirSync(join(home, 'config.toml'));
+  assert.deepEqual(isolationArgs({ CODEX_HOME: home }), FEATURES_OFF);
+});
 
 test('the codex command: the override, codex.js under APPDATA, or plain codex', () => {
   assert.deepEqual(codexCommand({ HUB_CODEX_CMD: '["node","f.mjs"]' }), ['node', 'f.mjs']);
@@ -58,7 +106,8 @@ function codexSetup() {
   appendFileSync(join(root, 'registry', 's1.events.jsonl'), `${JSON.stringify(ev('Stop', '2026-10-14T10:00:00Z', { sessionId: 's1', cwd: repo, lastFile: 's1.last/e1.md' }))}\n`);
   writeFileSync(join(root, 'projects.json'), JSON.stringify({ projects: { baza: { name: 'Baza', dir: repo, description: 'x' } } }));
   const log = join(root, 'fake-codex.log');
-  const env = { ...process.env, HUB_DATA: root, HUB_CODEX_CMD: JSON.stringify([process.execPath, FAKE]), FAKE_CODEX_LOG: log };
+  // CODEX_HOME keeps the tests away from the real ~/.codex/config.toml.
+  const env = { ...process.env, HUB_DATA: root, HUB_CODEX_CMD: JSON.stringify([process.execPath, FAKE]), FAKE_CODEX_LOG: log, CODEX_HOME: codexHome('[mcp_servers.n8n]\nurl = "x"\n') };
   const hub = (args, input, extra = {}) => spawnSync(process.execPath, [HUB, ...args], { encoding: 'utf8', input, env: { ...env, ...extra } });
   const calls = () => readFileSync(log, 'utf8').trim().split('\n').map((line) => JSON.parse(line));
   return { root, repo, hub, calls };
@@ -71,7 +120,8 @@ test('codex ask, follow and note: read-only arguments, stdin, thread files', () 
   const first = JSON.parse(asked.stdout);
   assert.equal(first.threadId, '01a136b7-2195-70d0-8cb4-81ac73919aa0');
   const [call1] = calls();
-  assert.deepEqual(call1.args, ['exec', '-s', 'read-only', '-C', repo, '--json', '-o', first.answerFile, '-']);
+  const isolation = [...FEATURES_OFF, '-c', 'mcp_servers.n8n.enabled=false'];
+  assert.deepEqual(call1.args, ['exec', '-s', 'read-only', '-C', repo, ...isolation, '--json', '-o', first.answerFile, '-']);
   assert.equal(call1.cwd.toLowerCase(), repo.toLowerCase());
   assert.match(call1.input, /^You are a reviewer/);
   assert.match(call1.input, /Wynik: zażółć gęślą jaźń/);
@@ -82,7 +132,7 @@ test('codex ask, follow and note: read-only arguments, stdin, thread files', () 
 
   const followed = JSON.parse(hub(['codex', 'follow', '--thread', first.thread, '--question-file', '-'], 'A testy?').stdout);
   const [, call2] = calls();
-  assert.deepEqual(call2.args, ['exec', 'resume', first.threadId, '-c', 'sandbox_mode="read-only"', '--json', '-o', followed.answerFile, '-']);
+  assert.deepEqual(call2.args, ['exec', 'resume', first.threadId, '-c', 'sandbox_mode="read-only"', ...isolation, '--json', '-o', followed.answerFile, '-']);
   assert.equal(call2.cwd.toLowerCase(), repo.toLowerCase());
   assert.equal(followed.n, 2);
 

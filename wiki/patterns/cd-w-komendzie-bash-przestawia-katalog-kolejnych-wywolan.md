@@ -132,6 +132,14 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   worktree bazy wiedzy, `tools/kb-client`), po każdej „Shell cwd was reset”.
   Bez szkody — każda komenda niosła własny `cd` ze ścieżką bezwzględną.
 
+- 2026-10-16, sesja c51a0755-8b46-4b7b-bca0-4c9d99ee48bd (id claude.ai niedostępny; vault, hub
+  Plan 4): piętnasty dowód, tym razem ze szkodą w commicie. `cd /d/Notatki/notatki/.claude/specs;
+  grep …` przestawiło cwd; trzy wywołania później `git add .claude/specs/2026-10-13-…design.md`
+  padło na `fatal: pathspec … did not match any files` (`could not open directory
+  '.claude/specs/.claude/specs/'`), `git commit` dało `nothing added to commit`, a `git push` —
+  `Everything up-to-date`. Zmiana specu nie poszła; wyszło to dopiero z wyniku commita.
+  Naprawa: `git add` ze ścieżką względem bieżącego cwd, potem komendy git zawsze z katalogu repo.
+
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
 gdy komenda musi biec z innego katalogu, opakuj ją w podpowłokę:
