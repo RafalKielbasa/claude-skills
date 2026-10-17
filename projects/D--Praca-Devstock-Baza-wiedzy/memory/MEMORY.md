@@ -15,6 +15,7 @@
 - [n8n: webhook z basicAuth bez credentiala](n8n-webhook-basicauth-bez-credentiala.md) — objaw to 500 "No authentication data defined on node!", nie 401; sonda złym hasłem odróżnia zepsuty webhook od zdrowego.
 - [/kurs-video tor B — bez etapu spięcia](kurs-video-tor-b-bez-spiecia.md) — Rafał sam montuje finalne wideo przy nakładaniu głosu; skill ma dostarczyć tylko paczkę lektora + avatary i zatrzymać się, bez `nagranie-z-lektorem.mp4`/`final.mp4` i bez ustawiania `status.video: zaakceptowane`.
 - [Wymowa n8n i JSON — zmiana po odsłuchu](wymowa-n8n-json-odsluch.md) — `"en osiem en"` i `dżejson` od 2026-09-09; podmienione tylko M00L02, siedem starszych scenariuszy nadal ze starym zapisem (moduł 1 = re-render).
+- [V4 czyta angielskie nazwy bez fonetyki](v4-angielskie-nazwy-bez-fonetyki.md) — odsłuch 16.10 (1.3): zapis angielski wygrał 22/22; wyjątek API („A PE I”); JSON, n8n, credential na V4 niesprawdzone; misja-ai-start na v2.
 - [Podpisy ilustracji w artykułach](ilustracje-podpis-w-artykulach.md) — format `**Ilustracja NR.** Podpis.` pod obrazkiem; zapisany w `/kurs-redakcja`, do `/kurs-lekcja` świadomie NIE dokładamy.
 - [ElevenLabs — klucz bez user_read i speech_to_text](elevenlabs-klucz-bez-user-read.md) — limitu kredytów NIE odczytasz z API, a kontrola lektora / rozpoznanie mowy plansz pada 401 (brak speech_to_text, 2026-10-08); uprawnienia dodaje Rafał w dashboardzie.
 - [MCP: klucz projektu zależy od litery dysku](mcp-klucz-projektu-litera-dysku.md) — VS Code `d:\`, terminal `D:\` = dwa projekty w `~/.claude.json`; `claude mcp remove` kasuje token OAuth; zasięg user nie dziedziczy tokenu local.
@@ -34,4 +35,5 @@
 - [Przebieg próbny automatu — stan 2026-10-10](przebieg-probny-status.md) — `przebieg` + bramka lektora gotowe (55372b65..c13988ff, #598), zadanie 10 (test na M00L01 w n8n) odłożone przez Rafała; 8 lekcji agenty-ai ma lektora bez nagrania.
 - [Reset konta kursu a gotowe lekcje](reset-konta-kursu-gotowe-lekcje.md) — w bramce B4 nie chroń zasobów lekcji już nagranych i zaakceptowanych; ich stan konta Rafała nie interesuje (2026-10-16).
 - [Gałąź DT-37 = gałąź biblioteki](dt37-galaz-biblioteki.md) — od 2026-10-16 biblioteka komponentów i ekrany w web i mobile idą na `feat/rafal-kielbasa/dt-37-design-system-tokens`; bez merge do `main` przed ukończeniem biblioteki.
+- [Kolejka do konta kursu — stan 2026-10-17](kolejka-konta-kursu-status.md) — `station-*` na `main` (PR #705, #697); odbiór częściowy 1.3/1.4/1.5 czeka, krok 4 niesprawdzony; sesje lekcji przed kontem wczytują ponownie `/kurs-nagrywanie`.
 - [n8n-prod liczy crony w UTC](n8n-prod-strefa-utc.md) — „08:00” = 10:00 Warszawa latem; `settings.timezone: Europe/Warsaw` (bez wersji, działa od razu — zgoda jak na publikację); `29`/`31` ustawione 2026-10-09.

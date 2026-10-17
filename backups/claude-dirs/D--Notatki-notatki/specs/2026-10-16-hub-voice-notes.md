@@ -31,7 +31,7 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
 |---|---|---|---|---|
 | 2026-10-11 | Interaction model | Real-time conversation with interruptions; a separate voice model is the "mouth", Claude works behind it (question 1, answer B) | confirmed (re-confirmed 2026-10-14 as finding 1) | transcript `0e06a344`, 2026-10-11T18:13:56Z |
 | 2026-10-11 | Line to Claude | The voice model gets a briefing and a line to Claude for questions outside it (question 2, answer B, then an `ask_claude` tool) | superseded in mechanism by GPT-Live delegation and the session fork (2026-10-12) | transcript `0e06a344`, 2026-10-11T18:16:45Z |
-| 2026-10-11 | Who starts voice | Claude proposes voice at gates and Rafal confirms; `/voice` works on demand (question 3, answer A) | to re-confirm (open question below) | transcript `0e06a344`, 2026-10-11T18:19:12Z |
+| 2026-10-11 | Who starts voice | Claude proposes voice at gates and Rafal confirms; `/voice` works on demand (question 3, answer A) | narrowed on 2026-10-17 (row "Voice proposals at gates") | transcript `0e06a344`, 2026-10-11T18:19:12Z |
 | 2026-10-11 | When a voice decision binds | Binding after Claude reads it back aloud and Rafal confirms; gates for irreversible or outward actions (tickets, push, GCP, new dependency) always stay in text (question 4, answer C) | confirmed (finding 4 on 2026-10-14) | transcript `0e06a344`, 2026-10-11T18:28:10Z |
 | 2026-10-11 | Codex as the voice | Evening of 2026-10-11, carried by Codex: „budowę własnego modułu głosowego odkładamy”, projects discussed by voice in Codex | superseded on 2026-10-12 13:03 | transcript `7e84737d`, 2026-10-12T10:47:01Z |
 | 2026-10-12 | Own voice module | Rafal invalidated "Codex as the voice"; back to an own module, decisions of 2026-10-11 stay | confirmed | transcript `7e84737d`, 2026-10-12T13:03:56Z and 13:06:06Z |
@@ -45,14 +45,11 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
 | 2026-10-14 | Equivalence with the written dialog | The voice interlocutor uses the same start-prompt role as hub spec §6.5 step 3 and the same `--settings` file as §6.5 step 2 | confirmed | registry `058993f5`, `fd8af3d0` (finding 6) |
 | 2026-10-14 | Who writes the decisions | The fork writes `decisions.md`, `open-questions.md` and `prompt.md` itself with the same tools as the written fork; no bridge MCP tools; the bridge only watches the dialog directory and shows decisions on its page | confirmed | registry `058993f5`, `fd8af3d0` (finding 2) |
 | 2026-10-14 | Acceptance criterion | The settings file of §6.5 step 2, checked by the same write test (repository write refused, dialog-directory write accepted), must pass on the `-p` voice process | confirmed | registry `058993f5`, `fd8af3d0` |
+| 2026-10-17 | After `/voice` | Session X proceeds at once on decisions confirmed by voice; `prompt.md` is written only when the conversation ends in a work order; Rafal reads `decisions.md` as text after the fact; irreversible or outward actions still wait for his word in text (question 2 of 2026-10-14, recommended variant) | confirmed | conversation 2026-10-17, session `c0987db9` |
+| 2026-10-17 | Voice proposals at gates | Claude proposes voice in one sentence in the question section only at gates where Rafal and Claude must agree: a brainstorming question, a spec or plan review, a decision whose variants differ by a trade-off; never at gates of push, tickets, GCP or a new dependency; Rafal starts the conversation himself with `/voice` | confirmed | conversation 2026-10-17, session `c0987db9` |
 
 ## Open questions
 
-- **After `/voice` (question 2 of 2026-10-14).** Does session X show `prompt.md` with the
-  decision table and wait for Rafal's text "dalej" (A), or proceed at once on decisions confirmed
-  by voice, with `prompt.md` written only when the conversation ends in a work order (B, as
-  decision 4C of 2026-10-11)? Recommended: B. Irreversible actions stay in text in both.
-- **Claude proposing voice at gates.** The decision "Who starts voice" of 2026-10-11 (Claude proposes voice at gates, Rafal confirms) is to be asked again separately.
 - **Voice layer.** GPT-Live-1 versus alternatives (OpenAI Realtime `gpt-realtime-2.1`, Gemini
   Live, ElevenLabs Agents with Claude as the LLM were compared on 2026-10-11). The API facts must be
   re-verified before asking.
@@ -64,6 +61,8 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
 
 ## Changed since 2026-10-14
 
+- Brainstorming resumed on 2026-10-17 (session `c0987db9`); the hub's finish line is `hub-core`
+  + `hub-voice`, and `hub-core` passed Rafal's pilot.
 - Hub Plans 3 and 4 are done and accepted (Plan 4 on 2026-10-16).
 - Probe S12 (a fork writing into `~/.claude/hub/projects/<project>/dialogs/`, reading a
   hub-placed file, without `EnterWorktree`) passed for `claude --bg` forks only. The voice process

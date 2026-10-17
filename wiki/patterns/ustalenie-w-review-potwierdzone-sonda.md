@@ -45,6 +45,7 @@ jednocześnie najtańszym możliwym sprawdzeniem.
   użytkownika przyszedł dopiero po sporze, choć na jego podstawie zapadała
   decyzja o operacji na historii (trzeci dowód, trzecia sesja).
 - 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: recenzent Tasków 4+4b przeliczył hasz sprzed zmiany własnym uruchomieniem, przepuścił eksportowane `usunUwagi` przez 33 kształty wejścia i przez wszystkie 11 plików `scenariusz.md` w `kursy/`. Rozstrzygający argument nie był w diffie: wszystkie 12 prawdziwych znaczników jedynej lekcji używającej tej funkcji siedzi w kształcie, który odrzucona wersja poprawki psuła.
+- 2026-10-16, sesja 1506ab90-7988-4231-ab1a-6beb3e2c2db1: recenzenci kolejki do konta kursu pisali sondy w scratchpadzie (`probe.mjs`…`probe5.mjs`, `stress-worker.mjs`), uruchamiające prawdziwe procesy CLI na tymczasowych katalogach `dane`. Każde Important przyszło z odtworzonym przypadkiem: `fs.renameSync` → `EPERM` przy czytelniku trzymającym `state.json` (240 błędów w pętli), `station-leave` cofnięty po jednym odpytaniu, kaskada „L2: exit 3, L3: exit 3, L4: exit 3”. Te same sondy wróciły jako test odbioru każdej fali poprawek („A gives one exit 3 instead of 3”).
 
 ## Rozwiązanie
 Ustalenie o zasobie zewnętrznym (bucket, kolejka, endpoint, uprawnienie) przed

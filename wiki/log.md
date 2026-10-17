@@ -515,3 +515,14 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Gładko, bez osobnych wzorców: board-tracker — cztery przypięcia z hooka i kumulatywne ślady w czterech issue; konflikt brainstorming 7.0.0 (jedno pytanie otwarte) z „Recommendation-First” rozstrzygnięty na korzyść `CLAUDE.md`.
 - Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): 1 dowód — patrz log repo.
 - Sygnał globalny: brak `nawrót`. pytania-niezalezne-zadawane-po-jednym-na-ture (porażka, dowody z 4 sesji) → `/evolve-skill superpowers:brainstorming`. dlugi-lancuch-narzedzi-bez-linii-statusu (4 sesje) i cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (18) są `ogólny` — kandydaci do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Kandydaci według poprzednich wpisów bez zmian, w tym kod-referencyjny-planu-nigdy-nie-uruchomiony → `/evolve-skill superpowers:writing-plans`.
+
+## 2026-10-17 — sesja 1506ab90-7988-4231-ab1a-6beb3e2c2db1
+- Założono: spec-protokolu-wieloprocesowego-bez-tabeli-awarii (dowód: kolejka do konta kursu - spec opisał tylko martwego posiadacza, po 5 zadaniach 4 fale poprawek na nienazwane stany)
+- Założono: paczka-review-wciaga-cudze-commity-galezi-dnia (dowód: paczka zadania 1 z commitami sesji lekcji 1.2, przebudowana od rodzica commita zadania)
+- Dopisano dowód: review-zakresowe-nie-widza-defektu-poza-swoim-diffem (siódmy) — 3 Important w protokole między zadaniami, tylko review całości
+- Dopisano dowód: ustalenie-w-review-potwierdzone-sonda (piąty) — sondy z prawdziwymi procesami CLI odtwarzały każde Important i wracały jako test odbioru fali
+- Dopisano dowód: branch-finish-zaklada-oddzielna-galaz-feature (trzeci) — gałąź dnia współdzielona przez sesje, integracja PR-em dnia #705 na słowo Rafała
+- Dopisano dowód: ruling-z-nieweryfikowana-przeslanka (czwarty) — ruling I2 zakładał, że lekcja, która zgłosiła, pozostaje żywa; kaskada bramek
+- Gładko, bez osobnych wzorców: decyzje Rafała przekazane przez hub (wariant A dwa razy) wykonane bez dopytywania; pytanie „Popraw teraz” bez kontekstu rozstrzygnięte wariantami zamiast domysłu.
+- Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): 1 nowy — patrz log repo.
+- Sygnał: ruling-z-nieweryfikowana-przeslanka (porażka, dowody z 4 sesji) → `/evolve-skill superpowers:subagent-driven-development`; branch-finish-zaklada-oddzielna-galaz-feature (porażka, 3 sesje) → `/evolve-skill superpowers:finishing-a-development-branch`.

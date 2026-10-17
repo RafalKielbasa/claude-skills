@@ -39,6 +39,7 @@ subagent-driven-development z własnym przeglądem zadaniowym i finalnym).
   sam (`5d6c035`). Brak commitów wywrócił też inny krok skilla nadrzędnego: instrukcję
   „skasuj workspace planu, bo historia gita jest teraz zapisem" — historii gita w chwili
   decyzji nie było, więc workspace zachowałem.
+- 2026-10-16/17, sesja 1506ab90-7988-4231-ab1a-6beb3e2c2db1: plan wykonany na współdzielonej gałęzi dnia `rafal-kielbasa/16-10-2026` (`CLAUDE.local.md`: wszystkie sesje dnia commitują na jedną gałąź, do `main` wieczorem przez PR). Menu skilla (merge lokalnie / push + PR / zostaw) nie pasowało: merge lokalny to zakaz commitów na `main`, a PR obejmuje commity wszystkich sesji dnia, nie plan. Integracja poszła trybem repo na słowo Rafała „Zakomituj … wypchnij i później scal”: push, PR #705 „Dzień 16-10-2026” (49 commitów, także cudze), `gh pr merge --merge`, `main` + `pull --ff-only`, nowa gałąź dnia.
 
 ## Rozwiązanie
 Gdy plan implementacyjny z góry zakłada pracę wprost na gałęzi głównej (świadoma decyzja

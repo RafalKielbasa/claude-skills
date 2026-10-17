@@ -352,3 +352,9 @@ Format wpisu:
 - Bez wzorca: błąd budowy kierunku 8 w makiecie (reguły kierunku 7 z list selektorów nie obejmowały 8, `253b2de1`, poprawione w `fbfc5b39`) — obserwacja jednorazowa, zależna od budowy tej makiety.
 - Wzorce globalne dotknięte w tej sesji: 3 nowe (kod-decyzji-numerowany-od-nowa-koliduje-w-sesji, klucz-projektu-szerszy-niz-slug-rodziny, agent-w-tle-wznowiony-przez-sendmessage) i dowody do 4 — patrz log globalny.
 - Sygnał repo: bez zmian według poprzedniego wpisu (skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo → `/evolve-skill spotkanie` i rodzina `kurs-*`; agent-czyta-plik-redagowany-przez-agenta-rownoleglego → `/evolve-skill kurs-redakcja`).
+
+## 2026-10-17 — sesja 1506ab90-7988-4231-ab1a-6beb3e2c2db1
+- Założono: pelny-suite-course-pipeline-pada-na-timeoutach-pod-obciazeniem (dowód: 11 timeoutów 5 s w pełnym zestawie po zmianie tylko `tts.js`, pliki osobno zielone)
+- Wzorce globalne dotknięte w tej sesji: 2 nowe (spec-protokolu-wieloprocesowego-bez-tabeli-awarii, paczka-review-wciaga-cudze-commity-galezi-dnia) i dowody do 4 (review-zakresowe-nie-widza-defektu-poza-swoim-diffem, ustalenie-w-review-potwierdzone-sonda, branch-finish-zaklada-oddzielna-galaz-feature, ruling-z-nieweryfikowana-przeslanka).
+- Skille repo użyte gładko: kurs-nagrywanie i kurs-video jako źródło procedury do specu; board-tracker (#697, kumulatywny ślad); project-index (indeks `nagrywanie`).
+- Sygnał repo: brak nowych kandydatów z tej sesji.
