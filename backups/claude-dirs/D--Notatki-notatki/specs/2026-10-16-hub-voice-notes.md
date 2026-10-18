@@ -35,7 +35,7 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
 | 2026-10-11 | When a voice decision binds | Binding after Claude reads it back aloud and Rafal confirms; gates for irreversible or outward actions (tickets, push, GCP, new dependency) always stay in text (question 4, answer C) | confirmed (finding 4 on 2026-10-14) | transcript `0e06a344`, 2026-10-11T18:28:10Z |
 | 2026-10-11 | Codex as the voice | Evening of 2026-10-11, carried by Codex: „budowę własnego modułu głosowego odkładamy”, projects discussed by voice in Codex | superseded on 2026-10-12 13:03 | transcript `7e84737d`, 2026-10-12T10:47:01Z |
 | 2026-10-12 | Own voice module | Rafal invalidated "Codex as the voice"; back to an own module, decisions of 2026-10-11 stay | confirmed | transcript `7e84737d`, 2026-10-12T13:03:56Z and 13:06:06Z |
-| 2026-10-12 | Voice model | GPT-Live-1 in `"delegation": {"type": "client"}` mode: the voice model hands thinking to the app (`session.delegation.created`), answers come back in chunks of at most 500 tokens per `delegation_id` (question 5, answer A) | to re-confirm: API facts read on 2026-10-12, not re-verified since | transcript `7e84737d`, 2026-10-12T13:37:17Z |
+| 2026-10-12 | Voice model | GPT-Live-1 in `"delegation": {"type": "client"}` mode: the voice model hands thinking to the app (`session.delegation.created`), answers come back in chunks of at most 500 tokens per `delegation_id` (question 5, answer A) | re-verified 2026-10-17: GA since 2026-09-10, delegation facts hold except the 500-token limit, which applies per append, not per `delegation_id`; the choice of voice layer is open again (section "Voice layer research") | transcript `7e84737d`, 2026-10-12T13:37:17Z |
 | 2026-10-12 | Who answers behind the voice | A fork of the current session: one `claude -p --resume <id> --fork-session` process in `stream-json` mode (question 6, answer A) | confirmed (finding 6 on 2026-10-14) | transcript `7e84737d`, 2026-10-12T13:42:53Z |
 | 2026-10-12 | Where Rafal talks | At the computer, in a browser tab served by a local Node bridge on `localhost`; the OpenAI key stays on the bridge; a phone later, without rebuilding (question 7, answer A) | to re-confirm: conflicts with hub spec §8.2 ("No component listens on a network interface") | transcript `7e84737d`, 2026-10-12T13:44:36Z |
 | 2026-10-12 | Fork may only read | The fork reads repository and vault and writes only the conversation files (question 8, answer A) | confirmed (finding 8 on 2026-10-14) | transcript `7e84737d`, 2026-10-12T13:48:00Z |
@@ -47,17 +47,17 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
 | 2026-10-14 | Acceptance criterion | The settings file of §6.5 step 2, checked by the same write test (repository write refused, dialog-directory write accepted), must pass on the `-p` voice process | confirmed | registry `058993f5`, `fd8af3d0` |
 | 2026-10-17 | After `/voice` | Session X proceeds at once on decisions confirmed by voice; `prompt.md` is written only when the conversation ends in a work order; Rafal reads `decisions.md` as text after the fact; irreversible or outward actions still wait for his word in text (question 2 of 2026-10-14, recommended variant) | confirmed | conversation 2026-10-17, session `c0987db9` |
 | 2026-10-17 | Voice proposals at gates | Claude proposes voice in one sentence in the question section only at gates where Rafal and Claude must agree: a brainstorming question, a spec or plan review, a decision whose variants differ by a trade-off; never at gates of push, tickets, GCP or a new dependency; Rafal starts the conversation himself with `/voice` | confirmed | conversation 2026-10-17, session `c0987db9` |
+| 2026-10-17 | Voice layer for the probe | GPT-Live-1 in `delegation: client` mode; the probe starts with a few minutes of Polish conversation mixed with English terms, without the fork; if Polish fails, the fallback is ElevenLabs Agents; consent to spend `OPENAI_API_KEY` is asked separately before the probe | confirmed | conversation 2026-10-17, session `c0987db9` |
+| 2026-10-17 | Voice layer for the probe | ElevenLabs Agents first (Rafal chose it over the recommended GPT-Live-1); the fork is reached through a client tool in the browser that calls the `localhost` bridge, so no public tunnel is needed; GPT-Live-1 stays as the fallback (assumption, not stated by Rafal) | confirmed | conversation 2026-10-17, session `c0987db9` |
+| 2026-10-18 | Network exception | An exception to hub spec §8.2 for the voice bridge only: it listens on `127.0.0.1` only, lives only for the duration of a conversation, and rejects requests without the conversation's random token (carried in the page URL) or with a foreign `Host` header; a phone is a separate decision for later; the hub panel gets no exception from this | confirmed | conversation 2026-10-18, session `c0987db9` |
+| 2026-10-18 | Command name | `/talk` starts a voice conversation about the current session; it replaces the name `/voice` used in the rows above, which collides with Claude Code's built-in dictation | confirmed | conversation 2026-10-18, session `c0987db9` |
+| 2026-10-18 | Agent's LLM | Claude Haiku 4.5 by default; the probe repeats the same script on Claude Sonnet 5.5 (a configuration switch in ElevenLabs, no code) and the choice follows turn latency and the fidelity of decision read-back | confirmed | conversation 2026-10-18, session `c0987db9` |
+| 2026-10-18 | ElevenLabs account | Free plan: Rafal creates the account and sets `ELEVENLABS_API_KEY` in his user environment; the probe fits in the plan's 15 free minutes; anything beyond them is a separate question to Rafal | confirmed | conversation 2026-10-18, session `c0987db9` |
 
 ## Open questions
 
-- **Voice layer.** GPT-Live-1 versus alternatives (OpenAI Realtime `gpt-realtime-2.1`, Gemini
-  Live, ElevenLabs Agents with Claude as the LLM were compared on 2026-10-11). The API facts must be
-  re-verified before asking.
-- **Network exception.** A bridge on `localhost` needs an exception to hub spec §8.2, limited to
-  127.0.0.1; the hub's increment 1a (panel) needs the same.
-- **Paid use of `OPENAI_API_KEY`.** Rafal's consent to use the existing key, which is set in the
-  environment (checked 2026-10-14; `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` and `ELEVENLABS_API_KEY`
-  are not).
+None left from the brainstorming of 2026-10-14; the next step is a playback of the whole flow and
+the spec.
 
 ## Changed since 2026-10-14
 
@@ -71,6 +71,35 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
 - The git snapshot decision (Plan 3 addition P4): the hub CLI writes `git status`, `git log` and
   `git diff HEAD` into `<dialog dir>/context/`, because the fork has no shell. A voice fork can
   read the same snapshot.
+
+## Voice layer research (2026-10-17)
+
+Three research subagents of session `c0987db9` read the vendors' docs through WebFetch, which
+returns model-written summaries; quotes may be paraphrases. "Unverified" means no source found.
+
+| Criterion | GPT-Live-1 (OpenAI) | `gpt-realtime-2.1` (OpenAI) | `gemini-3.8-live` (Google) | ElevenLabs Agents |
+|---|---|---|---|---|
+| Status | GA since 2026-09-10 | released 2026-07-06 | Stable (Gemini API), GA on Vertex since 2026-09-24 | production |
+| Handing a question to the fork | built in: `delegation: {type: client}`, `session.delegation.created` (no utterance text; the app rebuilds it from `session.input_transcript.delta`); answer via `session.commentary.append` (spoken, paraphrased) and `session.thinking.append` (silent), 500 tokens per append | function call; the session may continue while a call is pending; the model sometimes hallucinates a missing function result | function call, `NON_BLOCKING` by default, scheduling SILENT / WHEN_IDLE / INTERRUPT; a `FunctionResponse` cannot be streamed | client tool in the browser (can call the `localhost` bridge, no tunnel), `response_timeout_secs` 1–120 or -1, `pre_tool_speech`, `execution_mode: async`; a custom LLM endpoint would need a public tunnel |
+| While waiting | keeps talking; preambles may run ahead of the backend | preambles by default | keeps talking; the client may send text so the model reports progress | soft-timeout filler (0.5–8 s), tool-call sounds |
+| Interruption during the wait | allowed; does not cancel backend work | server VAD cancels the response | cancels pending calls (`toolCallCancellation`); for `NON_BLOCKING` unverified | allowed by default |
+| Polish | unverified; no language list; 21 voices, none Polish; "may have a non-native accent" (search snippet) | unverified; Polish is in the separate TTS endpoint's list | on the language list, 30 voices; a forum report (2026-08-07) of an English accent in Polish for 3.1, none for 3.8 | Scribe STT lists Polish as "Excellent (≤5% WER)"; several TTS models support Polish; the agents' ASR is not named |
+| Latency | 0.798 s turn-taking (OpenAI) | 1.41 s turn-taking (OpenAI) | no figure | no end-to-end figure |
+| Price | $0.05/min billed per second, silence and backend wait included | ≈ $0.019/min in + $0.077/min out, plus re-billed context | ≈ $0.005/min in + $0.018/min out | $0.08/min beyond plan minutes, plus the agent's LLM |
+| Key on the bridge | yes: the bridge creates the session from the browser's SDP offer | yes, or ephemeral keys | ephemeral tokens (preview) | signed URL or conversation token |
+| Key in the environment | `OPENAI_API_KEY` set | `OPENAI_API_KEY` set | `GEMINI_API_KEY` not set | `ELEVENLABS_API_KEY` not set |
+| Session limit | unverified | 60 min | 15 min audio without context compression; connection ~10 min with resumption | signed URL starts within 15 min, session may run longer |
+
+Other findings: Anthropic offers no developer realtime voice API (checked against the API
+overview and release notes up to 2026-10-15). LiveKit Agents and Pipecat allow a custom "LLM"
+step with filler speech and async tools at the cost of running an own agent worker; the Deepgram
+Voice Agent API takes a BYO LLM endpoint, likely public.
+
+Main sources: developers.openai.com `guides/live-delegation`, `guides/voice-webrtc`,
+`models/gpt-live-1`, `api/docs/changelog`; ai.google.dev `gemini-api/docs/live-guide`,
+`live-tools`, `live-session`, `ephemeral-tokens`, `pricing`; elevenlabs.io
+`docs/eleven-agents/customization/tools/client-tools`, `api-reference/tools/create`,
+`overview/capabilities/speech-to-text`, `pricing/agents`.
 
 ## Risks a probe must settle
 
