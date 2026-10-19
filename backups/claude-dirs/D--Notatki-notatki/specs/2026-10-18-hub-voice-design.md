@@ -177,7 +177,7 @@ A phone would need a different exception; that is a separate decision for later.
 
 ## 7. ElevenLabs agent
 
-- **Voice side's LLM:** Claude Haiku 4.5 by default; the probe compares Claude Sonnet 5.5 on the
+- **Voice side's LLM:** Claude Haiku 5.5 by default (Haiku 4.5 until 2026-10-19); the probe compares Claude Sonnet 5.5 on the
   same script (a configuration switch, no code) and the choice follows turn latency and the
   fidelity of read-back (§10, probe "Haiku and Sonnet").
 - **Language and voice:** Polish recognition and a Polish-capable voice (for example a Multilingual
@@ -243,8 +243,8 @@ minutes run out Claude stops and asks Rafal.
 | Fork boundary in `-p` | no | the §8 acceptance criterion on a `-p` fork with the voice `fork-settings.json` | repository write refused, dialog write accepted, denylisted read refused, no hanging prompt |
 | Round trip and latency | no (harness) | about 10 questions through the bridge to a fork of a real session | answers come as speakable Polish; median and maximum latency recorded; a second message during a running turn is serialised |
 | End and wake-up | no (harness) | end by the harness's "end" and by a lost heartbeat | the bridge exits after the fork's final turn, session X wakes, reads the closing report and proceeds |
-| Polish without the fork | about 4 min | Polish talk mixed with English terms with the agent alone (Haiku 4.5) | Rafal judges the voice natural and the transcript of his speech right on the technical terms; otherwise the fallback is GPT-Live-1 (notes, "Voice layer for the probe") |
-| Haiku and Sonnet | about 2 × 3 min | the same script of 3 decisions on Haiku 4.5 and on Sonnet 5.5, with the fork | for each model: spoken read-back compared with the text in `decisions.md`, turn latency, the wait filler, an interruption during the wait; Rafal picks the model |
+| Polish without the fork | about 4 min | Polish talk mixed with English terms with the agent alone (Haiku 5.5) | Rafal judges the voice natural and the transcript of his speech right on the technical terms; otherwise the fallback is GPT-Live-1 (notes, "Voice layer for the probe") |
+| Haiku and Sonnet | about 2 × 3 min | the same script of 3 decisions on Haiku 5.5 and on Sonnet 5.5, with the fork | for each model: spoken read-back compared with the text in `decisions.md`, turn latency, the wait filler, an interruption during the wait; Rafal picks the model |
 | End to end | about 3 min | one short `/talk` from start to session X's wake-up, closed by the button | the conversation is deleted at ElevenLabs, the closing report reaches X |
 
 ## 11. Acceptance of the implementation
@@ -300,3 +300,4 @@ session `c0987db9`), each on the recommended variant.
 | Retention at ElevenLabs | `retention_days` = 0 and deletion of each conversation by the bridge at its end; `transcript.md` is the only kept copy | §5.4, §6, §7 |
 | Browser SDK | a vendored copy of a pinned `@elevenlabs/client`, with version and hash recorded; no CDN at runtime, no build tooling | §3, §4 |
 | Minute budget | a voiceless harness for everything that does not test voice; about 13 voice minutes; Claude stops and asks when the free minutes run out | §10, §11 |
+| Haiku in the probes | `claude-haiku-5-5` replaces `claude-haiku-4-5` as the default and in the comparison with Sonnet 5.5 (found on ElevenLabs' model list while planning; decided at the plan 1 review) | §7, §10 |

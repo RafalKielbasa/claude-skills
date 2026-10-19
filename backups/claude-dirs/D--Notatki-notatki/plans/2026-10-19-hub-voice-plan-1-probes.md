@@ -92,7 +92,7 @@ Expected: one Polish sentence about the reading-list export; the transcript `~/.
 
 - [ ] **Step 5: Write the report skeleton**
 
-Sections: Preliminary findings (versions from step 1; `claude-haiku-5-5` is on ElevenLabs' `prompt.llm` list, which the research of 2026-10-17 missed); Fork boundary in `-p`; Round trip and latency; End and wake-up; Polish without the fork; Vendored client; Haiku and Sonnet; End to end; Minutes ledger; Conclusions for Plan 2. Header: `**Index:** [.claude/projects/hub.md](../projects/hub.md)` and a link to the spec.
+Sections: Preliminary findings (versions from step 1; `claude-haiku-5-5` is on ElevenLabs' `prompt.llm` list, which the research of 2026-10-17 missed; on 2026-10-19 Rafal chose `claude-haiku-5-5` instead of `claude-haiku-4-5` for the probes); Fork boundary in `-p`; Round trip and latency; End and wake-up; Polish without the fork; Vendored client; Haiku and Sonnet; End to end; Minutes ledger; Conclusions for Plan 2. Header: `**Index:** [.claude/projects/hub.md](../projects/hub.md)` and a link to the spec.
 
 - [ ] **Step 6: Commit and push the report skeleton** (vault rule; only the report path)
 
@@ -162,7 +162,7 @@ Passes when: the process ends before the timeout with no prompt; `probe-repo-wri
 
 - [ ] **Step 1: Write the failing tests**
 
-`fake-claude.mjs` reads `stream-json` lines from stdin. On the first user line it prints `{"type":"system","subtype":"init","session_id":"fork-1"}`. For every user line it waits `FAKE_DELAY_MS` (default 0) and prints an `assistant` line and `{"type":"result","subtype":"success","result":"echo: <the line's text>"}`. When stdin ends it exits 0.
+`fake-claude.mjs` reads `stream-json` lines from stdin and handles them one at a time. On the first user line it prints `{"type":"system","subtype":"init","session_id":"fork-1"}`. For every user line it waits a delay and prints an `assistant` line and `{"type":"result","subtype":"success","result":"echo: <the line's text>"}`. The delay is `FAKE_SLOW_MS` when the text contains `slow`, otherwise `FAKE_DELAY_MS` (both default 0). When stdin ends it finishes the pending turns and exits 0.
 
 ```js
 // stream.test.mjs
@@ -188,6 +188,16 @@ test('two asks sent at once are answered in order', async () => {
   const [a, b] = await Promise.all([f.ask('pierwsze'), f.ask('drugie zażółć')]);
   assert.equal(a.text, 'echo: pierwsze');
   assert.equal(b.text, 'echo: drugie zażółć');
+  await f.close();
+});
+test('a timed-out ask keeps the queue, and the next ask gets its own answer, not the late one', async () => {
+  const f = startFork({ ...base, startPrompt: 'start', env: { FAKE_SLOW_MS: '300' } });
+  await f.ready;
+  const t0 = Date.now();
+  const [a, b] = await Promise.all([f.ask('slow pierwsze', { timeoutMs: 100 }), f.ask('drugie')]);
+  assert.equal(a.timedOut, true); assert.equal(a.text, '');
+  assert.equal(b.timedOut, false); assert.equal(b.text, 'echo: drugie');
+  assert.ok(Date.now() - t0 >= 300);
   await f.close();
 });
 // speakable.test.mjs
@@ -292,14 +302,21 @@ test('the closing report carries every dialog file or says it was not written', 
 
 - [ ] **Step 3: Implement `fake-bridge.mjs`**
 
-CLI: `node tools/fake-bridge.mjs --session <id> --cwd <dir> --dialog <dir> --seconds 60`. It runs `prepareDialog` and starts the fork with `voiceStartPrompt`, then asks `Agent głosowy przekazuje: Co zrobiła sesja źródłowa tuż przed uruchomieniem ciebie? Odpowiedz jednym zdaniem.`. It saves the answer to `VOICE/data/wake-fork-answer.txt` and writes `decisions.md` with `- Format eksportu: CSV (decyzja sondy).`. After `--seconds` (standing in for a lost heartbeat) it closes the fork, prints `closingReport` with `deletion: no conversation (probe)` and exits 0.
+CLI: `node tools/fake-bridge.mjs --session <id> --cwd <dir> --dialog <dir> --seconds 60`. It runs `prepareDialog` and starts the fork with `voiceStartPrompt`. Then it sends these messages through `ask`, each in the bridge's format `Agent głosowy przekazuje: … / Rafał (transkrypcja): …`:
+1. `Co zrobiła sesja źródłowa tuż przed uruchomieniem ciebie? Odpowiedz jednym zdaniem.` The answer goes to `VOICE/data/wake-fork-answer.txt`.
+2. `Zdecydujmy pierwszy wybór z PLAN.md: CSV.`
+3. `Tak.`
+4. `Zlecenie dla sesji: dopisz na końcu PLAN.md linię „Wybrany format: CSV.". Potwierdź to zlecenie.`
+5. `Tak.`
+
+After `--seconds` (standing in for a lost heartbeat) it runs the real end path: the end message starting with `END_PREFIX` (as Task 6 words it), `close()`, `readDialogFiles`, `closingReport` with `deletion: no conversation (probe)`. It prints the report and exits 0.
 
 - [ ] **Step 4: Write the sandbox skill `sid-probe`**
 
 `SKILL.md` frontmatter: `name: sid-probe`, a one-line description. Body, in English:
 1. With the Bash tool and `run_in_background: true`, run `node C:/Users/rafal/hub-probes/voice/tools/fake-bridge.mjs --session ${CLAUDE_SESSION_ID} --cwd C:/Users/rafal/hub-probes/repo --dialog C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-19-voice-wake --seconds 60`.
 2. End the turn with one Polish sentence saying the probe bridge runs.
-3. When the background task completes, read its output, show Rafal the decisions from the report as a short Polish table, and end with `sonda wybudzenia: OK`.
+3. When the background task completes, read the closing report from its output and show Rafal the decisions as a short Polish table. Then proceed as `/talk` will (spec §5.5): carry out the work order of the report's `prompt.md` section (in the sandbox it only edits `PLAN.md`). Do not commit, and stop at any outward action. End with `sonda wybudzenia: OK`.
 
 - [ ] **Step 5: Run the probe with Rafal**
 
@@ -307,9 +324,10 @@ Rafal opens a new Claude Code session in VS Code on `C:/Users/rafal/hub-probes/r
 - (a) the command line the session ran: a UUID, or the literal `${CLAUDE_SESSION_ID}`;
 - (b) that UUID compared with the newest transcript name in `~/.claude/projects/C--Users-rafal-hub-probes-repo/`;
 - (c) `wake-fork-answer.txt`: does the fork know the `/sid-probe` launch;
-- (d) whether the session woke by itself about 60 s later and showed the table.
+- (d) whether the session woke by itself about 60 s later and showed the table;
+- (e) whether the report's `prompt.md` section holds the confirmed order, and whether `git -C C:/Users/rafal/hub-probes/repo diff` afterwards shows exactly the line „Wybrany format: CSV." added by session X and nothing from the fork.
 
-Passes when (a) is a UUID equal to (b), (c) names the launch, and (d) happened. If (a) is literal, try the fallback: the newest `~/.claude/hub/registry/*.events.jsonl` whose events carry `cwd` = the sandbox repository and a `UserPromptSubmit` with `sid-probe`. Record whether it identifies the session uniquely. If no method works, stop and ask Rafal.
+Passes when (a) is a UUID equal to (b), (c) names the launch, and (d) and (e) happened. If (a) is literal, try the fallback: the newest `~/.claude/hub/registry/*.events.jsonl` whose events carry `cwd` = the sandbox repository and a `UserPromptSubmit` with `sid-probe`. Record whether it identifies the session uniquely. If no method works, stop and ask Rafal.
 
 - [ ] **Step 6: Record verbatim in the report** and commit and push the report.
 
@@ -339,17 +357,17 @@ Passes when (a) is a UUID equal to (b), (c) names the launch, and (d) happened. 
 
 - [ ] **Step 1: Check the request bodies against the current API reference**
 
-Fetch `https://elevenlabs.io/docs/eleven-agents/api-reference/agents/create.md` and `…/api-reference/tools/create.md`. Confirm the field names used below, including the client tool's wrapper object (for example `tool_config`). Record any difference in the report and follow the reference.
+Fetch `https://elevenlabs.io/docs/eleven-agents/api-reference/agents/create.md` and `https://elevenlabs.io/docs/api-reference/tools/create.md`. Confirm the field names used below, including the client tool's wrapper object (for example `tool_config`). Record any difference in the report and follow the reference.
 
 - [ ] **Step 2: Write the failing tests**
 
 ```js
-test('the agent speaks Polish on Haiku 4.5 with no retention', () => {
-  const c = agentConfig({ llm: 'claude-haiku-4-5' });
+test('the agent speaks Polish on Haiku 5.5 with no retention', () => {
+  const c = agentConfig({ llm: 'claude-haiku-5-5' });
   assert.equal(c.name, 'hub-voice-probe');
   assert.equal(c.conversation_config.agent.language, 'pl');
   assert.equal(c.conversation_config.agent.first_message, 'Cześć, słucham.');
-  assert.equal(c.conversation_config.agent.prompt.llm, 'claude-haiku-4-5');
+  assert.equal(c.conversation_config.agent.prompt.llm, 'claude-haiku-5-5');
   assert.deepEqual(c.conversation_config.agent.prompt.tool_ids, []);
   assert.equal(c.conversation_config.tts.model_id, 'eleven_v4_turbo');
   assert.equal(c.conversation_config.asr.provider, 'scribe_realtime');
@@ -405,8 +423,8 @@ The `ask_claude` description says it asks Claude, who knows the project, and may
 
 - [ ] **Step 5: Create the agent and check it**
 
-Run: `node tools/agent-setup.mjs create --llm claude-haiku-4-5`
-Then `getAgent` must show `language` `pl`, `retention_days` 0 and `llm` `claude-haiku-4-5`.
+Run: `node tools/agent-setup.mjs create --llm claude-haiku-5-5`
+Then `getAgent` must show `language` `pl`, `retention_days` 0 and `llm` `claude-haiku-5-5`.
 
 - [ ] **Step 6: Run the probe with Rafal (about 4 minutes)**
 
@@ -427,7 +445,7 @@ Passes when Rafal judges the voice natural and the transcript right on the techn
 - Consumes: `startFork`, `prepareDialog`, `voiceStartPrompt`, `END_PREFIX`, `DECISION_PREFIX` (Task 3); `readDialogFiles`, `closingReport` (Task 4); `createElevenClient`, `appendMinutes` (Task 5).
 - Produces:
   - `authorize({ url: string, host?: string }, { token: string, port: number }): { ok: true } | { ok: false, status: 403, reason: 'token' | 'host' }`.
-  - `startBridge({ sessionId, cwd, dialogDir, agentId, port = 0, token, command, eleven, minutesFile, asksFile, heartbeatGraceMs = 15000, openBrowser = true }): Promise<{ url: string, port: number, token: string, done: Promise<string> }>`. `done` resolves with the closing report. The CLI `node tools/bridge.mjs --session <id> --cwd <dir> --dialog <dir> --agent <id> [--probe <name>]` uses `data/minutes.jsonl` and `data/asks.jsonl`, writes `--probe` into each minutes line, prints the report and exits 0.
+  - `startBridge({ sessionId, cwd, dialogDir, agentId, port = 0, token, command, eleven, minutesFile, asksFile, heartbeatGraceMs = 15000, askTimeoutMs = 115000, transcriptWaitMs = 1500, openBrowser = true }): Promise<{ url: string, port: number, token: string, done: Promise<string> }>`. `done` resolves with the closing report. The CLI `node tools/bridge.mjs --session <id> --cwd <dir> --dialog <dir> --agent <id> [--probe <name>]` uses `data/minutes.jsonl` and `data/asks.jsonl`, writes `--probe` into each minutes line, prints the report and exits 0.
 
 - [ ] **Step 1: Vendor the browser client**
 
@@ -453,6 +471,8 @@ test('the token and a local Host are both required', () => {
 - a request without the token gets 403, and `/` with the token gets 200 and HTML;
 - `GET /api/conversation-token` returns `{ token: 'tok' }`;
 - `POST /api/ask` `{ request: 'pytanie' }` after `POST /api/transcript` `{ role: 'user', text: 'zażółć gęślą jaźń' }` returns `answer` = `echo: Agent głosowy przekazuje: pytanie\nRafał (transkrypcja): zażółć gęślą jaźń`;
+- `POST /api/ask` `{ request: 'drugie' }` sent first, with `POST /api/transcript` `{ role: 'user', text: 'później' }` 100 ms after it (`transcriptWaitMs: 500`), returns an answer ending with `Rafał (transkrypcja): później`; the asks file line for it has `transcriptLate: true`;
+- with `askTimeoutMs: 100` and `FAKE_SLOW_MS: '300'`, `POST /api/ask` `{ request: 'slow' }` returns `Claude nadal myśli. Zapytaj za chwilę jeszcze raz.`, and the next ask returns its own echo;
 - two parallel `/api/ask` calls return their own echoes;
 - `POST /api/end` `{ conversationId: 'conv_1' }` resolves `done` with a report containing `deletion: deleted`; `eleven.deleteConversation` was called with `conv_1`; `transcript.md` contains `zażółć gęślą jaźń`; the minutes file holds one 30-second line;
 - with `heartbeatGraceMs: 200`, one `/api/heartbeat` `{ conversationId: 'conv_2' }` and no further beats, `done` resolves and `conv_2` is deleted.
@@ -467,7 +487,7 @@ Routes:
 - `GET /`, `GET /talk.mjs`, `GET /vendor/elevenlabs-client.mjs`;
 - `GET /api/conversation-token`;
 - `POST /api/transcript`: lines with local time; user lines since the last ask are pending;
-- `POST /api/ask`: sends the fork `Agent głosowy przekazuje: <request>\nRafał (transkrypcja): <pending user lines joined with " / ">`; appends `{ at, ms, request }` to `asksFile`; on `timedOut` it answers `Claude nadal myśli. Zapytaj za chwilę jeszcze raz.`;
+- `POST /api/ask`: when no user line is pending, waits up to `transcriptWaitMs` for one (the SDK does not promise that the transcript callback precedes the tool call). It sends the fork `Agent głosowy przekazuje: <request>\nRafał (transkrypcja): <pending user lines joined with " / ">` and appends `{ at, ms, request, transcriptLate }` to `asksFile`. On `timedOut` (`askTimeoutMs`) it answers `Claude nadal myśli. Zapytaj za chwilę jeszcze raz.`;
 - `GET /api/decisions`: the current `decisions.md` or an empty string;
 - `POST /api/heartbeat`: stores `conversationId` when given;
 - `POST /api/end`.
@@ -529,13 +549,13 @@ Passes when: the answer names the file format choice and is speakable; both bad 
 4. „Trzeci wybór: nazwa z datą.", then a correction, „nie, bez daty", then „tak" to the corrected read-back.
 5. „Kończymy."
 
-- [ ] **Step 3: Run A on Haiku 4.5**
+- [ ] **Step 3: Run A on Haiku 5.5**
 
 Run: `node tools/bridge.mjs --session $(cat data/seed-session.txt) --cwd C:/Users/rafal/hub-probes/repo --dialog C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-19-voice-haiku --agent $(node -p "require('./data/agent.json').agentId") --probe haiku`. Rafal follows the script and ends with the button. Keep the printed report, `transcript.md`, `decisions.md` and the asks file.
 
 - [ ] **Step 4: Run B on Sonnet 5.5**
 
-`node tools/agent-setup.mjs set-llm claude-sonnet-5-5`, then the same command with `…-voice-sonnet` and `--probe sonnet`.
+Run: `node tools/agent-setup.mjs set-llm claude-sonnet-5-5`, then `node tools/bridge.mjs --session $(cat data/seed-session.txt) --cwd C:/Users/rafal/hub-probes/repo --dialog C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-19-voice-sonnet --agent $(node -p "require('./data/agent.json').agentId") --probe sonnet`. Rafal follows the same script.
 
 - [ ] **Step 5: Compare and let Rafal choose**
 
@@ -544,6 +564,7 @@ For each run, a table per decision: the read-back as spoken (transcript) against
 - whether the filler played;
 - whether the interruption broke anything;
 - whether the corrected decision 3 was written only in its corrected form;
+- how many asks had `transcriptLate: true`;
 - `deletion: deleted`;
 - the minutes total.
 
@@ -566,7 +587,7 @@ Rafal picks the model. Set it with `set-llm` if it is not Sonnet. Passes when bo
 Steps in its `SKILL.md`:
 1. Run the bridge with `run_in_background: true`: `node C:/Users/rafal/hub-probes/voice/tools/bridge.mjs --session ${CLAUDE_SESSION_ID} --cwd C:/Users/rafal/hub-probes/repo --dialog C:/Users/rafal/.claude/hub/projects/repo/dialogs/2026-10-19-voice-e2e --agent <the agentId from VOICE/data/agent.json, written into the skill> --probe e2e`. If Task 4 proved the registry fallback instead of `${CLAUDE_SESSION_ID}`, the skill's first step runs that lookup and passes its result.
 2. End the turn with „Rozmowa głosowa otwarta w przeglądarce.".
-3. When the task completes, read the report from its output and show the decisions as a short Polish table. If a `prompt.md` section is present, say in one sentence what the session would do next, and do not do it: this is a probe.
+3. When the task completes, read the report from its output, show the decisions as a short Polish table, and carry out the work order of its `prompt.md` section (in the sandbox it only edits `PLAN.md`). Do not commit, and stop at any outward action.
 
 - [ ] **Step 2: Run the probe with Rafal**
 
@@ -576,7 +597,7 @@ Passes when:
 - the report says `deletion: deleted`;
 - `node tools/conversations.mjs get <id>` returns 404;
 - `prompt.md` holds only the confirmed order and decision;
-- `git -C C:/Users/rafal/hub-probes/repo status --short` shows no change made by the fork.
+- `git -C C:/Users/rafal/hub-probes/repo diff` shows only session X's edit for the work order and nothing from the fork.
 
 - [ ] **Step 3: Record verbatim in the report** and commit and push the report.
 
