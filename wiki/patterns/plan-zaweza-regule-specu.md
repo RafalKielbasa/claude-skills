@@ -20,6 +20,12 @@ czy sekcja ma zadanie, a nie, czy zadanie niesie wszystkie warunki.
   (Task 2, Step 4) i skill — „If `notatka.md` already exists". Codex review planu względem specu
   tego nie zgłosił; final review (opus) tak, a RED g1 potwierdził: przerwany krok 6 bez
   `zadania.yaml` dawał bramkę bez zadań. Naprawione w `ea378033`.
+- 2026-10-19, sesja e81e95d7-be5a-457d-884b-77d8d63c4251 (id claude.ai niedostępny), plan 1 biblioteki komponentów Kodożerców: spec
+  §4.1 miał paletę grupowaną z aliasem `{palette.<group>.<name>}` i synchronizację źródłowego
+  `pixel.json` do mobile; plan (zadania 2, 5, 7) użył płaskiej palety `{palette.<name>}` i synchronizacji
+  wygenerowanego `pixel-icons.js`, bez poprawki specu. Tym razem złapał codex (dwie uwagi „Wysoki”:
+  sprzeczność ze specem); spec poprawiony z datą. Nowe: plan upraszcza decyzję projektową specu (kształt
+  danych), nie tylko warunek reguły.
 
 ## Rozwiązanie
 W self-review planu, dla każdej reguły specu z warunkami („gdy", „tylko", „wszystkie", „i"),

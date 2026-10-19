@@ -228,6 +228,32 @@ Rafal's decisions, 2026-10-19 (variant A of each):
 - „Dlaczego rozmowa urwała się po kroku 2”: Rafal judged it enough or stepped away; no audio
   problem.
 
+**Run B, Sonnet 5.5** (`conv_2801m5at992zff9axh057m8tb1xs`, 464 s, deleted: `deletion: deleted`),
+full script, with `end_call` and the 30 s silence limit.
+
+- **Read-back fidelity, all three decisions verbatim.** Spoken and written (`**Brzmienie
+  potwierdzone:**`) match word for word:
+  - „format eksportu listy lektur to CSV, bo plik ma być czytelny w arkuszu kalkulacyjnym, a lista jest płaska”;
+  - „przycisk eksportu listy lektur trafia na pasek narzędzi, żeby był widoczny bez otwierania menu, z zastrzeżeniem, że przy zatłoczonym pasku można go później przenieść”;
+  - „domyślna nazwa pliku eksportu nie zawiera daty, czyli jest stała, na przykład lista lektur, a użytkownik w razie potrzeby zmienia ją sam w oknie zapisu”.
+- **Correction.** Rafal said „nazwa z datą”, then „A nie, jednak nie, bez daty.” before any
+  read-back; only the corrected wording was read back and written. The file records the course
+  („pierwotne wskazanie unieważnione na jego prośbę”).
+- **An ambiguous „Tak.”** right after the fork laid out two options was not forwarded as a
+  confirmation; the agent asked what Rafal confirms.
+- **Asks:** 56.1 s (first, with the fork's start), 15.1, 56.9 (the „Tak” that wrote the first
+  decision), 18.8, 14.5, 28.6 (a „Tak”), 24.3, 31.3, 40.2 (a „Tak”). A confirmation costs 28–57 s,
+  because the fork writes the file before answering.
+- **End during a pending write.** Rafal said „Kończymy.” 12 s after his last „Tak.”, while that
+  ask was still running (40.2 s). The agent ended with „ostatniego potwierdzenia nazwy bez daty
+  mogło nie dojść do zapisu”, yet `decisions.md` holds the third decision (file time 21:37:50):
+  the interruption dropped the tool result on ElevenLabs' side, as in run A, not the write.
+- **Ending.** After „Do usłyszenia” the call ended without Rafal's button (464 s total), and the
+  bridge produced the report 56 s later (the fork's end turn).
+- The interruption over the wait filler (step 2) was not exercised in run B.
+
+Minutes after run B: 20.75 (Starter plan).
+
 ## End to end
 
 Pending.

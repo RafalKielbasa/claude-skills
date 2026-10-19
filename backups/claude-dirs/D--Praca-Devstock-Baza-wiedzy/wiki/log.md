@@ -358,3 +358,8 @@ Format wpisu:
 - Wzorce globalne dotknięte w tej sesji: 2 nowe (spec-protokolu-wieloprocesowego-bez-tabeli-awarii, paczka-review-wciaga-cudze-commity-galezi-dnia) i dowody do 4 (review-zakresowe-nie-widza-defektu-poza-swoim-diffem, ustalenie-w-review-potwierdzone-sonda, branch-finish-zaklada-oddzielna-galaz-feature, ruling-z-nieweryfikowana-przeslanka).
 - Skille repo użyte gładko: kurs-nagrywanie i kurs-video jako źródło procedury do specu; board-tracker (#697, kumulatywny ślad); project-index (indeks `nagrywanie`).
 - Sygnał repo: brak nowych kandydatów z tej sesji.
+
+## 2026-10-19 — sesja e81e95d7-be5a-457d-884b-77d8d63c4251 (id claude.ai niedostępny; spec i plan 1 biblioteki komponentów Kodożerców, egzekucja SDD, setup dev clienta EAS)
+- Bez nowych wzorców repo: skille użyte w sesji są globalne (project-index, board-tracker, superpowers:brainstorming, writing-plans, subagent-driven-development, using-git-worktrees).
+- Wzorce globalne dotknięte w tej sesji: 4 nowe (bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska, setup-lokalny-oddany-uzytkownikowi-zamiast-wykonany, cli-modyfikujace-konfiguracje-dopisuje-wartosci-wyliczone, niezalezne-zadania-w-trakcie-bramki-uzytkownika) i dowody do 4 (kod-referencyjny-planu-nigdy-nie-uruchomiony, dlugi-lancuch-narzedzi-bez-linii-statusu, nazwa-modulu-w-specu-koliduje-z-istniejacym-eksportem, plan-zaweza-regule-specu).
+- Sygnał repo: brak.

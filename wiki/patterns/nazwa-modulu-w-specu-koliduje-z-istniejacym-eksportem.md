@@ -26,6 +26,12 @@ z toru B i konspekt bloku z sali), krótka nazwa jest zajęta.
   w trzech miejscach, zanim plan użył nazwy. Gdyby plan powstał bez tego
   odczytu, implementer zadania 1 nadpisałby cudzy eksport albo zostawił dwie
   funkcje o tej samej nazwie w jednym pakiecie.
+- 2026-10-18, sesja e81e95d7-be5a-457d-884b-77d8d63c4251 (id claude.ai niedostępny), spec biblioteki komponentów Kodożerców: nowe
+  komponenty `Button`, `Modal` i `ProgressBar` miały być eksportowane z `@devstock/ui`, którego indeks
+  `packages/ui/src/index.tsx` już eksportuje stare komponenty o tych nazwach. Self-review specu tego nie
+  złapał; złapał builder check (subagent z dostępem do obu repo), spec dostał osobne wejście
+  `@devstock/ui/ds` przed planem. Nowe: kolizja na poziomie publicznego indeksu pakietu, nie pliku, i
+  builder check czytający kod jako miejsce, które ją wyłapuje.
 
 ## Rozwiązanie
 W self-review specu, dla każdego nowego modułu i każdej nowej eksportowanej

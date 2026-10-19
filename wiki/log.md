@@ -526,3 +526,16 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Gładko, bez osobnych wzorców: decyzje Rafała przekazane przez hub (wariant A dwa razy) wykonane bez dopytywania; pytanie „Popraw teraz” bez kontekstu rozstrzygnięte wariantami zamiast domysłu.
 - Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): 1 nowy — patrz log repo.
 - Sygnał: ruling-z-nieweryfikowana-przeslanka (porażka, dowody z 4 sesji) → `/evolve-skill superpowers:subagent-driven-development`; branch-finish-zaklada-oddzielna-galaz-feature (porażka, 3 sesje) → `/evolve-skill superpowers:finishing-a-development-branch`.
+
+## 2026-10-19 — sesja e81e95d7-be5a-457d-884b-77d8d63c4251 (id claude.ai niedostępny; repo Baza wiedzy + code-busters-v2/mobile: spec i plan 1 biblioteki komponentów Kodożerców, egzekucja SDD zadań 1, 2, 4, setup dev clienta EAS)
+- Założono: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (dowód: bramka sond na telefonie bez dev clienta, konta bez dostępu do projektu EAS `devstock`, setup zamiast zrzutów)
+- Założono: setup-lokalny-oddany-uzytkownikowi-zamiast-wykonany (dowód: „instaluj” i „eas login” w odpowiedzi na „uruchom go sam”; logowanie trybem urządzenia zadziałało)
+- Założono: cli-modyfikujace-konfiguracje-dopisuje-wartosci-wyliczone (sukces; dowód: `eas init` dopisał zablokowane `RECORD_AUDIO`, diff przed commitem, w commicie 3 wartości)
+- Założono: niezalezne-zadania-w-trakcie-bramki-uzytkownika (sukces; dowód: zadania 2 i 4 zamknięte przy otwartej bramce zadania 1, ruling w ledgerze)
+- Dopisano dowód: kod-referencyjny-planu-nigdy-nie-uruchomiony (dwunasty) — komenda `pnpm format:write <ścieżki>` z planu sformatowała 31 plików repo mobile
+- Dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (piąty, piąta sesja) — sześć przypomnień harnessu
+- Dopisano dowód: nazwa-modulu-w-specu-koliduje-z-istniejacym-eksportem (drugi) — `Button`/`Modal`/`ProgressBar` w indeksie `@devstock/ui`, złapane builder checkiem
+- Dopisano dowód: plan-zaweza-regule-specu (drugi) — płaska paleta i wygenerowany moduł ikon w planie zamiast decyzji specu, złapane przez codex
+- Gładko, bez osobnych wzorców: project-index (stan projektu z indeksu, aktualizacja przy decyzjach D1–D11 w tych samych commitach); brainstorming z Recommendation-First i builder check (5 pytań, wszystkie rozstrzygnięte); review planu przez codex (6 uwag, tabela ocen); board-tracker (przypięcie #665, kumulatywny ślad); SDD z wznawianiem implementera przez `SendMessage` w rundzie poprawek.
+- Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): brak nowych — patrz log repo.
+- Sygnał: kod-referencyjny-planu-nigdy-nie-uruchomiony (porażka, 12 dowodów z 12 sesji) → `/evolve-skill superpowers:writing-plans`; dlugi-lancuch-narzedzi-bez-linii-statusu (porażka, 5 sesji) jest `ogólny` — kandydat do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.

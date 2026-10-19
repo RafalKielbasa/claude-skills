@@ -32,6 +32,12 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
 - 2026-10-16, sesja 7875e423-9ae8-4e55-a56b-31766c608f4e (id claude.ai niedostępny): dwa przypomnienia harnessu w jednej sesji — po zapisie indeksu projektu,
   commicie i czterech śladach board-tracker (pięć wywołań bez tekstu) i w kroku wiki po trzech
   odczytach; linia statusu za każdym razem dopiero po przypomnieniu.
+- 2026-10-17/19, sesja e81e95d7-be5a-457d-884b-77d8d63c4251 (id claude.ai niedostępny; Baza wiedzy i repo Kodożerców, spec i plan 1
+  biblioteki komponentów, egzekucja SDD): sześć przypomnień harnessu w jednej sesji, każde po 3–6 wywołaniach
+  bez tekstu: rozpoznanie repo w brainstormingu (klasy `ds-*`, fonty makiety), sprawdzenie pola okładki
+  w CMS przed pytaniami D5–D9, commit planu z aktualizacją śladu #665, odczyt raportu zadania 1 z paczką
+  review, walidacja i commit `app.json` przeniesione w tło. Linia statusu za każdym razem dopiero po
+  przypomnieniu, choć ta strona była w indeksie czytanym w poprzednich sesjach.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

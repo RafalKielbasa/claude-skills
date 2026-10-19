@@ -117,6 +117,13 @@ wierność jest tym, o co się go prosi.
   klasyfikator koloru karty liczył magentę jako kartę `b`, więc E2E nie mogło wykryć mignięcia planszy
   (znalazło to review całej gałęzi). Nowe: defekty **numeryczne/czasowe** w kodzie testu (semantyka seek,
   liczność próbek) — tych nie łapie ani lektura, ani pojedynczy zielony przebieg.
+- 2026-10-19, sesja e81e95d7-be5a-457d-884b-77d8d63c4251 (id claude.ai niedostępny), plan 1 biblioteki komponentów Kodożerców:
+  dwunasty dowód. Global Constraints i zadania 11–12 kazały w repo mobile „`pnpm format:write` only on
+  touched files (pass the paths)”. Skrypt to `prettier --write .`, więc dopisane ścieżki niczego nie
+  zawężają; implementer zadania 1 sformatował 31 niepowiązanych plików (odłożone na `stash@{0}`, plan
+  poprawiony na `npx prettier --write <pliki>`). Blok `scripts` z `package.json` czytałem przy pisaniu
+  planu, ale komendy nie uruchomiłem. Nowe: defekt w **komendzie** planu, nie w bloku kodu — wystarczyło
+  jedno `grep '"format:write"' package.json` przed zapisem kroku.
 
 ## Rozwiązanie
 
