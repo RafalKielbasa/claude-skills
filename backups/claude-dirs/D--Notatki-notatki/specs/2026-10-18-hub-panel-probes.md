@@ -30,6 +30,15 @@ app; the hub itself stays a Claude session.
   (https://code.claude.com/docs/en/agent-view). The docs say the desktop app sees only sessions
   it runs itself, and that a cross-session message never counts as consent from Rafal.
 
+## Information flow
+
+![[2026-10-18-hub-panel-flow.svg]]
+
+The figure shows the trial configuration: Rafal reads and answers the session cards in the
+desktop app; the global hooks feed the hub registry; the hub watches it, forks a dialog on
+request and sends approved prompts back with `SendMessage`. Each arrow carries the probe
+(D1–D11) that verifies it; the dashed red card is the gap the docs predict (D9).
+
 ## Probes
 
 Fill the Result column during the trial: `pass`, `fail` with one sentence, or `not tried`.

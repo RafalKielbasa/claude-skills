@@ -36,6 +36,9 @@ Komendy: `cd tools/nagrywanie && npm run nagrywanie -- <komenda> ../../kursy/<sl
    (README `tools/nagrywanie`, sekcja „Przełączanie kart”). Treść do wpisania bierz dosłownie z planu (kolumna
    "Do wpisania" i bloki pod tabelą) - nigdy własne brzmienie. Potem `sprawdz` (walidacja wobec planu) i `proba`
    (bez przeglądarki, atrapy) - oba czyste, zanim cokolwiek otworzysz w przeglądarce.
+   Krok z formularzem n8n (wyzwalacz formularza z plikiem) to działanie `submit_form { plik: materialy/<plik> }` -
+   okno formularza przyjmuje rdzeń (`okno: usluga`), plik bierze z katalogu lekcji; „Execute workflow” otwiera
+   formularz przy każdym uruchomieniu, „Execute step” na węźle dalej w przepływie - nie (README, „Okno formularza”).
 4. **Przebieg próbny (przed lektorem).** Lekcja nie potrzebuje jeszcze paczki lektora - ten krok idzie zaraz po
    zatwierdzeniu treści, zanim `/kurs-video` wygeneruje płatne audio. Lekcja, która ma już paczkę lektora (`video/lektor/spis.md`), a nie ma
    nagrania, też przechodzi przebieg przed nagraniem; przyjęta uwaga `scenariusz` oznacza wtedy nowe audio całej lekcji -

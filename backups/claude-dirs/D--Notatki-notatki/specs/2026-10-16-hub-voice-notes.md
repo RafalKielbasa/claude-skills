@@ -56,8 +56,9 @@ Success picture recorded on 2026-10-14 (registry `058993f5`, `d1198f9f`):
 
 ## Open questions
 
-None left from the brainstorming of 2026-10-14; the next step is a playback of the whole flow and
-the spec.
+None left from the brainstorming of 2026-10-14. The playback was approved on 2026-10-18 and the
+design is in [2026-10-18-hub-voice-design.md](2026-10-18-hub-voice-design.md); questions raised
+after that live in its §14.
 
 ## Changed since 2026-10-14
 
