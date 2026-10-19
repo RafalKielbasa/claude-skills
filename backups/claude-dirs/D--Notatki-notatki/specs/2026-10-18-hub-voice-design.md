@@ -63,12 +63,17 @@ session X continues on the confirmed decisions.
 - Windows 11; Node as the hub skill uses it; code, comments and configuration in English;
   everything Rafal reads or hears in Polish.
 - The command is `/talk`: Claude Code has a built-in `/voice` (dictation).
+- What Rafal says and what the fork answers leaves the machine, to ElevenLabs and to the agent's
+  LLM provider. This is accepted only within the limits of §6: projects on the allowlist, secret
+  files unreadable for the fork, no retention at ElevenLabs.
+- No new runtime dependency other than the vendored ElevenLabs browser client (§4).
 
 ## 4. Components
 
 | Component | Location | Role |
 |---|---|---|
-| Skill `talk` | `~/.claude/skills/talk/` (tracked like the skill `hub`) | `SKILL.md`: the procedure session X follows on `/talk` and after the conversation (§5) |
+| Skill `talk` | `~/.claude/skills/talk/` (tracked like the skill `hub`) | `SKILL.md`: the procedure session X follows on `/talk` and after the conversation (§5); a configuration file with the project allowlist (§6) |
+| Browser client | a vendored copy of a pinned `@elevenlabs/client` version in the skill (for example `web/vendor/`), downloaded once as an ES module, with its version and SHA-256 recorded next to it | The page's connection to the agent; never loaded from a CDN at runtime |
 | Bridge | a Node script in the skill, e.g. `bin/talk-bridge.mjs` | Serves the page on `127.0.0.1`, mints the ElevenLabs conversation token, runs the voice fork, answers the `ask_claude` tool, watches the dialog directory, writes the transcript, ends the conversation (§5, §6) |
 | Page | served by the bridge | Connects to the ElevenLabs agent with the token; shows the live transcript, the decision being read back, the recorded decisions, the fork's state ("Claude myśli…"), and an "Zakończ rozmowę" button |
 | ElevenLabs agent | an agent in Rafal's ElevenLabs account; its configuration kept as a file in the skill | The voice: Polish speech recognition and voice, conversation glue, the client tool `ask_claude` (§7) |
@@ -82,9 +87,11 @@ session X continues on the confirmed decisions.
 1. Rafal types `/talk` in session X (optionally with a subject). At gates where Rafal and Claude
    must agree, Claude may propose this in one sentence of the question section (§9).
 2. The skill checks `ELEVENLABS_API_KEY`; without it, it tells Rafal in Polish what to set and stops.
-3. It prepares the dialog directory exactly as the written dialog does: the hub's project matching
-   (hub spec §4.1), the git snapshot into `context/` and `fork-settings.json`.
-4. It starts the bridge as a background task of session X, so that X is woken when the bridge exits.
+3. It matches session X's project as the hub does (hub spec §4.1). A project outside the allowlist
+   (§6) stops the start with one Polish sentence naming the project and the configuration file.
+4. It prepares the dialog directory as the written dialog does: the git snapshot into `context/`
+   and the voice fork's `fork-settings.json` (§8).
+5. It starts the bridge as a background task of session X, so that X is woken when the bridge exits.
    The bridge picks a port on `127.0.0.1`, generates the conversation token, starts the voice fork
    (§8) and opens the page URL, carrying the token, in the default browser.
 
@@ -123,9 +130,12 @@ session X continues on the confirmed decisions.
    uzasadnieniem**, **Ograniczenia**, **Oczekiwany rezultat**), built only from the confirmed
    decisions and the confirmed order; otherwise write none, also when the conversation ended by a
    closed tab. It waits for that turn, closes the fork's input and lets the process exit.
-3. The bridge writes `transcript.md` (who said what, local times), then prints a closing report on
-   standard output: the dialog directory and the full contents of `decisions.md`,
-   `open-questions.md` and `prompt.md` (or that it was not written). Then it exits.
+3. The bridge writes `transcript.md` (who said what, local times), then deletes the conversation at
+   ElevenLabs (`DELETE /v1/convai/conversations/{conversation_id}`); a failed deletion is reported,
+   not retried silently.
+4. It prints a closing report on standard output: the dialog directory, the full contents of
+   `decisions.md`, `open-questions.md` and `prompt.md` (or that it was not written), and the result
+   of the deletion. Then it exits.
 
 ### 5.5 Session X after the conversation
 
@@ -136,10 +146,25 @@ at once: on `prompt.md` if there is one, otherwise on the decisions where it was
 Push, tickets, GCP, a new dependency and anything else outward still wait for Rafal's word in text,
 under the usual rules of the session's repository.
 
-## 6. Network exception (amends hub spec §8.2, row Network)
+## 6. Network and data exception (amends hub spec §8.2, row Network)
 
-The voice bridge is the only component allowed to listen on a network interface, under these
-rules:
+Hub spec §8.2 keeps dialogs on the machine and lets no component listen on a network interface.
+A voice conversation breaks both, so it is limited as follows.
+
+**What may leave the machine.** What Rafal says and what the fork answers goes to ElevenLabs and to
+the agent's LLM provider, and only:
+
+- in projects on the allowlist in the skill's configuration file, by hub project key (hub spec
+  §4.2). Initial list: `notatki`, and the key the hub matches for sessions in the hub skill's
+  repository (`~/.claude`), checked when the skill is built. Rafal adds other projects himself;
+  company repositories are not on the list;
+- with secret files unreadable for the fork (§8);
+- with no retention at ElevenLabs: the agent's `retention_days` is 0 and the bridge deletes each
+  conversation at its end (§5.4). ElevenLabs' Zero Retention Mode is for select enterprise
+  customers only. What the agent's LLM provider retains behind ElevenLabs is not verified.
+
+**Listening.** The voice bridge is the only component allowed to listen on a network interface,
+under these rules:
 
 - it binds `127.0.0.1` only;
 - it lives only for the duration of one conversation;
@@ -167,12 +192,18 @@ A phone would need a different exception; that is a separate decision for later.
   the bridge forwards those to the fork.
 - **Authentication:** the bridge obtains a conversation token (WebRTC) or signed URL (WebSocket)
   with the key; the page never sees the key.
+- **Retention:** `platform_settings.privacy.retention_days` = 0 (scheduled deletion); the bridge
+  also deletes each conversation at its end (§5.4). The local `transcript.md` is the only kept copy.
 
 ## 8. Voice fork
 
 - One `claude -p --resume <X> --fork-session --input-format stream-json --output-format
   stream-json` process per conversation, started by the bridge in session X's project directory,
   with `--settings <dialog dir>/fork-settings.json` and `--add-dir <dialog dir>`.
+- **Settings:** the written fork's rules (hub spec §6.5 step 2) plus `Read` denies for the
+  secret-file denylist of hub spec §7 (`.env*`, `*.pem`, `*.key`, `*credentials*`, `*secret*`,
+  `auth.json`, `secrets.yaml`). This narrows the decision "Equivalence with the written dialog" of
+  2026-10-14: the voice settings are a superset of the written fork's.
 - **Role:** the written dialog fork's role (hub spec §6.5 step 3; text in the hub skill's
   `forkStartPrompt`) with these voice differences:
   - it talks through a voice agent: every answer is plain spoken Polish, a few sentences at most,
@@ -187,9 +218,10 @@ A phone would need a different exception; that is a separate decision for later.
   - questions and gates open in the inherited history of X are not its gates (as in the written
     fork).
 - It sees X's history up to the tool call that started the bridge.
-- **Acceptance criterion (2026-10-14):** the settings file passes the same write test on this `-p`
-  process as on the written fork: a write into the repository refused, a write into the dialog
-  directory accepted, and no permission prompt that would hang a process nobody can answer.
+- **Acceptance criterion (2026-10-14, extended 2026-10-19):** on this `-p` process the settings
+  file passes the written fork's write test (a write into the repository refused, a write into the
+  dialog directory accepted) and a read test (a `Read` of a denylisted file such as a test `.env`
+  refused), with no permission prompt that would hang a process nobody can answer.
 
 ## 9. Voice proposals at gates
 
@@ -200,15 +232,20 @@ gate of push, tickets, GCP or a new dependency. Rafal starts the conversation hi
 
 ## 10. Probes before the implementation plan
 
-All within the Free plan's 15 minutes; the bridge or the probe script logs minutes used.
+Voice minutes are spent only where voice is the thing tested. Everything else runs on a voiceless
+harness: a text page or script that calls the bridge's `ask_claude` endpoint and the end of the
+conversation the way the ElevenLabs client would, with no ElevenLabs connection. The voice probes
+total about 13 minutes against the Free plan's 15; the bridge logs minutes used, and when the free
+minutes run out Claude stops and asks Rafal.
 
-| Probe | What | Passes when |
-|---|---|---|
-| Polish without the fork | 3–5 minutes of Polish talk mixed with English terms with the agent alone (Haiku 4.5) | Rafal judges the voice natural and the transcript of his speech right on the technical terms; otherwise the fallback is GPT-Live-1 (notes, "Voice layer for the probe") |
-| Fork write boundary in `-p` | the §8 acceptance criterion, run on a `-p` fork with `fork-settings.json`, no voice | repository write refused, dialog write accepted, no hanging prompt |
-| Round trip and latency | `ask_claude` from the page through the bridge to the fork and back, about 10 questions on a real session | the wait filler plays, an interruption during the wait breaks nothing, answers come as speakable Polish; median and maximum latency recorded |
-| Haiku and Sonnet | the same script of 3–5 decisions on Haiku 4.5 and on Sonnet 5.5 | for each model: spoken read-back compared with the text in `decisions.md`, turn latency; Rafal picks the model |
-| End and wake-up | end the conversation by button and by closing the tab | the bridge exits after the fork's final turn, session X wakes, reads the closing report and proceeds |
+| Probe | Voice | What | Passes when |
+|---|---|---|---|
+| Fork boundary in `-p` | no | the §8 acceptance criterion on a `-p` fork with the voice `fork-settings.json` | repository write refused, dialog write accepted, denylisted read refused, no hanging prompt |
+| Round trip and latency | no (harness) | about 10 questions through the bridge to a fork of a real session | answers come as speakable Polish; median and maximum latency recorded; a second message during a running turn is serialised |
+| End and wake-up | no (harness) | end by the harness's "end" and by a lost heartbeat | the bridge exits after the fork's final turn, session X wakes, reads the closing report and proceeds |
+| Polish without the fork | about 4 min | Polish talk mixed with English terms with the agent alone (Haiku 4.5) | Rafal judges the voice natural and the transcript of his speech right on the technical terms; otherwise the fallback is GPT-Live-1 (notes, "Voice layer for the probe") |
+| Haiku and Sonnet | about 2 × 3 min | the same script of 3 decisions on Haiku 4.5 and on Sonnet 5.5, with the fork | for each model: spoken read-back compared with the text in `decisions.md`, turn latency, the wait filler, an interruption during the wait; Rafal picks the model |
+| End to end | about 3 min | one short `/talk` from start to session X's wake-up, closed by the button | the conversation is deleted at ElevenLabs, the closing report reaches X |
 
 ## 11. Acceptance of the implementation
 
@@ -217,8 +254,10 @@ question, ending in a work order; checks: the decisions in `decisions.md` match 
 and confirmed; `prompt.md` carries only the confirmed work order and decisions;
 `open-questions.md` and `transcript.md` exist; the repository is
 unchanged by the fork (`git status` of X before and after differs only by X's own later work);
-the page refused a request without the token; session X proceeded on `prompt.md` and stopped at the
-first outward action.
+the page refused a request without the token; the conversation is gone from ElevenLabs; `/talk` in
+a project outside the allowlist refused to start; session X proceeded on `prompt.md` and stopped at
+the first outward action. If the free minutes are used up by then, the acceptance waits for Rafal's
+decision on paid minutes.
 
 ## 12. Calls made by Claude (approved as a whole in the playback of 2026-10-18; check them)
 
@@ -247,25 +286,17 @@ first outward action.
   transcript's format, the page's look.
 - How the agent's configuration file is applied to the ElevenLabs account (API from a setup
   command, or Rafal in the dashboard).
-- How the page loads the ElevenLabs browser SDK; see §14.
+- The voiceless harness's form (a page mode or a script).
 
-## 14. Open for Rafal before the plan
+## 14. Decisions after the builder check (2026-10-19)
 
-Raised by the builder check of 2026-10-18; asked in conversation 2026-10-18, session `c0987db9`.
+The builder check of 2026-10-18 raised these; Rafal decided them on 2026-10-19 (conversation,
+session `c0987db9`), each on the recommended variant.
 
-- **Data leaving the machine.** A voice conversation sends what Rafal says and what the fork answers
-  to ElevenLabs (speech recognition, voice, conversation history kept 2 years by default) and to
-  the agent's LLM provider, which contradicts hub spec §8.2 "dialogs … stay on this machine".
-  ElevenLabs' Zero Retention Mode is for select enterprise customers only; per-agent
-  `platform_settings.privacy.retention_days` (0 = scheduled deletion) and
-  `DELETE /v1/convai/conversations/{conversation_id}` exist. Open: which projects `/talk` may run
-  in; whether the voice fork's settings add `Read` denies for the secret-file denylist of hub spec
-  §7 (the written fork has none, `~/.claude/skills/hub/lib/dialog.mjs:30-33`); what the agent's
-  retention is and whether the bridge deletes the conversation at the end.
-- **Browser SDK.** The page needs ElevenLabs' browser client (`@elevenlabs/client`), a new
-  dependency, while the hub skill is Node without dependencies. Variants: a vendored copy of a
-  pinned version in the skill, a pinned version from a CDN, or no SDK (a signed URL over
-  WebSocket with own microphone capture, playback queue and interruption handling).
-- **Minute budget.** The builder estimates the probes of §10 at 17–27 voice minutes against the
-  Free plan's 15, before development and acceptance; whether the agent's LLM also draws on the
-  Free credits is unverified.
+| Name | Decision | Where applied |
+|---|---|---|
+| Projects allowed for `/talk` | an allowlist in the skill's configuration; outside it the skill refuses to start; initially `notatki` and the hub skill's repository; company repositories only when Rafal adds them | §5.1, §6 |
+| Secret reads by the voice fork | the written fork's settings plus `Read` denies for the hub spec §7 denylist; a read test joins the write test | §8, §10 |
+| Retention at ElevenLabs | `retention_days` = 0 and deletion of each conversation by the bridge at its end; `transcript.md` is the only kept copy | §5.4, §6, §7 |
+| Browser SDK | a vendored copy of a pinned `@elevenlabs/client`, with version and hash recorded; no CDN at runtime, no build tooling | §3, §4 |
+| Minute budget | a voiceless harness for everything that does not test voice; about 13 voice minutes; Claude stops and asks when the free minutes run out | §10, §11 |
