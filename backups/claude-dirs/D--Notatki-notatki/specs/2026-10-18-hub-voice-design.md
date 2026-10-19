@@ -199,7 +199,10 @@ A phone would need a different exception; that is a separate decision for later.
 
 - One `claude -p --resume <X> --fork-session --input-format stream-json --output-format
   stream-json` process per conversation, started by the bridge in session X's project directory,
-  with `--settings <dialog dir>/fork-settings.json` and `--add-dir <dialog dir>`.
+  with `--settings <dialog dir>/fork-settings.json` and `--add-dir <dialog dir>`. It also passes
+  `--permission-mode auto` (without it Claude Code refuses the dialog write under `~/.claude` as a
+  sensitive file in `-p`) and `--replay-user-messages` (a result counts as an answer only after the
+  replay of its message); probe report "Fork boundary in `-p`" and "Round trip and latency".
 - **Settings:** the written fork's rules (hub spec §6.5 step 2) plus `Read` denies for the
   secret-file denylist of hub spec §7 (`.env*`, `*.pem`, `*.key`, `*credentials*`, `*secret*`,
   `auth.json`, `secrets.yaml`). This narrows the decision "Equivalence with the written dialog" of
@@ -301,3 +304,4 @@ session `c0987db9`), each on the recommended variant.
 | Browser SDK | a vendored copy of a pinned `@elevenlabs/client`, with version and hash recorded; no CDN at runtime, no build tooling | §3, §4 |
 | Minute budget | a voiceless harness for everything that does not test voice; about 13 voice minutes; Claude stops and asks when the free minutes run out | §10, §11 |
 | Haiku in the probes | `claude-haiku-5-5` replaces `claude-haiku-4-5` as the default and in the comparison with Sonnet 5.5 (found on ElevenLabs' model list while planning; decided at the plan 1 review) | §7, §10 |
+| Voice fork's permission mode | `--permission-mode auto`, as the written `--bg` forks run by inheritance; the boundary still comes from the settings file (decided after the probe "Fork boundary in `-p`") | §8 |
