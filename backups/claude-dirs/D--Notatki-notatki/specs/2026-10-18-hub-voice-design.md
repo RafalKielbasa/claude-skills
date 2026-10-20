@@ -54,10 +54,11 @@ session X continues on the confirmed decisions.
 
 - The hub spec's boundaries (§8.2) hold, except the Network row, amended for the voice bridge only
   (§6 here).
-- The fork runs under the same permission file as the written dialog fork (hub spec §6.5 step 2:
-  `Edit` allowed only in the dialog directory; `Edit(./**)`, `Bash` and `EnterWorktree` denied).
-- ElevenLabs Free plan: the probes (§10) fit in its 15 included minutes; any paid use is a separate
-  question to Rafal.
+- The fork's boundary is enforced by Claude Code, not by the `auto` classifier: restricted mode,
+  five file tools, no MCP, `default` permission mode, writes allowed only in a dialog directory
+  outside `~/.claude` (§4, §8; decision of 2026-10-20 after the probes).
+- ElevenLabs Starter plan (since 2026-10-19; the probes used 26.88 minutes); paid use beyond the
+  plan's minutes is a separate question to Rafal.
 - `ELEVENLABS_API_KEY` is created and set by Rafal in his user environment; only the bridge reads
   it. Claude never creates or prints keys.
 - Windows 11; Node as the hub skill uses it; code, comments and configuration in English;
@@ -73,12 +74,12 @@ session X continues on the confirmed decisions.
 | Component | Location | Role |
 |---|---|---|
 | Skill `talk` | `~/.claude/skills/talk/` (tracked like the skill `hub`) | `SKILL.md`: the procedure session X follows on `/talk` and after the conversation (§5); a configuration file with the project allowlist (§6) |
-| Browser client | a vendored copy of a pinned `@elevenlabs/client` version in the skill (for example `web/vendor/`), downloaded once as an ES module, with its version and SHA-256 recorded next to it | The page's connection to the agent; never loaded from a CDN at runtime |
+| Browser client | a vendored copy of a pinned `@elevenlabs/client` version in the skill (for example `web/vendor/`): the package's self-contained `dist/lib.iife.js` (global `ElevenLabsClient`, classic script tag) and the `libsamplerate` worklet it would otherwise fetch from a CDN (passed as `libsampleratePath`), each with version and SHA-256 recorded next to it; probe report „Vendored client” | The page's connection to the agent; never loaded from a CDN at runtime |
 | Bridge | a Node script in the skill, e.g. `bin/talk-bridge.mjs` | Serves the page on `127.0.0.1`, mints the ElevenLabs conversation token, runs the voice fork, answers the `ask_claude` tool, watches the dialog directory, writes the transcript, ends the conversation (§5, §6) |
 | Page | served by the bridge | Connects to the ElevenLabs agent with the token; shows the live transcript, the decision being read back, the recorded decisions, the fork's state ("Claude myśli…"), and an "Zakończ rozmowę" button |
 | ElevenLabs agent | an agent in Rafal's ElevenLabs account; its configuration kept as a file in the skill | The voice: Polish speech recognition and voice, conversation glue, the client tool `ask_claude` (§7) |
-| Voice fork | `claude -p --resume <X> --fork-session` with `stream-json` input and output, one process per conversation | The interlocutor: answers, reads decisions back through the agent, writes the dialog files (§8) |
-| Dialog directory | `~/.claude/hub/projects/<project>/dialogs/<date>-<slug>/`, the hub's layout (hub spec §4.1) | `context/` (git snapshot), `fork-settings.json`, `decisions.md`, `open-questions.md`, `prompt.md`, plus `transcript.md` |
+| Voice fork | a restricted `claude -p --resume <X> --fork-session` with `stream-json` input and output, one process per conversation (§8) | The interlocutor: answers, reads decisions back through the agent, writes the dialog files (§8) |
+| Dialog directory | `C:\Users\rafal\hub-data\projects\<project>\dialogs\<date>-<slug>\`, the hub's layout (hub spec §4.1) but outside `~/.claude`, where Claude Code refuses a fork's write as a sensitive file; this amends hub spec §4.1 for voice dialogs only | `context/` (git snapshot), `fork-settings.json`, `decisions.md`, `open-questions.md`, `prompt.md`, plus `transcript.md` |
 
 ## 5. Flow
 
@@ -91,7 +92,9 @@ session X continues on the confirmed decisions.
    (§6) stops the start with one Polish sentence naming the project and the configuration file.
 4. It prepares the dialog directory as the written dialog does: the git snapshot into `context/`
    and the voice fork's `fork-settings.json` (§8).
-5. It starts the bridge as a background task of session X, so that X is woken when the bridge exits.
+5. It starts the bridge as a background task of session X, so that X is woken when the bridge exits;
+   the skill body passes session X's id as `${CLAUDE_SESSION_ID}`, which Claude Code substitutes
+   before the model reads it (probe report „End and wake-up” (a), (b)).
    The bridge picks a port on `127.0.0.1`, generates the conversation token, starts the voice fork
    (§8) and opens the page URL, carrying the token, in the default browser.
 
@@ -140,8 +143,8 @@ session X continues on the confirmed decisions.
 ### 5.5 Session X after the conversation
 
 Session X is woken by the end of the background task and reads the closing report from the task
-output (not from the files: reading `~/.claude/hub/` from a project session may raise a permission
-prompt, hub spec §6.1). It shows Rafal the recorded decisions as a short Polish table and proceeds
+output (not from the files: reading a directory outside the project from a project session may
+raise a permission prompt, hub spec §6.1). It shows Rafal the recorded decisions as a short Polish table and proceeds
 at once: on `prompt.md` if there is one, otherwise on the decisions where it was before `/talk`.
 Push, tickets, GCP, a new dependency and anything else outward still wait for Rafal's word in text,
 under the usual rules of the session's repository.
@@ -177,15 +180,20 @@ A phone would need a different exception; that is a separate decision for later.
 
 ## 7. ElevenLabs agent
 
-- **Voice side's LLM:** Claude Haiku 5.5 by default (Haiku 4.5 until 2026-10-19); the probe compares Claude Sonnet 5.5 on the
-  same script (a configuration switch, no code) and the choice follows turn latency and the
-  fidelity of read-back (§10, probe "Haiku and Sonnet").
-- **Language and voice:** Polish recognition and a Polish-capable voice (for example a Multilingual
-  or Flash v2.5 voice); English technical terms are said as English.
+- **Voice side's LLM:** Claude Haiku 5.5, Rafal's choice after the probe „Haiku and Sonnet”
+  (2026-10-19): both models read decisions back verbatim, the wait comes from the fork, Haiku costs
+  less.
+- **Language and voice:** `language: pl`, recognition `scribe_realtime`, voice model
+  `eleven_v4_turbo` with a Polish-capable voice; English technical terms are said as English.
 - **Its instructions** (the agent's system prompt, in the configuration file): it is only the
   mouth; it never answers project questions itself and never invents project facts; it forwards
   them with `ask_claude`; it reads text marked as a decision word for word; it keeps its own
-  sentences short; it never confirms anything on Rafal's behalf.
+  sentences short; it never confirms anything on Rafal's behalf; it addresses Rafal as „ty”; it
+  never says it is passing something to Claude without calling `ask_claude` (both added after the
+  Polish probe).
+- **Turns and hang-up:** `turn_timeout` 20 s; the built-in `end_call` tool and
+  `silence_end_call_timeout` 30 s, so the agent ends the call on „Kończymy” or silence instead of
+  running to the 600 s maximum (probe report „Haiku and Sonnet”, run A).
 - **Client tool `ask_claude`:** runs in the page and calls the bridge; `expects_response` on, a
   response timeout of 120 s, pre-tool speech forced, interruptions allowed. Its argument carries
   what Rafal asked; the page also hands the bridge Rafal's transcribed words for the same turn, and
@@ -197,13 +205,26 @@ A phone would need a different exception; that is a separate decision for later.
 
 ## 8. Voice fork
 
-- One `claude -p --resume <X> --fork-session --input-format stream-json --output-format
-  stream-json` process per conversation, started by the bridge in session X's project directory,
-  with `--settings <dialog dir>/fork-settings.json` and `--add-dir <dialog dir>`. It also passes
-  `--permission-mode auto` (without it Claude Code refuses the dialog write under `~/.claude` as a
-  sensitive file in `-p`) and `--replay-user-messages` (a result counts as an answer only after the
-  replay of its message); probe report "Fork boundary in `-p`" and "Round trip and latency".
-- **Settings:** the written fork's rules (hub spec §6.5 step 2) plus `Read` denies for the
+- One process per conversation, started by the bridge in session X's project directory:
+
+  ```
+  claude -p --resume <X> --fork-session --restricted --tools Read,Grep,Glob,Edit,Write --strict-mcp-config --permission-mode default --input-format stream-json --output-format stream-json --verbose --replay-user-messages --settings <dialog dir>/fork-settings.json --add-dir <dialog dir>
+  ```
+
+  - `--restricted` confines the file tools to the working directories (session X's project and
+    the dialog directory), removes the code-running tools and `WebFetch`, and ignores the user's
+    settings files, hooks included; `--settings` still applies;
+  - `--tools` and `--strict-mcp-config` leave exactly the five file tools and no MCP server; in
+    `auto` without them the fork had 54 tools, Google Calendar and Sheets writes and `SendMessage`
+    among them, decided by the classifier (probe report „Final review”, C1);
+  - `default` mode with nobody to answer refuses everything the settings do not allow;
+  - `--replay-user-messages`: a result counts as an answer only after the replay of its message;
+    a fork may print an empty result first (probe report „Round trip and latency”).
+- The bridge strips `ELEVENLABS_API_KEY` from the fork's environment (§3).
+- The fork runs on session X's model unless the bridge passes `--model`.
+- **Settings:** `permissions.allow` holds `Edit(//c/<dialog dir in POSIX form>/**)`. On Windows the
+  form `//C:/…` matches nothing; that was also the hub's form (hub index, `hub-core`).
+  `permissions.deny` holds `Edit(./**)`, `Bash`, `EnterWorktree` and `Read` denies for the
   secret-file denylist of hub spec §7 (`.env*`, `*.pem`, `*.key`, `*credentials*`, `*secret*`,
   `auth.json`, `secrets.yaml`). This narrows the decision "Equivalence with the written dialog" of
   2026-10-14: the voice settings are a superset of the written fork's.
@@ -221,10 +242,13 @@ A phone would need a different exception; that is a separate decision for later.
   - questions and gates open in the inherited history of X are not its gates (as in the written
     fork).
 - It sees X's history up to the tool call that started the bridge.
-- **Acceptance criterion (2026-10-14, extended 2026-10-19):** on this `-p` process the settings
-  file passes the written fork's write test (a write into the repository refused, a write into the
-  dialog directory accepted) and a read test (a `Read` of a denylisted file such as a test `.env`
-  refused), with no permission prompt that would hang a process nobody can answer.
+- **Acceptance criterion (2026-10-14, extended 2026-10-19 and 2026-10-20):** on this `-p`
+  process the `init` line lists only `Edit`, `Glob`, `Grep`, `Read`, `Write`; a write into the
+  repository is refused; a write into the dialog directory is accepted; a write outside both
+  working directories is refused; a `Read` of a denylisted file (a test `.env` and `Server.PEM`)
+  and a Grep for its content are refused or find nothing; no permission prompt hangs the process.
+  The probe of 2026-10-20 passed every item except the last Grep on `Server.PEM`, which was not
+  tried.
 
 ## 9. Voice proposals at gates
 
@@ -259,8 +283,10 @@ and confirmed; `prompt.md` carries only the confirmed work order and decisions;
 unchanged by the fork (`git status` of X before and after differs only by X's own later work);
 the page refused a request without the token; the conversation is gone from ElevenLabs; `/talk` in
 a project outside the allowlist refused to start; session X proceeded on `prompt.md` and stopped at
-the first outward action. If the free minutes are used up by then, the acceptance waits for Rafal's
-decision on paid minutes.
+the first outward action. The end is checked on three paths the probes did not run live: Rafal's
+„Zakończ rozmowę” button, a closed tab (lost heartbeat), and a page that never starts (first-beat
+deadline); each wakes session X with a closing report and leaves no conversation at ElevenLabs.
+Voice minutes beyond the Starter plan's go to Rafal first.
 
 ## 12. Calls made by Claude (approved as a whole in the playback of 2026-10-18; check them)
 
@@ -269,7 +295,7 @@ decision on paid minutes.
 - One fork process for the whole conversation (not one per question).
 - The bridge runs as a background task of session X, whose end wakes X.
 - The closing report on the bridge's standard output carries the files' contents, so X never reads
-  `~/.claude/hub/` itself.
+  the dialog directory itself (verified: X read the report from its task's output file).
 - `transcript.md` in the dialog directory.
 - Rafal's transcribed words reach the fork verbatim alongside the agent's tool argument.
 - The voice-proposal rule enters `~/.claude/CLAUDE.md` only after acceptance.
@@ -281,10 +307,12 @@ decision on paid minutes.
 
 - How the skill `talk` reuses the hub's code (importing the hub's `lib/`, or a new hub CLI command
   that prepares a dialog directory without launching a fork).
-- How session X learns its own session id for `--resume` (for example the skill's
-  `${CLAUDE_SESSION_ID}` substitution, if Claude Code provides it, or the hub registry by `cwd`);
-  verified in the first probe.
-- Whether the voice fork is registered in `hub-sessions.json` and how the hub overview shows it.
+- Whether the voice fork is registered in `hub-sessions.json` and how the hub overview shows it
+  (in restricted mode the fork runs no user hooks, so the hub's hook does not see it).
+- Whether the bridge pins the fork's model.
+- How the introduction turn prepares the fork (reading the git snapshot there shortens the first
+  real question, probe report „Conclusions”, finding 2).
+- The items the final review of Plan 1 deferred (probe report „Final review”, minor findings).
 - The port choice, the heartbeat and grace period, the decision marker's exact form, the
   transcript's format, the page's look.
 - How the agent's configuration file is applied to the ElevenLabs account (API from a setup
@@ -304,4 +332,30 @@ session `c0987db9`), each on the recommended variant.
 | Browser SDK | a vendored copy of a pinned `@elevenlabs/client`, with version and hash recorded; no CDN at runtime, no build tooling | §3, §4 |
 | Minute budget | a voiceless harness for everything that does not test voice; about 13 voice minutes; Claude stops and asks when the free minutes run out | §10, §11 |
 | Haiku in the probes | `claude-haiku-5-5` replaces `claude-haiku-4-5` as the default and in the comparison with Sonnet 5.5 (found on ElevenLabs' model list while planning; decided at the plan 1 review) | §7, §10 |
-| Voice fork's permission mode | `--permission-mode auto`, as the written `--bg` forks run by inheritance; the boundary still comes from the settings file (decided after the probe "Fork boundary in `-p`") | §8 |
+| Voice fork's permission mode | **superseded on 2026-10-20** (§15): `--permission-mode auto` was chosen on the claim that the boundary comes from the settings file; the final review of Plan 1 showed the claim false | — |
+
+## 15. Decisions after the probes (2026-10-19 and 2026-10-20)
+
+Rafal decided these in conversation (session `c0987db9`), from the probe report
+[2026-10-19-hub-voice-probes.md](2026-10-19-hub-voice-probes.md).
+
+| Name | Decision | Where applied |
+|---|---|---|
+| Polish in ElevenLabs | passes: natural voice, recognition sufficient | §7 |
+| Agent model | Haiku 5.5 | §7 |
+| Agent corrections | „ty”, no claimed forwarding, `turn_timeout` 20, `end_call`, `silence_end_call_timeout` 30 | §7 |
+| Voice minutes | ElevenLabs Starter plan | §3 |
+| Voice fork boundary (2026-10-20) | dialogs outside `~/.claude` in `C:\Users\rafal\hub-data\projects\<project>\dialogs\`; the fork restricted to five file tools, no MCP, `default` mode, a `//c/…` allow rule | §3, §4, §8 |
+| Browser client (2026-10-20) | Claude's ruling during the probes confirmed: the IIFE build plus the vendored `libsamplerate` worklet, no bundler | §4 |
+| Interruption during a wait (2026-10-20) | interruptions stay allowed; when ElevenLabs drops a tool result because Rafal spoke, the page pushes Claude's answer into the conversation with the client's `sendContextualUpdate`; Plan 2 probes this first and, if the agent does not take the answer up, falls back to `interruption_mode: disable_during_tool` | §7, §16 |
+| Spec review (2026-10-20) | the amended spec is accepted; Plan 2 (the skill `talk`) is next | — |
+
+## 16. Interruption during a wait
+
+In all three voice conversations of the probes, talking while `ask_claude` waited made ElevenLabs
+discard the fork's answer; the fork's work (a written decision) was not lost, but the agent did
+not hear about it and asked again. Decision of 2026-10-20 (§15): the page keeps every `ask_claude`
+answer it received from the bridge; when the SDK reports that the pending tool call was
+interrupted, the page sends that answer with `sendContextualUpdate`, so the agent can say it on its
+next turn. Plan 2 starts with a probe of this; if the agent does not take the answer up, the tool
+gets `interruption_mode: disable_during_tool` instead.
