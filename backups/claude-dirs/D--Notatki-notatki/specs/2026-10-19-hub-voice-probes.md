@@ -254,6 +254,33 @@ full script, with `end_call` and the 30 s silence limit.
 
 Minutes after run B: 20.75 (Starter plan).
 
+**Run A2, Haiku 5.5 top-up** (`conv_2801m5ax7j0ff43bjcy458rzqxdm`, 216 s, deleted), script steps
+3–4 plus an interruption; the first bridge of this run opened no visible tab and was stopped with
+`taskkill` (its fork too), the second was opened with `Start-Process`.
+
+- **Read-back fidelity, all three decisions verbatim** (spoken against `**Treść:**` in the file):
+  - „przycisk eksportu listy lektur trafia na pasek narzędzi, nie do menu”;
+  - „lista lektur eksportuje się do pliku w formacie CSV, nie JSON”;
+  - „domyślna nazwa eksportowanego pliku nie zawiera daty”.
+- **Correction.** Read-back „…zawiera datę eksportu”, Rafal: „Nie, bez daty.”, read-back of the
+  corrected wording, „Tak.”; only the corrected decision was written, with the correction noted.
+- **Interruption during a write.** After „Tak.” Rafal said „Pierwsze potrwa.” while the ask ran;
+  the agent answered „Dobrze, poczekam, aż pierwsza odpowiedź się skończy.” and never reported the
+  write. Rafal had to ask again; the fork replied „Decyzja o pasku narzędzi jest już zapisana”.
+  Third occurrence (A, B, A2): an interruption drops the pending tool result on ElevenLabs' side.
+- **Asks:** 5.6 s (the fork had started before Rafal spoke), 16.8 (a „Tak”), 6.2, 7.0, 15.9 (a
+  „Tak”), 3.5, 4.7, 18.0 (a „Tak”). Writes 16–18 s here against 28–57 s in run B with the same
+  fork model; answers without a write 3.5–7 s.
+- **Ending.** „Kończymy.” after the last write was reported; the agent said goodbye and the call
+  ended (216 s).
+- Expression tags appear as `[Neutral]` in the transcript.
+
+Minutes after run A2: 24.35.
+
+**Rafal's choice, 2026-10-19:** variant A of „Model agenta ElevenLabs”, Haiku 5.5. Fidelity and
+the correction behaved the same on both models, latency comes from the fork, and Haiku costs
+less. The agent stays on `claude-haiku-5-5`.
+
 ## End to end
 
 Pending.
