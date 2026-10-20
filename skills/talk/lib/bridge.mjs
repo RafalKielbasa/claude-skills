@@ -17,6 +17,7 @@ const WEB = fileURLToPath(new URL('../web/', import.meta.url));
 // Fixed routes only: no part of a request path ever reaches the file system.
 const STATIC = new Map([
   ['/talk.mjs', 'talk.mjs'],
+  ['/ask-tracker.mjs', 'ask-tracker.mjs'],
   ['/vendor/elevenlabs-client.iife.js', 'vendor/elevenlabs-client.iife.js'],
   ['/vendor/libsamplerate.worklet.js', 'vendor/libsamplerate.worklet.js'],
 ]);

@@ -1,0 +1,6 @@
+@elevenlabs/client 1.28.0 (npm, published/modified 2026-10-13), file dist/lib.iife.js, MIT
+source: npm pack @elevenlabs/client@1.28.0
+@alexanderolsen/libsamplerate-js 2.1.2, file dist/libsamplerate.worklet.js, MIT
+source: npm pack @alexanderolsen/libsamplerate-js@2.1.2 (the client loads it from cdn.jsdelivr.net unless libsampleratePath is given)
+cfccb4799627b4966153ada964744d31fce3aa6d0e343e5931d3ab5ed1f30b79 *elevenlabs-client.iife.js
+ca6e162f194d3ee5a2d2cd3c3b49641d31e56845aeae507feca1cdf8aa8116cb *libsamplerate.worklet.js

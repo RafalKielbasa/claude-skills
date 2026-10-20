@@ -390,6 +390,18 @@ test('a missing static file or an unknown path answers without crashing the brid
   }
 });
 
+test('the ask tracker module is served with the token and refused without it', async () => {
+  const b = await bridge();
+  try {
+    const ok = await call(b.port, 'GET', '/ask-tracker.mjs');
+    assert.equal(ok.status, 200);
+    assert.match(ok.body, /createAskTracker/);
+    assert.notEqual((await call(b.port, 'GET', '/ask-tracker.mjs', { withToken: false })).status, 200);
+  } finally {
+    await finish(b);
+  }
+});
+
 test('a fork that exits at once is never ready, its asks are answered at once, and the end still reports', async () => {
   const scripts = mkdtempSync(join(tmpdir(), 'x-'));
   writeFileSync(join(scripts, 'exit.mjs'), 'process.exit(0);\n');
