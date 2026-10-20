@@ -39,4 +39,5 @@
 - [Commit z pathspec we wspólnym indeksie](commit-pathspec-wspolny-indeks.md) — w „Bazie wiedzy” commituj `git commit -m … -- <ścieżki>`; zwykły add+commit wciąga to, co inne sesje zostawiły w indeksie (wpadka `d045f8df`, 2026-10-20).
 - [n8n-prod liczy crony w UTC](n8n-prod-strefa-utc.md) — „08:00” = 10:00 Warszawa latem; `settings.timezone: Europe/Warsaw` (bez wersji, działa od razu — zgoda jak na publikację); `29`/`31` ustawione 2026-10-09.
 - [Wspólny indeks git sesji](wspolny-indeks-git-sesje.md) — sesje dzielą indeks; częściowej wersji pliku nie stage'uj w prawdziwym indeksie, commit przez `GIT_INDEX_FILE` (2026-10-20: mój blok wszedł do cudzego `d045f8df`).
+- [Skrzynka kursu agenty-ai](skrzynka-kursu-agenty-ai.md) — alert Google po każdej zgodzie OAuth n8n, newslettery i rachunki wypychają wiadomości lekcji z „Get Many”; Rafał czyści ręcznie przed ujęciami modułu 2 (decyzja A, 2026-10-20).
 - [Klasyfikator a `npm run nagrywanie`](klasyfikator-npm-run-nagrywanie.md) — reguła w `.claude/settings.local.json` łapie tylko gołą komendę; `cd` osobno, bez `&&` i `; echo`.

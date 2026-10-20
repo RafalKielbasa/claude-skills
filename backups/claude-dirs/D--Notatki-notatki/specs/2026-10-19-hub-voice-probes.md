@@ -490,3 +490,110 @@ Minor findings, deferred to Plan 2:
 - `Server.PEM` was refused only through `Read`;
 - the page keeps polling after the end;
 - the URL file with the token stays in `data/`.
+
+## Interruption with a contextual update (Plan 2, Task 1)
+
+Spec §16. The probe page (`web/talk.mjs`) was taught to resend an answer whose ask was interrupted:
+`onInterruption` marks the pending ask, and when the bridge's answer arrives for a marked ask the
+page calls `sendContextualUpdate("Odpowiedź Claude na pytanie „…”, której nie usłyszałeś: …")` and
+writes a `Notatka` line. Probe agent `hub-voice-probe` (Haiku 5.5), tool `ask_claude` with
+`interruption_mode: allow` (read from the API before the run), sandbox seed `7210f405`.
+
+### Run 1 (2026-10-20 20:20, 34 s of voice)
+
+`transcript.md`, verbatim:
+
+```
+- 20:20:18 **Agent**: Cześć, słucham.
+- 20:20:26 **Rafał**: Przejdź cały plan MD i powiedz, który wybór jest najtrudniejszy i dlaczego.
+- 20:20:26 **Agent**: Dobrze, sprawdzę to u Claude'a. Chwilę to zajmie.
+- 20:20:31 **Notatka**: interruption during ask
+- 20:20:33 **Rafał**: A ile to potrwa?
+- 20:20:34 **Agent**: Odpowiedź może zająć do dwóch minut. Poprzednie zapytanie zostało przerwane, więc ponawiam je teraz.
+```
+
+`asks-interrupt.jsonl`, verbatim:
+
+```
+{"at":"2026-10-20T18:20:43.613Z","ms":16741,"request":"Przejdź cały plan MD i powiedz, który wybór jest najtrudniejszy i dlaczego.","transcriptLate":false,"timedOut":false}
+{"at":"2026-10-20T18:20:57.309Z","ms":22427,"request":"Przejdź cały plan MD i powiedz, który wybór jest najtrudniejszy i dlaczego.","transcriptLate":false,"timedOut":false}
+```
+
+The fork's session file (`ed8a273c`) gives the order:
+
+| Time (UTC) | Event |
+|---|---|
+| 18:20:26.9 | ask 1 written to the fork |
+| 18:20:31 | interruption while ask 1 is pending (`Notatka`) |
+| 18:20:34.9 | the agent calls `ask_claude` again with the same request (ask 2); the fork driver queues it behind ask 1 |
+| 18:20:43.6 | ask 1 answered („Najtrudniejszy jest wybór formatu pliku, bo…”); the page sends no contextual update |
+| 18:20:43.6 | ask 2 written to the fork |
+| ≈18:20:49 | the conversation ends (34 s); nothing more is heard |
+| 18:20:57.3 | ask 2 answered: „Jeśli pytasz o samą analizę planu, to już ją zrobiłem i wynik masz w poprzedniej odpowiedzi…” |
+| 18:20:57.3 | end message; nothing written; conversation `conv_0601m5d8nhhtewh9w9qawzhy0yfw` deleted |
+
+**Verdict: not passed, and `sendContextualUpdate` was never exercised.** The pass criteria fail:
+no `contextual update sent` line, Rafal never heard the answer, two asks instead of one. Cause,
+from the order above:
+
+1. **Haiku 5.5 re-issues the tool call itself** after an interruption („Poprzednie zapytanie
+   zostało przerwane, więc ponawiam je teraz.”). Plan 1's runs did not show this.
+2. **The page's single flag was reset by the re-issued call.** `askClaude` for ask 2 set
+   `interruptedDuringAsk = false` before ask 1 returned, so ask 1's answer was dropped without a
+   resend. A defect of the probe page, not of the SDK call.
+3. **The bridge sent the duplicate to the fork as a new turn.** The fork, believing its first
+   answer was heard, answered the duplicate with „już ją zrobiłem”, 22 s later.
+
+Ask 1's latency (16.7 s for reading `PLAN.md`) matches Plan 1.
+
+### Fix between the runs
+
+- The bridge joins an ask whose request equals one in flight: the repeat awaits the same answer,
+  the fork gets one turn, and the asks log marks the repeat `"joined": true`. Test RED→GREEN
+  („an ask identical to one in flight joins it: one fork turn, the same answer for both”), suite
+  37/37.
+- The page keeps a mark per ask. An interrupted ask's answer is resent with `sendContextualUpdate`
+  only when no other ask is pending and the same request was not already answered by an
+  uninterrupted call; otherwise the page writes the note „interrupted answer not resent (another ask
+  delivers it)”.
+
+### Run 2 (2026-10-20 20:51, 49 s of voice)
+
+`transcript.md`, verbatim:
+
+```
+- 20:51:46 **Agent**: Cześć, słucham.
+- 20:51:55 **Rafał**: Przejrzyj cały plan i powiedz, który wybór jest najtrudniejszy i dlaczego.
+- 20:51:56 **Agent**: Chwila, przekazuję to pytanie do Claude'a, zaraz wracam z odpowiedzią.
+- 20:52:00 **Notatka**: interruption during ask
+- 20:52:03 **Rafał**: A ile to potrwa?
+- 20:52:04 **Agent**: Odpowiedź może zająć do dwóch minut. Ponawiam pytanie do Claude'a.
+- 20:52:08 **Notatka**: interrupted answer not resent (another ask delivers it)
+- 20:52:10 **Agent**: Claude odpowiedział. Przejrzał plan i zauważył, że w repozytorium jest już zapisane, że format pliku to CSV. Według niego najtrudniejszy wybór to właśnie format. Jest on dla odbiorców najbardziej wiążący i trudno go potem cofnąć. CSV gubi strukturę przy zagnieżdżonych danych, na przykład listy autorów. Miejsce przycisku jest trudniejsze niż nazwa pliku, ale plan nie mówi, jak często użytkownicy eksportują. Nazwa pliku z datą jest prawie oczywista, bo chroni przed nadpisaniem.
+- 20:52:27 **Rafał**: Kończymy.
+- 20:52:27 **Agent**: Dobrze, kończymy. Do usłyszenia, powodzenia z planem.
+- 20:52:32 **Rafał**: Na razie.
+- 20:52:32 **Agent**: Na razie. Do usłyszenia.
+```
+
+`asks-interrupt.jsonl`, verbatim:
+
+```
+{"at":"2026-10-20T18:52:08.476Z","ms":12133,"request":"Przejrzyj cały plan i powiedz, który wybór jest najtrudniejszy i dlaczego.","transcriptLate":false,"timedOut":false}
+{"at":"2026-10-20T18:52:08.477Z","ms":4271,"request":"Przejrzyj cały plan i powiedz, który wybór jest najtrudniejszy i dlaczego.","joined":true}
+```
+
+The fork's raw log holds three user turns: the start, the question (one turn, `num_turns` 3) and the
+end message. Closing report: `deletion: deleted`, all three dialog files `(not written)`;
+conversation `conv_1601m5dafby5ebds7d75dbxwpn30`, 49 s.
+
+**Verdict: passed.** Rafal heard Claude's answer 2 s after the fork gave it, without asking
+again, and the fork worked on the question once. The agent re-issued the call again (2 of 2 runs),
+so the answer came through the joined tool call; the `sendContextualUpdate` path stayed unexercised
+and remains the page's fallback for an agent that does not re-issue.
+
+**Strategy for `config.json`:** `contextual-update` (interruptions allowed; the bridge joins
+repeats, the page resends when no repeat is pending). Plan 2 changes: Task 5 adds the join, Task 7's
+`ask-tracker` tracks each ask.
+
+Voice minutes of Task 1: 34 s + 49 s = 83 s.

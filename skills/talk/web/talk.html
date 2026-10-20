@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rozmowa z Claude</title>
+  <style>
+    :root { --bg: #fafaf8; --fg: #1d1d1b; --muted: #6b6b66; --line: #ddddd6; --accent: #b4532a; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #1b1b19; --fg: #ececE6; --muted: #a3a39c; --line: #3a3a36; --accent: #e08a5f; } }
+    body { margin: 0 auto; max-width: 760px; padding: 24px 16px; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    h2 { font-size: 15px; margin: 24px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    #status { color: var(--muted); }
+    button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+    button:not(:disabled):hover { border-color: var(--accent); }
+    button:disabled { opacity: .45; cursor: default; }
+    #pending { border-left: 3px solid var(--accent); padding: 4px 10px; margin: 0; }
+    #decisions { white-space: pre-wrap; margin: 0; font: 14px/1.45 ui-monospace, monospace; }
+    #transcript { padding-left: 20px; }
+    #transcript li { margin: 4px 0; }
+    .who { color: var(--muted); font-size: 13px; margin-right: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Rozmowa z Claude</h1>
+  <p id="status">Gotowe do rozmowy.</p>
+  <button id="start">Rozpocznij rozmowę</button>
+  <button id="stop" disabled>Zakończ rozmowę</button>
+  <h2>Decyzja do potwierdzenia</h2>
+  <p id="pending">—</p>
+  <h2>Zapisane decyzje</h2>
+  <pre id="decisions">—</pre>
+  <h2>Transkrypcja</h2>
+  <ol id="transcript"></ol>
+  <script src="./vendor/elevenlabs-client.iife.js?t=__TOKEN__"></script>
+  <script type="module" src="./talk.mjs?t=__TOKEN__"></script>
+</body>
+</html>

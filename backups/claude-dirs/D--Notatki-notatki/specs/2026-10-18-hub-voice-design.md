@@ -359,3 +359,13 @@ answer it received from the bridge; when the SDK reports that the pending tool c
 interrupted, the page sends that answer with `sendContextualUpdate`, so the agent can say it on its
 next turn. Plan 2 starts with a probe of this; if the agent does not take the answer up, the tool
 gets `interruption_mode: disable_during_tool` instead.
+
+Result of the probe (Plan 2, Task 1, 2026-10-20; probe report, section „Interruption with a
+contextual update”): after an interruption the agent (Haiku 5.5) itself re-issues `ask_claude`
+with the same request, twice out of two runs. The bridge therefore joins a request identical to one
+still in flight instead of giving the fork a second turn, and the re-issued call returns Claude's
+answer, which the agent then says. The page keeps a mark per ask and sends the answer with
+`sendContextualUpdate` only when an interrupted ask returns while no other ask is pending and no
+uninterrupted call has delivered the same request; this path was not exercised live, because the
+agent re-issued both times. Interruptions stay allowed (`interruption_mode: allow`); the fallback is
+not used.

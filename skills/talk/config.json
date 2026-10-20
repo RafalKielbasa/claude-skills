@@ -1,0 +1,12 @@
+{
+  "allow": [
+    "notatki",
+    ".claude"
+  ],
+  "dialogRoot": "C:/Users/rafal/hub-data",
+  "agent": {
+    "agentId": null,
+    "toolId": null
+  },
+  "interruption": "contextual-update"
+}

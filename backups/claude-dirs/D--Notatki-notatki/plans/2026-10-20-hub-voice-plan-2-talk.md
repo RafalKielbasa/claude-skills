@@ -69,15 +69,15 @@
 **Interfaces:**
 - Produces: the value of `config.json` `interruption`: `"contextual-update"` or `"disable-during-tool"`, used by Tasks 6 and 7.
 
-- [ ] **Step 1: Teach the probe page to resend an interrupted answer**
+- [x] **Step 1: Teach the probe page to resend an interrupted answer**
 
 In `askClaude`, record the request and set `interruptedDuringAsk = false`; `onInterruption` sets it to `true` while an ask is pending. When the bridge's answer arrives and the flag is set, call `conversation.sendContextualUpdate("Odpowiedź Claude na pytanie „<request>”, której nie usłyszałeś: <answer>")` and post `/api/transcript` `{ role: 'note', text: 'contextual update sent' }`. Still return the answer to the SDK. In the bridge, a `note` line is written as `**Notatka**`.
 
-- [ ] **Step 2: Run one conversation with Rafal**
+- [x] **Step 2: Run one conversation with Rafal**
 
 Start the probe bridge on the sandbox seed (`bash with-key.sh node tools/bridge.mjs --session $(cat data/seed-session.txt) --cwd C:/Users/rafal/hub-probes/repo --dialog C:/Users/rafal/hub-probes/voice-dialogs/<YYYY-MM-DD>-interrupt --agent $(node -p "require('./data/agent.json').agentId") --probe interrupt`). Rafal says „Przejrzyj cały PLAN.md i powiedz, który wybór jest najtrudniejszy i dlaczego.”, talks over the filler („a ile to potrwa?”) and then waits silently for 20 s; then „Kończymy.”
 
-- [ ] **Step 3: Judge and record**
+- [x] **Step 3: Judge and record**
 
 Passes when the transcript has the `Notatka` line, the agent's next turn conveys the fork's answer without Rafal asking again, and `asks-interrupt.jsonl` holds one ask for that question. Record verbatim in a new report section „Interruption with a contextual update (Plan 2, Task 1)” and the strategy for `config.json`: pass → `contextual-update`; fail → `disable-during-tool`. Commit and push the report.
 
@@ -202,7 +202,7 @@ test('a subject from /talk reaches the role', () => {
 
 **Interfaces:**
 - Consumes: Tasks 2–4.
-- Produces: `authorize({ url, host }, { token, port })`; `startBridge({ sessionId, cwd, dialogDir, agentId, eleven, command, forkEnv, port = 0, token, heartbeatGraceMs = 15000, firstBeatDeadlineMs = 600000, askTimeoutMs = 115000, transcriptWaitMs = 1500, openBrowser = true, subject, interruption = 'contextual-update' }): Promise<{ url, port, token, done: Promise<string> }>`. Routes as in the probe bridge plus `GET /api/status` → `{ forkReady: boolean, ending: boolean, interruption: string }`. While opening, it writes the URL to `<dialogDir>/.url` and deletes that file at the end.
+- Produces: `authorize({ url, host }, { token, port })`; `startBridge({ sessionId, cwd, dialogDir, agentId, eleven, command, forkEnv, port = 0, token, heartbeatGraceMs = 15000, firstBeatDeadlineMs = 600000, askTimeoutMs = 115000, transcriptWaitMs = 1500, openBrowser = true, subject, interruption = 'contextual-update' }): Promise<{ url, port, token, done: Promise<string> }>`. Routes as in the probe bridge plus `GET /api/status` → `{ forkReady: boolean, ending: boolean, interruption: string }`. While opening, it writes the URL to `<dialogDir>/.url` and deletes that file at the end. An ask whose request equals one still in flight joins it: it awaits the same answer and gives the fork no second turn (Task 1: the agent re-issues an interrupted `ask_claude` with the same request). `asksFile` (optional, JSONL of ask timings; the CLI does not pass it) marks such a repeat `"joined": true`.
 
 - [ ] **Step 1: Write the failing tests** — the probe's `auth.test.mjs` and all ten `bridge.test.mjs` tests, plus:
 
@@ -248,6 +248,23 @@ test('the URL file exists while the bridge runs and is gone after the end', asyn
   await b.done;
   assert.equal(existsSync(urlFile), false);
 });
+test('an ask identical to one in flight joins it: one fork turn, the same answer for both', async () => {
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '300' } });
+  try {
+    await call(b.port, 'POST', '/api/transcript', { body: { role: 'user', text: 'słowa' } });
+    const first = call(b.port, 'POST', '/api/ask', { body: { request: 'to samo' } });
+    await new Promise((r) => setTimeout(r, 100));
+    const second = call(b.port, 'POST', '/api/ask', { body: { request: 'to samo' } });
+    const [a1, a2] = (await Promise.all([first, second])).map((r) => JSON.parse(r.body).answer);
+    assert.equal(a1, 'echo: Agent głosowy przekazuje: to samo\nRafał (transkrypcja): słowa');
+    assert.equal(a2, a1);
+    const asks = readFileSync(join(b.tmp, 'asks.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+    assert.deepEqual(asks.map((a) => Boolean(a.joined)), [false, true]);
+  } finally {
+    await call(b.port, 'POST', '/api/end', { body: {} });
+    await b.done;
+  }
+});
 test('a failure in the end still deletes every known conversation and reports it', async () => {
   const b = await bridge();
   await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_x' } });
@@ -265,6 +282,7 @@ test('a failure in the end still deletes every known conversation and reports it
 - [ ] **Step 2–4:** run and fail; implement; run and pass. The implementation:
   - reads bodies with `req.setEncoding('utf8')`;
   - keeps `conversationIds` as a set;
+  - keeps the asks in flight in a map from request to answer promise (the probe's `inFlight` in `tools/bridge.mjs`);
   - sets `ending` synchronously;
   - runs the end in three independent steps, each in its own `try`, so that a failure in one never skips the next:
     1. the fork's end turn and `close()`;
@@ -312,7 +330,7 @@ test('the interruption strategy maps to the tool setting', () => {
 
 **Interfaces:**
 - Consumes: bridge routes (Task 5), the `interruption` field of `GET /api/status` (Task 5).
-- Produces: `createAskTracker(): { start(request: string): void, interrupted(): void, answered(answer: string): { resend: boolean, text: string } }` in `web/ask-tracker.mjs`, a plain ES module that runs in the page (`import` by `talk.mjs`) and in Node. `answered` returns `resend: true` exactly once for an ask during which `interrupted()` was called, with the text `Odpowiedź Claude na pytanie „<request>”, której nie usłyszałeś: <answer>`. The bridge serves it at `/ask-tracker.mjs` (add it to Task 5's static routes).
+- Produces: `createAskTracker(): { start(request: string): Ask, interrupted(): void, answered(ask: Ask, answer: string): { resend: boolean, text: string } }` in `web/ask-tracker.mjs`, a plain ES module that runs in the page (loaded by `talk.mjs` with `await import(\`./ask-tracker.mjs?t=${token}\`)`, because the bridge refuses a request without the token) and in Node. `Ask` is an opaque object, one per `ask_claude` call. `interrupted()` marks every ask pending at that moment. `answered` returns `resend: true` only when its ask was marked, no other ask is pending, and no unmarked ask with the same request has been answered since that request last started; the text is then `Odpowiedź Claude na pytanie „<request>”, której nie usłyszałeś: <answer>`, otherwise `text` is the answer. This is the probe page's logic (`C:/Users/rafal/hub-probes/voice/web/talk.mjs`, `pendingAsks` and `delivered`), plus clearing a request from `delivered` when it starts again: the agent re-issues an interrupted call, the bridge joins the repeat (Task 5), and the repeat delivers the answer. The bridge serves the module at `/ask-tracker.mjs` (add it to Task 5's static routes).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -330,23 +348,37 @@ test('the page loads only local files, all with the token', () => {
   for (const [, src] of html.matchAll(/src="([^"]+)"/g)) assert.match(src, /\?t=__TOKEN__$/);
 });
 // ask-tracker.test.mjs
-test('an answer to an interrupted ask is resent once, with the question', () => {
+test('an answer to an interrupted ask with nothing else pending is resent, with the question', () => {
   const t = createAskTracker();
-  t.start('który wybór jest najtrudniejszy?');
+  const a = t.start('który wybór jest najtrudniejszy?');
   t.interrupted();
-  assert.deepEqual(t.answered('Format pliku.'), { resend: true, text: 'Odpowiedź Claude na pytanie „który wybór jest najtrudniejszy?”, której nie usłyszałeś: Format pliku.' });
-  t.start('drugie');
-  assert.deepEqual(t.answered('Tak.'), { resend: false, text: 'Tak.' });
+  assert.deepEqual(t.answered(a, 'Format pliku.'), { resend: true, text: 'Odpowiedź Claude na pytanie „który wybór jest najtrudniejszy?”, której nie usłyszałeś: Format pliku.' });
+  const b = t.start('drugie');
+  assert.deepEqual(t.answered(b, 'Tak.'), { resend: false, text: 'Tak.' });
+});
+test('a re-issued ask delivers the answer, so the interrupted one is not resent, in either order', () => {
+  const t = createAskTracker();
+  const first = t.start('q');
+  t.interrupted();
+  const repeat = t.start('q');
+  assert.equal(t.answered(first, 'A').resend, false);  // the repeat is still pending
+  assert.equal(t.answered(repeat, 'A').resend, false); // the repeat was not interrupted
+  const u = createAskTracker();
+  const first2 = u.start('q');
+  u.interrupted();
+  const repeat2 = u.start('q');
+  assert.equal(u.answered(repeat2, 'A').resend, false);
+  assert.equal(u.answered(first2, 'A').resend, false); // already delivered by the repeat
 });
 test('an interruption with no ask pending marks nothing', () => {
   const t = createAskTracker();
   t.interrupted();
-  t.start('pytanie');
-  assert.equal(t.answered('odpowiedź').resend, false);
+  const a = t.start('pytanie');
+  assert.equal(t.answered(a, 'odpowiedź').resend, false);
 });
 ```
 
-- [ ] **Step 2–4:** run and fail; implement (the probe page plus: „Rozpocznij rozmowę” enabled only when `/api/status` says `forkReady`, with „Claude się przygotowuje…” until then; `onInterruption` → `tracker.interrupted()`, and after each answer `sendContextualUpdate(text)` when `resend` and the strategy is `contextual-update`; polling stopped at the end); run and pass. The page's DOM behaviour (button gating, polling stop, a resend heard by the agent) is verified live in Task 9.
+- [ ] **Step 2–4:** run and fail; implement (the probe page plus: „Rozpocznij rozmowę” enabled only when `/api/status` says `forkReady`, with „Claude się przygotowuje…” until then; `onInterruption` → `tracker.interrupted()`, and after each answer `sendContextualUpdate(text)` when `resend` and the strategy is `contextual-update`; polling stopped at the end); run and pass. The page's DOM behaviour (button gating, polling stop, an interrupted answer heard by Rafal) is verified live in Task 9.
 
 ---
 
