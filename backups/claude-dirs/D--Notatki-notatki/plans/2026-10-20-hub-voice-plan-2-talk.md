@@ -4,7 +4,7 @@
 
 **Goal:** Build `/talk`: in any allowlisted Claude Code session, a Polish voice conversation through an ElevenLabs agent with a restricted `claude -p` fork of that session behind it, ending in confirmed decisions, a work order and a woken session X.
 
-**Architecture:** A global skill `~/.claude/skills/talk/` (Node, standard library only, `node --test`) whose CLI checks the project and key, prepares a dialog directory outside `~/.claude`, and runs a bridge on `127.0.0.1` as a background task of session X. The bridge serves the page, mints the ElevenLabs token, drives the fork over `stream-json`, ends the conversation and prints the closing report that wakes X. It reuses the hub's project matching and git snapshot by import. The probe code in `C:/Users/rafal/hub-probes/voice/` is the reference for every module; each is rewritten here test-first with the final review's fixes.
+**Architecture:** A global skill `~/.claude/skills/talk/` (Node, standard library only, `node --test test/*.test.mjs`) whose CLI checks the project and key, prepares a dialog directory outside `~/.claude`, and runs a bridge on `127.0.0.1` as a background task of session X. The bridge serves the page, mints the ElevenLabs token, drives the fork over `stream-json`, ends the conversation and prints the closing report that wakes X. It reuses the hub's project matching and git snapshot by import. The probe code in `C:/Users/rafal/hub-probes/voice/` is the reference for every module; each is rewritten here test-first with the final review's fixes.
 
 **Tech Stack:** Node v24, Claude Code 2.1.302, ElevenLabs Agents API, vendored `@elevenlabs/client` 1.28.0 IIFE.
 
@@ -39,7 +39,7 @@
 
 | Path | Responsibility |
 |---|---|
-| `TALK/package.json` | `{"name":"talk","private":true,"type":"module","scripts":{"test":"node --test"}}` |
+| `TALK/package.json` | `{"name":"talk","private":true,"type":"module","scripts":{"test":"node --test test/*.test.mjs"}}` |
 | `TALK/config.json` | allowlist, dialog root, agent ids, interruption strategy |
 | `TALK/SKILL.md` | the procedure session X follows (spec §5) |
 | `TALK/bin/talk.mjs` | CLI: `check`, `start`, `agent setup`, `agent sync` |
@@ -127,11 +127,11 @@ test('the shipped config allows notatki and .claude and stores dialogs outside ~
 });
 ```
 
-- [ ] **Step 2: Run them and see them fail** — `cd TALK && node --test`. Expected: FAIL, modules not found.
+- [ ] **Step 2: Run them and see them fail** — `cd TALK && node --test test/*.test.mjs`. Expected: FAIL, modules not found.
 
 - [ ] **Step 3: Implement** the modules above. `config.json` starts with `"agent": { "agentId": null, "toolId": null }` and the interruption strategy from Task 1. `dialogDirFor` uses the hub's `safeName` for the key.
 
-- [ ] **Step 4: Run them and see them pass** — `node --test`. Expected: all passing.
+- [ ] **Step 4: Run them and see them pass** — `node --test test/*.test.mjs`. Expected: all passing.
 
 ---
 
@@ -165,7 +165,7 @@ test('a result with num_turns 0 after the replay is not taken as the answer', as
 });
 ```
 
-- [ ] **Step 2: Run and see them fail**; **Step 3: implement**; **Step 4: run and see them pass** — `node --test`.
+- [ ] **Step 2: Run and see them fail**; **Step 3: implement**; **Step 4: run and see them pass** — `node --test test/*.test.mjs`.
 
 ---
 
@@ -216,15 +216,63 @@ test('a page reload adds a second conversation; both are deleted and reported', 
   assert.deepEqual(b.eleven.calls.filter((c) => c[0] === 'delete').map((c) => c[1]).sort(), ['conv_a', 'conv_b']);
   assert.match(report, /conversations: conv_a \(30 s\), conv_b \(30 s\)/);
 });
-test('a request body split inside a Polish letter is decoded intact', async () => { /* send 'zażółć' as two raw chunks split inside 'ż' to /api/transcript, then end; transcript.md contains 'zażółć' */ });
-test('asks are refused once the end has started', async () => { /* /api/end, then /api/ask → answer 'Rozmowa się kończy.' and no fork ask logged */ });
-test('status reports the fork ready after its introduction', async () => { /* GET /api/status before and after ready */ });
-test('the URL file exists while the bridge runs and is gone after the end', async () => { /* existsSync(<dialogDir>/.url) true, then false after done */ });
+test('a request body split inside a Polish letter is decoded intact', async () => {
+  const b = await bridge();
+  const body = Buffer.from(JSON.stringify({ role: 'user', text: 'zażółć' }), 'utf8');
+  const cut = body.indexOf(Buffer.from('ż', 'utf8')) + 1; // between the two bytes of „ż”
+  await rawPost(b.port, `/api/transcript?t=${token}`, [body.subarray(0, cut), body.subarray(cut)]); // two writes, 50 ms apart
+  await call(b.port, 'POST', '/api/end', { body: {} });
+  await b.done;
+  assert.match(readFileSync(join(b.tmp, 'dialog', 'transcript.md'), 'utf8'), /zażółć/);
+});
+test('asks are refused once the end has started', async () => {
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '300' } }); // the end message keeps the fork busy
+  await call(b.port, 'POST', '/api/end', { body: {} });            // `ending` is set before end() awaits anything
+  const r = JSON.parse((await call(b.port, 'POST', '/api/ask', { body: { request: 'późno' } })).body);
+  assert.equal(r.answer, 'Rozmowa się kończy.');
+  await b.done;
+  assert.equal(existsSync(join(b.tmp, 'asks.jsonl')), false);
+});
+test('status reports the fork ready only after its introduction', async () => {
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '400' } });
+  assert.equal(JSON.parse((await call(b.port, 'GET', '/api/status')).body).forkReady, false);
+  await waitFor(async () => JSON.parse((await call(b.port, 'GET', '/api/status')).body).forkReady, 3000);
+  await call(b.port, 'POST', '/api/end', { body: {} });
+  await b.done;
+});
+test('the URL file exists while the bridge runs and is gone after the end', async () => {
+  const b = await bridge();
+  const urlFile = join(b.tmp, 'dialog', '.url');
+  assert.equal(readFileSync(urlFile, 'utf8'), b.url);
+  await call(b.port, 'POST', '/api/end', { body: {} });
+  await b.done;
+  assert.equal(existsSync(urlFile), false);
+});
+test('a failure in the end still deletes every known conversation and reports it', async () => {
+  const b = await bridge();
+  await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_x' } });
+  rmSync(join(b.tmp, 'dialog'), { recursive: true, force: true }); // transcript.md cannot be written now
+  await call(b.port, 'POST', '/api/end', { body: {} });
+  const report = await b.done;
+  assert.deepEqual(b.eleven.calls.filter((c) => c[0] === 'delete').map((c) => c[1]), ['conv_x']);
+  assert.match(report, /deletion: deleted/);
+  assert.match(report, /transcript not written/);
+});
 ```
 
-Write the four commented tests out in full in the same style as the first; the comments are their exact scenarios.
+`rawPost(port, path, chunks)` and `waitFor(fn, ms)` are helpers in `bridge.test.mjs`: the first sends the chunks with `req.write` 50 ms apart and a `content-length` of their sum; the second polls `fn` every 50 ms until it is truthy or `ms` passes (then fails the test).
 
-- [ ] **Step 2–4:** run and fail; implement (body read with `req.setEncoding('utf8')`, `conversationIds` as a set, the end in `try/finally`, first-beat deadline); run and pass.
+- [ ] **Step 2–4:** run and fail; implement; run and pass. The implementation:
+  - reads bodies with `req.setEncoding('utf8')`;
+  - keeps `conversationIds` as a set;
+  - sets `ending` synchronously;
+  - runs the end in three independent steps, each in its own `try`, so that a failure in one never skips the next:
+    1. the fork's end turn and `close()`;
+    2. `transcript.md`;
+    3. deletion of every known conversation;
+  - adds every failure to the report (for example `transcript not written (ENOENT …)`);
+  - always resolves `done` and removes `.url`;
+  - has a first-beat deadline.
 
 ---
 
@@ -259,11 +307,12 @@ test('the interruption strategy maps to the tool setting', () => {
 ### Task 7: Page and vendored client
 
 **Files:**
-- Create: `TALK/web/talk.html`, `TALK/web/talk.mjs`, `TALK/web/vendor/{elevenlabs-client.iife.js,libsamplerate.worklet.js,VERSION.txt}` (copied from the probe)
-- Test: `TALK/test/web.test.mjs`
+- Create: `TALK/web/talk.html`, `TALK/web/talk.mjs`, `TALK/web/ask-tracker.mjs`, `TALK/web/vendor/{elevenlabs-client.iife.js,libsamplerate.worklet.js,VERSION.txt}` (copied from the probe)
+- Test: `TALK/test/web.test.mjs`, `TALK/test/ask-tracker.test.mjs`
 
 **Interfaces:**
 - Consumes: bridge routes (Task 5), the `interruption` field of `GET /api/status` (Task 5).
+- Produces: `createAskTracker(): { start(request: string): void, interrupted(): void, answered(answer: string): { resend: boolean, text: string } }` in `web/ask-tracker.mjs`, a plain ES module that runs in the page (`import` by `talk.mjs`) and in Node. `answered` returns `resend: true` exactly once for an ask during which `interrupted()` was called, with the text `Odpowiedź Claude na pytanie „<request>”, której nie usłyszałeś: <answer>`. The bridge serves it at `/ask-tracker.mjs` (add it to Task 5's static routes).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -280,13 +329,24 @@ test('the page loads only local files, all with the token', () => {
   assert.doesNotMatch(html, /https?:\/\//);
   for (const [, src] of html.matchAll(/src="([^"]+)"/g)) assert.match(src, /\?t=__TOKEN__$/);
 });
-test('the page resends an interrupted answer, stops polling at the end and waits for the fork', () => {
-  const js = read('../web/talk.mjs');
-  for (const s of ['onInterruption', 'sendContextualUpdate', 'clearInterval(poll)', '/api/status', 'libsampleratePath']) assert.ok(js.includes(s), s);
+// ask-tracker.test.mjs
+test('an answer to an interrupted ask is resent once, with the question', () => {
+  const t = createAskTracker();
+  t.start('który wybór jest najtrudniejszy?');
+  t.interrupted();
+  assert.deepEqual(t.answered('Format pliku.'), { resend: true, text: 'Odpowiedź Claude na pytanie „który wybór jest najtrudniejszy?”, której nie usłyszałeś: Format pliku.' });
+  t.start('drugie');
+  assert.deepEqual(t.answered('Tak.'), { resend: false, text: 'Tak.' });
+});
+test('an interruption with no ask pending marks nothing', () => {
+  const t = createAskTracker();
+  t.interrupted();
+  t.start('pytanie');
+  assert.equal(t.answered('odpowiedź').resend, false);
 });
 ```
 
-- [ ] **Step 2–4:** run and fail; implement (the probe page plus: „Rozpocznij rozmowę” enabled only when `/api/status` says `forkReady`, with „Claude się przygotowuje…” until then; the Task 1 interruption handling when `interruption` is `contextual-update`; polling stopped at the end); run and pass.
+- [ ] **Step 2–4:** run and fail; implement (the probe page plus: „Rozpocznij rozmowę” enabled only when `/api/status` says `forkReady`, with „Claude się przygotowuje…” until then; `onInterruption` → `tracker.interrupted()`, and after each answer `sendContextualUpdate(text)` when `resend` and the strategy is `contextual-update`; polling stopped at the end); run and pass. The page's DOM behaviour (button gating, polling stop, a resend heard by the agent) is verified live in Task 9.
 
 ---
 
@@ -299,7 +359,7 @@ test('the page resends an interrupted answer, stops polling at the end and waits
 
 **Interfaces:**
 - Consumes: everything above; `loadProjectMap`, `projectOf` (`../../hub/lib/projects.mjs`), `hubRoot` (`../../hub/lib/paths.mjs`).
-- Produces: `node bin/talk.mjs check --cwd <dir>` → exit 0 and JSON `{ ok: true, project, dialogDir }`, or exit 2 and one Polish sentence; `node bin/talk.mjs start --session <id> --cwd <dir> [--subject <text>]` → runs the bridge, prints the closing report, exits 0. Both take test hooks through env: `TALK_CONFIG` (config path), `TALK_FAKE_CLAUDE` (fork command), `TALK_ELEVEN_STUB=1` (stub client), `TALK_USER_ENV_EMPTY=1` (the User-environment reader returns nothing), `TALK_FIRST_BEAT_MS` (overrides `firstBeatDeadlineMs`), `HUB_DATA`.
+- Produces: `node bin/talk.mjs check --cwd <dir>` → only validates: exit 0 and JSON `{ ok: true, project }`, or exit 2 and one Polish sentence; it creates nothing. `node bin/talk.mjs start --session <id> --cwd <dir> [--subject <text>]` → repeats the checks, creates the dialog directory, prints `dialog: <dialog dir>` as its first stdout line, runs the bridge, prints the closing report, exits 0. The first line is how session X finds `.url` while the task runs. Both take test hooks through env: `TALK_CONFIG` (config path), `TALK_FAKE_CLAUDE` (fork command), `TALK_ELEVEN_STUB=1` (stub client), `TALK_USER_ENV_EMPTY=1` (the User-environment reader returns nothing), `TALK_FIRST_BEAT_MS` (overrides `firstBeatDeadlineMs`), `HUB_DATA`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -315,7 +375,21 @@ test('check without a key tells Rafal where to set it', () => {
   assert.equal(r.status, 2);
   assert.match(r.stdout, /ELEVENLABS_API_KEY/);
 });
-test('start with a fake fork and a stub client prints the closing report after /api/end', async () => { /* start, read the URL from <dialogDir>/.url, POST /api/end with the token, the output ends with END OF REPORT and exit code 0 */ });
+test('start names its dialog directory first, serves .url there, and prints the closing report after /api/end', async () => {
+  const child = spawn(process.execPath, [CLI, 'start', '--session', 's', '--cwd', allowedRepo],
+    { env: { ...process.env, ...testEnv, ELEVENLABS_API_KEY: 'k', TALK_ELEVEN_STUB: '1', TALK_FAKE_CLAUDE: FAKE } });
+  let out = '';
+  child.stdout.on('data', (c) => { out += c; });
+  await waitFor(() => /^dialog: .+\n/.test(out), 5000);
+  const dialogDir = out.match(/^dialog: (.+)\n/)[1];
+  assert.ok(dialogDir.startsWith(join(dialogRoot, 'projects')));
+  await waitFor(() => existsSync(join(dialogDir, '.url')), 5000);
+  const url = new URL(readFileSync(join(dialogDir, '.url'), 'utf8'));
+  await fetch(new URL(`/api/end${url.search}`, url), { method: 'POST', body: '{}', headers: { 'content-type': 'application/json' } });
+  const code = await new Promise((resolve) => child.on('close', resolve));
+  assert.equal(code, 0);
+  assert.match(out, /END OF REPORT\n$/);
+});
 test('SKILL.md runs check in the foreground and start in the background with the session id', () => {
   const skill = read('../SKILL.md');
   assert.match(skill, /^---\nname: talk\ndescription: /);
@@ -325,17 +399,33 @@ test('SKILL.md runs check in the foreground and start in the background with the
 });
 ```
 
-Write the third test out in full; the comment is its exact scenario.
+The fixtures of `cli.test.mjs`:
+- `testEnv`: `TALK_CONFIG` pointing at a temporary `config.json` (allow `['allowed']`, `dialogRoot` = a temporary `dialogRoot`), `HUB_DATA` pointing at an empty temporary directory, `TALK_USER_ENV_EMPTY: '1'`;
+- `allowedRepo` and `outsideRepo`: temporary git repositories named `allowed` and `outside`, so the hub's fallback gives these keys;
+- `FAKE`: `fakes/claude.mjs`;
+- `CLI`: `bin/talk.mjs`;
+- `waitFor`: as in `bridge.test.mjs`.
 
 - [ ] **Step 2–4:** run and fail; implement; run and pass.
 
 `SKILL.md` (English). Description: use when Rafal types `/talk` or asks to talk about the current session by voice. Steps:
 1. `node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" check --cwd "<session cwd>"`. On exit 2, show its sentence and stop.
 2. With `run_in_background: true`: `node … start --session ${CLAUDE_SESSION_ID} --cwd "<session cwd>" [--subject "<Rafal's subject>"]`.
-3. End the turn with „Rozmowa głosowa otwarta w przeglądarce.” If Rafal says the tab did not open, run `powershell -NoProfile -Command "Start-Process (Get-Content -Raw '<dialog dir>\.url')"`.
+3. End the turn with „Rozmowa głosowa otwarta w przeglądarce.” If Rafal says the tab did not open, read the first line of the task's output file (`dialog: <dir>`) and run `powershell -NoProfile -Command "Start-Process (Get-Content -Raw '<dir>\.url')"`.
 4. When the task completes, read the closing report from its output, show the decisions and open questions as short Polish tables, then carry out the report's `prompt.md`, if any, under the repository's own rules. Push, tickets, GCP, a new dependency and anything outward wait for Rafal's word in text.
 
 - [ ] **Step 5: Voiceless smoke on a real fork** — `TALK_ELEVEN_STUB=1 node bin/talk.mjs start --session $(cat C:/Users/rafal/hub-probes/voice/data/seed-session.txt) --cwd C:/Users/rafal/hub-probes/repo` with `TALK_CONFIG` allowing `repo`; from another shell, read `.url`, check `GET /api/status` until `forkReady`, post one ask and `/api/end`. Expected: a speakable answer, the report, and a dialog directory under `C:/Users/rafal/hub-data/projects/repo/dialogs/` with `transcript.md`; the fork's `init` (raw log) lists only the five file tools.
+
+- [ ] **Step 6: The spec §8 boundary on the final code** — a dev script `TALK/test/live/boundary.mjs` (it lives under `test/live/` without `.test` in its name, so `node --test test/*.test.mjs` never runs it; every test command in this plan uses that pattern, because a bare `node --test` would run every `.mjs` under `test/`) starts the final `startFork` on a fork of the sandbox seed with the final `writeVoiceForkSettings`, and asks for one attempt each:
+  - a write into the repository;
+  - a write into the dialog directory;
+  - a write to `C:/Users/rafal/hub-probes/outside-probe.txt`;
+  - `Read` of `.env`;
+  - `Read` of `Server.PEM`;
+  - Grep for `VOICE_PROBE_SENTINEL`;
+  - Grep for `PEM_PROBE_SENTINEL`.
+
+  Passes when only the dialog write succeeds, no sentinel appears in the raw log, `init` lists the five file tools, and the run ends without a hanging prompt. Record the result in the acceptance report later (Task 9).
 
 ---
 
@@ -355,7 +445,11 @@ Write the third test out in full; the comment is its exact scenario.
     - the conversation returns `404` at ElevenLabs;
     - X proceeded and stopped at the first outward action;
     - a `curl` without the token gets `403`.
-  - Two more short runs: one closed by closing the tab (lost heartbeat), and one `/talk` whose page Rafal never starts. Use `firstBeatDeadlineMs` lowered through `TALK_FIRST_BEAT_MS=120000` for this run. Each must wake X with a report and leave no conversation.
+  - Two more short runs:
+    - one closed by closing the tab (lost heartbeat), after one confirmed decision and **no** work order;
+    - one `/talk` whose page Rafal never starts, run with `TALK_FIRST_BEAT_MS=120000`.
+
+    Each must wake X with a report and leave no conversation at ElevenLabs. In both, `prompt.md` must not exist and the report must show `--- prompt.md ---` followed by `(not written)` (spec §5.4, §12).
   - `/talk` in an `edu-saas` session must refuse.
 
 - [ ] **Step 2: Write the acceptance report** (verbatim evidence per check) and update the hub index with the skill `project-index` (`hub-voice-plan-2` done or the failed checks). Add `talk` to the global skills listed in `README.md:20`. Commit and push the vault files.
