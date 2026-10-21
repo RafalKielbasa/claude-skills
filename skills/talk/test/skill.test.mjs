@@ -26,3 +26,15 @@ test('SKILL.md uses the absolute CLI path, LF endings, a closed frontmatter, and
   assert.match(skill, /first `;`/);
   assert.match(skill, /stays at ElevenLabs/);
 });
+
+test('SKILL.md passes the subject single-quoted without single quotes, names the status line and the call lengths', () => {
+  const skill = read('../SKILL.md');
+  // Single quotes keep $, backticks and backslashes literal; the = form takes a subject that starts with -.
+  assert.match(skill, /start --session \$\{CLAUDE_SESSION_ID\} --cwd "<session cwd>" \[--subject='<subject>'\]\n/);
+  assert.doesNotMatch(skill, /--subject "/);
+  assert.match(skill, /every\s+single quote \(`'`\) removed/);
+  // The sentence is the status line of Rafal's reply protocol, not the whole reply.
+  assert.match(skill, /End the turn\.\*\* Its status line[^\n]* is „Rozmowa głosowa otwarta w przeglądarce\.”/);
+  assert.doesNotMatch(skill, /with exactly/);
+  assert.match(skill, /`conversations:` line[\s\S]{0,200}call length of each/);
+});

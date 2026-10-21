@@ -38,6 +38,7 @@ ani szablon poprawki, ani sam moment rozstrzygania. Przemiecenie klasy wymaga
   `undefined`, ale nie `null`, więc scorecard z `"demand": null` rzucał surowy
   `TypeError`, wyrzucając 24 poprawne obiekty błędu policzone linijkę wyżej.
   Recenzent podsumował to jako „słuszna decyzja, niedokończone przemiecenie".
+- 2026-10-20/21, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny): ten sam mechanizm na etapie specu. Poprawka autora dopisała do sekcji 4.6 specu katalogu publicznego „serwowana jest tylko lekcja kursu `published`” — dla jednego konsumenta flagi `Lesson.isFreeSample` (resolver `publicSampleLesson`). Drugi konsument tej samej flagi, wyjątek paywalla z sekcji 4.7 (`toGate` w `contentPaywall.ts`), został bez warunku. Plan i siedem review zadaniowych szły za specem, więc dziura doszła do review całej gałęzi jako Important: zalogowany bez subskrypcji czytałby lekcję z flagą w kursie ukrytym razem z poprawnymi odpowiedziami. Klasą był niezmiennik „flaga darmowej lekcji działa tylko w kursie opublikowanym”, nie przypadek resolvera.
 
 ## Rozwiązanie
 
@@ -49,3 +50,4 @@ wszystkich miejsc pasujących do reguły** — grep po wzorcu, tabela „miejsce
 co robi dziś przy złym wejściu, decyzja" — i wymagaj uzasadnienia dla każdego
 miejsca zostawionego bez zmiany. Naprawa punktowa po raz drugi w tej samej
 klasie jest sygnałem, że pierwsza powinna była być przemieceniem.
+To samo przy poprawce specu albo planu: warunek dopisany przy jednym konsumencie pola lub flagi każe przejrzeć wszystkich jej konsumentów (`grep` po nazwie pola w specu i w kodzie, który spec opisuje) i dopisać warunek albo powód, dla którego go tam nie ma.

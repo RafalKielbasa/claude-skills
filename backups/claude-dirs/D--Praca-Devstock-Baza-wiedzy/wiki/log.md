@@ -363,3 +363,8 @@ Format wpisu:
 - Bez nowych wzorców repo: skille użyte w sesji są globalne (project-index, board-tracker, superpowers:brainstorming, writing-plans, subagent-driven-development, using-git-worktrees).
 - Wzorce globalne dotknięte w tej sesji: 4 nowe (bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska, setup-lokalny-oddany-uzytkownikowi-zamiast-wykonany, cli-modyfikujace-konfiguracje-dopisuje-wartosci-wyliczone, niezalezne-zadania-w-trakcie-bramki-uzytkownika) i dowody do 4 (kod-referencyjny-planu-nigdy-nie-uruchomiony, dlugi-lancuch-narzedzi-bez-linii-statusu, nazwa-modulu-w-specu-koliduje-z-istniejacym-eksportem, plan-zaweza-regule-specu).
 - Sygnał repo: brak.
+
+## 2026-10-21 — sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny; bramka sond i plan 1 biblioteki domknięte, bramka i spec ekranu niezalogowanego, plan 1 warstwy CMS przez SDD, PR kodozercy/code-busters#1669)
+- Bez nowych wzorców repo: skille repo użyte gładko — konsultant-ux-kodozercy (bramka ekranów i danych #651: 16 decyzji, koncept i decyzje w `platforma/`); reszta skilli sesji jest globalna (board-tracker, project-index, superpowers:brainstorming, writing-plans, subagent-driven-development, finishing-a-development-branch).
+- Wzorce globalne dotknięte w tej sesji: 2 nowe (kontrakt-danych-w-specu-niesprawdzony-wobec-konsumenta, implementer-pomija-obserwowany-red) i dowody do 7 (review-zakresowe-nie-widza-defektu-poza-swoim-diffem, poprawka-punktowa-zamiast-przemiecenia-klasy, kod-referencyjny-planu-nigdy-nie-uruchomiony, kontekst-utracony-odtwarzany-z-dysku-nie-z-pamieci, taskstop-nie-zabija-procesu-potomnego-na-windows, dlugi-lancuch-narzedzi-bez-linii-statusu, bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska).
+- Sygnał repo: brak.

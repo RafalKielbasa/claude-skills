@@ -24,6 +24,7 @@ odpowiednika `taskkill /T`). Port zwalnia dopiero wyjście `node.exe`, a wynik
   pamięci wygasły refresh token ADC — bez `netstat` „nowe" API byłoby starym
   procesem i test poświadczeń niczego by nie sprawdził. Powtórzone przy
   sprzątaniu: PID 40624 przeżył `TaskStop bl8y8fbfj`.
+- 2026-10-20, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny): drugi dowód. Metro (`expo start` przez `pnpm` w `code-busters-mobile`, zadanie tła) przeżyło `TaskStop`; `node.exe` o PID 31248 działał dalej. `Stop-Process -Id 31248` z sesji zablokował klasyfikator trybu auto, więc komenda poszła do Rafała do wklejenia.
 
 ## Rozwiązanie
 Po `TaskStop` zadania, które uruchomiło serwer przez wrapper menedżera pakietów
@@ -31,3 +32,4 @@ na Windowsie, sprawdź port: `netstat -ano | grep ":<port> .*LISTENING"` i zabij
 drzewo `taskkill //PID <pid> //F //T`. Gdy restart ma podnieść nowe
 poświadczenia albo konfigurację, przed startem potwierdź, że PID z linii
 startowej poprzedniego procesu zniknął — inaczej test sprawdza stary proces.
+Gdy zabicie procesu blokuje klasyfikator, podaj użytkownikowi gotową komendę z PID-em i powiedz, który proces i port trzyma.

@@ -76,6 +76,12 @@ async function start() {
     $('status').textContent = 'Rozmowa się kończy.';
     return;
   }
+  if (!response.ok) {
+    // The bridge answers a failed token call in text/plain, with the ElevenLabs status and reason.
+    $('status').textContent = `Nie udało się pobrać tokenu ElevenLabs: ${await response.text().catch(() => response.status)}`;
+    $('start').disabled = false;
+    return;
+  }
   const { token: conversationToken } = await response.json();
   conversation = await window.ElevenLabsClient.Conversation.startSession({
     conversationToken,
@@ -100,7 +106,7 @@ async function start() {
       note('interruption during ask');
     },
     onDisconnect: () => { finish(); },
-    onError: (message) => { $('status').textContent = `Błąd: ${message}`; },
+    onError: (message) => { $('status').textContent = `Błąd połączenia z ElevenLabs: ${message}`; },
   });
 }
 
@@ -117,16 +123,30 @@ $('stop').addEventListener('click', async () => {
 // "Rozpocznij rozmowę" stays disabled until the fork is ready.
 $('start').disabled = true;
 $('status').textContent = 'Claude się przygotowuje…';
+// A fork that exits before its introduction ends the bridge at once: the page says so when the status
+// reports forkExited, or when three polls in a row get no answer (the bridge is gone).
+let failedPolls = 0;
+function notStarted() {
+  stopPolling();
+  $('start').disabled = true;
+  $('status').textContent = 'Claude nie wystartował. Zamknij kartę i sprawdź komunikat w sesji.';
+}
 async function pollStatus() {
   try {
     const s = await api('/api/status');
+    failedPolls = 0;
     if (s.interruption) interruption = s.interruption;
-    if (s.forkReady && !conversation && !finished) {
+    if (s.forkExited && !conversation && !finished) notStarted();
+    else if (s.forkReady && !conversation && !finished) {
       clearInterval(statusPoll);
       $('start').disabled = false;
       $('status').textContent = 'Gotowe do rozmowy.';
     }
-  } catch { /* the next tick retries */ }
+  } catch {
+    // One miss is retried by the next tick.
+    failedPolls += 1;
+    if (failedPolls >= 3 && !conversation && !finished) notStarted();
+  }
 }
 statusPoll = setInterval(pollStatus, 1000);
 pollStatus();

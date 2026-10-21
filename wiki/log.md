@@ -539,3 +539,17 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Gładko, bez osobnych wzorców: project-index (stan projektu z indeksu, aktualizacja przy decyzjach D1–D11 w tych samych commitach); brainstorming z Recommendation-First i builder check (5 pytań, wszystkie rozstrzygnięte); review planu przez codex (6 uwag, tabela ocen); board-tracker (przypięcie #665, kumulatywny ślad); SDD z wznawianiem implementera przez `SendMessage` w rundzie poprawek.
 - Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): brak nowych — patrz log repo.
 - Sygnał: kod-referencyjny-planu-nigdy-nie-uruchomiony (porażka, 12 dowodów z 12 sesji) → `/evolve-skill superpowers:writing-plans`; dlugi-lancuch-narzedzi-bez-linii-statusu (porażka, 5 sesji) jest `ogólny` — kandydat do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.
+
+## 2026-10-21 — sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny); Baza wiedzy + code-busters-v2/mobile: bramka sond i plan 1 biblioteki domknięte, bramka i spec ekranu niezalogowanego, plan 1 warstwy CMS (SDD), review całej gałęzi, PR kodozercy/code-busters#1669
+- Założono: kontrakt-danych-w-specu-niesprawdzony-wobec-konsumenta (dowód: sekcja 4.6 bez opisów lekcji wobec ekranu 5.6, `''` z `text()` Keystone wobec `null` z SDL)
+- Założono: implementer-pomija-obserwowany-red (dowód: zadanie 6 i fala poprawek pozycje 5–10 bez RED; mutacje w review zadania 6, samo rozumowanie w re-review fali)
+- Dopisano dowód: review-zakresowe-nie-widza-defektu-poza-swoim-diffem (ósmy) — wyjątek paywalla bez warunku kursu `published`, rozłożony na zadania 4 i 6
+- Dopisano dowód: poprawka-punktowa-zamiast-przemiecenia-klasy (drugi) — warunek „kurs published” dopisany w specu do resolvera, nie do paywalla
+- Dopisano dowód: kod-referencyjny-planu-nigdy-nie-uruchomiony (trzynasty) — `isCourseEditor(session)` podpięty wprost jako dostęp Keystone, fail closed
+- Dopisano dowód: kontekst-utracony-odtwarzany-z-dysku-nie-z-pamieci (trzeci) — wznowienie SDD po kompaktowaniu z ledgera, bez ponownych dispatchy
+- Dopisano dowód: taskstop-nie-zabija-procesu-potomnego-na-windows (drugi) — Metro PID 31248 po `TaskStop`, `Stop-Process` zablokowany przez klasyfikator
+- Dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (szósty, szósta sesja) — sześć przypomnień harnessu po kompaktowaniu
+- Dopisano dowód: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (drugi) — EAS: DNS, pnpm 11 na obrazie, brak `.env`, Metro nie stoi
+- Gładko, bez osobnych wzorców: Recommendation-First z D1/D2 — „ok” i „A” przyjęły po kilka decyzji naraz; codex review planu (tabela uwag); builder check specu; board-tracker (kumulatywne ślady #651 i #665); project-index w tych samych commitach; review końcowe na opus z triażem odłożonych Minor i jedną falą poprawek.
+- Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): brak nowych — patrz log repo.
+- Sygnał: kod-referencyjny-planu-nigdy-nie-uruchomiony (porażka, 13 dowodów z 13 sesji) → `/evolve-skill superpowers:writing-plans`; dlugi-lancuch-narzedzi-bez-linii-statusu (porażka, 6 sesji) jest `ogólny` — kandydat do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.

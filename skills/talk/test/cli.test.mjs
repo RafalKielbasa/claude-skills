@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { agentSetup, agentSync, main } from '../bin/talk.mjs';
+import { CONFIG_PATH } from '../lib/config.mjs';
 
 const BIN = fileURLToPath(new URL('../bin/talk.mjs', import.meta.url));
 const base = { allow: ['notatki'], dialogRoot: 'x', agent: { agentId: null, toolId: null }, interruption: 'contextual-update' };
@@ -90,6 +91,24 @@ test('the CLI creates the agent against a stub client and saves ids to TALK_CONF
   assert.match(r.stdout, /^agent: \S+\ntool: \S+/);
   const saved = JSON.parse(readFileSync(r.path, 'utf8')).agent;
   assert.ok(saved.agentId && saved.toolId);
+});
+
+test('agent setup and agent sync under the stub refuse to run without TALK_CONFIG, leaving the real config untouched', async () => {
+  const before = readFileSync(CONFIG_PATH, 'utf8');
+  try {
+    for (const env of [{ TALK_ELEVEN_STUB: '1' }, { TALK_ELEVEN_STUB: '1', TALK_CONFIG: '' }]) {
+      for (const args of [['agent', 'setup'], ['agent', 'sync']]) {
+        const out = await main(args, env);
+        assert.equal(out.code, 2);
+        assert.equal(out.lines.length, 1);
+        assert.match(out.lines[0], /^Z TALK_ELEVEN_STUB=1 polecenia agent wymagają TALK_CONFIG/);
+      }
+    }
+    assert.equal(readFileSync(CONFIG_PATH, 'utf8'), before);
+  } finally {
+    // Should the refusal ever regress, the real config is put back as it was.
+    if (readFileSync(CONFIG_PATH, 'utf8') !== before) writeFileSync(CONFIG_PATH, before, 'utf8');
+  }
 });
 
 test('an unknown command exits 2 with usage', () => {

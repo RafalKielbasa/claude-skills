@@ -23,6 +23,7 @@ widać z repo, więc nie wychodzi ani w self-review, ani w review planu, ani w b
   setup.” Dalej: brak `eas-cli`, konta `rafalkielbasa` i nowe `rafalkielbasapraca` z `Entity Not
   Authorized` na projekcie EAS `devstock`, `eas init` pod prywatnym kontem i commit `7ab1618` na gałęzi
   sondy. Na koniec sesji build dev clienta wciąż przed nami; zadanie 3 i wszystkie za nim czekają.
+- 2026-10-20, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny): drugi dowód, ciąg dalszy tej samej bramki. Build dev clienta na prywatnym EAS padał kolejno na `ENOTFOUND api.expo.dev`, `ERR_PNPM_IGNORED_BUILDS` (obraz EAS z pnpm 11; przypięte `"pnpm": "10.4.1"` na gałęzi sond), potem aplikacja na telefonie rzuciła `EXPO_PUBLIC_GRAPHQL_URL is not set` (brak `.env` w mobile), a na „aplikacja nie stoi” okazało się, że Metro nie działa. Cztery tury Rafała na setup, zanim padł pierwszy zrzut sondy.
 
 ## Rozwiązanie
 Gdy spec albo plan zawiera krok, który wykonuje użytkownik na swoim sprzęcie lub koncie (urządzenie,

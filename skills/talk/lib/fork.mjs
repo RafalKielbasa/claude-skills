@@ -7,6 +7,7 @@ import { appendFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { createTurnCollector, userLine } from './stream.mjs';
 
+const STDERR_TAIL_LINES = 20;
 const textOf = (msg) => (Array.isArray(msg?.message?.content) ? msg.message.content.filter((c) => c.type === 'text').map((c) => c.text).join('') : null);
 
 // The restricted fork command of spec §8, without the executable; --add-dir stays the last pair.
@@ -18,24 +19,32 @@ export function forkArgs({ sessionId, settingsPath, dialogDir, model }) {
 
 export function startFork({ cwd, sessionId, settingsPath, dialogDir, startPrompt, command = ['claude'], model, env, rawLog }) {
   const args = [...command.slice(1), ...forkArgs({ sessionId, settingsPath, dialogDir, model })];
-  // Only the bridge reads the ElevenLabs key (spec §3); the fork and its hooks never get it.
+  // Only the bridge reads the ElevenLabs key (spec §3); the fork and its hooks never get it. Windows
+  // reads env names in any letter case, so every spelling of the name is removed.
   const childEnv = { ...process.env, ...env };
-  delete childEnv.ELEVENLABS_API_KEY;
+  for (const name of Object.keys(childEnv)) if (name.toUpperCase() === 'ELEVENLABS_API_KEY') delete childEnv[name];
   const child = spawn(command[0], args, { cwd, env: childEnv, stdio: ['pipe', 'pipe', 'pipe'] });
   child.on('error', () => {});
   child.stdin.on('error', () => {});
   const collector = createTurnCollector();
   const waiters = [];
+  let closed = false;
   let resolveSessionId;
   const sessionIdPromise = new Promise((resolve) => { resolveSessionId = resolve; });
   const exited = new Promise((resolve) => {
     child.on('close', (code) => {
+      closed = true;
       for (const waiter of waiters.splice(0)) waiter.resolve({ text: '', subtype: 'exited' });
       resolveSessionId(null);
       resolve(code);
     });
   });
-  child.stderr.resume();
+  // stderr is drained, and only its last lines are kept: the cause the report gives for a fork that exited.
+  const stderrLines = [];
+  createInterface({ input: child.stderr }).on('line', (line) => {
+    stderrLines.push(line);
+    if (stderrLines.length > STDERR_TAIL_LINES) stderrLines.shift();
+  });
   createInterface({ input: child.stdout }).on('line', (line) => {
     if (rawLog) appendFileSync(rawLog, `${line}\n`, 'utf8');
     try {
@@ -47,7 +56,9 @@ export function startFork({ cwd, sessionId, settingsPath, dialogDir, startPrompt
     if (turn && waiters[0]?.echoed) waiters.shift().resolve(turn);
   });
 
-  const send = (text) => new Promise((resolve) => { waiters.push({ text, echoed: false, resolve }); child.stdin.write(userLine(text)); });
+  // After the close event no waiter would ever be resolved: a message sent then is answered at once.
+  const send = (text) => (closed ? Promise.resolve({ text: '', subtype: 'exited' })
+    : new Promise((resolve) => { waiters.push({ text, echoed: false, resolve }); child.stdin.write(userLine(text)); }));
   const ready = send(startPrompt);
   let tail = ready;
 
@@ -78,5 +89,5 @@ export function startFork({ cwd, sessionId, settingsPath, dialogDir, startPrompt
     return exited;
   }
 
-  return { ready, sessionId: sessionIdPromise, ask, close };
+  return { ready, sessionId: sessionIdPromise, ask, close, stderrTail: () => stderrLines.join('\n') };
 }

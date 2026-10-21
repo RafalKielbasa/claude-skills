@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -36,6 +36,15 @@ test('the fork does not inherit ELEVENLABS_API_KEY', async () => {
   const f = startFork({ ...base, startPrompt: 'start', env: { ELEVENLABS_API_KEY: 'secret' } });
   assert.equal((await f.ready).text, 'echo: start');
   await f.close();
+});
+
+test('the fork does not inherit the key under another letter case', async () => {
+  const f = startFork({ ...base, startPrompt: 'start', env: { elevenlabs_api_key: 'secret', ElevenLabs_Api_Key: 'secret' } });
+  try {
+    assert.equal((await f.ready).text, 'echo: start');
+  } finally {
+    await f.close({ deadlineMs: 500 });
+  }
 });
 
 test('close kills a fork that does not exit within the deadline', async () => {
@@ -85,6 +94,36 @@ test('forkArgs is the restricted command of spec §8 with --add-dir last', () =>
 test('forkArgs puts --model right before --add-dir', () => {
   const args = forkArgs({ sessionId: 's', settingsPath: 'p', dialogDir: 'd', model: 'm' });
   assert.deepEqual(args.slice(-4), ['--model', 'm', '--add-dir', 'd']);
+});
+
+test("an ask sent after the child exited answers 'exited' at once", async () => {
+  const f = startFork({ ...base, startPrompt: 'start' });
+  try {
+    await f.ready;
+    assert.equal(await f.close(), 0); // the child has exited and its close event has been seen
+    const t0 = Date.now();
+    const answer = await f.ask('po końcu', { timeoutMs: 3000 });
+    assert.equal(answer.subtype, 'exited');
+    assert.equal(answer.timedOut, false);
+    assert.ok(Date.now() - t0 < 1000);
+  } finally {
+    await f.close({ deadlineMs: 500 });
+  }
+});
+
+test('a fork that writes to stderr and exits keeps the last 20 stderr lines for the report', async () => {
+  const script = join(tmp, 'stderr-exit.mjs');
+  writeFileSync(script, "for (let i = 1; i <= 25; i += 1) process.stderr.write(`linia ${i} zażółć\\n`);\nprocess.exit(1);\n");
+  const f = startFork({ ...base, command: [process.execPath, script], startPrompt: 'start' });
+  try {
+    assert.equal((await f.ready).subtype, 'exited');
+    const tail = f.stderrTail().split('\n');
+    assert.equal(tail.length, 20);
+    assert.equal(tail[0], 'linia 6 zażółć');
+    assert.equal(tail[19], 'linia 25 zażółć');
+  } finally {
+    await f.close({ deadlineMs: 500 });
+  }
 });
 
 test('a result with num_turns 0 after the replay is not taken as the answer', async () => {

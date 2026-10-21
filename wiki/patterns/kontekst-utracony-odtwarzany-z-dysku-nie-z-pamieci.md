@@ -37,6 +37,7 @@ porówna.
   Ledger mówił „repo-side gotowe", dopiero sondy pokazały, że strona n8n nie
   istnieje. Odstępstwo: nie podałem gałęzi, na której leży praca — patrz
   [[gotowe-na-galezi-roboczej-zgloszone-bez-galezi-integracji]].
+- 2026-10-21, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny): kompaktowanie kontekstu w środku egzekucji SDD (review zadania 7 z 7 w toku). Po wznowieniu stan wzięty z ledgera `.superpowers/sdd/2026-10-20-kodozercy-platform-public-catalog-plan-1/progress.md` (zadania 1–6 zamknięte z commitami, odłożone Minor, rulingi) i z `git log` worktree. Kontroler przyjął raport review zadania 7 i ruszył do review całej gałęzi bez ponownego dispatchu żadnego zakończonego zadania; odłożone Minor z ledgera trafiły do triażu w review końcowym, a rulingi do raportu dla Rafała.
 
 ## Rozwiązanie
 Gdy pytanie dotyczy czegoś, czego nie ma w kontekście, powiedz to w pierwszym

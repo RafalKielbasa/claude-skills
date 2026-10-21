@@ -124,6 +124,7 @@ wierność jest tym, o co się go prosi.
   poprawiony na `npx prettier --write <pliki>`). Blok `scripts` z `package.json` czytałem przy pisaniu
   planu, ale komendy nie uruchomiłem. Nowe: defekt w **komendzie** planu, nie w bloku kodu — wystarczyło
   jedno `grep '"format:write"' package.json` przed zapisem kroku.
+- 2026-10-21, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny), plan 1 warstwy CMS katalogu publicznego: trzynasty dowód. Plan kazał podpiąć `isCourseEditor(session)` wprost jako dostęp pól Keystone (i list w zadaniach 3–4). Keystone woła funkcję dostępu z obiektem `{ session, context, listKey, … }`, więc pól katalogu nie mógł zapisać nikt (fail closed, bez błędu). Testy z planu wołały pomocnika z gołą sesją i były zielone; złapało to review zadania 2, nie test. Poprawka: `courseEditorAccess({ session })` i ruling na zadania 3–4. Odmiana wzorca: kod pomocnika poprawny, błędne jego podpięcie do frameworka, którego żaden test nie wykonuje.
 
 ## Rozwiązanie
 

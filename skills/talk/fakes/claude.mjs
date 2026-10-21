@@ -9,6 +9,8 @@ const slow = Number(process.env.FAKE_SLOW_MS ?? 0);
 const delay = Number(process.env.FAKE_DELAY_MS ?? 0);
 const replay = process.argv.includes('--replay-user-messages');
 const print = (obj) => process.stdout.write(`${JSON.stringify(obj)}\n`);
+// The `[key]` mark: an ElevenLabs key in this process's env under any letter case.
+const hasKey = () => Object.entries(process.env).some(([name, value]) => name.toUpperCase() === 'ELEVENLABS_API_KEY' && value);
 let initDone = false;
 let zeroDone = false;
 let chain = Promise.resolve();
@@ -26,9 +28,11 @@ rl.on('line', (line) => {
     // FAKE_ZERO_TURNS=1: a `result` with num_turns 0 right after the first replay, before the real answer.
     if (process.env.FAKE_ZERO_TURNS === '1' && !zeroDone) { zeroDone = true; print({ type: 'result', subtype: 'success', num_turns: 0, result: '' }); }
     await new Promise((r) => setTimeout(r, text.includes('slow') ? slow : delay));
-    const answer = `echo: ${text}${process.env.ELEVENLABS_API_KEY ? ' [key]' : ''}`;
+    const answer = `echo: ${text}${hasKey() ? ' [key]' : ''}`;
     print({ type: 'assistant', message: { content: [{ type: 'text', text: answer }] } });
     print({ type: 'result', subtype: 'success', result: answer });
+    // FAKE_EXIT_AFTER_FIRST=1: a fork that dies right after its introduction, with a cause on stderr.
+    if (process.env.FAKE_EXIT_AFTER_FIRST === '1') process.stderr.write('fake: crashed after the introduction\n', () => process.exit(1));
   });
 });
 // FAKE_HANG=1: the process ignores the end of stdin, like a fork that never exits.

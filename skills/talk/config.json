@@ -5,8 +5,8 @@
   ],
   "dialogRoot": "C:/Users/rafal/hub-data",
   "agent": {
-    "agentId": null,
-    "toolId": null
+    "agentId": "agent_5001m5df9a5zeesaff7ney8ypmak",
+    "toolId": "tool_9201m5df99v6e1psq1pcg84kbdt0"
   },
   "interruption": "contextual-update"
 }

@@ -296,12 +296,29 @@ test('a refused ask answers at once, without waiting for a transcript', async ()
   }
 });
 
+test('an end posted during a running ask still gives the end turn its own time', async () => {
+  // Every fork turn takes 400 ms; the end turn queued behind the ask starts 250 ms after its call
+  // and ends 650 ms after it, past endTurnMs counted from the call.
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '400' }, askTimeoutMs: 1000, endTurnMs: 500 });
+  try {
+    await waitFor(async () => (await status(b)).forkReady, 5000);
+    const asked = call(b.port, 'POST', '/api/ask', { body: { request: 'w toku' } });
+    await sleep(200); // transcriptWaitMs is 50 ms: the ask is in the fork now
+    await call(b.port, 'POST', '/api/end', { body: {} });
+    const report = await b.done;
+    assert.match(JSON.parse((await asked).body).answer, /^echo: Agent głosowy przekazuje: w toku/);
+    assert.match(report, /deletion: no conversation id\n/); // no "fork end turn timed out" note
+  } finally {
+    await finish(b);
+  }
+});
+
 test('status reports the fork ready only after its introduction', async () => {
   const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '400' } });
   try {
     assert.equal(JSON.parse((await call(b.port, 'GET', '/api/status')).body).forkReady, false);
     await waitFor(async () => JSON.parse((await call(b.port, 'GET', '/api/status')).body).forkReady, 3000);
-    assert.deepEqual(await status(b), { forkReady: true, ending: false, interruption: 'contextual-update' });
+    assert.deepEqual(await status(b), { forkReady: true, forkExited: false, ending: false, interruption: 'contextual-update' });
   } finally {
     await finish(b);
   }
@@ -402,21 +419,32 @@ test('the ask tracker module is served with the token and refused without it', a
   }
 });
 
-test('a fork that exits at once is never ready, its asks are answered at once, and the end still reports', async () => {
+test('a fork that exits before its introduction ends the bridge at once, with its stderr in the report', async () => {
   const scripts = mkdtempSync(join(tmpdir(), 'x-'));
-  writeFileSync(join(scripts, 'exit.mjs'), 'process.exit(0);\n');
-  const b = await bridge({ command: [process.execPath, join(scripts, 'exit.mjs')], askTimeoutMs: 300 });
+  writeFileSync(join(scripts, 'exit.mjs'), "process.stderr.write('Error: no conversation found\\nsecond; line\\n', () => process.exit(1));\n");
+  const b = await bridge({ command: [process.execPath, join(scripts, 'exit.mjs')], firstBeatDeadlineMs: 20000 });
   try {
-    let n = 0;
-    const gone = async () => /proces się zakończył/.test(JSON.parse((await call(b.port, 'POST', '/api/ask', { body: { request: `q${n += 1}` } })).body).answer);
-    await waitFor(gone, 5000);
+    let timer;
+    const limit = new Promise((resolve) => { timer = setTimeout(() => resolve('the bridge did not end within 5 s'), 5000); });
+    const report = await Promise.race([b.done, limit]).finally(() => clearTimeout(timer));
+    // A `;` from stderr would split the note into two segments of the deletion line (SKILL.md reads it by `;`).
+    assert.match(report, /deletion: no conversation id; fork exited before the end turn; fork stderr: Error: no conversation found second, line\n/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a fork that exits after its introduction: an ask answers at once that its process ended, and status says it exited', async () => {
+  const b = await bridge({ forkEnv: { FAKE_EXIT_AFTER_FIRST: '1' }, askTimeoutMs: 5000 });
+  try {
+    await waitFor(async () => (await status(b)).forkReady, 5000);
     const t0 = Date.now();
-    assert.ok(await gone());
-    assert.ok(Date.now() - t0 < 250);
-    assert.equal((await status(b)).forkReady, false);
+    const r = JSON.parse((await call(b.port, 'POST', '/api/ask', { body: { request: 'pytanie' } })).body);
+    assert.equal(r.answer, 'Claude nie odpowie, bo jego proces się zakończył. Zakończ rozmowę.');
+    assert.ok(Date.now() - t0 < 2000);
+    assert.deepEqual(await status(b), { forkReady: false, forkExited: true, ending: false, interruption: 'contextual-update' });
     await call(b.port, 'POST', '/api/end', { body: {} });
-    const report = await b.done;
-    assert.match(report, /deletion: no conversation id; fork exited before the end turn\n/);
+    assert.match(await b.done, /deletion: no conversation id; fork exited before the end turn; fork stderr: fake: crashed after the introduction\n/);
   } finally {
     await finish(b);
   }

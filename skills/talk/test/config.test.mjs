@@ -9,7 +9,9 @@ test('the shipped config allows notatki and .claude and stores dialogs outside ~
   const c = loadConfig();
   assert.deepEqual(c.allow, ['notatki', '.claude']);
   assert.equal(c.dialogRoot, 'C:/Users/rafal/hub-data');
-  assert.deepEqual(c.agent, { agentId: null, toolId: null });
+  // Null until `agent setup` runs once, then both ids saved by it.
+  const saved = /^agent_\w+$/.test(c.agent.agentId) && /^tool_\w+$/.test(c.agent.toolId);
+  assert.ok(saved || (c.agent.agentId === null && c.agent.toolId === null), JSON.stringify(c.agent));
   assert.ok(['contextual-update', 'disable-during-tool'].includes(c.interruption));
 });
 

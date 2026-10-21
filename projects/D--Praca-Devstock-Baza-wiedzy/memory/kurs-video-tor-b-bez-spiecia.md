@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: feedback
   originSessionId: 21e37356-099e-4ae0-99b4-1875bd23ce17
-  modified: 2026-10-08T08:43:15.744Z
+  modified: 2026-10-21T06:30:08.766Z
 ---
 
 Rafał sam składa finalne wideo, gdy nakłada głos na nagranie — etap
@@ -31,5 +31,9 @@ o tradycyjne spięcie finalne przez pipeline dla konkretnej lekcji, to jest
 wyjątek na tę jedną prośbę, nie zmiana tej zasady na stałe.
 
 **Wyjątek 2026-10-08:** M00L01 robimy od nowa pełną ścieżką automatu (nagrywanie Playwrightem, `/kurs-montaz`,
-oprawa i znak AI, etap 2 do `final.mp4`) - patrz [[agenty-ai-m00l01-rerender]]. Gdy Rafał zechce tego samego
-przy kolejnych lekcjach demo, zapytaj, czy ta zasada przestaje obowiązywać.
+oprawa i znak AI, etap 2 do `final.mp4`) - patrz [[agenty-ai-m00l01-rerender]].
+
+**2026-10-21, lekcja agenty-ai 1.3:** po `/kurs-montaz` Rafał wybrał etap 2 do `final.mp4` (wariant A) zamiast
+„kończę na montażu, final składasz sam” (wariant C) i zaakceptował film (`status.video: zaakceptowane`).
+W kursie z `nagrywanie: { automat: true }` i `oprawa` pełna ścieżka do `final.mp4` jest więc normą. Zasada
+„bez etapu spięcia” zostaje tylko dla lekcji nagrywanych ręcznie. Etap 2 nadal startuje dopiero po jego „OK”.

@@ -29,13 +29,15 @@ environment), in double quotes. Run the commands with the Bash tool.
 2. **Start, in the background** (Bash with `run_in_background: true`):
 
    ```
-   node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" start --session ${CLAUDE_SESSION_ID} --cwd "<session cwd>" [--subject "<Rafal's subject>"]
+   node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" start --session ${CLAUDE_SESSION_ID} --cwd "<session cwd>" [--subject='<subject>']
    ```
 
-   Add `--subject` only when Rafal gave a subject with `/talk`; drop any double quote from it.
+   Add `--subject` only when Rafal gave a subject with `/talk`: his subject replaces `<subject>`, with
+   every single quote (`'`) removed. The single quotes keep `$`, backticks and backslashes literal,
+   and the `=` form takes a subject that starts with `-`.
    The task runs for the whole conversation; do not wait for it and do not poll its output.
 
-3. **End the turn** with exactly: „Rozmowa głosowa otwarta w przeglądarce.”
+3. **End the turn.** Its status line (the one-sentence status of Rafal's reply protocol) is „Rozmowa głosowa otwarta w przeglądarce.”
 
    If Rafal says the tab did not open, read the first line of the task's output file
    (`dialog: <dir>`) and run:
@@ -56,6 +58,9 @@ environment), in double quotes. Run the commands with the Bash tool.
      an end-step note (a fork or transcript problem): tell Rafal each one. For every failed deletion,
      tell Rafal which conversation stays at ElevenLabs (its id, also listed on the `conversations:`
      line).
+   - The `conversations:` line lists every ElevenLabs conversation as `<id> (<n> s)`, or
+     `<id> (unknown)` when its length could not be read (`none`: no conversation was started). Tell
+     Rafal the call length of each, in minutes and seconds: he pays per minute.
    - If `--- prompt.md ---` holds a prompt, carry it out under this repository's own rules (commits,
      tickets, gates as the repository's `CLAUDE.md` and Rafal's global rules say). If it shows
      `(not written)`, go on with the decisions from where you were before `/talk`.

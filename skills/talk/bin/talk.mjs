@@ -23,6 +23,7 @@ const USAGE = 'Użycie: node bin/talk.mjs check --cwd <katalog> | start --sessio
 const notAllowed = (key, configPath) => `Projekt ${key} nie jest na liście dozwolonych dla /talk (${configPath}).`;
 const noAgent = (configPath) => `Brak agenta ElevenLabs w ${configPath}: uruchom najpierw node bin/talk.mjs agent setup w katalogu ${SKILL_DIR}.`;
 const noDir = (cwd) => `Katalog ${cwd} nie istnieje.`;
+const STUB_NEEDS_CONFIG = `Z TALK_ELEVEN_STUB=1 polecenia agent wymagają TALK_CONFIG, bo bez niego identyfikatory zaślepki trafiłyby do prawdziwego ${CONFIG_PATH}.`;
 
 const interruptionMode = (config) => (config.interruption === 'contextual-update' ? 'allow' : 'disable_during_tool');
 
@@ -151,8 +152,11 @@ export async function main(argv, env = process.env, deps = {}) {
   const run = AGENT_COMMANDS[argv.slice(0, 2).join(' ')];
   if (!run) return { code: 2, lines: [USAGE] };
   let eleven;
-  if (env.TALK_ELEVEN_STUB === '1') eleven = stubClient();
-  else {
+  if (env.TALK_ELEVEN_STUB === '1') {
+    // Stub ids saved to the real config would pass for a real agent.
+    if (!env.TALK_CONFIG) return { code: 2, lines: [STUB_NEEDS_CONFIG] };
+    eleven = stubClient();
+  } else {
     const apiKey = loadKey({ env });
     if (!apiKey) return { code: 2, lines: [NO_KEY] };
     eleven = createElevenClient({ apiKey });

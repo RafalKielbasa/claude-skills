@@ -68,7 +68,8 @@ function within(fn, ms) {
 
 export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, command, forkEnv, port = 0,
   token = randomBytes(32).toString('hex'), heartbeatGraceMs = 15000, firstBeatDeadlineMs = 600000, askTimeoutMs = 115000,
-  transcriptWaitMs = 1500, openBrowser = true, subject, interruption = 'contextual-update', asksFile, rawLog, elevenTimeoutMs = 20000 }) {
+  transcriptWaitMs = 1500, openBrowser = true, subject, interruption = 'contextual-update', asksFile, rawLog, elevenTimeoutMs = 20000,
+  endTurnMs = END_TURN_MS }) {
   const { snapshot, settingsPath } = prepareDialog({ cwd, dialogDir });
   const fork = startFork({ cwd, sessionId, settingsPath, dialogDir, command, env: forkEnv, rawLog,
     startPrompt: voiceStartPrompt({ projectName: basename(cwd), sourceId: sessionId, dialogDir, snapshot, subject }) });
@@ -148,14 +149,23 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
       try {
         if (forkExited) notes.push('fork exited before the end turn');
         else {
-          const turn = await fork.ask(endMessage(dialogDir), { timeoutMs: END_TURN_MS });
-          if (turn.timedOut) notes.push(`fork end turn timed out after ${END_TURN_MS / 1000} s`);
+          // The end message may be queued behind a running ask, which may take askTimeoutMs; its timer
+          // runs from this call, so that time is added and the end turn keeps endTurnMs of its own.
+          const timeoutMs = askTimeoutMs + endTurnMs;
+          const turn = await fork.ask(endMessage(dialogDir), { timeoutMs });
+          if (turn.timedOut) notes.push(`fork end turn timed out after ${timeoutMs / 1000} s`);
           else if (turn.subtype === 'exited') { forkExited = true; notes.push('fork exited during the end turn'); }
         }
       } catch (error) { notes.push(`fork end turn failed (${reason(error)})`); }
       try {
         await within(() => fork.close({ deadlineMs: forkExited ? 0 : FORK_CLOSE_MS }), FORK_CLOSE_LIMIT_MS);
       } catch (error) { notes.push(`fork not closed (${reason(error)})`); }
+      // The cause of an exit: the end of the fork's stderr, on one line and without a `;`, which would
+      // split it into two segments of the deletion line.
+      if (forkExited) {
+        const tail = fork.stderrTail().replaceAll(';', ',').replace(/\s+/g, ' ').trim();
+        if (tail) notes.push(`fork stderr: ${tail.length > 300 ? `…${tail.slice(-300)}` : tail}`);
+      }
 
       // 2. transcript.md, the only kept copy of the conversation (spec §6).
       try {
@@ -204,7 +214,7 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
       try { file = readFileSync(join(WEB, STATIC.get(path))); } catch { send(res, 404, 'not found'); return; }
       send(res, 200, file, 'text/javascript; charset=utf-8');
     } else if (req.method === 'GET' && path === '/api/status') {
-      json(res, { forkReady: forkReady && !forkExited, ending, interruption });
+      json(res, { forkReady: forkReady && !forkExited, forkExited, ending, interruption });
     } else if (req.method === 'GET' && path === '/api/conversation-token') {
       // A conversation started once the end has begun would never be deleted.
       if (ending) { json(res, { error: 'ending' }, 409); return; }
@@ -262,6 +272,10 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
   // A page that never sends a heartbeat (no tab, no click) must not keep the bridge and fork alive.
   firstBeat = setTimeout(() => end(), firstBeatDeadlineMs);
   watch = setInterval(() => { if (lastBeat && Date.now() - lastBeat > heartbeatGraceMs) end(); }, Math.min(1000, heartbeatGraceMs / 4));
+  // A fork that exits before its introduction can serve no conversation, and no page can have started
+  // one (the page waits for forkReady): the end runs at once instead of at the first-beat deadline. It
+  // is attached only here, so that end() clears the timers set above.
+  fork.ready.then((turn) => { if (turn.subtype === 'exited') end(); });
   if (openBrowser) {
     const browser = spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' });
     browser.on('error', () => {});
