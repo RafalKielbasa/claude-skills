@@ -467,7 +467,7 @@ The fixtures of `cli.test.mjs`:
 - Create: `D:/Notatki/notatki/.claude/specs/<YYYY-MM-DD of the run>-hub-voice-plan-2-acceptance.md`
 - Modify: `D:/Notatki/notatki/.claude/projects/hub.md`, `D:/Notatki/notatki/README.md:20`
 
-- [ ] **Step 1: Run the acceptance with Rafal** in a real `notatki` session.
+- [x] **Step 1: Run the acceptance with Rafal** in a real `notatki` session.
   - The conversation: `/talk` with at least two decisions, one open question and a work order. Rafal ends it with the „Zakończ rozmowę” button.
   - Checks:
     - decisions as read back match `decisions.md`;
@@ -484,8 +484,8 @@ The fixtures of `cli.test.mjs`:
     Each must wake X with a report and leave no conversation at ElevenLabs. In both, `prompt.md` must not exist and the report must show `--- prompt.md ---` followed by `(not written)` (spec §5.4, §12).
   - `/talk` in an `edu-saas` session must refuse.
 
-- [ ] **Step 2: Write the acceptance report** (verbatim evidence per check) and update the hub index with the skill `project-index` (`hub-voice-plan-2` done or the failed checks). Add `talk` to the global skills listed in `README.md:20`. Commit and push the vault files.
+- [x] **Step 2: Write the acceptance report** (verbatim evidence per check) and update the hub index with the skill `project-index` (`hub-voice-plan-2` done or the failed checks). Add `talk` to the global skills listed in `README.md:20`. Commit and push the vault files.
 
-- [ ] **Step 3: Propose the voice-proposal rule** (spec §9) to Rafal as the exact text for `~/.claude/CLAUDE.md`, section „Decyzje: Recommendation-First”. Add it only after his „tak”; it is his global configuration.
+- [x] **Step 3: Propose the voice-proposal rule** (spec §9) to Rafal as the exact text for `~/.claude/CLAUDE.md`, section „Decyzje: Recommendation-First”. Add it only after his „tak”; it is his global configuration.
 
-- [ ] **Step 4: Cleanup after his OK:** delete the probe agent `hub-voice-probe` and its tool (ElevenLabs API), and remove the probe's `with-key.sh` URL files. Keep `C:/Users/rafal/hub-probes/` as it is.
+- [x] **Step 4: Cleanup after his OK:** delete the probe agent `hub-voice-probe` and its tool (ElevenLabs API), and remove the probe's `with-key.sh` URL files. Keep `C:/Users/rafal/hub-probes/` as it is.

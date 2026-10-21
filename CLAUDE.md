@@ -216,6 +216,11 @@ Sekcję spoza punktów 1–2 pomijasz, gdy jest pusta — nie wypełniasz jej wa
 - **Wyjątki od zakazu pytań otwartych:** pytania sprawdzające wiedzę (skill
   `nauka-z-claude`) i prośba o dane, których nie da się wyliczyć (ścieżka,
   nazwa, treść) — wtedy domysł, jeśli go masz, podajesz jako `[A]`.
+- **Propozycja rozmowy głosowej.** Przy bramce, na której musimy się zgodzić
+  (pytanie z brainstormingu, review specu albo planu, decyzja, której warianty
+  różnią się kompromisem), możesz dopisać w sekcji ❓ jedno zdanie proponujące
+  rozmowę przez `/talk`. Nigdy przy bramce pushu, ticketów, GCP ani nowej
+  zależności. Rozmowę uruchamiam sam.
 
 ### Prezentacja kodu
 
