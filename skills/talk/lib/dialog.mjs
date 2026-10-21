@@ -7,10 +7,12 @@ import { writeVoiceForkSettings } from './settings.mjs';
 
 const pad = (n) => String(n).padStart(2, '0');
 
-// <root>/projects/<safe key>/dialogs/<YYYY-MM-DD-HHmm>-talk, with -2, -3... on collision.
+// <root>/projects/<safe key>/dialogs/<YYYY-MM-DD-HHmm>-talk, with -2, -3... on collision. Leading dots
+// are dropped: Claude Code refuses any write under a `.claude` directory as a sensitive file, whatever
+// the allow rule (the hub's key is `.claude`).
 export function dialogDirFor({ root, projectKey, now }) {
   const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
-  const base = join(root, 'projects', safeName(projectKey), 'dialogs', `${stamp}-talk`);
+  const base = join(root, 'projects', safeName(projectKey).replace(/^\.+/, ''), 'dialogs', `${stamp}-talk`);
   let dir = base;
   for (let n = 2; existsSync(dir); n += 1) dir = `${base}-${n}`;
   return dir;

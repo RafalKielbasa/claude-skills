@@ -31,6 +31,8 @@ export function agentConfig({ llm = 'claude-haiku-5-5', toolIds = [], voiceId } 
       tts: { model_id: 'eleven_v4_turbo', ...(voiceId ? { voice_id: voiceId } : {}) },
       asr: { provider: 'scribe_realtime' },
       turn: { turn_eagerness: 'normal', turn_timeout: 20, silence_end_call_timeout: 30 },
+      // The 600 s default cut a real conversation mid-answer (2026-10-21).
+      conversation: { max_duration_seconds: 1800 },
     },
     platform_settings: { privacy: { retention_days: 0 } },
   };

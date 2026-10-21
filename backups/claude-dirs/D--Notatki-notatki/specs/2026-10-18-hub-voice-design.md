@@ -2,6 +2,8 @@
 
 **Index:** [.claude/projects/hub.md](../projects/hub.md)
 **Date:** 2026-10-18
+**Amended:** 2026-10-21, §17–§20: the decisions after Rafal's first tests, rejoining a conversation,
+starting a conversation from the hub, and Plan 3
 **Sources:** brainstorming notes [2026-10-16-hub-voice-notes.md](2026-10-16-hub-voice-notes.md)
 (every decision below with its date and source), hub spec
 [2026-10-13-hub-core-design.md](2026-10-13-hub-core-design.md) (cited as "hub spec §n").
@@ -29,11 +31,14 @@ session X continues on the confirmed decisions.
 - The conversation leaves files Rafal reviews as text: `decisions.md`, `open-questions.md`,
   `prompt.md` when the conversation ends in a work order, and a transcript.
 - After the conversation, session X proceeds at once on the confirmed decisions.
+- A break, a closed tab or the duration limit of a call does not end the conversation; Rafal
+  rejoins it from the browser (§18, added 2026-10-21).
+- The hub starts a voice conversation about another session, and its result reaches that session
+  only through the hub's send path (§19, added 2026-10-21).
 
 **Non-goals of this spec** (later or elsewhere):
 
-- Starting a voice conversation from the hub ("omówmy głosem wynik sesji X"): a later stage of
-  `hub-voice`, added to this spec when its turn comes.
+- A voice conversation about a project with no live session to fork (§19.5).
 - A phone as the voice device.
 - The hub panel and any network exception other than the voice bridge (§6).
 - Sending messages to other sessions by voice; "wyślij" stays in text in the hub.
@@ -79,7 +84,7 @@ session X continues on the confirmed decisions.
 | Page | served by the bridge | Connects to the ElevenLabs agent with the token; shows the live transcript, the decision being read back, the recorded decisions, the fork's state ("Claude myśli…"), and an "Zakończ rozmowę" button |
 | ElevenLabs agent | an agent in Rafal's ElevenLabs account; its configuration kept as a file in the skill | The voice: Polish speech recognition and voice, conversation glue, the client tool `ask_claude` (§7) |
 | Voice fork | a restricted `claude -p --resume <X> --fork-session` with `stream-json` input and output, one process per conversation (§8) | The interlocutor: answers, reads decisions back through the agent, writes the dialog files (§8) |
-| Dialog directory | `C:\Users\rafal\hub-data\projects\<project>\dialogs\<date>-<slug>\`, the hub's layout (hub spec §4.1) but outside `~/.claude`, where Claude Code refuses a fork's write as a sensitive file; this amends hub spec §4.1 for voice dialogs only | `context/` (git snapshot), `fork-settings.json`, `decisions.md`, `open-questions.md`, `prompt.md`, plus `transcript.md` |
+| Dialog directory | `C:\Users\rafal\hub-data\projects\<project>\dialogs\<date>-<slug>\`, the hub's layout (hub spec §4.1) but outside `~/.claude`, where Claude Code refuses a fork's write as a sensitive file; this amends hub spec §4.1 for voice dialogs only. The `<project>` segment is the hub project key without leading dots: the hub's own key `.claude` gives `claude`, because Claude Code refuses a write under any directory named `.claude` (§17) | `context/` (git snapshot), `fork-settings.json`, `decisions.md`, `open-questions.md`, `prompt.md`, plus `transcript.md`, and while the dialog lives, the file that lets `/talk` and the hub find it (§18.5) |
 
 ## 5. Flow
 
@@ -127,7 +132,11 @@ session X continues on the confirmed decisions.
 ### 5.4 End
 
 1. The conversation ends with the page's "Zakończ rozmowę" button, the agent's end of the call, or
-   the page disappearing (tab closed: no heartbeat for a grace period).
+   the page disappearing (tab closed: no heartbeat for a grace period). Amended 2026-10-21 (§18.3):
+   a hang-up, a closed tab and the duration limit end only the current call. The dialog ends on
+   the button, on Rafal's spoken end marked by the agent, at the pause limit, at the first-call
+   deadline, or when the fork exits. Steps 2–4 run once, at the end of the dialog. The deletion of
+   step 3 and the transcript also run at the end of every call (§18.4).
 2. The bridge sends the fork a final message: if a work order was confirmed (§5.3 step 3), write
    `prompt.md` with the hub's template sections (hub spec §6.1: **Cel**, **Kontekst**, **Decyzje z
    uzasadnieniem**, **Ograniczenia**, **Oczekiwany rezultat**), built only from the confirmed
@@ -170,7 +179,8 @@ the agent's LLM provider, and only:
 under these rules:
 
 - it binds `127.0.0.1` only;
-- it lives only for the duration of one conversation;
+- it lives only for the duration of one conversation; since 2026-10-21, one dialog: its calls and
+  the pauses between them, each pause at most the pause limit (§18.9);
 - every request must carry the conversation's random token (from the page URL); requests without
   it, or with a `Host` header other than the bridge's own `127.0.0.1:<port>` or `localhost:<port>`,
   are refused;
@@ -193,7 +203,9 @@ A phone would need a different exception; that is a separate decision for later.
   Polish probe).
 - **Turns and hang-up:** `turn_timeout` 20 s; the built-in `end_call` tool and
   `silence_end_call_timeout` 30 s, so the agent ends the call on „Kończymy” or silence instead of
-  running to the 600 s maximum (probe report „Haiku and Sonnet”, run A).
+  running to the 600 s maximum (probe report „Haiku and Sonnet”, run A). The maximum
+  (`max_duration_seconds`) is 1800 s since 2026-10-21 (§17). Since §18, a hang-up ends only the
+  call, and the agent marks Rafal's spoken end with the client tool `end_conversation` first.
 - **Client tool `ask_claude`:** runs in the page and calls the bridge; `expects_response` on, a
   response timeout of 120 s, pre-tool speech forced, interruptions allowed. Its argument carries
   what Rafal asked; the page also hands the bridge Rafal's transcribed words for the same turn, and
@@ -286,7 +298,7 @@ a project outside the allowlist refused to start; session X proceeded on `prompt
 the first outward action. The end is checked on three paths the probes did not run live: Rafal's
 „Zakończ rozmowę” button, a closed tab (lost heartbeat), and a page that never starts (first-beat
 deadline); each wakes session X with a closing report and leaves no conversation at ElevenLabs.
-Voice minutes beyond the Starter plan's go to Rafal first.
+Voice minutes beyond the Starter plan's go to Rafal first. Plan 3 adds the checks of §20.2.
 
 ## 12. Calls made by Claude (approved as a whole in the playback of 2026-10-18; check them)
 
@@ -369,3 +381,330 @@ answer, which the agent then says. The page keeps a mark per ask and sends the a
 uninterrupted call has delivered the same request; this path was not exercised live, because the
 agent re-issued both times. Interruptions stay allowed (`interruption_mode: allow`); the fallback is
 not used.
+
+## 17. Decisions of 2026-10-21
+
+Rafal tested `/talk` on 2026-10-21, five times from the hub session and earlier in `notatki`, and
+concluded: „móc włączać i wyłączać się do jednej sesji albo w jaki sposób przeglądarki reaktywować
+sesję, a nie znowu przez tok” („tok”, dictated, is `/talk`), and of the cut after ten minutes:
+„nie da się przeprowadzić dłuższej rozmowy”. He decided the rows below in conversation (session
+`c0987db9`). He confirmed the last row in a voice conversation from the hub (dialog
+`C:\Users\rafal\hub-data\projects\claude\dialogs\2026-10-21-2111-talk`, decision 1).
+
+| Name | Decision | Where applied |
+|---|---|---|
+| Conversation length limit | The agent's `max_duration_seconds` goes from ElevenLabs' default of 600 to 1800; the field accepts 60–7200. The 600 s default cut the hub conversation of 14:54 in the middle of an ask, 596 s after the agent's first line | §7; applied 2026-10-21 by `agent sync` |
+| Writes in dialogs of the hub | The dialog directory's project segment drops leading dots. The hub's key `.claude` had put dialogs under `hub-data\projects\.claude\`, where Claude Code refused every write of the fork („…which is a sensitive file”, reproduced by a probe with the fork's flags) despite the `allow` rule. The fork's role adds that Rafal cannot approve a blocked write | §4; applied 2026-10-21, confirmed live by the dialog of 21:11 |
+| Rejoining a conversation | One design covers rejoining a conversation and starting one from the hub, because both change how long the bridge lives and who opens the page; then Plan 3 | §18, §19 |
+| Design without questions („zacznij”) | Claude designs §18–§19 alone, writes this amendment and Plan 3 with a Codex review, and stops at Rafal's review of the plan. No change to the skill's code before the plan is accepted, no push | §20 |
+
+## 18. Rejoining a conversation
+
+### 18.1 Why
+
+In the hub conversation of 14:54 Rafal talked while he worked: he created a Pinecone index step by
+step and asked whether a newly launched session was running yet. A conversation that goes along
+with work has breaks in it. Plan 2 ends everything at the first end of a call:
+
+- the client's `onDisconnect` calls `finish()` (`web/talk.mjs:108`), `finish()` posts `/api/end`
+  (`web/talk.mjs:68`), and the bridge runs `end()` (`lib/bridge.mjs:241-244`);
+- 15 s without a heartbeat ends it as well (`lib/bridge.mjs:274`).
+
+After that the fork has exited. A new `/talk` starts a new fork, a new dialog directory and a new
+snapshot, so what the conversation had built up is gone. Claude guessed the moment of 14:54;
+Rafal neither confirmed nor rejected that guess.
+
+### 18.2 Terms
+
+- A **dialog** is what `/talk` starts: one bridge, one voice fork, one dialog directory and one
+  closing report.
+- A **call** is one ElevenLabs conversation inside a dialog.
+- A dialog has one or more calls, never two at the same time.
+
+### 18.3 What ends what
+
+| Event | What it ends | What follows |
+|---|---|---|
+| „Zakończ rozmowę” on the page | the call and the dialog | §5.4 steps 2–4 |
+| Rafal's spoken end („Kończymy”): the agent calls the client tool `end_conversation`, then hangs up | the dialog, once that call has ended | §5.4 steps 2–4 |
+| „Przerwa” on the page | the call | paused |
+| the agent hangs up without `end_conversation` (Rafal asked for a break or stopped answering), or the platform's silence hang-up | the call | paused |
+| a closed or reloaded tab (no heartbeat for 15 s during a call) | the call | paused |
+| a network drop or another client error | the call | paused |
+| the call reaches its duration limit (`max_duration_exceeded`) | the call | the page starts the next call at once, without a click |
+| no first call within 10 min of the start (the first-call deadline, as today) | the dialog | §5.4 steps 2–4 |
+| the pause limit: 60 min after a call ended with no new call | the dialog | §5.4 steps 2–4 |
+| the fork exits | the dialog | §5.4 steps 2–4 (as today) |
+
+- **Paused** means that the bridge and the fork keep running. An open page shows „Połącz
+  ponownie”, „Zakończ rozmowę” and the time until which the dialog waits.
+- **After `end_conversation`:** a call that is still running 15 s after the tool returned is
+  ended by the page.
+- **Fallback.** If the probe of §20.1 shows that the agent does not call `end_conversation`
+  reliably, the agent's hang-up (the client's `end_call` context) ends the dialog, as in Plan 2.
+  It is a setting in the skill's configuration, not a code change.
+  - A hang-up reported with any other context (for example the platform's silence hang-up, if the
+    probe shows it arrives as `close`) still pauses the dialog.
+  - If the silence hang-up also arrives as `end_call`, silence ends the dialog, as in Plan 2. A
+    break is then possible only through „Przerwa”, the tab and the duration limit.
+  - Raising or turning off `silence_end_call_timeout` (30 s, §7) would let quiet stretches
+    through, at the price of minutes spent in silence. That price makes it Rafal's decision (§20.4).
+
+### 18.4 At the end of every call
+
+- The bridge reads the call's length and deletes its conversation at ElevenLabs (§5.4 step 3).
+  It also rewrites `transcript.md` with everything said so far.
+- Effects:
+  - a paused dialog keeps nothing at ElevenLabs;
+  - a dialog killed together with its session still leaves its transcript (the background task
+    dies when session X's process ends).
+- At the end of the dialog only what is still missing is deleted.
+- The closing report keeps its format. `conversations:` lists every call of the dialog, and the
+  first segment of `deletion:` is `deleted` only when every call was deleted.
+
+### 18.5 Rejoining
+
+- **The same tab.** „Połącz ponownie” starts the next call.
+- **A closed tab.** The page URL, with its token, stays valid for the life of the dialog.
+  Reopening the tab from the browser (history, „Otwórz ponownie zamkniętą kartę”) brings the page
+  back, and the page loads the transcript so far and the recorded decisions from the bridge.
+- **`/talk` again in session X while its dialog lives.**
+  - The skill reopens that dialog's page instead of starting a second dialog.
+  - `check` reports the live dialog of the session, and a new `reopen` command opens its URL.
+  - The live dialog is found through a file in its dialog directory that exists only while the
+    bridge runs; a file left behind by a killed bridge does not count.
+  - `start` refuses a second live dialog for the same session.
+- **From the hub:** §19.
+- **One call at a time.**
+  - While a call is live, a second tab cannot start another: the bridge refuses the token request,
+    and the page says „Rozmowa trwa w innej karcie.”
+  - A call whose heartbeat has been missing for 15 s is no longer live.
+- **A conversation with a fresh fork**, for example after X has done more work: end the open
+  dialog on its page, then type `/talk`.
+
+### 18.6 What a later call knows
+
+- **The fork.**
+  - At the start of every call after the first, the bridge refreshes the git snapshot in
+    `context/`.
+  - It puts a one-line Polish note in front of the next message to the fork: the length of the
+    break, or that the duration limit cut the call, and the time of the snapshot.
+  - The fork's role: a decision read back before the break and not yet confirmed is read back
+    again before Rafal can confirm it. A read-back cut off by the break may not have been heard
+    whole (§2, anti-goal on the wording).
+- **The agent.**
+  - Every later call starts with another first message: „Wracamy do rozmowy. Słucham.”.
+  - Right after connecting, the agent gets a contextual update with the last lines of the
+    transcript and with every answer from Claude that arrived after its call had ended. The fork
+    may finish an ask after a cut, and without this its answer would be lost, as in §16.
+- **The page** shows the transcript and the decisions so far.
+
+### 18.7 Duration limit
+
+- Each call is limited to 1800 s (§17).
+- When the limit is reached, the agent says „Kończy się czas tego połączenia, zaraz łączę
+  ponownie.” (the agent field `max_conversation_duration_message`; its effect is probed in
+  §20.1).
+- Then the page starts the next call.
+
+### 18.8 Session X during a dialog
+
+- X's turn ends with the start (§5.1), and Rafal may keep working with X in text in the meantime.
+- The fork does not see that work, except through the refreshed snapshot.
+- Decisions reach X only with the closing report at the end of the dialog.
+- This follows from §8: the fork sees X's history up to the tool call that started the bridge.
+- **Amends §5.5.** When X had turns of its own between the start of the dialog and the closing
+  report, X does not carry out `prompt.md` at once. It shows Rafal the order next to what it has
+  done since the start, and waits for his word in text. A work order built on an older state must
+  not land on top of newer work unseen. Without such turns, X proceeds at once, as in §5.5.
+
+### 18.9 Network exception
+
+- The bridge lives for the dialog instead of a single conversation, and each pause lasts at most
+  the pause limit (§6).
+- The token rule is unchanged.
+- The URL in the browser history works only while the dialog lives.
+
+### 18.10 Non-goals
+
+- A fixed address or a bookmark.
+- Reconnecting on its own after anything other than the duration limit.
+- Two calls at once.
+- A call in which the fork knows X's later work beyond the snapshot.
+
+## 19. Starting a conversation from the hub
+
+### 19.1 Why
+
+- „Omówmy głosem wynik sesji X” is the voice twin of the hub's written dialog (hub spec §6.5).
+  §2 kept it as a non-goal until 2026-10-21.
+- On 2026-10-21 Rafal used `/talk` in the hub session itself (project key `.claude`) to talk about
+  all his projects. That use stays as it is: a plain `/talk` in the hub.
+- This section covers the other case: a conversation about one session X, started from the hub.
+  X is untouched until Rafal sends the result.
+
+### 19.2 Flow
+
+1. Rafal says in the hub „porozmawiajmy głosem o <X>” or „omówmy głosem wynik sesji X”. The hub
+   picks X from the overview as in the dialog path.
+2. `HUB voice resolve --session <X>` is a new command. It launches nothing and writes only the
+   poll record that every hub poll appends (`registry/polls.jsonl`).
+   - It resolves X as `dialog start` does (hub spec §6.5 step 2): a live id directly, a restarted
+     session by its name, and otherwise candidates for Rafal to choose from, plus twins and busy.
+   - **Working directory.** The cwd comes from X's own hook events first, and from the poll of
+     `claude agents --json` only when no event names one.
+     - For a hub-launched worktree session the two disagree. `99352fa7` (in
+       `notatki-hub-single-wyslij`) is polled with `D:\Notatki\notatki` in its latest entries
+       (117 of 151), while its hook names only the worktree (20 of 20), and its transcript lies
+       under the worktree's project directory.
+     - A fork started in the main checkout would read and snapshot the wrong tree, and its
+       `--resume` would look for the transcript in the wrong place.
+   - **Transcript.** It prints X's live session id, that cwd, the project key, the name, and the
+     `transcriptPath` from X's latest hook event, with whether that file exists.
+     - `talk.mjs start` refuses a session whose transcript file is missing, with one Polish
+       sentence. This is the guard against finding F1: a session without a transcript cannot be
+       resumed.
+   - The resolution code is shared with `dialog start`, so the cwd preference also corrects
+     `dialog start` for the same sessions (§20.4).
+3. The hub runs `talk.mjs check --cwd "<cwd>" --session <id>`.
+   - A project outside the allowlist refuses, with the sentence of §5.1, which the hub quotes.
+   - A live dialog of X makes the hub run `talk.mjs reopen --session <id>` and say so.
+4. The hub runs `talk.mjs start --session <id> --cwd "<cwd>" --origin hub [--subject='<subject>']`
+   as its own background task.
+   - The fork is a fork of X, runs in X's working directory and has the boundary of §8.
+   - The dialog directory lies under X's project key.
+   - The page names the project and X's name or short id.
+   - When X is busy, the hub says, as in the written dialog, that the fork sees X's history only up
+     to the running tool call.
+5. When the task completes, the hub reads the closing report from the task's output.
+   - It shows the decisions and open questions as Polish tables, the length of each call and any
+     deletion problem.
+   - If `prompt.md` was written, the hub composes it as a dialog message to X:
+     `HUB compose --path dialog --session <id> --origin voice/<dialog dir name> --body-file "<dialog dir>/prompt.md"`.
+     It then follows steps 2–6 of the hub skill's Sending: the full draft, then Rafal's „wyślij”
+     in text.
+   - Without `prompt.md` nothing is sent.
+6. The bridge does not wake X, and X never reads the dialog. X learns the result only from the
+   hub's message.
+
+### 19.3 Boundaries
+
+- A voice decision is never „wyślij” (§2, anti-goals; the hub's hard rules are unchanged).
+- The hub writes only into `~/.claude/hub/` through the hub CLI, with one exception: the directory
+  of a voice dialog, which the talk CLI writes into its own dialog root (§4). The hub's role text
+  and its skill say so.
+- The hub starts sessions and forks only with `HUB launch` and `HUB dialog start`; the voice fork
+  joins that list, started through the talk CLI after `HUB voice resolve`.
+- If Rafal types `/talk` in X while a hub-started dialog about X lives, X reopens that dialog
+  (§18.5). Its report still goes to the hub, and X tells Rafal so.
+
+### 19.4 Hub-launched sessions (finding F1)
+
+- Sessions launched by the hub with `claude --bg` write their transcripts. Checked on 2026-10-21:
+  `4bd53d28` and `f8d64eed`, both `kind: background` in `hub-sessions.json`, have their `.jsonl`
+  under `~/.claude/projects/`.
+- Their transcripts lie under the project directory of their worktree, which is why the cwd comes
+  from the hook (§19.2 step 2).
+- Plan 3 checks a hub-started voice fork of a hub-launched worktree session, without voice,
+  before the acceptance: the fork must become ready from the hook's cwd.
+
+### 19.5 Non-goals
+
+- A voice conversation about a project with no live session.
+- Live voice dialogs in the hub overview (`check --session` and `reopen` are enough).
+- The hub driving the page.
+
+## 20. Plan 3
+
+### 20.1 Probe (with voice, about 3 min, with Rafal)
+
+The probe runs on the built code, before the acceptance. Every way it can come out is already
+covered in the build, so its result only sets configuration:
+
+- the fallback of §18.3;
+- whether a later call gets its own first message;
+- whether the duration message is spoken.
+
+A separate probe harness would only duplicate the page. The probe checks four things:
+
+- **(a)** On „Kończymy”, the agent calls `end_conversation` and then hangs up. On „Zrób przerwę”,
+  it hangs up without calling it.
+- **(b)** The agent takes up a later call's first message and its contextual update with the end
+  of the transcript.
+- **(c)** The duration message is spoken, on a call limited to 60 s for the probe; the limit goes
+  back to 1800 s afterwards.
+- **(d)** What `onDisconnect` receives in each case. The vendored client 1.28.0 reports the
+  contexts `end_call`, `max_duration_exceeded`, `close` and `connection_state_changed`.
+
+If (a) fails, the fallback of §18.3 applies.
+
+### 20.2 Acceptance with Rafal (extends §11)
+
+One dialog in `notatki` covers:
+
+- a break through „Przerwa”, then a rejoin;
+- a closed tab reopened from the browser within the pause limit;
+- a decision read back, a break before its confirmation, and the read-back repeated after the
+  rejoin;
+- a call cut by a temporary 120 s duration limit (restored to 1800 s afterwards), followed by the
+  automatic next call;
+- `/talk` in X during a pause, which reopens the same page;
+- „Kończymy”, which ends the dialog and wakes X with a report that lists every call.
+
+Then:
+
+- a conversation started from the hub about a session in `notatki`, whose `prompt.md` the hub
+  drafts to X and sends after „wyślij”;
+- the pause limit, shortened by configuration, ending a dialog (without voice).
+
+After each call, its conversation is gone from ElevenLabs. Voice time is about 10 minutes, within
+the Starter plan; anything beyond the plan goes to Rafal first.
+
+### 20.3 Calls made by Claude under „zacznij” (for Rafal's review)
+
+- One dialog, one fork, one dialog directory and one closing report across all its calls; one
+  call at a time; one live dialog per session X.
+- Only the button, Rafal's spoken end marked by `end_conversation`, the pause limit, the
+  first-call deadline and the fork's exit end a dialog; every other end of a call pauses it.
+- The pause limit is 60 min, in the skill's configuration. The first-call deadline stays at
+  10 min.
+- The page reconnects on its own only after the duration limit, so that a call Rafal left on
+  purpose is not reopened and its minutes are not spent.
+- Each call's conversation is deleted at ElevenLabs, and `transcript.md` is rewritten, at the end
+  of that call.
+- Rejoining works through the same URL; `/talk` and the hub reopen the dialog instead of starting
+  a second one.
+- At a later call: the snapshot is refreshed, the fork gets a note, a decision read back before the
+  break is read back again, and the agent gets a first message, the transcript's end and any
+  undelivered answers.
+- The page gets a „Przerwa” button and names the project and session X.
+- A start from the hub uses a new read-only `HUB voice resolve` and the talk CLI with
+  `--origin hub`. The report goes to the hub, and `prompt.md` reaches X only through the hub's
+  dialog send path after „wyślij”.
+- The hub's role and skill get the exception for voice dialog directories and voice forks
+  (§19.3).
+- `agent sync` also applies the new client tool and the agent fields that §18 needs.
+- The fork of a session starts in the cwd from that session's hook events, not in the cwd of the
+  poll. A session without a transcript file is refused before any fork starts.
+- X asks before carrying out `prompt.md` when it had turns of its own during the dialog (§18.8).
+- The probe runs on the built code, and its results are configuration values (§20.1).
+- The fallback of §18.3 keeps `silence_end_call_timeout` at 30 s.
+
+### 20.4 Decisions for Rafal (in Plan 3, not taken by Claude)
+
+| Name | Question | Recommendation | Why it is Rafal's |
+|---|---|---|---|
+| Working directory in `dialog start` | Should the hook-first cwd of §19.2 also apply to the written dialog's `dialog start`, which shares the code? | A: yes. A written dialog of a hub-launched worktree session otherwise starts in the main checkout. B: only the voice path; `dialog start` goes on the open points of `hub-core` | It changes the built part `hub-core` from inside Plan 3 |
+| Silence in the fallback | Only if the probe triggers the fallback and the silence hang-up arrives as `end_call`: raise `silence_end_call_timeout`? | A: leave it at 30 s and take breaks with „Przerwa”. B: 120 s | Minutes spent in silence cost money |
+| Voice minutes | The probe (about 3 min) and the acceptance (about 10 min) on the Starter plan; the remaining minutes could not be read (`GET /v1/user/subscription` answers 401 to this key) | A: go ahead, and stop if ElevenLabs reports the plan's limit | Cost |
+
+### 20.5 Left to the builder
+
+- The structure of the bridge's states.
+- The form of the live-dialog file and its liveness check.
+- How a later call's first message is set: an override enabled in the agent's platform settings,
+  or a dynamic variable.
+- How many transcript lines the contextual update carries.
+- The page texts beyond those named here.
+- Where `HUB voice resolve`'s code lives.
+- How `agent sync` applies the client tool and the platform settings.

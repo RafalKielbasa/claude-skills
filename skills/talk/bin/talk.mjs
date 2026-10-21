@@ -58,6 +58,7 @@ export async function agentSync({ eleven, configPath = CONFIG_PATH }) {
     conversation_config: {
       agent: { prompt: { prompt: c.agent.prompt.prompt, tool_ids: c.agent.prompt.tool_ids, built_in_tools: c.agent.prompt.built_in_tools } },
       turn: c.turn,
+      conversation: c.conversation,
     },
   });
   return { code: 0, lines: [`agent: ${agentId}`, `tool: ${toolId}`] };

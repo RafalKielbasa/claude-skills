@@ -24,6 +24,12 @@ test('the project key is made safe for a directory name', () => {
   assert.equal(dir, join(root, 'projects', 'my-project', 'dialogs', '2026-10-21-0905-talk'));
 });
 
+test('a project key with leading dots loses them, so no dialog path holds a .claude directory', () => {
+  const root = mkdtempSync(join(tmpdir(), 't-'));
+  const dir = dialogDirFor({ root, projectKey: '.claude', now: new Date(2026, 9, 21, 9, 5) });
+  assert.equal(dir, join(root, 'projects', 'claude', 'dialogs', '2026-10-21-0905-talk'));
+});
+
 test('prepareDialog takes the snapshot into context and writes fork-settings.json', () => {
   const repo = mkdtempSync(join(tmpdir(), 'repo-'));
   assert.equal(spawnSync('git', ['init', repo]).status, 0);

@@ -60,6 +60,7 @@ test('agent sync patches the tool and the agent from the saved ids', async () =>
   const patch = eleven.calls[1][2].conversation_config;
   assert.deepEqual(patch.agent.prompt.tool_ids, ['t']);
   assert.ok(patch.agent.prompt.prompt && patch.agent.prompt.built_in_tools.end_call && patch.turn.turn_timeout === 20);
+  assert.equal(patch.conversation.max_duration_seconds, 1800);
 });
 
 test('agent sync without saved ids exits 2 without any API call', async () => {

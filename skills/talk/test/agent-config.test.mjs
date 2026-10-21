@@ -32,6 +32,10 @@ test('the agent can end the call itself and hangs up after 30 s of silence', () 
   assert.equal(c.conversation_config.turn.silence_end_call_timeout, 30);
 });
 
+test('a conversation lasts up to 30 minutes instead of the 600 s default', () => {
+  assert.equal(agentConfig({}).conversation_config.conversation.max_duration_seconds, 1800);
+});
+
 test('tool ids and voice are passed through', () => {
   const c = agentConfig({ llm: 'l', toolIds: ['t1'], voiceId: 'v1' });
   assert.deepEqual(c.conversation_config.agent.prompt.tool_ids, ['t1']);

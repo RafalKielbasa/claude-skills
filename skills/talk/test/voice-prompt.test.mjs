@@ -25,6 +25,11 @@ test('the role tells the fork that the stopped talk start notification is its ow
   assert.match(p, /`talk\.mjs start` task with the status stopped \("didn't finish before the previous session ended"\) is the bridge of this very conversation, still running: it is not a failure/);
 });
 
+test('the role says a blocked write cannot be approved by Rafal and leaves the decision in the transcript', () => {
+  const p = voiceStartPrompt({ projectName: 'n', sourceId: 'a', dialogDir: 'C:/d', snapshot: { git: false, cwd: 'C:/r', at: 'T' } });
+  assert.match(p, /You run in the background without a window: Rafal cannot approve a blocked write\. If a write is refused, say once that the decision stays in the transcript, and do not retry\./);
+});
+
 test('the introduction turn reads the git snapshot so the first question does not wait for it', () => {
   const p = voiceStartPrompt({ projectName: 'notatki', sourceId: 'abcdef12', dialogDir: 'C:/d', snapshot: { git: true, cwd: 'C:/r', at: 'T' } });
   assert.match(p, /Before you introduce yourself, read .*status\.txt.*log\.txt.*diff\.patch/s);

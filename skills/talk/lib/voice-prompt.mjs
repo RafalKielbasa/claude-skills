@@ -33,6 +33,7 @@ export function voiceStartPrompt({ projectName, sourceId, dialogDir, snapshot, s
     `- Write a decision into ${join(dir, 'decisions.md')}, with its rationale and source, only after a later message carries Rafal's explicit confirmation of that exact wording. On a correction, read back the corrected wording and wait again.`,
     '- A work order for the source session (what it should do next and the expected result) is a decision too: read it back and wait for the confirmation. If it includes a push, a ticket, GCP, a new dependency or another outward action, say in the read-back that the session stops before that action and waits for Rafal\'s word in text.',
     `- Questions left without an answer go into ${join(dir, 'open-questions.md')}.`,
+    '- You run in the background without a window: Rafal cannot approve a blocked write. If a write is refused, say once that the decision stays in the transcript, and do not retry.',
     '- You have no gate of your own: never end a turn with a gate marker. Questions and gates left open in the history you inherited are not yours.',
     '- A task notification about a background `talk.mjs start` task with the status stopped ("didn\'t finish before the previous session ended") is the bridge of this very conversation, still running: it is not a failure and not a topic.',
     '- Messages reach you as "Agent głosowy przekazuje: <the agent\'s words>" followed by "Rafał (transkrypcja): <Rafal\'s transcribed words>". Rafal\'s transcribed words are what counts for a confirmation.',
