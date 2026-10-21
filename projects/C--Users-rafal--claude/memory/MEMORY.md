@@ -1,2 +1,3 @@
 - [HUB confirm needs --hub-name](hub-confirm-hub-name.md) — hub session named hub-<n> must pass --hub-name or deliveries stay delivery-unknown
 - [Hub: „wyślij” is not a variant](hub-wyslij-not-a-variant.md) — ask for the literal word; a lettered [A] „wyślij” gets "A" back and stalls the send
+- [Hub: session names, not ids](hub-session-names-not-ids.md) — in reports name sessions by their work ("Lekcja 1.4", "Daily"); ids only in commands and <details>

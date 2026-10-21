@@ -20,6 +20,11 @@ test('outward actions go into prompt.md only under Ograniczenia, waiting for Raf
   assert.match(p, /push, tickets, GCP.*only under \*\*Ograniczenia\*\*.*never under \*\*Oczekiwany rezultat\*\*/);
 });
 
+test('the role tells the fork that the stopped talk start notification is its own running bridge', () => {
+  const p = voiceStartPrompt({ projectName: 'n', sourceId: 'a', dialogDir: 'C:/d', snapshot: { git: false, cwd: 'C:/r', at: 'T' } });
+  assert.match(p, /`talk\.mjs start` task with the status stopped \("didn't finish before the previous session ended"\) is the bridge of this very conversation, still running: it is not a failure/);
+});
+
 test('the introduction turn reads the git snapshot so the first question does not wait for it', () => {
   const p = voiceStartPrompt({ projectName: 'notatki', sourceId: 'abcdef12', dialogDir: 'C:/d', snapshot: { git: true, cwd: 'C:/r', at: 'T' } });
   assert.match(p, /Before you introduce yourself, read .*status\.txt.*log\.txt.*diff\.patch/s);

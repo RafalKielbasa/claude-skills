@@ -52,14 +52,14 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
             "command": "node \"C:/Users/rafal/.claude/skills/hub/bin/hub-hook.mjs\"",
             "async": true
           }
-        ],
-        "matcher": "*"
+        ]
       }
     ],
     "Notification": [
@@ -152,5 +152,10 @@
       "**Org-specific CLIs**: `tools/kb-client` (knowledge-base vector DB CLI, wraps n8n webhooks), `tools/course-pipeline` (course validation, review-ai, publish, plan-nagrania)",
       "**routine under this repo's tools/ prefix**: read-only kb-client operations (`ask`, `stats`, `list`, `export`) and course-pipeline validation/dry-run commands are routine per repo skill docs; `kb-client delete --yes` (whole-category wipe) and course-pipeline `publish --env=prod` are explicitly gated on Rafał's in-conversation confirmation and should not be auto-approved"
     ]
+  },
+  "voiceEnabled": true,
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
   }
 }
