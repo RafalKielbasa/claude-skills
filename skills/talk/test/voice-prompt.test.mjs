@@ -13,6 +13,13 @@ test('the voice role pins the decision prefix, the end message and the dialog fi
   for (const s of ['Decyzja do potwierdzenia:', 'KONIEC ROZMOWY', 'decisions.md', 'open-questions.md', 'prompt.md', 'Polish', 'gate marker', 'Markdown']) assert.ok(p.includes(s), s);
 });
 
+test('outward actions go into prompt.md only under Ograniczenia, waiting for Rafal in text, and the read-back says so', () => {
+  assert.match(endMessage('C:/d'), /Push, tickety, GCP.*tylko do \*\*Ograniczenia\*\*.*słowo Rafała w tekście, nigdy do \*\*Oczekiwany rezultat\*\*/);
+  const p = voiceStartPrompt({ projectName: 'n', sourceId: 'a', dialogDir: 'C:/d', snapshot: { git: false, cwd: 'C:/r', at: 'T' } });
+  assert.match(p, /say in the read-back that the session stops before that action and waits for Rafal's word in text/);
+  assert.match(p, /push, tickets, GCP.*only under \*\*Ograniczenia\*\*.*never under \*\*Oczekiwany rezultat\*\*/);
+});
+
 test('the introduction turn reads the git snapshot so the first question does not wait for it', () => {
   const p = voiceStartPrompt({ projectName: 'notatki', sourceId: 'abcdef12', dialogDir: 'C:/d', snapshot: { git: true, cwd: 'C:/r', at: 'T' } });
   assert.match(p, /Before you introduce yourself, read .*status\.txt.*log\.txt.*diff\.patch/s);

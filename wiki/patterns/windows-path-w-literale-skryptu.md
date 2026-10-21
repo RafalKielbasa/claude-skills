@@ -131,6 +131,14 @@ kodem i nie powinna przechodzić przez składnię języka.
   zapisał. Naprawa: skrypt przez Write do scratchpada; tak samo wszystkie późniejsze skrypty w tej sesji.
   Ta reguła jest już w pamięci projektu (`bash-heredoc-backslash-halved`), a odruch heredoku i tak wrócił
   przy pierwszym skrypcie.
+- 2026-10-20, sesja 541cf3f0-bb8c-449a-92fd-d69e74d140fc (id claude.ai niedostępny; repo Baza wiedzy, montaż
+  lekcji agenty-ai 1.3): szesnasty dowód. W pętli Bash do arkuszy klatek wyrażenie `${r##*klatki\\}` w podwójnym
+  cudzysłowie dało „unexpected EOF”: ukośnik zjadł znak zamykający. Naprawa: skrypt w pliku w scratchpadzie, nazwa
+  pliku wycinana przez `sed -E 's/.*[\\/]//'` zamiast rozwinięcia parametru z ukośnikiem.
+- 2026-10-21, ta sama sesja, krok wiki: siedemnasty dowód. Skrypt Pythona w heredoku Bash miał wpisać do
+  indeksu wiki tekst `$'\r'`; podwójny ukośnik w literale Pythona dotarł pojedynczy i do pliku trafiły dwa
+  prawdziwe znaki CR. Złapane kontrolą `tr -cd '\r' | wc -c` (wynik 2) i naprawione skryptem bez ukośników
+  (`chr(92) + 'r'`).
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją

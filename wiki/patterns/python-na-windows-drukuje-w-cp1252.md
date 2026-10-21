@@ -81,6 +81,10 @@ niepowodzenie całej operacji.
   `print(s)` (`'charmap' codec can't encode character 'ą'`); kontrola odnośników konceptu
   wypisała wynik i padła na drukowaniu „Rafał”. Stan plików sprawdzony przed powtórzeniem —
   powtarzać nie było czego; dalsze wypisy tylko ASCII.
+- 2026-10-20, sesja 541cf3f0-bb8c-449a-92fd-d69e74d140fc (id claude.ai niedostępny): ósmy dowód. Skrypt
+  Pythona przy montażu lekcji agenty-ai 1.3 padł na `print` polskiego tekstu (`UnicodeEncodeError`, cp1252).
+  Powtórzony z `PYTHONIOENCODING=utf-8`. W tej samej sesji zabrakło modułu PIL do arkusza klatek: arkusze
+  złożone przez `ffmpeg` `xstack`.
 
 ## Rozwiązanie
 Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie

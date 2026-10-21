@@ -553,3 +553,11 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Gładko, bez osobnych wzorców: Recommendation-First z D1/D2 — „ok” i „A” przyjęły po kilka decyzji naraz; codex review planu (tabela uwag); builder check specu; board-tracker (kumulatywne ślady #651 i #665); project-index w tych samych commitach; review końcowe na opus z triażem odłożonych Minor i jedną falą poprawek.
 - Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): brak nowych — patrz log repo.
 - Sygnał: kod-referencyjny-planu-nigdy-nie-uruchomiony (porażka, 13 dowodów z 13 sesji) → `/evolve-skill superpowers:writing-plans`; dlugi-lancuch-narzedzi-bez-linii-statusu (porażka, 6 sesji) jest `ogólny` — kandydat do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.
+
+## 2026-10-21 — sesja 541cf3f0-bb8c-449a-92fd-d69e74d140fc (id claude.ai niedostępny; repo Baza wiedzy: lekcja agenty-ai 1.3 od przebiegu próbnego do zaakceptowanego `final.mp4`)
+- Dopisano dowód: windows-path-w-literale-skryptu (szesnasty i siedemnasty; drugi to heredoc, który wpisał prawdziwe CR do indeksu wiki) — rozwinięcie parametru z ukośnikiem w podwójnym cudzysłowie dało „unexpected EOF”, skrypt przeniesiony do pliku
+- Dopisano dowód: python-na-windows-drukuje-w-cp1252 (ósmy) — `print` polskiego tekstu przy montażu, powtórka z `PYTHONIOENCODING=utf-8`; brak PIL zastąpiony `ffmpeg` `xstack`
+- Dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (siódmy, siódma sesja) — dwa przypomnienia harnessu po kompaktowaniu
+- Dopisano dowód: python-write-text-na-windows-zmienia-konce-linii (drugi) — `io.open(..., 'w')` zapisał CRLF w `index.md`/`log.md` obu wiki, commit `b2db7b58` naprawiony `c74b7fd`; kontrola `grep -c` ze strony dała fałszywe 0
+- Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): 4 nowe i 2 dowody — patrz log repo.
+- Sygnał: dlugi-lancuch-narzedzi-bez-linii-statusu (7 sesji), python-na-windows-drukuje-w-cp1252 (8 dowodów) i windows-path-w-literale-skryptu (17 dowodów) są `ogólny` — kandydaci do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.

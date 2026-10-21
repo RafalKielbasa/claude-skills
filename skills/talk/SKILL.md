@@ -65,6 +65,8 @@ environment), in double quotes. Run the commands with the Bash tool.
      tickets, gates as the repository's `CLAUDE.md` and Rafal's global rules say). If it shows
      `(not written)`, go on with the decisions from where you were before `/talk`.
    - Push, tickets, GCP, a new dependency and anything else outward wait for Rafal's word in text,
-     even when the conversation decided them.
+     even when the conversation decided them, when `prompt.md` orders them, and in a repository
+     whose own rules push without asking (the vault „Notatki”): a voice decision is never that word.
+     Stop before the first such action, say what is ready, and ask.
    - If the task ended without a report (an error exit), show Rafal the last lines of its output and
      the `dialog:` line, and stop.

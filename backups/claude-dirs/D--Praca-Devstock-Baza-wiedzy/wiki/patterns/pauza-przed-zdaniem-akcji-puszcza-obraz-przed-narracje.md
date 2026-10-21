@@ -24,6 +24,14 @@ tylko na zdania zakotwiczone.
     wykonuje się zanim padną słowa o wpisywaniu do czatu.”
   - Poprawka objęła całą klasę, nie tylko 7:2: kotwice wpisywania przeniesione na zdanie z pytaniem, pauzy po
     pytaniu, oczekiwanie w kroku 23 automatu. Klatki sprawdzone dla wszystkich trzech pytań czatu (6:4, 6:5, 7:2).
+- 2026-10-20, sesja 541cf3f0-bb8c-449a-92fd-d69e74d140fc (id claude.ai niedostępny): lekcja agenty-ai 1.3, dowód,
+  że reguła działa, gdy idzie się za krokiem 5 `/kurs-montaz` („Then check sync”).
+  - Kotwice 5:4, 5:6, 6:2, 6:10 i 6:12 sprawdzone na 30 klatkach przed i po starcie zdania z kotwicą: żadna akcja
+    nie pojawia się przed swoim zdaniem.
+  - Pauza w 6:11 stoi w „cięciu pauzy” po zdaniu z wynikiem (`po: 3.2`, 1,5 s), nie przed nim.
+  - W 6:7 błąd pojawia się ok. 1 s po „Klikam Execute step”, a lektor komentuje go dopiero w 6:8. Zostawione bez
+    zmian jako skutek kliknięcia, a nie akcja wyprzedzająca zdanie.
+  - Rafał zaakceptował montaż i `final.mp4` bez uwag o synchronizacji.
 
 ## Rozwiązanie
 1. Zanim dodasz pauzę przeciw przyspieszeniu, zakotwicz początek akcji na zdaniu, które ją wprowadza:

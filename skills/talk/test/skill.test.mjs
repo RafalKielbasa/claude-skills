@@ -27,6 +27,12 @@ test('SKILL.md uses the absolute CLI path, LF endings, a closed frontmatter, and
   assert.match(skill, /stays at ElevenLabs/);
 });
 
+test('SKILL.md keeps outward actions behind Rafal\'s word in text even when prompt.md or the repository orders a push', () => {
+  const skill = read('../SKILL.md').replace(/\s+/g, ' ');
+  assert.match(skill, /when `prompt\.md` orders them, and in a repository whose own rules push without asking/);
+  assert.match(skill, /a voice decision is never that word\. Stop before the first such action/);
+});
+
 test('SKILL.md passes the subject single-quoted without single quotes, names the status line and the call lengths', () => {
   const skill = read('../SKILL.md');
   // Single quotes keep $, backticks and backslashes literal; the = form takes a subject that starts with -.

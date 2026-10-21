@@ -39,6 +39,7 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   review, walidacja i commit `app.json` przeniesione w tło. Linia statusu za każdym razem dopiero po
   przypomnieniu, choć ta strona była w indeksie czytanym w poprzednich sesjach.
 - 2026-10-21, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny), egzekucja SDD planu CMS, review końcowe, PR i podsumowanie: sześć przypomnień harnessu po kompaktowaniu, każde po 3–5 wywołaniach bez tekstu — budowa paczki review całej gałęzi, dispatch rundy poprawek, szukanie śladu #651, dopisanie sekcji do specu, sprawdzenie gałęzi sond, przegląd wiki. Linia statusu za każdym razem dopiero po przypomnieniu.
+- 2026-10-21, sesja 541cf3f0-bb8c-449a-92fd-d69e74d140fc (id claude.ai niedostępny; Baza wiedzy, etap 2 `/kurs-video` lekcji agenty-ai 1.3 i podsumowanie): dwa przypomnienia harnessu po kompaktowaniu. Pierwsze po czterech odczytach kodu `video.js` przed sprawdzeniem cache lektora, drugie po trzech odczytach wiki i kodu przy szukaniu przyczyny zawinięcia `lekcja.yaml`. W obu przypadkach linia statusu pojawiła się dopiero po przypomnieniu. Render, poprzedzony własną zapowiedzią, przypomnienia nie wywołał.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

@@ -48,6 +48,10 @@ Skill powtarza regułę, która ma swoje jedyne źródło w `CLAUDE.md`.
   Claude poszedł za `CLAUDE.md` i commitował na gałęzi dnia `rafal-kielbasa/16-10-2026`, np. `884376b9` (uwagi),
   `a0ed9773` (wymowa) i `3efe390a` (akceptacja wideo). Lista dotkniętych skilli rośnie z każdą sesją, która używa
   nowego skilla z rodziny.
+- 2026-10-21, sesja 541cf3f0-bb8c-449a-92fd-d69e74d140fc (id claude.ai niedostępny): akceptacja wideo lekcji
+  agenty-ai 1.3. `/kurs-video` krok 6 (`kurs-video/SKILL.md:214`) nadal mówi „Zmiany zostają niezacommitowane —
+  commit robi Rafał”. Claude poszedł za `CLAUDE.md`, wpisał gałąź do wariantu A („commituję ten plik na
+  `rafal-kielbasa/17-10-2026`”) i po „ok” zacommitował `lekcja.yaml` (`954921eb`). Szósta sesja z tym samym zdaniem.
 
 ## Rozwiązanie
 Zastąp w skillach zdania „Zmiany zostają niezacommitowane — commit robi Rafał”
