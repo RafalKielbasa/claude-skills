@@ -9,6 +9,10 @@ const REJOIN_FIRST_MESSAGE = 'Wracamy do rozmowy. Słucham.';
 const END_ACCEPTED = 'Koniec rozmowy przyjęty. Pożegnaj się jednym zdaniem i zakończ połączenie.';
 const ENDED = 'Rozmowa zakończona. Możesz zamknąć kartę.';
 const END_GRACE_MS = 15000; // a call still running this long after end_conversation is ended here
+// The agent's duration message (lib/agent-config.mjs). Over WebRTC the cut it announces reaches
+// onDisconnect as a close, not as max_duration_exceeded (the rejoin probe of Plan 3, Task 9), so a
+// close right after it is taken for the cut.
+const DURATION_MESSAGE = 'Kończy się czas tego połączenia, zaraz łączę ponownie.';
 const $ = (id) => document.getElementById(id);
 const api = (path, body) => fetch(`${path}?t=${token}`, body === undefined ? {} : {
   method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
@@ -30,6 +34,8 @@ let rejoinFirstMessage = false;
 // path: 'end' posts nothing there (the button posts /api/end), 'pause' posts call-end with reason user.
 let ownEnd = null;
 let endTimer = null;
+// The last message the agent said in the live call.
+let lastAgentMessage = null;
 // One send of what the bridge kept runs at a time; a call whose SDK refused one tries no other.
 let keptSending = false;
 let keptRefused = false;
@@ -186,6 +192,8 @@ function callConnected(id, later) {
 function callEnded(details) {
   const own = ownEnd;
   ownEnd = null;
+  const said = lastAgentMessage;
+  lastAgentMessage = null;
   connected = false;
   conversation = null;
   clearInterval(beat);
@@ -194,8 +202,14 @@ function callEnded(details) {
   shown = null;
   if (own === 'end' || finished) return;
   const reason = own === 'pause' ? 'user' : details?.reason;
-  const context = own === 'pause' ? undefined : details?.context?.type;
-  const ended = api('/api/call-end', { conversationId, reason, context }).catch(() => {});
+  const reported = own === 'pause' ? undefined : details?.context?.type;
+  const cut = reported === 'max_duration_exceeded' || (reported === 'close' && said?.trim() === DURATION_MESSAGE);
+  const context = cut ? 'max_duration_exceeded' : reported;
+  // The client's own reason goes into the bridge's note, after the reported type when the page read
+  // the end as another one.
+  const why = own === 'pause' ? undefined : details?.context?.reason;
+  const detail = context === reported ? why : [reported, why].filter(Boolean).join(': ');
+  const ended = api('/api/call-end', { conversationId, reason, context, ...(detail ? { detail } : {}) }).catch(() => {});
   if (context !== 'max_duration_exceeded') {
     buttons();
     return;
@@ -210,6 +224,7 @@ async function start(auto) {
   if (finished) return;
   connecting = true;
   ownEnd = null;
+  lastAgentMessage = null;
   buttons();
   // After the duration limit the status keeps saying why the page reconnects.
   if (!auto) $('status').textContent = 'Łączę…';
@@ -241,6 +256,7 @@ async function start(auto) {
     onConnect: ({ conversationId: id }) => callConnected(id, later),
     onMessage: ({ message, role, source }) => {
       const who = role ?? (source === 'ai' ? 'agent' : 'user');
+      if (who === 'agent') lastAgentMessage = message;
       addLine(who, message);
       api('/api/transcript', { role: who, text: message }).catch(() => {});
     },

@@ -597,3 +597,65 @@ repeats, the page resends when no repeat is pending). Plan 2 changes: Task 5 add
 `ask-tracker` tracks each ask.
 
 Voice minutes of Task 1: 34 s + 49 s = 83 s.
+
+## Rejoining a conversation (Plan 3, Task 9)
+
+Run 2026-10-22 20:49, in `notatki`, from session c0987db9 (`/talk sonda planu 3`), on the code of
+Plan 3 Tasks 1–8. Setup (Task 9 Step 1): `config.json` `agentHangup: "pause"`,
+`rejoinFirstMessage: true`; `TALK_MAX_DURATION_SECONDS=60 agent sync` created the
+`end_conversation` tool (`tool_4601m5jezbhze889xheh5vcqenxd`, saved as `endToolId`). Read back:
+`max_duration_seconds` 60, two tool ids, `max_conversation_duration_message` „Kończy się czas tego
+połączenia, zaraz łączę ponownie.”, the `first_message` override allowed. The first `agent sync`
+from the controller was refused by the auto-mode classifier; it ran after Rafal's order in text.
+
+`transcript.md`, verbatim:
+
+```
+- 20:50:19 **Agent**: Cześć, słucham.
+- 20:50:27 **Rafał**: Cześć, jak tam dzisiaj leci?
+- 20:50:28 **Agent**: Cześć! [happy] Dzięki, leci dobrze. Jak u ciebie? Co słychać?
+- 20:50:35 **Rafał**: Dobrze. Zrób przerwę.
+- 20:50:36 **Agent**: Okej, [slow] rozmowa na ciebie poczeka. Do usłyszenia!
+- 20:50:40 **Notatka**: call ended: agent/end_call
+- 20:51:02 **Agent**: Wracamy do rozmowy. Słucham.
+- 20:51:02 **Rafał**: Na-na jakim etapie stoisz?
+- 20:51:02 **Notatka**: rejoin context sent
+- 20:51:02 **Agent**: Chwila, pytam Claude o aktualny etap projektu, to może potrwać.
+- 20:51:08 **Agent**: Claude mówi, że jesteśmy w zadaniu dziewiątym planu trzeciego, czyli w samej sondzie głosowej. Agent ma limit sześćdziesięciu sekund. Po przerwie masz poczekać na komunikat o końcu czasu i sprawdzić, czy strona sama połączy się ponownie. Dopiero potem powiedz „Kończymy”.
+- 20:51:46 **Rafał**: ...
+- 20:51:47 **Agent**: Jesteś tam jeszcze? Jeśli chcesz coś dopytać o etap projektu, po prostu powiedz.
+- 20:51:56 **Agent**: Kończy się czas tego połączenia, zaraz łączę ponownie.
+- 20:51:59 **Notatka**: call ended: agent/close
+- 20:57:21 **Agent**: Wracamy do rozmowy. Słucham.
+- 20:57:21 **Rafał**: Kończymy.
+- 20:57:21 **Notatka**: rejoin context sent
+- 20:57:22 **Agent**: Do usłyszenia, Rafał, miłego dnia!
+- 20:57:24 **Notatka**: call ended: agent/end_call
+```
+
+Closing report: `origin: session`, `deletion: deleted`, `conversations:
+conv_7901m5jf5mcwfmtsv4wd6gmjnd81 (22 s), conv_8501m5jf7bv4e14rvmzd26rm2xqm (64 s),
+conv_3401m5jfjwcqfp3sy52gq83pw3vm (11 s)`; all three dialog files `(not written)`.
+
+| Check | Result | Evidence |
+|---|---|---|
+| (a) `end_conversation` on „Kończymy”, not on „Zrób przerwę” | passed | The break call ended `agent/end_call` and the dialog paused (a call followed). The last call also ended `agent/end_call`, yet the dialog ended at once with no fork note: with `agentHangup: "pause"`, `endCall` (`lib/bridge.mjs:280`) ends it only after `end-request`, which only `end_conversation` posts. |
+| (b) a later call's first message and its contextual update | passed | „Wracamy do rozmowy. Słucham.” opened both later calls, `rejoin context sent` followed each, and the agent went on without a new greeting. |
+| (c) the duration message on a 60 s call | passed | Spoken at 20:51:56, 3 s before the cut. |
+| (d) what `onDisconnect` receives | break: `agent/end_call`; end: `agent/end_call` after `end_conversation`; duration cut: `agent/close` | See the finding below. |
+
+**Finding: the duration cut arrives as `close`.** Over WebRTC the cut came as
+`{ reason: 'agent', context: { type: 'close' } }`, not `max_duration_exceeded`. In the vendored
+client 1.28.0, `max_duration_exceeded` comes only from `handleErrorEvent`, on a server `error_event`
+with that `error_type`; LiveKit's `RoomEvent.Disconnected` and the agent's `ParticipantDisconnected`
+both give `close`. So `callEnded` (`web/talk.mjs:199`) did not reconnect, and `endCall` paused the
+dialog. Rafal rejoined with „Połącz ponownie” 5 min 22 s later; nothing was lost (the rejoin context
+was sent and the dialog went on). The page logs only `context.type`, so which of the two LiveKit
+events closed the call is not known. The automatic next call of spec §18 does not happen on this
+client; the fix waits for Rafal's decision „Ponowne połączenie po limicie czasu”.
+
+**Configuration:** `agentHangup: "pause"`, `rejoinFirstMessage: true` (both stay as set for the
+probe); the fallback of §18.3 does not apply, so the question „Silence in the fallback” is not asked.
+Step 4: `agent sync` without the variable, read back `max_duration_seconds` 1800.
+
+Voice minutes of Task 9: 22 s + 64 s + 11 s = 97 s.

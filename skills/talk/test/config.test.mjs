@@ -17,7 +17,7 @@ test('the shipped config allows notatki and .claude and stores dialogs outside ~
 
 test('the shipped config has the pause limit, the hang-up mode and the rejoin first message', () => {
   const c = loadConfig();
-  // Probe values (Task 9): the probe's result may set them back to 'end' and false.
+  // Set by the rejoin probe (Plan 3, Task 9, 2026-10-22): end_conversation and the first message work.
   assert.equal(c.pauseLimitMinutes, 60);
   assert.equal(c.agentHangup, 'pause');
   assert.equal(c.rejoinFirstMessage, true);

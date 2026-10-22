@@ -268,9 +268,10 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
   // the duration limit. The first end of a call that leaves no call live ends the dialog when an end
   // was requested, when the fork has exited (Ruling T2-1), or on the agent's hang-up when agentHangup
   // is 'end'; otherwise the dialog pauses. `ending` is set before the cleanup is awaited, so a dialog
-  // that ends is never reported paused.
-  async function endCall(id, cause, context) {
-    addLine('note', `call ended: ${cause}/${context}`);
+  // that ends is never reported paused. `detail`, when the page sends one, is the client's own account
+  // of the end, kept in the note.
+  async function endCall(id, cause, context, detail = '') {
+    addLine('note', `call ended: ${cause}/${context}${detail ? ` (${detail})` : ''}`);
     const c = remember(id);
     if (!c) return;
     const first = c.endedAt === null;
@@ -410,7 +411,7 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
     } else if (req.method === 'POST' && path === '/api/call-end') {
       // The answer waits for the call's cleanup.
       const body = await readBody(req);
-      await endCall(body.conversationId, field(body.reason), field(body.context));
+      await endCall(body.conversationId, field(body.reason), field(body.context), field(body.detail));
       json(res, { ok: true });
     } else if (req.method === 'POST' && path === '/api/end-request') {
       // Rafal's spoken end (end_conversation): the dialog ends with the current call, or at once when no
