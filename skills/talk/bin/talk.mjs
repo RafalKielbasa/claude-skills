@@ -15,7 +15,7 @@ import { dialogDirFor } from '../lib/dialog.mjs';
 import { startBridge } from '../lib/bridge.mjs';
 import { loadKey } from '../lib/key.mjs';
 import { createElevenClient } from '../lib/eleven.mjs';
-import { agentConfig, askClaudeToolConfig } from '../lib/agent-config.mjs';
+import { agentConfig, askClaudeToolConfig, endConversationToolConfig } from '../lib/agent-config.mjs';
 
 const SKILL_DIR = resolve(fileURLToPath(new URL('../', import.meta.url)));
 const NO_KEY = 'Brak klucza ELEVENLABS_API_KEY: ustaw go jako zmienną środowiskową użytkownika (User) w Windows i uruchom polecenie ponownie.';
@@ -30,36 +30,60 @@ const interruptionMode = (config) => (config.interruption === 'contextual-update
 // Resolves once the text is handed to the OS, so a line is out before the next step and before exit.
 const writeStdout = (text) => new Promise((done) => { process.stdout.write(text, () => done()); });
 
-// Creates the tool, then the agent that uses it, and saves both ids. Never creates a second agent.
+// Creates both tools, then the agent that uses them, and saves the ids. Never creates a second agent.
 export async function agentSetup({ eleven, configPath = CONFIG_PATH }) {
   const config = loadConfig(configPath);
   if (config.agent?.agentId) {
     return { code: 2, lines: [`Agent już istnieje (${config.agent.agentId}); użyj "agent sync", aby go zaktualizować.`] };
   }
-  // A tool saved by an earlier run that failed before the agent was created is reused, not duplicated.
-  let toolId = config.agent?.toolId;
+  // Tools saved by an earlier run that failed before the agent was created are reused, not duplicated.
+  let { toolId, endToolId } = config.agent ?? {};
   if (!toolId) {
     ({ id: toolId } = await eleven.createTool(askClaudeToolConfig({ interruptionMode: interruptionMode(config) })));
-    saveConfig({ ...config, agent: { agentId: null, toolId } }, configPath);
+    saveConfig({ ...config, agent: { agentId: null, toolId, endToolId } }, configPath);
   }
-  const { agent_id: agentId } = await eleven.createAgent(agentConfig({ toolIds: [toolId] }));
-  saveConfig({ ...config, agent: { agentId, toolId } }, configPath);
+  if (!endToolId) {
+    ({ id: endToolId } = await eleven.createTool(endConversationToolConfig()));
+    saveConfig({ ...config, agent: { agentId: null, toolId, endToolId } }, configPath);
+  }
+  const { agent_id: agentId } = await eleven.createAgent(agentConfig({ toolIds: [toolId, endToolId] }));
+  saveConfig({ ...config, agent: { agentId, toolId, endToolId } }, configPath);
   return { code: 0, lines: [`agent: ${agentId}`, `tool: ${toolId}`] };
 }
 
-// Patches the saved tool and agent from the current definitions.
-export async function agentSync({ eleven, configPath = CONFIG_PATH }) {
+const BAD_DURATION = 'TALK_MAX_DURATION_SECONDS musi być liczbą całkowitą od 60 do 7200.';
+
+// Patches the saved tools and agent from the current definitions; creates end_conversation if it is missing.
+// env.TALK_MAX_DURATION_SECONDS sets the call limit (probes only).
+export async function agentSync({ eleven, configPath = CONFIG_PATH, env = {} }) {
   const config = loadConfig(configPath);
   const { agentId, toolId } = config.agent ?? {};
   if (!agentId || !toolId) return { code: 2, lines: ['Brak zapisanego agenta; najpierw uruchom "agent setup".'] };
+  let maxDurationSeconds;
+  if (env.TALK_MAX_DURATION_SECONDS !== undefined && env.TALK_MAX_DURATION_SECONDS !== '') {
+    maxDurationSeconds = Number(env.TALK_MAX_DURATION_SECONDS);
+    if (!Number.isInteger(maxDurationSeconds) || maxDurationSeconds < 60 || maxDurationSeconds > 7200) {
+      return { code: 2, lines: [BAD_DURATION] };
+    }
+  }
+  let endToolId = config.agent.endToolId;
+  if (!endToolId) {
+    ({ id: endToolId } = await eleven.createTool(endConversationToolConfig()));
+    saveConfig({ ...config, agent: { ...config.agent, endToolId } }, configPath);
+  }
   await eleven.updateTool(toolId, askClaudeToolConfig({ interruptionMode: interruptionMode(config) }));
-  const { conversation_config: c } = agentConfig({ toolIds: [toolId] });
+  await eleven.updateTool(endToolId, endConversationToolConfig());
+  const { conversation_config: c, platform_settings: p } = agentConfig({ toolIds: [toolId, endToolId], maxDurationSeconds });
   await eleven.updateAgent(agentId, {
     conversation_config: {
-      agent: { prompt: { prompt: c.agent.prompt.prompt, tool_ids: c.agent.prompt.tool_ids, built_in_tools: c.agent.prompt.built_in_tools } },
+      agent: {
+        prompt: { prompt: c.agent.prompt.prompt, tool_ids: c.agent.prompt.tool_ids, built_in_tools: c.agent.prompt.built_in_tools },
+        max_conversation_duration_message: c.agent.max_conversation_duration_message,
+      },
       turn: c.turn,
       conversation: c.conversation,
     },
+    platform_settings: { overrides: p.overrides },
   });
   return { code: 0, lines: [`agent: ${agentId}`, `tool: ${toolId}`] };
 }
@@ -162,7 +186,7 @@ export async function main(argv, env = process.env, deps = {}) {
     if (!apiKey) return { code: 2, lines: [NO_KEY] };
     eleven = createElevenClient({ apiKey });
   }
-  return run({ eleven, configPath });
+  return run({ eleven, configPath, env });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

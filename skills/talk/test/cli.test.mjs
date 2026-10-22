@@ -20,23 +20,24 @@ function recordingClient() {
   const calls = [];
   return {
     calls,
-    createTool: async (b) => { calls.push(['createTool', b]); return { id: 'tool_1' }; },
+    createTool: async (b) => { calls.push(['createTool', b]); return { id: `tool_${calls.filter((c) => c[0] === 'createTool').length}` }; },
     createAgent: async (b) => { calls.push(['createAgent', b]); return { agent_id: 'agent_1' }; },
     updateTool: async (id, b) => { calls.push(['updateTool', id, b]); return {}; },
     updateAgent: async (id, b) => { calls.push(['updateAgent', id, b]); return {}; },
   };
 }
 
-test('agent setup creates the tool, then the agent with that tool, and saves both ids', async () => {
+test('agent setup creates both tools, then the agent with both, and saves three ids', async () => {
   const path = tmpConfig(base);
   const eleven = recordingClient();
   const out = await agentSetup({ eleven, configPath: path });
   assert.equal(out.code, 0);
   assert.deepEqual(out.lines, ['agent: agent_1', 'tool: tool_1']);
-  assert.deepEqual(eleven.calls.map((c) => c[0]), ['createTool', 'createAgent']);
-  assert.deepEqual(eleven.calls[1][1].conversation_config.agent.prompt.tool_ids, ['tool_1']);
+  assert.deepEqual(eleven.calls.map((c) => c[0]), ['createTool', 'createTool', 'createAgent']);
+  assert.equal(eleven.calls[1][1].tool_config.name, 'end_conversation');
+  assert.deepEqual(eleven.calls[2][1].conversation_config.agent.prompt.tool_ids, ['tool_1', 'tool_2']);
   assert.equal(eleven.calls[0][1].tool_config.interruption_mode, 'allow');
-  assert.deepEqual(JSON.parse(readFileSync(path, 'utf8')).agent, { agentId: 'agent_1', toolId: 'tool_1' });
+  assert.deepEqual(JSON.parse(readFileSync(path, 'utf8')).agent, { agentId: 'agent_1', toolId: 'tool_1', endToolId: 'tool_2' });
 });
 
 test('agent setup uses disable_during_tool for that interruption strategy', async () => {
@@ -52,15 +53,38 @@ test('agent setup refuses when an agent already exists, without any API call', a
   assert.equal(eleven.calls.length, 0);
 });
 
-test('agent sync patches the tool and the agent from the saved ids', async () => {
+test('agent sync creates end_conversation once, saves its id and gives the agent both tools', async () => {
   const eleven = recordingClient();
-  const out = await agentSync({ eleven, configPath: tmpConfig({ ...base, agent: { agentId: 'a', toolId: 't' } }) });
+  const path = tmpConfig({ ...base, agent: { agentId: 'a', toolId: 't' } });
+  const out = await agentSync({ eleven, configPath: path, env: {} });
   assert.equal(out.code, 0);
-  assert.deepEqual(eleven.calls.map((c) => c.slice(0, 2)), [['updateTool', 't'], ['updateAgent', 'a']]);
-  const patch = eleven.calls[1][2].conversation_config;
-  assert.deepEqual(patch.agent.prompt.tool_ids, ['t']);
+  assert.deepEqual(eleven.calls.map((c) => c.slice(0, 2).map((x, i) => (i === 1 && typeof x === 'object' ? x.tool_config.name : x))),
+    [['createTool', 'end_conversation'], ['updateTool', 't'], ['updateTool', 'tool_1'], ['updateAgent', 'a']]);
+  assert.equal(JSON.parse(readFileSync(path, 'utf8')).agent.endToolId, 'tool_1');
+  const body = eleven.calls[3][2];
+  const patch = body.conversation_config;
+  assert.deepEqual(patch.agent.prompt.tool_ids, ['t', 'tool_1']);
   assert.ok(patch.agent.prompt.prompt && patch.agent.prompt.built_in_tools.end_call && patch.turn.turn_timeout === 20);
+  assert.equal(patch.agent.max_conversation_duration_message, 'Kończy się czas tego połączenia, zaraz łączę ponownie.');
   assert.equal(patch.conversation.max_duration_seconds, 1800);
+  assert.equal(body.platform_settings.overrides.conversation_config_override.agent.first_message, true);
+  const again = recordingClient();
+  await agentSync({ eleven: again, configPath: path, env: {} });
+  assert.deepEqual(again.calls.map((c) => c.slice(0, 2)), [['updateTool', 't'], ['updateTool', 'tool_1'], ['updateAgent', 'a']]);
+});
+
+test('agent sync takes TALK_MAX_DURATION_SECONDS and refuses a value outside 60-7200 without any API call', async () => {
+  const config = { ...base, agent: { agentId: 'a', toolId: 't', endToolId: 'e' } };
+  const ok = recordingClient();
+  await agentSync({ eleven: ok, configPath: tmpConfig(config), env: { TALK_MAX_DURATION_SECONDS: '60' } });
+  assert.equal(ok.calls.at(-1)[2].conversation_config.conversation.max_duration_seconds, 60);
+  for (const bad of ['59', '7201', 'x']) {
+    const eleven = recordingClient();
+    const out = await agentSync({ eleven, configPath: tmpConfig(config), env: { TALK_MAX_DURATION_SECONDS: bad } });
+    assert.equal(out.code, 2);
+    assert.deepEqual(out.lines, ['TALK_MAX_DURATION_SECONDS musi być liczbą całkowitą od 60 do 7200.']);
+    assert.deepEqual(eleven.calls, []);
+  }
 });
 
 test('agent sync without saved ids exits 2 without any API call', async () => {

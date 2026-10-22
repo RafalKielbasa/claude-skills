@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { agentConfig, askClaudeToolConfig } from '../lib/agent-config.mjs';
+import { agentConfig, askClaudeToolConfig, endConversationToolConfig } from '../lib/agent-config.mjs';
 
 test('the agent speaks Polish on Haiku 5.5 with no retention', () => {
   const c = agentConfig({ llm: 'claude-haiku-5-5' });
@@ -52,4 +52,28 @@ test('ask_claude waits up to 120 s, speaks before the call and allows interrupti
 
 test('the interruption strategy maps to the tool setting', () => {
   assert.equal(askClaudeToolConfig({ interruptionMode: 'disable_during_tool' }).tool_config.interruption_mode, 'disable_during_tool');
+});
+
+test('end_conversation is a client tool without parameters that waits for the page', () => {
+  const t = endConversationToolConfig().tool_config;
+  assert.equal(t.type, 'client'); assert.equal(t.name, 'end_conversation');
+  assert.deepEqual(t.parameters, { type: 'object', properties: {}, required: [] });
+  assert.equal(t.expects_response, true); assert.equal(t.response_timeout_secs, 10);
+  assert.match(t.description, /only when Rafal says the whole conversation is over/);
+});
+
+test('the agent marks the end, keeps a break open, and carries the duration message and the first-message override', () => {
+  const c = agentConfig({});
+  assert.match(c.conversation_config.agent.prompt.prompt, /call end_conversation, then say goodbye in one sentence and end the call/);
+  assert.match(c.conversation_config.agent.prompt.prompt, /When Rafal wants a break .+ end the call without end_conversation/);
+  assert.match(c.conversation_config.agent.prompt.prompt, /never treat a „tak” as a confirmation yourself/);
+  assert.match(c.conversation_config.agent.prompt.built_in_tools.end_call.description, /asks for a break/);
+  assert.equal(c.conversation_config.agent.max_conversation_duration_message, 'Kończy się czas tego połączenia, zaraz łączę ponownie.');
+  assert.equal(c.platform_settings.overrides.conversation_config_override.agent.first_message, true);
+  assert.equal(c.platform_settings.privacy.retention_days, 0);
+});
+
+test('the duration limit defaults to 1800 s and takes a probe value', () => {
+  assert.equal(agentConfig({}).conversation_config.conversation.max_duration_seconds, 1800);
+  assert.equal(agentConfig({ maxDurationSeconds: 60 }).conversation_config.conversation.max_duration_seconds, 60);
 });
