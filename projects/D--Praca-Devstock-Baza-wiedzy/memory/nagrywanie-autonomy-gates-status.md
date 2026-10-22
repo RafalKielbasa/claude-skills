@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4bd53d28-0d05-40dd-bf31-94901ea828ea
-  modified: 2026-10-22T09:05:47.375Z
+  modified: 2026-10-22T11:39:29.989Z
 ---
 
 Część `nagrywanie-autonomy-gates` (spec `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`,
@@ -22,6 +22,16 @@ Tego samego dnia Rafał zatrzymał produkcję modułu 2 („wszystko na automaci
 trybie biletu po planach 2 i 3. Sekcja 9 specu przeszła do planu 2. Plan 2
 (`docs/superpowers/plans/2026-10-22-nagrywanie-autonomy-gates-plan-2.md`, 12 zadań, `1917f3e6`, poprawki specu D4
 w `6a82d131`) czeka na S2. Plan 3 to tylko sekcja 10 (Gmail, `send_mail`, warianty zgody) po sondach P-B–P-D.
+
+Po południu 22.10: sondy P-B–P-D zrobione z Rafałem (raport `…-probes.md`, commit `03bab34f`). Drugie konto kursowe
+(skrzynka live'ów, wolno z nim robić wszystko) siedzi w profilu kursu pod `/mail/u/1/`; logować je można tylko
+w zwykłym Chrome na profilu kursu. **Uwaga:** od tej chwili `oauth.js:157-158` zatrzymuje każde logowanie Google
+w sesjach lekcji (dwa konta na liście) do zadania 1 planu 3; po P-D n8n nie ma dostępu do konta Google kursu,
+credential arkusza wymaga nowej zgody. Plan 3 (`docs/superpowers/plans/2026-10-22-nagrywanie-autonomy-gates-plan-3.md`,
+`2db0845c`) zatwierdzony (S2 A) razem z: oba konta zostają, warianty zgody w 2.1, G3 `connections` zatwierdzone,
+nadawca jak w konspektach. Plan 2 realizowany na gałęzi `nagrywanie-autonomy-gates-plan-2` (ledger
+`.superpowers/sdd/2026-10-22-nagrywanie-autonomy-gates-plan-2/progress.md`), plan 3 po nim; okno konta planu 3
+(zadanie 10) tylko na słowo Rafała.
 
 **Why:** sześć bramek (G1 bilet produkcyjny `video/ticket.yaml`, G2 poświadczenia, G3 polityka konta per usługa,
 G4 zakres dydaktyczny, G5 `final.mp4` z kartą lekcji, G6 publikacja) zastępuje 24 miejsca, w których automat

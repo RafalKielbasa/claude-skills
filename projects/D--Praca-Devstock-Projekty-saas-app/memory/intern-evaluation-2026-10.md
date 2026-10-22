@@ -54,3 +54,9 @@ Godziny Norberta z Discorda 2026-10-22 (vault `cdf63c2`, sekcja 2 dokumentu): st
 tygodnia urlopu 10.08: 101 h / 6 tyg. (~17); 31.08–21.10: 50 h / 8 tyg. (~6); razem 151 h / 14 tyg. (~11);
 ≥20 h tylko w 4 tygodniach, wszystkie przed wrześniem. 8 statusów „nie miałem czasu” od września. Konrad 0, Miłosz
 2 statusy z godzinami na #edu-saas — godzin nie porównujemy. Parser: scratchpad sesji `discord/hours2.js` (nietrwały).
+
+Standard oceny 2026-10-22: case study bez imion i liczb w bazie wiedzy `knowledge-base/company/mentoring/ocena-postepow-praktykanta.md`
+(kategoria `company`, 15 chunków; commit `baza-wiedzy@2d19fece` na `rafal-kielbasa/17-10-2026`, niewypchnięty) — przy kolejnej
+ocenie praktykanta zacznij od niego. Regulamin `knowledge-base/praktyki/zasady-wspolpracy-praktyki.md` dostał datowane zdanie
+o godzinach w statusie (nie jest w bazie wektorowej: tabela `interns` nie istnieje). Karta dla core teamu: devstock-org/devstock-team#742
+(DT-53, epik #10, Done 22.10). Rafał wysłał Norbertowi dokument i wiadomość 22.10.2026. Kontrola 04.12.2026 i ocena 14.01.2027 jako prywatne wydarzenia 9:00–10:00 w Google Calendar rafal-kielbasa@it-chef.com (id p6hgg1rhukto3or8u8qf3vf910 i 6s2o73d0kelaqvlid3ed6mg9v4) z listą 7 warunków i komendą eksportu statusów.
