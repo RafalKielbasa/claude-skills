@@ -8,8 +8,10 @@ import { tempRoot, ev } from './helpers.mjs';
 import { isDenied } from '../lib/denylist.mjs';
 import { takeSnapshot, forkSettings, forkArgs, forkStartPrompt, fallbackCommand, PROMPT_READY } from '../lib/dialog.mjs';
 import { readHubSessions } from '../lib/hubsessions.mjs';
+import { resolveSource, cwdForTranscript, withAncestors } from '../lib/resolve.mjs';
+import { deriveSession } from '../lib/derive.mjs';
 
-const HUB = fileURLToPath(new URL('../bin/hub.mjs', import.meta.url));
+const HUB =fileURLToPath(new URL('../bin/hub.mjs', import.meta.url));
 const FAKE = fileURLToPath(new URL('../fakes/claude.mjs', import.meta.url));
 const git = (repo, ...args) => spawnSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@e', ...args], { encoding: 'utf8' });
 
@@ -364,4 +366,60 @@ test('dialog start forks a worktree session from its hook cwd, not from the poll
   const out = JSON.parse(run.stdout);
   assert.equal(JSON.parse(readFileSync(log, 'utf8').trim()).cwd.toLowerCase(), worktree.toLowerCase());
   assert.equal(JSON.parse(readFileSync(join(out.dialogDir, 'context', 'snapshot.json'), 'utf8')).cwd, worktree);
+});
+
+// Finding F1 of the final review: hook cwds follow `cd` and subagent tool calls, while the transcript
+// lies in the Claude project folder named after the session's own cwd.
+const projectFolder = (dir) => dir.replace(/[^A-Za-z0-9]/g, '-');
+
+test('the source cwd is the first candidate whose project folder holds the transcript: latest hook cwd, its ancestors, poll, first hook cwd', () => {
+  const derivedState = deriveSession([
+    ev('UserPromptSubmit', '2026-10-22T10:00:00Z', { cwd: 'C:\\first' }),
+    ev('PostToolUse', '2026-10-22T10:01:00Z', { cwd: null }),
+    ev('PostToolUse', '2026-10-22T10:02:00Z', { cwd: 'C:\\proj\\sub\\deep' }),
+  ]);
+  assert.deepEqual([derivedState.cwd, derivedState.firstCwd], ['C:\\proj\\sub\\deep', 'C:\\first']);
+  assert.deepEqual(withAncestors('C:\\proj\\sub'), ['C:\\proj\\sub', 'C:\\proj', 'C:\\']);
+  const poll = { ok: true, sessions: [{ sessionId: 's1', name: 'x', status: 'idle', cwd: 'C:\\poll' }] };
+  const cwdOf = (transcriptPath, state = derivedState) => resolveSource({
+    requested: 's1', poll, derivedOf: () => ({ ...state, transcriptPath }), lastPollName: () => null,
+  }).source.cwd;
+  const under = (folder) => `X:\\claude\\projects\\${folder}\\s1.jsonl`;
+  // A match, compared case-insensitively.
+  assert.equal(cwdOf(under('C--proj-sub-deep')), 'C:\\proj\\sub\\deep');
+  assert.equal(cwdOf(under('c--PROJ-sub-deep')), 'C:\\proj\\sub\\deep');
+  // The nearest matching ancestor of the latest hook cwd.
+  assert.equal(cwdOf(under('C--proj-sub')), 'C:\\proj\\sub');
+  assert.equal(cwdOf(under('C--proj')), 'C:\\proj');
+  // Then the poll cwd, then the first hook cwd.
+  assert.equal(cwdOf(under('C--poll')), 'C:\\poll');
+  assert.equal(cwdOf(under('C--first')), 'C:\\first');
+  // No match, or no transcript path: the latest hook cwd, then the poll cwd.
+  assert.equal(cwdOf(under('elsewhere')), 'C:\\proj\\sub\\deep');
+  assert.equal(cwdOf(null), 'C:\\proj\\sub\\deep');
+  assert.equal(cwdOf(under('elsewhere'), { ...derivedState, cwd: null, firstCwd: null }), 'C:\\poll');
+  assert.equal(cwdForTranscript(['C:\\a', null, 'C:\\b'], under('C--b')), 'C:\\b');
+  assert.equal(cwdForTranscript(['C:\\a'], null), null);
+});
+
+test('voice resolve and dialog start fork from the cwd whose project folder holds the transcript, not from a later subdirectory', () => {
+  const { root, repo, agents, log, projectsDir, hub } = dialogSetup();
+  const sub = join(repo, 'config');
+  const transcriptPath = join(projectsDir, projectFolder(repo), 's1.jsonl');
+  mkdirSync(dirname(transcriptPath), { recursive: true });
+  writeFileSync(transcriptPath, '{}\n');
+  // The session started in the repository and then ran a tool call in its subdirectory.
+  appendFileSync(join(root, 'registry', 's1.events.jsonl'), [
+    ev('UserPromptSubmit', '2026-10-22T10:00:00Z', { sessionId: 's1', cwd: repo, transcriptPath }),
+    ev('PostToolUse', '2026-10-22T10:01:00Z', { sessionId: 's1', cwd: sub, tool: 'Bash' }),
+  ].map((event) => `${JSON.stringify(event)}\n`).join(''));
+  writeFileSync(agents, JSON.stringify([{ sessionId: 's1', id: 's1', name: 'app-x', kind: 'interactive', status: 'idle', cwd: join(tempRoot(), 'main') }]));
+  const resolved = hub('voice', 'resolve', '--session', 's1', '--agents-json', agents);
+  assert.equal(resolved.status, 0, resolved.stdout + resolved.stderr);
+  const out = JSON.parse(resolved.stdout);
+  assert.deepEqual([out.cwd, out.project, out.transcriptPath, out.transcriptExists], [repo, 'app', transcriptPath, true]);
+  const started = hub('dialog', 'start', '--session', 's1', '--slug', 'sub', '--agents-json', agents);
+  assert.equal(started.status, 0, started.stdout + started.stderr);
+  assert.equal(JSON.parse(readFileSync(log, 'utf8').trim()).cwd.toLowerCase(), repo.toLowerCase());
+  assert.equal(JSON.parse(readFileSync(join(JSON.parse(started.stdout).dialogDir, 'context', 'snapshot.json'), 'utf8')).cwd, repo);
 });

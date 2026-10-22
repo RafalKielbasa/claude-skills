@@ -10,6 +10,6 @@
   },
   "interruption": "contextual-update",
   "pauseLimitMinutes": 60,
-  "agentHangup": "pause",
-  "rejoinFirstMessage": true
+  "agentHangup": "end",
+  "rejoinFirstMessage": false
 }

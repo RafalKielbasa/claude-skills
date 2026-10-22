@@ -67,6 +67,10 @@ test('the agent marks the end, keeps a break open, and carries the duration mess
   assert.match(c.conversation_config.agent.prompt.prompt, /call end_conversation, then say goodbye in one sentence and end the call/);
   assert.match(c.conversation_config.agent.prompt.prompt, /When Rafal wants a break .+ end the call without end_conversation/);
   assert.match(c.conversation_config.agent.prompt.prompt, /never treat a „tak” as a confirmation yourself/);
+  // An answer kept while no call was live is said first, right after the line on a later call.
+  const lines = c.conversation_config.agent.prompt.prompt.split('\n');
+  const later = lines.findIndex((line) => line.startsWith('A later call may start with the last lines'));
+  assert.equal(lines[later + 1], "When an update brings Claude's answer that you did not say („której nie usłyszałeś”), say it to Rafal at your next turn, before anything else.");
   assert.match(c.conversation_config.agent.prompt.built_in_tools.end_call.description, /asks for a break/);
   assert.equal(c.conversation_config.agent.max_conversation_duration_message, 'Kończy się czas tego połączenia, zaraz łączę ponownie.');
   assert.equal(c.platform_settings.overrides.conversation_config_override.agent.first_message, true);

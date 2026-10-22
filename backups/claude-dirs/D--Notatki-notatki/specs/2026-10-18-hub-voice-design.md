@@ -559,6 +559,14 @@ Rafal neither confirmed nor rejected that guess.
        under the worktree's project directory.
      - A fork started in the main checkout would read and snapshot the wrong tree, and its
        `--resume` would look for the transcript in the wrong place.
+     - Amendment of 2026-10-22 (final review of Plan 3): hook cwds also follow `cd` and
+       subagent tool calls, so the latest one can be a subdirectory (session `c0987db9` resolved
+       to a folder under `.superpowers/`). The cwd is therefore the first candidate whose Claude
+       project folder name (the path with every character outside `[A-Za-z0-9]` replaced by
+       `-`, compared case-insensitively) equals the folder of X's `transcriptPath`: the latest
+       hook cwd, its ancestors, the poll cwd, then the first hook cwd. Without a transcript path
+       or a match, the order above stays. `talk.mjs start` and `check` with `--session` correct
+       `--cwd` the same way, to its nearest matching ancestor.
    - **Transcript.** It prints X's live session id, that cwd, the project key, the name, and the
      `transcriptPath` from X's latest hook event, with whether that file exists.
      - `talk.mjs start` refuses a session whose transcript file is missing, with one Polish

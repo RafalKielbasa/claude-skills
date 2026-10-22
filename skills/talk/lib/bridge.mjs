@@ -207,18 +207,20 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
   }
 
   // Synchronous, like the first snapshot: nothing else runs between the refresh and the note. A
-  // refresh that fails leaves no note, since the note would say the snapshot was refreshed.
+  // refresh that fails leaves the note without its snapshot clause, which would say the snapshot was
+  // refreshed, and a transcript note on the failure.
   function rejoin(previous) {
-    let snapshot;
-    try { snapshot = takeSnapshot(cwd, join(dialogDir, 'context')); } catch (error) {
+    let refreshed = '';
+    try {
+      const snapshot = takeSnapshot(cwd, join(dialogDir, 'context'));
+      refreshed = ` Migawka git w context/ odświeżona o ${clock(new Date(snapshot.at))}.`;
+    } catch (error) {
       addLine('note', `snapshot not refreshed: ${reason(error)}`);
-      return;
     }
-    const at = clock(new Date(snapshot.at));
     const minutes = Math.max(1, Math.round((Date.now() - previous.endedAt) / 60000));
     forkNote = previous.endContext === 'max_duration_exceeded'
-      ? `(Połączenie odnowione po limicie czasu. Migawka git w context/ odświeżona o ${at}.)`
-      : `(Rafał wrócił do rozmowy po ${minutes} min przerwy. Migawka git w context/ odświeżona o ${at}.)`;
+      ? `(Połączenie odnowione po limicie czasu.${refreshed})`
+      : `(Rafał wrócił do rozmowy po ${minutes} min przerwy.${refreshed})`;
   }
 
   // The agent's contextual update at the start of a later call (spec §18.6): the last lines of Rafal

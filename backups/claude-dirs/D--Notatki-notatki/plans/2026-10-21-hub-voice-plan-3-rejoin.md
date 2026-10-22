@@ -616,6 +616,7 @@ The existing test 'SKILL.md names the skill hub and every command it uses exists
 - **Produces:** the values of `agentHangup` and `rejoinFirstMessage`. If the fallback applies, the question „Silence in the fallback” goes to Rafal.
 
 - [ ] **Step 1: Sync the probe agent.**
+  - Set `TALK/config.json` to `"agentHangup": "pause"` and `"rejoinFirstMessage": true`. Until this task, the shipped values are `"end"` and `false` (Ruling F2 of the execution, 2026-10-22), because the live agent still has the Plan 2 prompt. The config test changes with them.
   - Run `TALK_MAX_DURATION_SECONDS=60 node TALK/bin/talk.mjs agent sync`.
   - Read the agent back, without printing the key:
     - `max_duration_seconds` 60;
@@ -651,6 +652,7 @@ The existing test 'SKILL.md names the skill hub and every command it uses exists
   - „Przerwa”, then a rejoin;
   - a closed tab, reopened from the browser history;
   - a decision read back, a break before its confirmation, and the read-back again after the rejoin;
+  - a question asked right before „Przerwa”, whose answer arrives after the call ended: the agent says that answer in the next call (Ruling F3 of the execution, 2026-10-22);
   - a call cut by a temporary 120 s limit (`TALK_MAX_DURATION_SECONDS=120` `agent sync`, restored to 1800 afterwards), followed by the automatic next call;
   - `/talk` in X during a pause reopens the same page;
   - „Kończymy” ends the dialog, and X's report lists every call.

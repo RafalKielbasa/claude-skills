@@ -17,9 +17,10 @@ test('the shipped config allows notatki and .claude and stores dialogs outside ~
 
 test('the shipped config has the pause limit, the hang-up mode and the rejoin first message', () => {
   const c = loadConfig();
+  // Interim values until the probe: Task 9 sets agentHangup and rejoinFirstMessage from its result.
   assert.equal(c.pauseLimitMinutes, 60);
-  assert.equal(c.agentHangup, 'pause');
-  assert.equal(c.rejoinFirstMessage, true);
+  assert.equal(c.agentHangup, 'end');
+  assert.equal(c.rejoinFirstMessage, false);
 });
 
 test('saveConfig round-trips and writes pretty JSON with a trailing newline', () => {

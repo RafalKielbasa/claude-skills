@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-22T13:10:50.247Z
+  modified: 2026-10-22T17:41:40.791Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -75,8 +75,23 @@ przełożone na 23.10, start od kroku 1. Środowisko: baza `course_platform_cp10
 D1 = dzwonek z plakietką, D2 = bez plakietki (strona 1323:7). Na Windows `taskkill` w Git Bash wymaga `//PID`; klasyfikator
 nie pozwala mi zabijać procesów, robi to Rafał.
 
+Review końcowe Miłosza 2026-10-22 (PR #200, tip `8e6d0d5`, nic nie wysłane na GitHub): lint/typecheck/unit zielone
+w worktree `D:\Praca\Devstock\Projekty\cp107-review` (API 607, web 494); e2e lokalnie NIE (Docker Desktop: proces żyje,
+silnik nie), dowód z CI na tym tipie: 244/244. Bazy `course_platform_cp107_dev` i `_test_cp107` jeszcze NIE założone
+(docker exec padł), `.env`/`.env.test`/`.env.local` w worktree już przepięte. crm run `20261022-150436-6a71` (w worktree),
+artefakt https://claude.ai/artifact/QVKd1VYukbF436EAzyqUXA: 4 znaleziska, wszystkie <próg. Blokująca ręcznie (f-02, codex
+potwierdził): 7 dni powielone w `seed/invitations.ts:83` i `verify.ts:438`. W1: podtytuł „Zespół” z subdomeną (sam zgłosił w PR).
+Cross-review #199 „LGTM 👍”. Oba PR-y dodają `admin@`/`instructor@kuznia.local` z innymi ID (konflikt przy drugim merge'u).
+Dokument w vaulcie `review-koncowe-milosz.md` (commit `beffec7`) z 18-krokową checklistą (Figma Z1–Z5, M1–M5, I1–I9;
+tokeny linków SQL-em `encode(sha256(convert_to(...)),'hex')`) i 13 pytaniami. Wstępnie ≈82,6/90 bez obrony.
+Na 23.10 (Rafał: „jutro dokończymy”): silnik Dockera zawieszony (`docker desktop restart` padł na wiszących `wsl.exe`);
+wariant A czeka na Rafała: Quit Docker Desktop, `wsl --shutdown` (zatrzyma też Ubuntu), start. Potem: CREATE DATABASE
+`course_platform_cp107_dev` i `course_platform_test_cp107`, `prisma migrate deploy` na obie, seed + `verify.ts`, lokalne e2e,
+wyniki do `review-koncowe-milosz.md`; następnie przejścia po aplikacji (Konrad od kroku 1, Miłosz wg 18 kroków).
+
 Zmiana wymagań: decyzja Rafała z 2026-10-12, wysyłka śr 14.10 (nie wt 13.10 z vaulta); wariant jeszcze
-niewybrany (rekomendacja A dla obu).
+niewybrany (rekomendacja A dla obu). Rafał potwierdził 22.10: zmiana NIE poszła do żadnego z nich (wpisane w tabeli
+„wysłane”, vault `792d863`); plan Miłosza zaakceptowany na Discordzie 26.09 (v2).
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.

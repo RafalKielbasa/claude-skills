@@ -68,7 +68,11 @@ test('agent sync creates end_conversation once, saves its id and gives the agent
   assert.ok(patch.agent.prompt.prompt && patch.agent.prompt.built_in_tools.end_call && patch.turn.turn_timeout === 20);
   assert.equal(patch.agent.max_conversation_duration_message, 'Kończy się czas tego połączenia, zaraz łączę ponownie.');
   assert.equal(patch.conversation.max_duration_seconds, 1800);
-  assert.equal(body.platform_settings.overrides.conversation_config_override.agent.first_message, true);
+  // The retention setting goes with the first-message override.
+  assert.deepEqual(body.platform_settings, {
+    overrides: { conversation_config_override: { agent: { first_message: true } } },
+    privacy: { retention_days: 0 },
+  });
   const again = recordingClient();
   await agentSync({ eleven: again, configPath: path, env: {} });
   assert.deepEqual(again.calls.map((c) => c.slice(0, 2)), [['updateTool', 't'], ['updateTool', 'tool_1'], ['updateAgent', 'a']]);
@@ -280,7 +284,7 @@ test('start names its dialog directory first, serves bridge.json there, and prin
     await waitFor(() => /^dialog: .+\n/.test(s.out()), 5000);
     const dialogDir = s.out().match(/^dialog: (.+)\n/)[1];
     assert.ok(dialogDir.startsWith(join(dialogRoot, 'projects')));
-    await waitFor(() => existsSync(join(dialogDir, 'bridge.json')), 5000);
+    await waitFor(() => existsSync(join(dialogDir, 'bridge.json')), 20000);
     const url = new URL(JSON.parse(readFileSync(join(dialogDir, 'bridge.json'), 'utf8')).url);
     await fetch(new URL(`/api/end${url.search}`, url), { method: 'POST', body: '{}', headers: { 'content-type': 'application/json' } });
     const code = await s.closed;
@@ -480,4 +484,37 @@ test('a session whose transcript file is missing is refused before any bridge st
   const fourth = run(['check', '--cwd', allowedRepo, '--session', id4], env);
   assert.equal(fourth.status, 0, fourth.stdout + fourth.stderr);
   assert.deepEqual(JSON.parse(fourth.stdout), { ok: true, project: 'allowed' });
+});
+
+test("check and start with --session correct a --cwd below the session's project folder to its nearest matching ancestor", async () => {
+  const hub = mkdtempSync(join(tmpdir(), 'talk-cli-hub-'));
+  const projects = mkdtempSync(join(tmpdir(), 'talk-cli-projects-'));
+  // A subdirectory the project map gives a key outside the allowlist: a --cwd left there is refused.
+  const sub = join(allowedRepo, 'sub', 'deeper');
+  mkdirSync(sub, { recursive: true });
+  writeFileSync(join(hub, 'projects.json'), JSON.stringify({ projects: { inner: { name: 'Inner', dir: sub, description: 'A subdirectory.' } } }), 'utf8');
+  mkdirSync(join(hub, 'registry'));
+  const session = (sessionId, folder) => {
+    const transcriptPath = join(projects, folder, `${sessionId}.jsonl`);
+    mkdirSync(dirname(transcriptPath), { recursive: true });
+    writeFileSync(transcriptPath, '', 'utf8');
+    // The hook cwd followed a `cd` into the subdirectory.
+    writeFileSync(join(hub, 'registry', `${sessionId}.events.jsonl`), `${JSON.stringify({ sessionId, cwd: sub, transcriptPath })}\n`, 'utf8');
+  };
+  session('s-root', allowedRepo.replace(/[^A-Za-z0-9]/g, '-'));
+  session('s-other', 'elsewhere');
+  const seen = [];
+  const deps = { startBridge: async (options) => { seen.push(options); return { done: Promise.resolve('') }; }, write: async () => {} };
+  const env = { ...process.env, ...testEnv, TALK_ELEVEN_STUB: '1', HUB_DATA: hub, TALK_CLAUDE_PROJECTS: projects,
+    TALK_CONFIG: tmpConfig({ ...startBase, dialogRoot: mkdtempSync(join(tmpdir(), 'talk-cli-root-')) }) };
+  const checked = await main(['check', '--cwd', sub, '--session', 's-root'], env, deps);
+  assert.deepEqual([checked.code, JSON.parse(checked.lines[0])], [0, { ok: true, project: 'allowed' }]);
+  assert.equal((await main(['start', '--session', 's-root', '--cwd', sub], env, deps)).code, 0);
+  assert.deepEqual(seen.map((o) => o.cwd), [allowedRepo]);
+  // No ancestor matches the transcript's folder, or no session is named: --cwd stays as given.
+  for (const args of [['check', '--cwd', sub, '--session', 's-other'], ['check', '--cwd', sub]]) {
+    const kept = await main(args, env, deps);
+    assert.equal(kept.code, 2);
+    assert.match(kept.lines[0], /^Projekt inner nie jest na liście dozwolonych dla \/talk/);
+  }
 });

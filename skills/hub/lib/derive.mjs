@@ -19,6 +19,8 @@ export function deriveSession(events) {
     sessionTitle: null,
     transcriptPath: null,
     cwd: null,
+    // The cwd of the session's first event that names one; `cwd` is the latest (it follows `cd`).
+    firstCwd: null,
     firstAt: null,
     lastEventAt: null,
     endedAt: null,
@@ -34,7 +36,10 @@ export function deriveSession(events) {
   for (const event of sortEvents(events)) {
     state.firstAt ??= event.at;
     state.lastEventAt = event.at;
-    if (event.cwd) state.cwd = event.cwd;
+    if (event.cwd) {
+      state.firstCwd ??= event.cwd;
+      state.cwd = event.cwd;
+    }
     if (event.transcriptPath) state.transcriptPath = event.transcriptPath;
     if (event.event !== 'SessionEnd') state.activity += 1;
 

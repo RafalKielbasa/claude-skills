@@ -338,6 +338,28 @@ test('Przerwa ends only the call', async () => {
   }
 });
 
+test('Zakończ rozmowę during a pause ends the dialog at once', async () => {
+  let status = {};
+  const page = await loadPage(routes({ '/api/status': () => ready(status) }));
+  try {
+    await page.click('start');
+    page.sessions[0].onConnect({ conversationId: 'conv_a' });
+    page.sessions[0].onDisconnect({ reason: 'agent', context: { type: 'end_call' } });
+    await page.flush();
+    status = PAUSED;
+    await page.pollStatus();
+    assert.equal(page.element('stop').disabled, false);
+    const before = page.posts.length;
+    await page.click('stop');
+    // No call is connected: nothing is hung up, and the bridge hears only the end of the dialog.
+    assert.deepEqual(page.posts.slice(before), [['/api/end', { conversationId: 'conv_a' }]]);
+    assert.equal(page.conversations[0].ended, 0);
+    assert.equal(page.element('status').textContent, ENDED);
+  } finally {
+    page.restore();
+  }
+});
+
 test('a token refused because a call is live in another tab says so', async () => {
   const page = await loadPage(routes({ '/api/status': ready, '/api/conversation-token': () => json({ error: 'call-live' }, 409) }));
   try {
@@ -369,6 +391,8 @@ test('end_conversation tells the bridge and ends a call still running after 15 s
     assert.deepEqual([...page.timeouts].map((t) => t.ms), [15000]);
     await page.fireTimeouts();
     assert.equal(page.conversations[0].ended, 1);
+    // The client reports the page's own endSession with reason user; the bridge hears that call end.
+    assert.deepEqual(page.posts.filter(([path]) => path === '/api/call-end'), [['/api/call-end', { conversationId: 'conv_a', reason: 'user' }]]);
   } finally {
     page.restore();
   }

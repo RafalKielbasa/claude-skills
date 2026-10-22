@@ -34,6 +34,10 @@ test('SKILL.md starts a voice conversation through voice resolve and the talk CL
   assert.match(skill, /HUB voice resolve --session/);
   assert.match(skill, /talk\.mjs" check --cwd "<cwd>" --session <sessionId>/);
   assert.match(skill, /talk\.mjs" start --session <sessionId> --cwd "<cwd>" --origin hub/);
+  // The name and the subject go single-quoted, as the talk skill passes --subject (voice spec §19.2 step 4).
+  assert.ok(skill.includes(`talk.mjs" start --session <sessionId> --cwd "<cwd>" --origin hub --name='<name>' [--subject='<subject>']\``));
+  assert.ok(skill.replace(/\s+/g, ' ').includes("with every single quote (`'`) removed"));
+  assert.doesNotMatch(skill, /--name "<name>"/);
   assert.match(skill, /--path dialog --session <sessionId> --origin voice\//);
   assert.match(skill, /A voice decision is never „wyślij”/);
 });

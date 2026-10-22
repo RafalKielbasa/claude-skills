@@ -16,6 +16,7 @@ import { loadProjectMap, projectOf } from '../../hub/lib/projects.mjs';
 import { hubRoot } from '../../hub/lib/paths.mjs';
 import { readEvents } from '../../hub/lib/registry.mjs';
 import { deriveSession } from '../../hub/lib/derive.mjs';
+import { cwdForTranscript, findTranscript, withAncestors } from '../../hub/lib/resolve.mjs';
 import { CONFIG_PATH, loadConfig, saveConfig } from '../lib/config.mjs';
 import { dialogDirFor } from '../lib/dialog.mjs';
 import { startBridge } from '../lib/bridge.mjs';
@@ -94,7 +95,7 @@ export async function agentSync({ eleven, configPath = CONFIG_PATH, env = {} }) 
       turn: c.turn,
       conversation: c.conversation,
     },
-    platform_settings: { overrides: p.overrides },
+    platform_settings: { overrides: p.overrides, privacy: p.privacy },
   });
   return { code: 0, lines: [`agent: ${agentId}`, `tool: ${toolId}`] };
 }
@@ -126,6 +127,21 @@ function missingTranscript(sessionId, env) {
       .some((entry) => entry.isDirectory() && existsSync(join(projects, entry.name, `${sessionId}.jsonl`)));
   } catch { /* no projects root, so no transcript */ }
   return found ? null : `${projects}/*/${sessionId}.jsonl`;
+}
+
+// A session's hook cwd follows `cd`, so a --cwd taken from it can be a subdirectory, while the fork's
+// --resume finds the transcript only from the directory the session started in (spec §19.2,
+// amendment of 2026-10-22). With --session, an existing --cwd becomes its nearest ancestor (itself
+// first) whose Claude project folder holds the session's transcript, as in `HUB voice resolve`;
+// without a known transcript or a match it stays as given. The transcript guard runs after this.
+function sessionCwd(cwd, sessionId, env) {
+  if (sessionId === undefined || !existsSync(cwd)) return cwd;
+  const { transcriptPath } = findTranscript({
+    sessionId,
+    transcriptPath: deriveSession(readEvents(hubRoot(env), sessionId).events).transcriptPath,
+    projectsDir: env.TALK_CLAUDE_PROJECTS || join(homedir(), '.claude', 'projects'),
+  });
+  return cwdForTranscript(withAncestors(cwd), transcriptPath) ?? cwd;
 }
 
 // The checks of `check` and `start` (spec §5.1, Ruling R8), in this order: project on the allowlist,
@@ -236,7 +252,7 @@ export async function main(argv, env = process.env, deps = {}) {
   if (session) {
     const values = parseOptions(argv.slice(1), session);
     if (!values) return { code: 2, lines: [USAGE] };
-    const cwd = resolve(values.cwd);
+    const cwd = sessionCwd(resolve(values.cwd), values.session, env);
     const admitted = admit({ cwd, sessionId: values.session, env, configPath });
     if (!admitted.ok) return { code: 2, lines: [admitted.line] };
     return session.run({ values, cwd, admitted, env, deps });

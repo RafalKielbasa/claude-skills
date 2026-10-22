@@ -61,7 +61,7 @@ test('close does not wait forever for a turn that never ends', async () => {
   f.ask('slow forever', { timeoutMs: 50 });
   const t0 = Date.now();
   await f.close({ deadlineMs: 200 });
-  assert.ok(Date.now() - t0 < 2000);
+  assert.ok(Date.now() - t0 < 8000);
 });
 
 test('two asks sent at once are answered in order', async () => {

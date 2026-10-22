@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createServer, request } from 'node:http';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -695,6 +695,27 @@ test('a call renewed after the duration limit tells the fork so', async () => {
   } finally {
     await finish(b);
   }
+});
+
+test('a later call whose snapshot refresh fails still gets the note, without its snapshot clause, and the transcript keeps the failure', async () => {
+  const b = await bridge();
+  try {
+    // A directory where the refresh writes snapshot.json: every refresh throws.
+    const snapshotFile = join(b.tmp, 'dialog', 'context', 'snapshot.json');
+    rmSync(snapshotFile);
+    mkdirSync(snapshotFile);
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'agent', context: 'end_call' } });
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
+    assert.match(await answerOf(b, 'dalej', 'conv_b'), /^echo: \(Rafał wrócił do rozmowy po 1 min przerwy\.\)\nAgent głosowy przekazuje: dalej/);
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_b', reason: 'error', context: 'max_duration_exceeded' } });
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_c' } });
+    assert.match(await answerOf(b, 'znowu', 'conv_c'), /^echo: \(Połączenie odnowione po limicie czasu\.\)\nAgent głosowy przekazuje: znowu/);
+  } finally {
+    await finish(b);
+  }
+  const transcript = readFileSync(join(b.tmp, 'dialog', 'transcript.md'), 'utf8');
+  assert.equal(transcript.match(/\*\*Notatka\*\*: snapshot not refreshed: /g)?.length, 2, transcript);
 });
 
 test('the first call carries no note', async () => {

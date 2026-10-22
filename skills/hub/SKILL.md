@@ -187,11 +187,14 @@ result. A plain `/talk` typed in the hub is not this procedure: it talks about t
      `node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" reopen --session <sessionId>`, tell
      Rafal that its page opened again, and stop; its report goes to whoever started it
      (`live.origin`).
-4. `node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" start --session <sessionId> --cwd "<cwd>" --origin hub --name "<name>"`
-   (leave out `--name` when `name` is null; the page then shows the short id), through Bash with
-   `run_in_background: true`. The task runs for the whole conversation, which may pause and
-   rejoin; do not wait for it or poll its output. Tell Rafal that the page opens in the browser.
-   The bridge never wakes X, and X never reads the dialog.
+4. `node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" start --session <sessionId> --cwd "<cwd>" --origin hub --name='<name>' [--subject='<subject>']`
+   (leave out `--name` when `name` is null; the page then shows the short id; add `--subject` only
+   when Rafal gave a subject for the conversation). `name` replaces `<name>` and his subject
+   replaces `<subject>`, each with every single quote (`'`) removed: the single quotes keep `$`,
+   backticks and backslashes literal, and the `=` form takes a value that starts with `-`. Run it
+   through Bash with `run_in_background: true`. The task runs for the whole conversation, which
+   may pause and rejoin; do not wait for it or poll its output. Tell Rafal that the page opens in
+   the browser. The bridge never wakes X, and X never reads the dialog.
 5. When the task completes, read the closing report from its output, between `TALK CLOSING REPORT`
    and `END OF REPORT` (`dialog:`, `origin:`, `deletion:` and `conversations:` lines, then the
    dialog's files):

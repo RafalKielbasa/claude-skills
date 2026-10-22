@@ -11,6 +11,7 @@ export const AGENT_PROMPT = [
   'When Rafal says the whole conversation is over (for example „Kończymy”), call end_conversation, then say goodbye in one sentence and end the call.',
   'When Rafal wants a break („przerwa”, „wrócę za chwilę”), say that the conversation waits for him and end the call without end_conversation.',
   'A later call may start with the last lines of the conversation: continue from them, and never treat a „tak” as a confirmation yourself.',
+  "When an update brings Claude's answer that you did not say („której nie usłyszałeś”), say it to Rafal at your next turn, before anything else.",
   'Keep your own sentences short. Handle greetings, requests to repeat ("powtórz") and mishearing yourself.',
 ].join('\n');
 
