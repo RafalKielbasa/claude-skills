@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createServer, request } from 'node:http';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -77,13 +78,18 @@ async function waitFor(fn, ms) {
   assert.fail(`condition not met within ${ms} ms`);
 }
 
+// The closing report, or a failure when the bridge has not ended within `ms`.
+async function doneWithin(b, ms) {
+  let timer;
+  const limit = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`the bridge did not end within ${ms / 1000} s`)), ms); });
+  try { return await Promise.race([b.done, limit]); } finally { clearTimeout(timer); }
+}
+
 // Every test ends its bridge here, so a failed assertion fails the test instead of leaving a bridge
 // and its fork running; a bridge that already ended refuses the connection, which is ignored.
 async function finish(b) {
   await call(b.port, 'POST', '/api/end', { body: {} }).catch(() => {});
-  let timer;
-  const limit = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('the bridge did not end within 10 s')), 10000); });
-  try { return await Promise.race([b.done, limit]); } finally { clearTimeout(timer); }
+  return doneWithin(b, 10000);
 }
 
 const status = async (b) => JSON.parse((await call(b.port, 'GET', '/api/status')).body);
@@ -213,13 +219,16 @@ test('a bridge whose page never sends a heartbeat ends after the first-beat dead
   }
 });
 
-test('a lost heartbeat ends the conversation and deletes it', async () => {
+test('a lost heartbeat pauses the dialog instead of ending it', async () => {
   const b = await bridge({ heartbeatGraceMs: 200 });
   try {
-    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_2' } });
-    const report = await b.done;
-    assert.match(report, /deletion: deleted/);
-    assert.deepEqual(b.eleven.calls.filter((c) => c[0] === 'delete'), [['delete', 'conv_2']]);
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await waitFor(async () => (await status(b)).state === 'paused', 3000);
+    assert.equal((await status(b)).ending, false);
+    assert.deepEqual(b.eleven.calls.filter((c) => c[0] === 'delete').map((c) => c[1]), ['conv_a']);
+    assert.match(readFileSync(join(b.tmp, 'dialog', 'transcript.md'), 'utf8'), /\*\*Notatka\*\*: call ended: heartbeat-lost\/\n/);
+    await call(b.port, 'POST', '/api/end', { body: {} });
+    assert.match(await b.done, /deletion: deleted\nconversations: conv_a \(30 s\)\n/);
   } finally {
     await finish(b);
   }
@@ -318,20 +327,24 @@ test('status reports the fork ready only after its introduction', async () => {
   try {
     assert.equal(JSON.parse((await call(b.port, 'GET', '/api/status')).body).forkReady, false);
     await waitFor(async () => JSON.parse((await call(b.port, 'GET', '/api/status')).body).forkReady, 3000);
-    assert.deepEqual(await status(b), { forkReady: true, forkExited: false, ending: false, interruption: 'contextual-update' });
+    assert.deepEqual(await status(b), { forkReady: true, forkExited: false, ending: false, interruption: 'contextual-update',
+      state: 'waiting', callLive: false, calls: 0, pausedUntil: null, label: '', agentHangup: 'pause', rejoinFirstMessage: true, undelivered: 0 });
   } finally {
     await finish(b);
   }
 });
 
-test('the URL file exists while the bridge runs and is gone after the end', async () => {
-  const b = await bridge();
+test('the live file names the session, origin and URL while the bridge runs and is gone after the end', async () => {
+  const b = await bridge({ origin: 'hub' });
   try {
-    const urlFile = join(b.tmp, 'dialog', '.url');
-    assert.equal(readFileSync(urlFile, 'utf8'), b.url);
+    const liveFile = join(b.tmp, 'dialog', 'bridge.json');
+    const live = JSON.parse(readFileSync(liveFile, 'utf8'));
+    assert.deepEqual(live, { sessionId: 's', origin: 'hub', url: b.url, pid: process.pid, startedAt: live.startedAt });
+    assert.match(live.startedAt, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/);
+    assert.equal(existsSync(join(b.tmp, 'dialog', '.url')), false);
     await call(b.port, 'POST', '/api/end', { body: {} });
-    await b.done;
-    assert.equal(existsSync(urlFile), false);
+    assert.match(await b.done, /^TALK CLOSING REPORT\ndialog: .+\norigin: hub\n/);
+    assert.equal(existsSync(liveFile), false);
   } finally {
     await finish(b);
   }
@@ -442,7 +455,8 @@ test('a fork that exits after its introduction: an ask answers at once that its 
     const r = JSON.parse((await call(b.port, 'POST', '/api/ask', { body: { request: 'pytanie' } })).body);
     assert.equal(r.answer, 'Claude nie odpowie, bo jego proces się zakończył. Zakończ rozmowę.');
     assert.ok(Date.now() - t0 < 2000);
-    assert.deepEqual(await status(b), { forkReady: false, forkExited: true, ending: false, interruption: 'contextual-update' });
+    assert.deepEqual(await status(b), { forkReady: false, forkExited: true, ending: false, interruption: 'contextual-update',
+      state: 'waiting', callLive: false, calls: 0, pausedUntil: null, label: '', agentHangup: 'pause', rejoinFirstMessage: true, undelivered: 0 });
     await call(b.port, 'POST', '/api/end', { body: {} });
     assert.match(await b.done, /deletion: no conversation id; fork exited before the end turn; fork stderr: fake: crashed after the introduction\n/);
   } finally {
@@ -483,5 +497,357 @@ test('a port already in use rejects the start instead of hanging', { timeout: 10
     await assert.rejects(bridge({ port: busy.address().port }), { code: 'EADDRINUSE' });
   } finally {
     busy.close();
+  }
+});
+
+// --- a dialog of calls (Plan 3, Task 2) ---
+
+test('a call end without an end request pauses: the call is deleted and the transcript written, the fork stays', async () => {
+  const b = await bridge();
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/transcript', { body: { role: 'user', text: 'pierwsze' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'agent', context: 'end_call' } });
+    const s = JSON.parse((await call(b.port, 'GET', '/api/status')).body);
+    assert.equal(s.state, 'paused');
+    assert.equal(s.calls, 1);
+    assert.equal(s.callLive, false);
+    assert.ok(Date.parse(s.pausedUntil) > Date.now());
+    assert.equal(s.ending, false);
+    assert.deepEqual(b.eleven.calls.filter((c) => c[0] === 'delete').map((c) => c[1]), ['conv_a']);
+    assert.match(readFileSync(join(b.tmp, 'dialog', 'transcript.md'), 'utf8'), /pierwsze[\s\S]*call ended: agent\/end_call/);
+    assert.equal((await call(b.port, 'GET', '/api/conversation-token')).status, 200);
+    await call(b.port, 'POST', '/api/end', { body: {} });
+    assert.match(await b.done, /conversations: conv_a \(30 s\)/);
+    assert.equal(b.eleven.calls.filter((c) => c[0] === 'delete').length, 1);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('an end request makes the end of the current call end the dialog', async () => {
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '300' } }); // the end turn keeps the bridge up for the last status
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/end-request', { body: {} });
+    assert.equal((await status(b)).state, 'in-call');
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'agent', context: 'end_call' } });
+    assert.equal((await status(b)).state, 'ending');
+    const report = await doneWithin(b, 5000);
+    assert.match(report, /deletion: deleted\nconversations: conv_a \(30 s\)\n/);
+    assert.deepEqual(b.eleven.calls.filter((c) => c[0] === 'delete').map((c) => c[1]), ['conv_a']);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('an end request or the end button during a pause ends the dialog at once', async () => {
+  for (const route of ['/api/end-request', '/api/end']) {
+    const b = await bridge();
+    try {
+      await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+      await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'user' } });
+      assert.equal((await status(b)).state, 'paused', route);
+      await call(b.port, 'POST', route, { body: {} });
+      assert.match(await doneWithin(b, 5000), /deletion: deleted\nconversations: conv_a \(30 s\)\n/, route);
+      assert.equal(b.eleven.calls.filter((c) => c[0] === 'delete').length, 1, route);
+    } finally {
+      await finish(b);
+    }
+  }
+});
+
+test('agentHangup end: an end_call context ends the dialog, a close context pauses it', async () => {
+  const b = await bridge({ agentHangup: 'end' });
+  try {
+    assert.equal((await status(b)).agentHangup, 'end');
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'agent', context: 'close' } });
+    assert.equal((await status(b)).state, 'paused');
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
+    assert.equal((await status(b)).state, 'in-call');
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_b', reason: 'agent', context: 'end_call' } });
+    assert.match(await doneWithin(b, 5000), /deletion: deleted\nconversations: conv_a \(30 s\), conv_b \(30 s\)\n/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('the pause limit ends a paused dialog with its report, and a new call cancels it', async () => {
+  const b = await bridge({ pauseLimitMs: 300 });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'user' } });
+    assert.match(await doneWithin(b, 2000), /deletion: deleted\nconversations: conv_a \(30 s\)\n/);
+  } finally {
+    await finish(b);
+  }
+  const c = await bridge({ pauseLimitMs: 300 });
+  try {
+    await call(c.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(c.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'user' } });
+    await call(c.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
+    await sleep(600);
+    const s = await status(c);
+    assert.equal(s.state, 'in-call');
+    assert.equal(s.pausedUntil, null);
+    assert.equal(s.calls, 2);
+  } finally {
+    await finish(c);
+  }
+});
+
+test('a token is refused while another call is live and allowed once its heartbeat is lost', async () => {
+  const b = await bridge({ heartbeatGraceMs: 300 });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    const refused = await call(b.port, 'GET', '/api/conversation-token');
+    assert.equal(refused.status, 409);
+    assert.deepEqual(JSON.parse(refused.body), { error: 'call-live' });
+    await waitFor(async () => (await call(b.port, 'GET', '/api/conversation-token')).status === 200, 3000);
+    await call(b.port, 'POST', '/api/end', { body: {} });
+    await b.done;
+  } finally {
+    await finish(b);
+  }
+});
+
+test('status carries the label and the configuration the page needs', async () => {
+  const b = await bridge({ label: 'notatki · abcdef12' });
+  try {
+    const s = await status(b);
+    assert.equal(s.label, 'notatki · abcdef12');
+    assert.equal(s.agentHangup, 'pause');
+    assert.equal(s.rejoinFirstMessage, true);
+    assert.equal(s.state, 'waiting');
+    assert.equal(s.calls, 0);
+    assert.equal(s.callLive, false);
+    assert.equal(s.pausedUntil, null);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a fork that exits during a pause ends the dialog at once', async () => {
+  // The fake fork introduces itself 500 ms in and exits right after: the call below has ended by then.
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '500', FAKE_EXIT_AFTER_FIRST: '1' } });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'agent', context: 'end_call' } });
+    assert.equal((await status(b)).state, 'paused');
+    const report = await doneWithin(b, 2000);
+    assert.match(report, /deletion: deleted; fork exited before the end turn; fork stderr: fake: crashed after the introduction\nconversations: conv_a \(30 s\)\n/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a call whose fork exited ends the dialog instead of pausing it', async () => {
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '300', FAKE_EXIT_AFTER_FIRST: '1' } });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await waitFor(async () => (await status(b)).forkReady, 5000);
+    await sleep(300); // the fake exits right after its introduction; no ask sees the exit
+    assert.equal((await status(b)).state, 'in-call');
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'agent', context: 'end_call' } });
+    // The bridge may have closed already; only a status it still answers could say paused.
+    const after = await call(b.port, 'GET', '/api/status').then((r) => JSON.parse(r.body).state, () => 'closed');
+    assert.notEqual(after, 'paused');
+    assert.match(await doneWithin(b, 5000), /deletion: deleted; fork exited before the end turn; fork stderr: fake: crashed after the introduction\nconversations: conv_a \(30 s\)\n/);
+  } finally {
+    await finish(b);
+  }
+});
+
+// --- what a later call knows (Plan 3, Task 3) ---
+
+const answerOf = async (b, request, conversationId) =>
+  JSON.parse((await call(b.port, 'POST', '/api/ask', { body: { request, conversationId } })).body).answer;
+const rejoinContext = async (b) => JSON.parse((await call(b.port, 'GET', '/api/rejoin-context')).body);
+
+test('the first ask of a later call carries the break note, once, and the snapshot is refreshed', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'r-'));
+  assert.equal(spawnSync('git', ['init', '-q', repo]).status, 0);
+  const b = await bridge({ cwd: repo });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'agent', context: 'end_call' } });
+    rmSync(join(b.tmp, 'dialog', 'context', 'status.txt')); // throws if the first snapshot did not write it
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
+    const first = JSON.parse((await call(b.port, 'POST', '/api/ask', { body: { request: 'dalej', conversationId: 'conv_b' } })).body).answer;
+    assert.match(first, /^echo: \(Rafał wrócił do rozmowy po 1 min przerwy\. Migawka git w context\/ odświeżona o \d\d:\d\d\.\)\nAgent głosowy przekazuje: dalej/);
+    assert.ok(existsSync(join(b.tmp, 'dialog', 'context', 'status.txt')));
+    const second = JSON.parse((await call(b.port, 'POST', '/api/ask', { body: { request: 'jeszcze', conversationId: 'conv_b' } })).body).answer;
+    assert.match(second, /^echo: Agent głosowy przekazuje: jeszcze/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a call renewed after the duration limit tells the fork so', async () => {
+  const b = await bridge();
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'error', context: 'max_duration_exceeded' } });
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
+    assert.match(await answerOf(b, 'dalej', 'conv_b'),
+      /^echo: \(Połączenie odnowione po limicie czasu\. Migawka git w context\/ odświeżona o \d\d:\d\d\.\)\nAgent głosowy przekazuje: dalej/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('the first call carries no note', async () => {
+  const b = await bridge();
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    assert.match(await answerOf(b, 'pierwsze', 'conv_a'), /^echo: Agent głosowy przekazuje:/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a reloaded page during a call carries no note and takes no snapshot (Ruling T3-1)', async () => {
+  const b = await bridge();
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    rmSync(join(b.tmp, 'dialog', 'context', 'snapshot.json'));
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } }); // conv_a is still live
+    assert.match(await answerOf(b, 'po odświeżeniu', 'conv_b'), /^echo: Agent głosowy przekazuje: po odświeżeniu/);
+    assert.equal(existsSync(join(b.tmp, 'dialog', 'context', 'snapshot.json')), false);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('an answer that arrives after its call ended goes into the next call, once', async () => {
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '300' } });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    const asked = call(b.port, 'POST', '/api/ask', { body: { request: 'wolne', conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'error', context: 'connection_state_changed' } });
+    await asked;
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
+    const context = async () => JSON.parse((await call(b.port, 'GET', '/api/rejoin-context')).body);
+    const first = await context();
+    assert.match(first.text, /^Dalszy ciąg rozmowy po przerwie\. Ostatnie wypowiedzi:/);
+    assert.match(first.text, /Odpowiedź Claude na pytanie „wolne”, której nie usłyszałeś: echo: /);
+    assert.equal(first.undelivered, 1);
+    assert.match((await context()).text, /której nie usłyszałeś/); // not sent yet: still there
+    await call(b.port, 'POST', '/api/rejoin-context-sent', { body: { undelivered: 1 } });
+    assert.doesNotMatch((await context()).text, /której nie usłyszałeś/);
+    await call(b.port, 'POST', '/api/end', { body: {} }); await b.done;
+  } finally {
+    await finish(b);
+  }
+});
+
+test('an answer that the next call asked for again is heard there and not kept', async () => {
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '300' } });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    const asked = answerOf(b, 'wolne', 'conv_a');
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'error', context: 'connection_state_changed' } });
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
+    const again = answerOf(b, 'wolne', 'conv_b'); // joins the ask in flight
+    const [a1, a2] = await Promise.all([asked, again]);
+    assert.equal(a2, a1);
+    assert.deepEqual(await rejoinContext(b), { text: 'Dalszy ciąg rozmowy po przerwie. Ostatnie wypowiedzi:', undelivered: 0, answers: '' });
+  } finally {
+    await finish(b);
+  }
+});
+
+test('the rejoin context carries the last eight lines of Rafal and the agent, without notes', async () => {
+  const b = await bridge();
+  try {
+    for (let n = 1; n <= 10; n += 1) {
+      await call(b.port, 'POST', '/api/transcript', { body: { role: n % 2 ? 'user' : 'agent', text: `linia ${n}` } });
+      if (n === 3 || n === 9) await call(b.port, 'POST', '/api/transcript', { body: { role: 'note', text: `notatka ${n}` } });
+    }
+    const lines = [3, 4, 5, 6, 7, 8, 9, 10].map((n) => `- ${n % 2 ? 'Rafał' : 'Agent'}: linia ${n}`);
+    assert.deepEqual(await rejoinContext(b), { text: ['Dalszy ciąg rozmowy po przerwie. Ostatnie wypowiedzi:', ...lines].join('\n'), undelivered: 0, answers: '' });
+  } finally {
+    await finish(b);
+  }
+});
+
+test('history returns the transcript so far', async () => {
+  const b = await bridge();
+  try {
+    await call(b.port, 'POST', '/api/transcript', { body: { role: 'user', text: 'pierwsze' } });
+    await call(b.port, 'POST', '/api/transcript', { body: { role: 'agent', text: 'drugie' } });
+    const history = JSON.parse((await call(b.port, 'GET', '/api/history')).body);
+    const [at1, at2] = history.transcript.map((t) => t.at);
+    assert.deepEqual(history, { transcript: [{ at: at1, role: 'user', text: 'pierwsze' }, { at: at2, role: 'agent', text: 'drugie' }] });
+    for (const at of [at1, at2]) assert.match(at, /^\d{1,2}:\d\d:\d\d$/);
+  } finally {
+    await finish(b);
+  }
+});
+
+// --- fix round 1 of Task 3 ---
+
+// Sends an ask and closes its connection after `ms` without reading an answer, as a closed tab does.
+function abandonedAsk(port, body, ms) {
+  return new Promise((resolve) => {
+    const req = request({ host: '127.0.0.1', port, method: 'POST', path: `/api/ask?t=${token}`,
+      headers: { host: `127.0.0.1:${port}`, 'content-type': 'application/json' } });
+    req.on('error', () => {});
+    req.end(JSON.stringify(body));
+    setTimeout(() => { req.destroy(); resolve(); }, ms);
+  });
+}
+
+test('the answer to an ask whose tab closed is kept, although its call is still live', async () => {
+  // The heartbeat grace stays at 15 s, so conv_a is live when the answer comes 500 ms after the ask.
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '500' } });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await abandonedAsk(b.port, { request: 'wolne', conversationId: 'conv_a' }, 200);
+    await waitFor(async () => (await status(b)).undelivered === 1, 5000);
+    assert.equal((await status(b)).callLive, true);
+    assert.match((await rejoinContext(b)).answers, /^Odpowiedź Claude na pytanie „wolne”, której nie usłyszałeś: echo: Agent głosowy przekazuje: wolne/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('status counts the kept answers, and the rejoin context gives them alone in answers (Ruling T3-2)', async () => {
+  const b = await bridge({ forkEnv: { FAKE_DELAY_MS: '300' } });
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/transcript', { body: { role: 'user', text: 'zdanie Rafała' } });
+    const asked = answerOf(b, 'wolne', 'conv_a');
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'error', context: 'connection_state_changed' } });
+    await asked;
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
+    assert.equal((await status(b)).undelivered, 1);
+    const kept = 'Odpowiedź Claude na pytanie „wolne”, której nie usłyszałeś: echo: Agent głosowy przekazuje: wolne Rafał (transkrypcja): zdanie Rafała';
+    assert.deepEqual(await rejoinContext(b), { text: `Dalszy ciąg rozmowy po przerwie. Ostatnie wypowiedzi:\n- Rafał: zdanie Rafała\n${kept}`, undelivered: 1, answers: kept });
+    await call(b.port, 'POST', '/api/rejoin-context-sent', { body: { undelivered: 1 } });
+    assert.equal((await status(b)).undelivered, 0);
+    assert.equal((await rejoinContext(b)).answers, '');
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a transcript line and an answer with line breaks each take one line of the rejoin context', async () => {
+  const b = await bridge();
+  try {
+    await call(b.port, 'POST', '/api/transcript', { body: { role: 'user', text: 'pierwsza\ndruga' } });
+    await call(b.port, 'POST', '/api/transcript', { body: { role: 'agent', text: 'trzecia\r\nczwarta' } });
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'user' } });
+    await answerOf(b, 'pytanie\nw dwóch liniach', 'conv_a'); // conv_a has ended: the answer is kept
+    assert.deepEqual((await rejoinContext(b)).text.split('\n'), [
+      'Dalszy ciąg rozmowy po przerwie. Ostatnie wypowiedzi:',
+      '- Rafał: pierwsza druga',
+      '- Agent: trzecia czwarta',
+      'Odpowiedź Claude na pytanie „pytanie w dwóch liniach”, której nie usłyszałeś: echo: Agent głosowy przekazuje: pytanie w dwóch liniach Rafał (transkrypcja): pierwsza druga',
+    ]);
+  } finally {
+    await finish(b);
   }
 });

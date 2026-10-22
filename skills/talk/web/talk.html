@@ -19,12 +19,15 @@
     #transcript { padding-left: 20px; }
     #transcript li { margin: 4px 0; }
     .who { color: var(--muted); font-size: 13px; margin-right: 6px; }
+    #who { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
   </style>
 </head>
 <body>
   <h1>Rozmowa z Claude</h1>
+  <p id="who"></p>
   <p id="status">Gotowe do rozmowy.</p>
   <button id="start">Rozpocznij rozmowę</button>
+  <button id="pause" disabled>Przerwa</button>
   <button id="stop" disabled>Zakończ rozmowę</button>
   <h2>Decyzja do potwierdzenia</h2>
   <p id="pending">—</p>

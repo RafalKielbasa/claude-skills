@@ -49,6 +49,7 @@ bo twierdzenie brzmi jak fakt operacyjny, nie jak hipoteza do sprawdzenia.
   Kontrola po agencie podważyła liczbę i policzyła ją kotwicą ASCII (`grep -c
   "wideo"` → 6 przed i po). Twierdzenie subagenta o zawartości pliku wchodzi do
   raportu dla użytkownika tak samo jak własne, więc wymaga tego samego odczytu.
+- 2026-10-21/22, sesja f8d64eed-4822-47ab-af24-2115a5905b5f (id claude.ai niedostępny), plan 2 `kodozercy-platform-public-catalog` pisany przez Claude: plan twierdził, że hooki ekranów po zalogowaniu importują dane placeholderów roadmapy (`coursesData`, `featuresData`), więc kazał je zostawić. Recenzent całej gałęzi sprawdził obu konsumentów: używają zmiennych lokalnych. Dane usunięte w fali poprawek (M2), zgodnie ze specem 5.3, który od początku kazał je usunąć.
 
 ## Rozwiązanie
 Zanim powiesz użytkownikowi, co zawiera plik, przeczytaj ten plik. Dotyczy to

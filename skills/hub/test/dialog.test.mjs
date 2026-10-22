@@ -88,9 +88,11 @@ function dialogSetup() {
   writeFileSync(join(root, 'projects.json'), JSON.stringify({ projects: { app: { name: 'App', dir: repo, description: 'Test app.' } } }));
   const agents = join(root, 'agents.json');
   const log = join(root, 'fake-claude.log');
-  const env = { ...process.env, HUB_DATA: root, HUB_CLAUDE_CMD: JSON.stringify([process.execPath, FAKE]), FAKE_CLAUDE_LOG: log, FAKE_AGENTS: agents, FAKE_CLAUDE_ID: 'f0f0f0f0' };
+  // Stands in for ~/.claude/projects, where `voice resolve` looks for a transcript no event names.
+  const projectsDir = join(root, 'claude-projects');
+  const env = { ...process.env, HUB_DATA: root, HUB_CLAUDE_CMD: JSON.stringify([process.execPath, FAKE]), FAKE_CLAUDE_LOG: log, FAKE_AGENTS: agents, FAKE_CLAUDE_ID: 'f0f0f0f0', HUB_CLAUDE_PROJECTS: projectsDir };
   const hub = (...args) => spawnSync(process.execPath, [HUB, ...args], { encoding: 'utf8', env });
-  return { root, repo, agents, log, hub };
+  return { root, repo, agents, log, projectsDir, hub };
 }
 
 test('dialog start resolves the source by name, writes the context and settings, launches and registers the fork', () => {
@@ -257,4 +259,109 @@ test('dialog start refuses a source without a working directory before creating 
   assert.equal(refused.status, 3);
   assert.match(refused.stderr, /has no working directory/);
   assert.equal(existsSync(join(root, 'projects', 'unknown')), false);
+});
+
+// s1 as a hub-launched worktree session shows it (voice spec §19.2 step 2): its hook names the
+// worktree, while `claude agents --json` lists it in the main checkout.
+function hookAndPollDisagree({ root, agents, worktree, main, transcriptPath }) {
+  appendFileSync(join(root, 'registry', 's1.events.jsonl'), `${JSON.stringify(ev('UserPromptSubmit', '2026-10-21T10:00:00Z', { sessionId: 's1', cwd: worktree, transcriptPath }))}\n`);
+  writeFileSync(agents, JSON.stringify([{ sessionId: 's1', id: 's1', name: 'notatki-wt', kind: 'background', status: 'idle', cwd: main }]));
+}
+
+test('voice resolve takes the cwd from the session hook before the poll, with the transcript path, and launches nothing', () => {
+  const { root, agents, log, hub } = dialogSetup();
+  const transcriptPath = join(tempRoot(), 's1.jsonl');
+  writeFileSync(transcriptPath, '{}\n');
+  hookAndPollDisagree({ root, agents, worktree: 'C:\\wt', main: 'C:\\main', transcriptPath });
+  const run = hub('voice', 'resolve', '--session', 's1', '--agents-json', agents);
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  const { project, ...out } = JSON.parse(run.stdout);
+  assert.deepEqual(out, { ok: true, sessionId: 's1', name: 'notatki-wt', cwd: 'C:\\wt', busy: false, twins: [], resolvedFrom: null, transcriptPath, transcriptExists: true });
+  assert.equal(project, 'wt');
+  // Read-only apart from the poll record: no fork, no dialog directory, no registration.
+  assert.equal(existsSync(log), false);
+  assert.equal(existsSync(join(root, 'projects')), false);
+  assert.equal(existsSync(join(root, 'hub-sessions.json')), false);
+});
+
+test('voice resolve falls back to the poll cwd when no event names one, and reports a missing transcript', () => {
+  const { root, agents, hub } = dialogSetup();
+  const gone = join(tempRoot(), 'gone.jsonl');
+  appendFileSync(join(root, 'registry', 's1.events.jsonl'), `${JSON.stringify(ev('UserPromptSubmit', '2026-10-21T10:00:00Z', { sessionId: 's1', cwd: null, transcriptPath: gone }))}\n`);
+  writeFileSync(agents, JSON.stringify([{ sessionId: 's1', name: 'notatki-wt', status: 'busy', cwd: 'C:\\main' }]));
+  const run = hub('voice', 'resolve', '--session', 's1', '--agents-json', agents);
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  const out = JSON.parse(run.stdout);
+  assert.deepEqual([out.ok, out.sessionId, out.cwd, out.transcriptPath, out.transcriptExists, out.busy], [true, 's1', 'C:\\main', gone, false, true]);
+});
+
+test('voice resolve resolves a restarted session by name and lists candidates when two live sessions share it', () => {
+  const { root, agents, hub } = dialogSetup();
+  const events = (id, fields = {}) => appendFileSync(join(root, 'registry', `${id}.events.jsonl`), `${JSON.stringify(ev('UserPromptSubmit', '2026-10-21T10:00:00Z', { sessionId: id, cwd: 'C:\\notatki', ...fields }))}\n`);
+  const live = (...ids) => writeFileSync(agents, JSON.stringify(ids.map((id) => ({ sessionId: id, name: 'notatki-x', status: 'idle', cwd: 'C:\\notatki' }))));
+  const voiceResolve = (id, status) => {
+    const run = hub('voice', 'resolve', '--session', id, '--agents-json', agents);
+    assert.equal(run.status, status, run.stdout + run.stderr);
+    return JSON.parse(run.stdout);
+  };
+  events('o1', { sessionTitle: 'notatki-x' });
+
+  live('n1');
+  const restarted = voiceResolve('o1', 0);
+  assert.deepEqual([restarted.ok, restarted.sessionId, restarted.resolvedFrom, restarted.twins], [true, 'n1', 'o1', []]);
+
+  live('n1', 'n2');
+  assert.deepEqual(voiceResolve('o1', 3), { ok: false, name: 'notatki-x', candidates: ['n1', 'n2'] });
+
+  events('n1');
+  const direct = voiceResolve('n1', 0);
+  assert.deepEqual([direct.sessionId, direct.resolvedFrom, direct.twins], ['n1', null, ['n2']]);
+});
+
+test('voice resolve looks for the transcript under the Claude projects directory when no event names one', () => {
+  const { root, agents, projectsDir, hub } = dialogSetup();
+  // A tool call carries no transcript path; only a prompt does (lib/events.mjs).
+  appendFileSync(join(root, 'registry', 's1.events.jsonl'), `${JSON.stringify(ev('PostToolUse', '2026-10-21T10:00:00Z', { sessionId: 's1', cwd: 'C:\\notatki' }))}\n`);
+  writeFileSync(agents, JSON.stringify([{ sessionId: 's1', name: 'notatki-y', status: 'idle', cwd: 'C:\\notatki' }]));
+  const voiceResolve = () => {
+    const run = hub('voice', 'resolve', '--session', 's1', '--agents-json', agents);
+    assert.equal(run.status, 0, run.stdout + run.stderr);
+    return JSON.parse(run.stdout);
+  };
+  const missing = voiceResolve();
+  assert.deepEqual([missing.transcriptPath, missing.transcriptExists], [null, false]);
+  mkdirSync(join(projectsDir, 'C--notatki'), { recursive: true });
+  writeFileSync(join(projectsDir, 'C--notatki', 's1.jsonl'), '{}\n');
+  const found = voiceResolve();
+  assert.deepEqual([found.transcriptPath, found.transcriptExists], [join(projectsDir, 'C--notatki', 's1.jsonl'), true]);
+});
+
+test('voice resolve refuses a session without a name or a working directory', () => {
+  const { root, agents, hub } = dialogSetup();
+  appendFileSync(join(root, 'registry', 'anon-1111.events.jsonl'), `${JSON.stringify(ev('UserPromptSubmit', '2026-10-21T10:00:00Z', { sessionId: 'anon-1111', cwd: 'C:\\notatki' }))}\n`);
+  appendFileSync(join(root, 'registry', 'nocwd-2222.events.jsonl'), `${JSON.stringify(ev('UserPromptSubmit', '2026-10-21T10:00:00Z', { sessionId: 'nocwd-2222', cwd: null }))}\n`);
+  writeFileSync(agents, JSON.stringify([{ sessionId: 'nocwd-2222', name: 'nocwd', status: 'idle', cwd: null }]));
+  const anonymous = hub('voice', 'resolve', '--session', 'anon-1111', '--agents-json', agents);
+  assert.equal(anonymous.status, 3);
+  assert.match(anonymous.stderr, /session anon-1111 has no name/);
+  const nowhere = hub('voice', 'resolve', '--session', 'nocwd-2222', '--agents-json', agents);
+  assert.equal(nowhere.status, 3);
+  assert.match(nowhere.stderr, /has no working directory/);
+});
+
+test('dialog start forks a worktree session from its hook cwd, not from the poll cwd', () => {
+  // Decision „Katalog roboczy w dialog start”, variant A. The fixture of the first voice resolve
+  // test, with real directories: the fork is launched and snapshotted in its cwd.
+  const { root, agents, log, hub } = dialogSetup();
+  const worktree = join(tempRoot(), 'wt');
+  const main = join(tempRoot(), 'main');
+  for (const dir of [worktree, main]) mkdirSync(dir, { recursive: true });
+  const transcriptPath = join(tempRoot(), 's1.jsonl');
+  writeFileSync(transcriptPath, '{}\n');
+  hookAndPollDisagree({ root, agents, worktree, main, transcriptPath });
+  const run = hub('dialog', 'start', '--session', 's1', '--slug', 'w', '--agents-json', agents);
+  assert.equal(run.status, 0, run.stdout + run.stderr);
+  const out = JSON.parse(run.stdout);
+  assert.equal(JSON.parse(readFileSync(log, 'utf8').trim()).cwd.toLowerCase(), worktree.toLowerCase());
+  assert.equal(JSON.parse(readFileSync(join(out.dialogDir, 'context', 'snapshot.json'), 'utf8')).cwd, worktree);
 });

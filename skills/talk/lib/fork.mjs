@@ -89,5 +89,6 @@ export function startFork({ cwd, sessionId, settingsPath, dialogDir, startPrompt
     return exited;
   }
 
-  return { ready, sessionId: sessionIdPromise, ask, close, stderrTail: () => stderrLines.join('\n') };
+  // `exited` resolves with the exit code once the process has closed, whenever that happens.
+  return { ready, sessionId: sessionIdPromise, exited, ask, close, stderrTail: () => stderrLines.join('\n') };
 }

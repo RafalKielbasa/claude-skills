@@ -15,6 +15,13 @@ test('the shipped config allows notatki and .claude and stores dialogs outside ~
   assert.ok(['contextual-update', 'disable-during-tool'].includes(c.interruption));
 });
 
+test('the shipped config has the pause limit, the hang-up mode and the rejoin first message', () => {
+  const c = loadConfig();
+  assert.equal(c.pauseLimitMinutes, 60);
+  assert.equal(c.agentHangup, 'pause');
+  assert.equal(c.rejoinFirstMessage, true);
+});
+
 test('saveConfig round-trips and writes pretty JSON with a trailing newline', () => {
   const path = join(mkdtempSync(join(tmpdir(), 'c-')), 'config.json');
   const c = { ...loadConfig(), agent: { agentId: 'a1', toolId: 't1' } };

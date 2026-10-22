@@ -25,10 +25,11 @@ dać nową wadę.
   bramkę po trzecim zrzucie i zaakceptował ją jednym „ok”.
 - 2026-10-21, ta sama sesja, bramka planu 2: zrzuty wykazały zepsute historie `TimelineItem/Sheet`,
   `Navigation/Narrow` i dekorator `meta`, które poprawiono w fali poprawek przed bramką.
+- 2026-10-22, sesja f8d64eed-4822-47ab-af24-2115a5905b5f (id claude.ai niedostępny), bramka wizualna ekranów publicznych Kodożerców (plan 2 `kodozercy-platform-public-catalog`) na lokalnym CMS: trzeci dowód, druga sesja, tym razem strony aplikacji zamiast Storybooka. Zrzuty Playwrightem 1440/390 z ofertą i bez oferty plus skrypt kontrastu WCAG na wyrenderowanych stronach i wszystkich krokach darmowej lekcji. Skrypt znalazł tekst artykułu lekcji w kolorach `prose` (gray-700) na ciemnym polu, 1,68:1, czego nie złapało 1125 testów ani review całej gałęzi na Opusie; poprawka `a1d671dd7`, ponowny przebieg czysty. Trzy pułapki samego pomiaru: `next dev` dokładał nakładkę React Query Devtools do zrzutów i do kontrastu (przejście na `next build` + `next start`), strony trzymały dane 5 minut w cache po zmianie danych testowych (świeży build), a wypełnione przyciski `ds` malują tło w rodzeństwie `[data-part="fill"]`, więc skrypt czytający tło elementu dawał fałszywe porażki (poprawka skryptu). Rafał zaliczył bramkę jednym „OK”.
 
 ## Rozwiązanie
 Przed bramką wizualną: zbuduj Storybook z HEAD (sprawdź, że build jest nowszy niż ostatnia zmiana
 kodu), zrzuć każdą historię z bramki w obu motywach i co najmniej jednej szerokości telefonu,
 obejrzyj zrzuty i porównaj z arkuszem. Każda wada wraca do wykonawcy przed bramką. Po poprawce
 zrzuć ponownie, a przy zmianach szerokości sprawdź dekoratory `meta`, które owijają wszystkie
-historie.
+historie. Przy bramce na stronach aplikacji (nie w Storybooku): zrzuty i kontrast z `next build` + `next start`, nie z `next dev`, bo nakładki narzędzi deweloperskich trafiają do obrazu i do pomiaru; po zmianie danych testowych świeży build, gdy strony trzymają dane w cache; skrypt kontrastu bierze tło z elementu, który je faktycznie maluje (np. rodzeństwo `[data-part="fill"]`), i przechodzi wszystkie kroki przebiegu, nie tylko strony startowe.

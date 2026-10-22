@@ -18,3 +18,11 @@ test('the page loads only local files, all with the token', () => {
   assert.doesNotMatch(html, /https?:\/\//);
   for (const [, src] of html.matchAll(/src="([^"]+)"/g)) assert.match(src, /\?t=__TOKEN__$/);
 });
+
+test('the page has the label and the three buttons', () => {
+  const html = read('../web/talk.html');
+  assert.match(html, /id="who"/);
+  assert.match(html, /<button id="start"[^>]*>Rozpocznij rozmowę<\/button>/);
+  assert.match(html, /<button id="pause"[^>]*>Przerwa<\/button>/);
+  assert.match(html, /<button id="stop"[^>]*>Zakończ rozmowę<\/button>/);
+});

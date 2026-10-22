@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-12T17:29:33.031Z
+  modified: 2026-10-22T13:10:50.247Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -58,6 +58,22 @@ token tylko jako sha256. Review 5494000452 typu COMMENT, ta sama formuła co u K
 zaszyte 7 dni w `prisma/seed/verify.ts:438` i testach, bo to sprawdza zmiana wymagań A (ważność 1/7/30 dni).
 Otwarte: Miłosz zgłosił brak `team/guards/invite-throttler.guard.ts` w `when` osi `rate-limiting` w `config.md`.
 Wstępnie: schemat 8/10, serwisy 12/15.
+
+Review końcowe Konrada 2026-10-22 (PR #199, tip `c08f46d`, nic nie wysłane na GitHub): bramki zielone w worktree
+(API 562, web 353, e2e 207 na osobnej bazie `course_platform_test_cp106`); code-review-master run `20261022-115856-ckab`
+leży w worktree `scratchpad/pr199` sesji e115bb16 (nie w repo), artefakt https://claude.ai/artifact/4pQASqtPjekez3P23dehUE.
+Jedyna uwaga blokująca: seed powiela wyznaczanie odbiorców (`seed/announcements.ts:40-52` vs `announcements.service.ts:97-109`),
+codex ją odrzuca (zakłada wywołanie `publish()`), ja trzymam. Bez wycieku tenantów i sekretów. Cross-review #200 = „LGTM:-)”
+(18.10), Miłosz na #199 to samo 2 min później. `docs/announcements.md` 2358 słów vs 556 w `rate-limiting.md`. W kodzie brak
+śladu zmiany wymagań A ani B; Rafał potwierdził 22.10: zmiana wymagań NIE poszła do Konrada.
+Decyzje 22.10: review tylko do vaulta (`egzamin-praktyki-2026-09/review-koncowe-konrad.md`, commity `1e9691f`, `19b08b9`,
+z 15-krokową checklistą i pytaniami na obronę), nic na GitHub przed 25.10. Tablica: DT-56 #745 w devstock-team, jedno issue
+dla Konrada i Miłosza, bez treści ocen (nie przypinać do #196/#197, bo widzą je kandydaci). Przejście po aplikacji
+przełożone na 23.10, start od kroku 1. Środowisko: baza `course_platform_cp106_dev` (seed z PR, zweryfikowany), API z worktree
+`scratchpad/pr199` sesji e115bb16 (`.env` przepięty na tę bazę), web z worktree `D:\Praca\Devstock\Projekty\cp106-review`
+(krótka ścieżka: w Temp Turbopack pada na limicie 260 znaków), `API_URL=127.0.0.1:3001`. Figma MCP zalogowana; w pliku
+D1 = dzwonek z plakietką, D2 = bez plakietki (strona 1323:7). Na Windows `taskkill` w Git Bash wymaga `//PID`; klasyfikator
+nie pozwala mi zabijać procesów, robi to Rafał.
 
 Zmiana wymagań: decyzja Rafała z 2026-10-12, wysyłka śr 14.10 (nie wt 13.10 z vaulta); wariant jeszcze
 niewybrany (rekomendacja A dla obu).

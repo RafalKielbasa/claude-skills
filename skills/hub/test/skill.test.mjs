@@ -28,3 +28,18 @@ test('the role file carries the hard rules and points at the skill', () => {
   assert.match(role, /"wyślij"/);
   assert.match(role, /Never answer a permission prompt or a gate/);
 });
+
+test('SKILL.md starts a voice conversation through voice resolve and the talk CLI, and sends prompt.md only after wyślij', () => {
+  const skill = read('../SKILL.md');
+  assert.match(skill, /HUB voice resolve --session/);
+  assert.match(skill, /talk\.mjs" check --cwd "<cwd>" --session <sessionId>/);
+  assert.match(skill, /talk\.mjs" start --session <sessionId> --cwd "<cwd>" --origin hub/);
+  assert.match(skill, /--path dialog --session <sessionId> --origin voice\//);
+  assert.match(skill, /A voice decision is never „wyślij”/);
+});
+
+test('the role file allows the voice dialog directory as the one write outside the hub data', () => {
+  // Compared with the line breaks folded, as the rule wraps in role.md.
+  const role = read('../role.md').replace(/\s+/g, ' ');
+  assert.ok(role.includes("- Write only into ~/.claude/hub/ (through the hub CLI); a voice conversation's dialog directory is written by the talk CLI in its own dialog root. Change nothing in project repositories and never edit the skill `hub` itself."), role);
+});

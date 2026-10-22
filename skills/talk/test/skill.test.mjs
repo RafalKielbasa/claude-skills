@@ -21,7 +21,6 @@ test('SKILL.md uses the absolute CLI path, LF endings, a closed frontmatter, and
   assert.match(skill, /node "C:\/Users\/rafal\/\.claude\/skills\/talk\/bin\/talk\.mjs" check --cwd/);
   assert.match(skill, /node "C:\/Users\/rafal\/\.claude\/skills\/talk\/bin\/talk\.mjs" start --session/);
   assert.match(skill, /Rozmowa głosowa otwarta w przeglądarce\./);
-  assert.match(skill, /Start-Process \(Get-Content -Raw '<dir>\\\.url'\)/);
   assert.match(skill, /deletion:/);
   assert.match(skill, /first `;`/);
   assert.match(skill, /stays at ElevenLabs/);
@@ -43,4 +42,25 @@ test('SKILL.md passes the subject single-quoted without single quotes, names the
   assert.match(skill, /End the turn\.\*\* Its status line[^\n]* is „Rozmowa głosowa otwarta w przeglądarce\.”/);
   assert.doesNotMatch(skill, /with exactly/);
   assert.match(skill, /`conversations:` line[\s\S]{0,200}call length of each/);
+});
+
+const skillText = () => read('../SKILL.md');
+
+test('SKILL.md checks with the session id and reopens a live dialog instead of starting a second one', () => {
+  const skill = skillText();
+  assert.match(skill, /check --cwd "<session cwd>" --session \$\{CLAUDE_SESSION_ID\}/);
+  assert.match(skill, /reopen --session \$\{CLAUDE_SESSION_ID\}/);
+  assert.match(skill, /Rozmowa głosowa ponownie otwarta w przeglądarce\./);
+  assert.match(skill, /origin.+hub.+report goes to the hub/s);
+  assert.doesNotMatch(skill, /Start-Process/);
+});
+
+test('SKILL.md asks before carrying out prompt.md when this session had turns of its own during the dialog', () => {
+  assert.match(skillText().replace(/\s+/g, ' '), /had turns of its own .+ show Rafal the order .+ wait for his word in text/s);
+});
+
+test('SKILL.md says a conversation lives through breaks until Rafal ends it or the pause limit passes, and how to start a fresh one', () => {
+  const skill = skillText().replace(/\s+/g, ' ');
+  assert.match(skill, /pauseLimitMinutes/);
+  assert.match(skill, /end the open conversation on its page first/);
 });

@@ -30,6 +30,11 @@ test('the role says a blocked write cannot be approved by Rafal and leaves the d
   assert.match(p, /You run in the background without a window: Rafal cannot approve a blocked write\. If a write is refused, say once that the decision stays in the transcript, and do not retry\./);
 });
 
+test('after a break note a read-back that was not confirmed is read back again', () => {
+  const p = voiceStartPrompt({ projectName: 'n', sourceId: 'a', dialogDir: 'C:/d', snapshot: { git: false, cwd: 'C:/r', at: 'T' } });
+  assert.match(p, /A message may begin with a note in parentheses that Rafal came back after a break or that the call was renewed after its time limit\. A decision you read back before that note and Rafal has not confirmed is read back again before his confirmation counts/);
+});
+
 test('the introduction turn reads the git snapshot so the first question does not wait for it', () => {
   const p = voiceStartPrompt({ projectName: 'notatki', sourceId: 'abcdef12', dialogDir: 'C:/d', snapshot: { git: true, cwd: 'C:/r', at: 'T' } });
   assert.match(p, /Before you introduce yourself, read .*status\.txt.*log\.txt.*diff\.patch/s);

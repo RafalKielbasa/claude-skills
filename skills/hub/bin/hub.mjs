@@ -11,6 +11,7 @@
 //   launch <recordId> [--agents-json <file>]
 //   dialog start --session <sessionId> --slug <slug> [--agents-json <file>]
 //   dialog refresh --dir <dialog dir>
+//   voice resolve --session <sessionId> [--agents-json <file>]
 //   codex ask (--session <sessionId> | --cwd <dir>) --slug <slug> (--file <path> | --diff <range> | --last <sessionId>) --question-file <file|-> [--project <p>]
 //   codex follow --thread <thread dir> --question-file <file|->
 //   codex note --thread <thread dir> --text-file <file|->
@@ -27,6 +28,7 @@
 // --confirm-* flags are passed only after Rafal answered the hub's question (spec §6.2).
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, copyFileSync, existsSync, realpathSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
+import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir, codexDir, ownedDir } from '../lib/paths.mjs';
 import { readEvents, resolveSessionId, listSessionIds } from '../lib/registry.mjs';
@@ -41,6 +43,7 @@ import { gitInfo, runChecks } from '../lib/checks.mjs';
 import { findDelivery, findMismatch, findLaunchDelivery, findLaunchMismatch, classifyNotice, applyNotice } from '../lib/confirm.mjs';
 import { SLUG, newSessionArgs, runClaude, worktreeOf, launchChecks, findLaunched } from '../lib/launch.mjs';
 import { takeSnapshot, forkSettings, forkArgs, forkStartPrompt, fallbackCommand } from '../lib/dialog.mjs';
+import { resolveSource, findTranscript } from '../lib/resolve.mjs';
 import { describeElement, firstPrompt, askArgs, followArgs, isolationArgs, runCodex, threadEntry } from '../lib/codex.mjs';
 import { cleanup } from '../lib/retention.mjs';
 import { VERDICTS, recordJudgment } from '../lib/judgments.mjs';
@@ -111,6 +114,20 @@ const lastPollName = (root, sessionId) => [...readPolls(root)].reverse().map((po
 
 // A fork's name takes the project key kebab-cased: an unmapped checkout's key is its directory name.
 const kebab = (text) => String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// The live source of a fork, from a fresh poll (lib/resolve.mjs). Several or no candidates are
+// printed for Rafal to choose from (spec §6.5 step 2), and the command exits.
+function liveSource(root, requested, options) {
+  const poll = freshPoll(root, options);
+  if (!poll.ok) fail(`claude agents --json failed: ${poll.error}`, 3);
+  const resolved = resolveSource({ requested, poll, derivedOf: (id) => derivedOf(root, id), lastPollName: (id) => lastPollName(root, id) });
+  if (resolved.error) fail(resolved.error, 3);
+  if (!resolved.ok) {
+    console.log(JSON.stringify({ ok: false, name: resolved.name, candidates: resolved.candidates }, null, 2));
+    process.exit(3);
+  }
+  return { poll, ...resolved };
+}
 
 const readBody = (options, key = 'body-file') => readFileSync(need(options, key) === '-' ? 0 : options[key], 'utf8');
 const given = (options, key) => (options[key] && options[key] !== true ? options[key] : null);
@@ -309,27 +326,9 @@ switch (command) {
     const requested = sessionArg(root, options.session, 'missing --session');
     const slug = need(options, 'slug');
     if (!SLUG.test(slug)) fail(`--slug must be kebab-case: ${slug}`);
-    const derived = derivedOf(root, requested);
-    const poll = freshPoll(root, options);
-    if (!poll.ok) fail(`claude agents --json failed: ${poll.error}`, 3);
-    // A live id is forked directly: when two live sessions share a name, Rafal chose this one
-    // (spec §6.5 step 2). An id that is not live is resolved by name right before the launch: a
-    // restart keeps the name and changes the id, and a fork of a stale id answers from the ended
-    // session (D6).
-    let source = pollEntry(poll, requested);
-    let sourceName = source?.name ?? derived.sessionTitle;
-    if (!source) {
-      sourceName = derived.sessionTitle ?? lastPollName(root, requested);
-      if (!sourceName) fail(`session ${requested} has no name; a fork resolves its source by name`, 3);
-      const candidates = poll.sessions.filter((s) => s.name === sourceName);
-      if (candidates.length !== 1) {
-        console.log(JSON.stringify({ ok: false, name: sourceName, candidates: candidates.map((s) => s.sessionId) }, null, 2));
-        process.exit(3);
-      }
-      [source] = candidates;
-    }
-    const twins = source.name ? poll.sessions.filter((s) => s.name === source.name && s.sessionId !== source.sessionId).map((s) => s.sessionId) : [];
-    const cwd = source.cwd ?? derived.cwd;
+    // Resolved right before the launch; the cwd comes from the source's hook events first (lib/resolve.mjs).
+    const { poll, source, twins, resolvedFrom } = liveSource(root, requested, options);
+    const { cwd } = source;
     if (!cwd) fail(`session ${source.sessionId} has no working directory; a fork starts in its source's directory`, 3);
     const project = projectOf(cwd, loadProjectMap(root).projects);
     const name = `dlg-${kebab(project.key)}-${slug}`;
@@ -342,7 +341,7 @@ switch (command) {
     const snapshot = takeSnapshot(cwd, join(dir, 'context'), { at });
     const settingsPath = join(dir, 'fork-settings.json');
     writeFileSync(settingsPath, `${JSON.stringify(forkSettings(dir), null, 2)}\n`, 'utf8');
-    const prompt = forkStartPrompt({ projectName: project.name, sourceName: sourceName ?? '(no name)', sourceId: source.sessionId, dialogDir: dir, snapshot });
+    const prompt = forkStartPrompt({ projectName: project.name, sourceName: source.name ?? '(no name)', sourceId: source.sessionId, dialogDir: dir, snapshot });
     const promptPath = join(dir, 'start-prompt.md');
     writeFileSync(promptPath, prompt, 'utf8');
     const launched = runClaude(forkArgs({ sessionId: source.sessionId, name, settingsPath, prompt, dialogDir: dir }), { cwd });
@@ -359,7 +358,22 @@ switch (command) {
     if (sessionId) registerLaunched(root, { sessionId, kind: 'dialog', project: project.key, name, dialogDir: dir, sourceSessionId: source.sessionId, at });
     console.log(JSON.stringify({
       ok: true, dialogDir: dir, name, shortId: launched.shortId, sessionId, sourceSessionId: source.sessionId,
-      resolvedFrom: source.sessionId === requested ? null : requested, twins, busy: source.status === 'busy', attach: `claude attach ${launched.shortId}`,
+      resolvedFrom, twins, busy: source.status === 'busy', attach: `claude attach ${launched.shortId}`,
+    }, null, 2));
+    break;
+  }
+  case 'voice': {
+    // Read-only (voice spec §19.2 step 2): it launches nothing and writes only the poll record. The
+    // hub then starts the voice fork through the talk CLI with this cwd. HUB_CLAUDE_PROJECTS replaces
+    // ~/.claude/projects, where a transcript no hook event names is looked for, in tests.
+    if (positional[0] !== 'resolve') fail('usage: voice resolve --session <sessionId> [--agents-json <file>]');
+    const requested = sessionArg(root, options.session, 'missing --session');
+    const { source, twins, resolvedFrom } = liveSource(root, requested, options);
+    if (!source.cwd) fail(`session ${source.sessionId} has no working directory; a voice fork starts in its source's directory`, 3);
+    const projectsDir = process.env.HUB_CLAUDE_PROJECTS || join(homedir(), '.claude', 'projects');
+    console.log(JSON.stringify({
+      ok: true, sessionId: source.sessionId, name: source.name, cwd: source.cwd, project: projectOf(source.cwd, loadProjectMap(root).projects).key,
+      busy: source.status === 'busy', twins, resolvedFrom, ...findTranscript({ sessionId: source.sessionId, transcriptPath: source.transcriptPath, projectsDir }),
     }, null, 2));
     break;
   }
@@ -545,5 +559,5 @@ switch (command) {
     break;
   }
   default:
-    fail('usage: hub.mjs overview|last|judge|compose|approve|launch|dialog|codex|prepare|result|notice|confirm|register|journal|projects|cleanup');
+    fail('usage: hub.mjs overview|last|judge|compose|approve|launch|dialog|voice|codex|prepare|result|notice|confirm|register|journal|projects|cleanup');
 }

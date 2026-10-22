@@ -10,11 +10,12 @@ export function readDialogFiles(dialogDir) {
   return Object.fromEntries(FILES.map(([key, name]) => [key, read(name)]));
 }
 
-export function closingReport({ dialogDir, files, deletion, conversations }) {
+// `origin` (session or hub) tells session X whether the dialog was started from its own /talk or by the hub.
+export function closingReport({ dialogDir, origin, files, deletion, conversations }) {
   const section = ([key, name]) => {
     const body = files[key];
     return `--- ${name} ---\n${body === undefined ? '(not written)\n' : body.endsWith('\n') ? body : `${body}\n`}`;
   };
   const convs = conversations.length ? conversations.map(({ id, seconds }) => `${id} (${seconds === null ? 'unknown' : `${seconds} s`})`).join(', ') : 'none';
-  return `TALK CLOSING REPORT\ndialog: ${dialogDir}\ndeletion: ${deletion}\nconversations: ${convs}\n${FILES.map(section).join('')}END OF REPORT\n`;
+  return `TALK CLOSING REPORT\ndialog: ${dialogDir}\norigin: ${origin}\ndeletion: ${deletion}\nconversations: ${convs}\n${FILES.map(section).join('')}END OF REPORT\n`;
 }

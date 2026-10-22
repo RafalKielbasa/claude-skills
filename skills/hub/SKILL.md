@@ -159,6 +159,53 @@ message is `held`, do not resend it.
 6. After the send, stop the fork with `claude stop <shortId>`; the dialog directory stays. Show
    X's next result when its turn ends.
 
+## Voice conversation about a session (voice spec §19)
+
+The voice twin of the dialog above. Design: `D:/Notatki/notatki/.claude/specs/2026-10-18-hub-voice-design.md`,
+§19. The talk CLI runs the conversation and its fork; X stays untouched until Rafal sends the
+result. A plain `/talk` typed in the hub is not this procedure: it talks about the hub session itself.
+
+1. Rafal says "porozmawiajmy głosem o <X>" or "omówmy głosem wynik sesji X". Pick X from the
+   overview as in the dialog path.
+2. `HUB voice resolve --session <X>`. It launches nothing. By its output, as in the dialog path:
+   - `candidates` with several ids: ask Rafal which session, then run `HUB voice resolve` again
+     with the chosen id; with none: X is not live under its name, tell him so;
+   - `twins` not empty: other live sessions carry the same name; tell Rafal that the conversation
+     is about `sessionId` and name the twins;
+   - `resolvedFrom` set: X restarted, and the conversation is about the live session `sessionId`;
+   - `busy: true`: tell Rafal that the voice fork sees X's history up to the running tool call,
+     without its result;
+   - `transcriptExists: false`: refuse. X has no transcript file (`transcriptPath`), so no fork can
+     resume it; tell Rafal so and stop.
+
+   `<sessionId>`, `<cwd>` and `<name>` below are `sessionId`, `cwd` and `name` of this output. The
+   `cwd` comes from X's hook events first, so a worktree session's fork starts in its worktree.
+3. `node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" check --cwd "<cwd>" --session <sessionId>`.
+   - Exit 2 prints one Polish sentence (for example a project outside the allowlist): quote it
+     verbatim and stop.
+   - `live` in the output: a voice dialog of X is already open; never start a second one. Run
+     `node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" reopen --session <sessionId>`, tell
+     Rafal that its page opened again, and stop; its report goes to whoever started it
+     (`live.origin`).
+4. `node "C:/Users/rafal/.claude/skills/talk/bin/talk.mjs" start --session <sessionId> --cwd "<cwd>" --origin hub --name "<name>"`
+   (leave out `--name` when `name` is null; the page then shows the short id), through Bash with
+   `run_in_background: true`. The task runs for the whole conversation, which may pause and
+   rejoin; do not wait for it or poll its output. Tell Rafal that the page opens in the browser.
+   The bridge never wakes X, and X never reads the dialog.
+5. When the task completes, read the closing report from its output, between `TALK CLOSING REPORT`
+   and `END OF REPORT` (`dialog:`, `origin:`, `deletion:` and `conversations:` lines, then the
+   dialog's files):
+   - show the decisions (`--- decisions.md ---`) and the open questions
+     (`--- open-questions.md ---`) as Polish tables, the length of each call (`conversations:`, in
+     minutes and seconds) and every deletion problem on the `deletion:` line;
+   - if the dialog directory (the `dialog:` line) holds a `prompt.md` (its section is not
+     `(not written)`): `HUB compose --path dialog --session <sessionId> --origin voice/<dialog dir name> --body-file "<dialog dir>/prompt.md"`,
+     then steps 2–6 of Sending (full draft, "wyślij", approve, prepare, SendMessage, result,
+     confirm);
+   - without a `prompt.md`, nothing is sent;
+   - a task that ended without a report: show Rafal the last lines of its output and the
+     `dialog:` line, and stop.
+
 ## Codex consultation (spec §7)
 
 1. Rafal says "odbij od Codexa <element>: <pytanie>". The element is a session's last result
@@ -185,9 +232,14 @@ message is `held`, do not resend it.
 
 ## Boundaries
 
-- Write only through `HUB` into `~/.claude/hub/`. Never edit project repositories or this skill.
+- Write only through `HUB` into `~/.claude/hub/`; a voice conversation's dialog directory is
+  written by the talk CLI in its own dialog root. Never edit project repositories or this skill.
 - Start sessions and forks only with `HUB launch` and `HUB dialog start`, after the steps above;
-  stop a fork only with `claude stop <shortId>` after its prompt was sent or Rafal asked.
+  start a voice fork only through the talk CLI (`talk.mjs start --origin hub`), after
+  `HUB voice resolve`. Stop a fork only with `claude stop <shortId>` after its prompt was sent or
+  Rafal asked.
+- A voice decision is never „wyślij”: a voice dialog's `prompt.md` reaches X only through Sending,
+  after Rafal typed "wyślij" in the hub.
 - Never answer gates or permission prompts of other sessions.
 - If a name matches several live sessions, stop and ask Rafal; SendMessage addresses by name.
 - Quote errors literally; never retry on your own.

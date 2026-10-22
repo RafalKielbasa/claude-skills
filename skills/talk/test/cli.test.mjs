@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createServer as createNetServer } from 'node:net';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { agentSetup, agentSync, main } from '../bin/talk.mjs';
@@ -172,8 +173,14 @@ const outsideRepo = gitRepo('outside');
 const startBase = { allow: ['allowed'], dialogRoot, agent: { agentId: 'agent_test', toolId: 'tool_test' }, interruption: 'contextual-update' };
 const testConfig = join(fixtures, 'config.json');
 writeFileSync(testConfig, JSON.stringify(startBase), 'utf8');
+// The transcripts the transcript guard looks for when a session has no hook events (the hub data
+// above has none): one per session id the start tests use.
+const claudeProjects = join(fixtures, 'claude-projects');
+mkdirSync(join(claudeProjects, 'p'), { recursive: true });
+for (const id of ['s', 's1', 's2']) writeFileSync(join(claudeProjects, 'p', `${id}.jsonl`), '', 'utf8');
 // The hooks a developer's shell might carry are cleared, so each test sets only what it needs.
-const testEnv = { TALK_CONFIG: testConfig, HUB_DATA: hubData, TALK_USER_ENV_EMPTY: '1', TALK_ELEVEN_STUB: '', TALK_FAKE_CLAUDE: '', TALK_RAW_LOG: '', TALK_FIRST_BEAT_MS: '' };
+const testEnv = { TALK_CONFIG: testConfig, HUB_DATA: hubData, TALK_USER_ENV_EMPTY: '1', TALK_ELEVEN_STUB: '', TALK_FAKE_CLAUDE: '', TALK_RAW_LOG: '',
+  TALK_FIRST_BEAT_MS: '', TALK_PAUSE_LIMIT_MS: '', TALK_CLAUDE_PROJECTS: claudeProjects };
 
 function run(args, env = {}) {
   return spawnSync(process.execPath, [CLI, ...args], { encoding: 'utf8', env: { ...process.env, ...testEnv, ...env } });
@@ -258,14 +265,23 @@ test('start without --session or --cwd, and check without --cwd, exit 2 with usa
   }
 });
 
-test('start names its dialog directory first, serves .url there, and prints the closing report after /api/end', async () => {
+// Before the start tests below, so that `projects` would only exist if this start created it. The
+// fake fork and the short first-call deadline keep a start that slipped through short.
+test('start refuses an origin other than session or hub with usage', () => {
+  const r = run(['start', '--session', 's', '--cwd', allowedRepo, '--origin', 'browser'], { TALK_ELEVEN_STUB: '1', TALK_FAKE_CLAUDE: FAKE, TALK_FIRST_BEAT_MS: '300' });
+  assert.equal(r.status, 2);
+  assert.match(r.stdout, /^Użycie: .+--origin session\|hub/);
+  assert.equal(existsSync(join(dialogRoot, 'projects')), false);
+});
+
+test('start names its dialog directory first, serves bridge.json there, and prints the closing report after /api/end', async () => {
   const s = startChild(['--session', 's', '--cwd', allowedRepo], { ELEVENLABS_API_KEY: 'k', TALK_ELEVEN_STUB: '1', TALK_FAKE_CLAUDE: FAKE });
   try {
     await waitFor(() => /^dialog: .+\n/.test(s.out()), 5000);
     const dialogDir = s.out().match(/^dialog: (.+)\n/)[1];
     assert.ok(dialogDir.startsWith(join(dialogRoot, 'projects')));
-    await waitFor(() => existsSync(join(dialogDir, '.url')), 5000);
-    const url = new URL(readFileSync(join(dialogDir, '.url'), 'utf8'));
+    await waitFor(() => existsSync(join(dialogDir, 'bridge.json')), 5000);
+    const url = new URL(JSON.parse(readFileSync(join(dialogDir, 'bridge.json'), 'utf8')).url);
     await fetch(new URL(`/api/end${url.search}`, url), { method: 'POST', body: '{}', headers: { 'content-type': 'application/json' } });
     const code = await s.closed;
     assert.equal(code, 0);
@@ -292,4 +308,176 @@ test('start passes the subject and TALK_RAW_LOG to the fork and ends by itself a
   } finally {
     stop(s);
   }
+});
+
+// --- live dialogs, reopen, --origin and the transcript guard (Plan 3, Task 5) ---
+
+const post = (url, path, body = {}) => fetch(new URL(`${path}${new URL(url).search}`, url),
+  { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' } });
+const statusOf = async (url) => (await fetch(new URL(`/api/status${new URL(url).search}`, url))).json();
+
+// A start under the stub whose bridge serves bridge.json; `url` is the page URL read from that file.
+async function liveStart(args, env = {}) {
+  const s = startChild(args, { TALK_ELEVEN_STUB: '1', TALK_FAKE_CLAUDE: FAKE, ...env });
+  try {
+    await waitFor(() => /^dialog: .+\n/.test(s.out()), 5000);
+    const dialogDir = s.out().match(/^dialog: (.+)\n/)[1];
+    await waitFor(() => existsSync(join(dialogDir, 'bridge.json')), 5000);
+    return { ...s, dialogDir, url: JSON.parse(readFileSync(join(dialogDir, 'bridge.json'), 'utf8')).url };
+  } catch (error) {
+    stop(s);
+    throw error;
+  }
+}
+async function endDialog(s) {
+  await post(s.url, '/api/end');
+  assert.equal(await s.closed, 0);
+}
+
+test('check --session reports the live dialog of the session, and start refuses a second one', async () => {
+  const s = await liveStart(['--session', 's1', '--cwd', allowedRepo]);
+  try {
+    const check = run(['check', '--cwd', allowedRepo, '--session', 's1'], { TALK_ELEVEN_STUB: '1' });
+    assert.equal(check.status, 0, check.stdout + check.stderr);
+    assert.deepEqual(JSON.parse(check.stdout), { ok: true, project: 'allowed', live: { dir: s.dialogDir, origin: 'session' } });
+    // Another session of the project has no live dialog.
+    assert.deepEqual(JSON.parse(run(['check', '--cwd', allowedRepo, '--session', 's'], { TALK_ELEVEN_STUB: '1' }).stdout), { ok: true, project: 'allowed' });
+    const dialogs = readdirSync(dirname(s.dialogDir));
+    const second = run(['start', '--session', 's1', '--cwd', allowedRepo], { TALK_ELEVEN_STUB: '1', TALK_FAKE_CLAUDE: FAKE, TALK_FIRST_BEAT_MS: '300' });
+    assert.equal(second.status, 2);
+    assert.match(second.stdout, new RegExp(`^Rozmowa głosowa tej sesji już trwa \\(${escape(s.dialogDir)}\\).*reopen --session s1`));
+    assert.equal(second.stdout.trim().split('\n').length, 1);
+    assert.deepEqual(readdirSync(dirname(s.dialogDir)), dialogs);
+    await endDialog(s);
+  } finally {
+    stop(s);
+  }
+});
+
+test('reopen opens the live dialog of the session and refuses a session without one', async () => {
+  const s = await liveStart(['--session', 's1', '--cwd', allowedRepo]);
+  try {
+    const opened = [];
+    const deps = { openUrl: async (url) => { opened.push(url); } };
+    const env = { ...process.env, ...testEnv };
+    const out = await main(['reopen', '--session', 's1'], env, deps);
+    assert.equal(out.code, 0);
+    assert.deepEqual(out.lines.map((line) => JSON.parse(line)), [{ ok: true, dialog: s.dialogDir, origin: 'session' }]);
+    assert.deepEqual(opened, [s.url]);
+    assert.deepEqual(await main(['reopen', '--session', 's9'], env, deps), { code: 2, lines: ['Ta sesja nie ma otwartej rozmowy głosowej.'] });
+    assert.match((await main(['reopen'], env, deps)).lines[0], /^Użycie: .+reopen --session <id>/);
+    assert.equal(opened.length, 1);
+    await endDialog(s);
+  } finally {
+    stop(s);
+  }
+});
+
+test('a bridge.json left by a killed bridge neither shows as live nor blocks a start', async () => {
+  // A port that was free a moment ago: no bridge answers there.
+  const free = createNetServer();
+  await new Promise((resolve) => free.listen(0, '127.0.0.1', resolve));
+  const { port } = free.address();
+  await new Promise((resolve) => free.close(resolve));
+  const stale = join(dialogRoot, 'projects', 'allowed', 'dialogs', '2000-01-01-0000-talk');
+  mkdirSync(stale, { recursive: true });
+  writeFileSync(join(stale, 'bridge.json'), JSON.stringify({ sessionId: 's2', origin: 'session', url: `http://127.0.0.1:${port}/?t=dead`, pid: 1, startedAt: '2000-01-01T00:00:00.000Z' }), 'utf8');
+  const check = run(['check', '--cwd', allowedRepo, '--session', 's2'], { TALK_ELEVEN_STUB: '1' });
+  assert.equal(check.status, 0, check.stdout + check.stderr);
+  assert.deepEqual(JSON.parse(check.stdout), { ok: true, project: 'allowed' });
+  const s = await liveStart(['--session', 's2', '--cwd', allowedRepo]);
+  try {
+    assert.notEqual(s.dialogDir, stale);
+    await endDialog(s);
+  } finally {
+    stop(s);
+  }
+});
+
+test('start --origin hub reaches the report, --name the page label, and the pause limit comes from the configuration or TALK_PAUSE_LIMIT_MS', async () => {
+  const s = await liveStart(['--session', 's1', '--cwd', allowedRepo, '--origin', 'hub', '--name', 'dlg-name'], { TALK_PAUSE_LIMIT_MS: '300' });
+  try {
+    assert.equal((await statusOf(s.url)).label, 'allowed · dlg-name');
+    assert.equal(JSON.parse(readFileSync(join(s.dialogDir, 'bridge.json'), 'utf8')).origin, 'hub');
+    await post(s.url, '/api/heartbeat', { conversationId: 'conv_a' });
+    await post(s.url, '/api/call-end', { conversationId: 'conv_a', reason: 'agent', context: 'end_call' });
+    // Nothing else is sent: the pause limit ends the dialog.
+    assert.equal(await s.closed, 0);
+    assert.match(s.out(), new RegExp(`\\nTALK CLOSING REPORT\\ndialog: ${escape(s.dialogDir)}\\norigin: hub\\n`));
+    assert.match(s.out(), /\nconversations: conv_a \(0 s\)\n/);
+  } finally {
+    stop(s);
+  }
+  const t = await liveStart(['--session', 's1', '--cwd', allowedRepo]);
+  try {
+    assert.equal((await statusOf(t.url)).label, 'allowed · s1');
+    await endDialog(t);
+    assert.match(t.out(), /\norigin: session\n/);
+  } finally {
+    stop(t);
+  }
+  // What reaches the bridge: TALK_PAUSE_LIMIT_MS before pauseLimitMinutes, the configuration's values
+  // before the defaults, and the first 8 characters of a session id without --name.
+  writeFileSync(join(claudeProjects, 'p', 'abcdef12-3456.jsonl'), '', 'utf8');
+  const seen = [];
+  const deps = { startBridge: async (options) => { seen.push(options); return { done: Promise.resolve('') }; }, write: async () => {} };
+  const env = { ...process.env, ...testEnv, TALK_ELEVEN_STUB: '1' };
+  const configured = tmpConfig({ ...startBase, dialogRoot: mkdtempSync(join(tmpdir(), 'talk-cli-root-')), pauseLimitMinutes: 2, agentHangup: 'end', rejoinFirstMessage: false });
+  const plain = tmpConfig({ ...startBase, dialogRoot: mkdtempSync(join(tmpdir(), 'talk-cli-root-')) });
+  const args = ['start', '--session', 'abcdef12-3456', '--cwd', allowedRepo];
+  for (const extra of [{ TALK_CONFIG: configured }, { TALK_CONFIG: configured, TALK_PAUSE_LIMIT_MS: '300' }, { TALK_CONFIG: plain }]) {
+    assert.equal((await main(args, { ...env, ...extra }, deps)).code, 0);
+  }
+  assert.deepEqual(seen.map((o) => [o.pauseLimitMs, o.agentHangup, o.rejoinFirstMessage, o.origin, o.label]), [
+    [120000, 'end', false, 'session', 'allowed · abcdef12'],
+    [300, 'end', false, 'session', 'allowed · abcdef12'],
+    [3600000, 'pause', true, 'session', 'allowed · abcdef12'],
+  ]);
+});
+
+test('a session whose transcript file is missing is refused before any bridge starts, with or without hook events', () => {
+  const hub = mkdtempSync(join(tmpdir(), 'talk-cli-hub-'));
+  const projects = mkdtempSync(join(tmpdir(), 'talk-cli-projects-'));
+  mkdirSync(join(projects, 'p'));
+  const root = mkdtempSync(join(tmpdir(), 'talk-cli-root-'));
+  // The fake fork and the short first-call deadline keep a start that slipped through short.
+  const env = { TALK_ELEVEN_STUB: '1', TALK_FAKE_CLAUDE: FAKE, TALK_FIRST_BEAT_MS: '300', HUB_DATA: hub, TALK_CLAUDE_PROJECTS: projects,
+    TALK_CONFIG: tmpConfig({ ...startBase, dialogRoot: root }) };
+  const event = (sessionId, transcriptPath) => {
+    mkdirSync(join(hub, 'registry'), { recursive: true });
+    writeFileSync(join(hub, 'registry', `${sessionId}.events.jsonl`), `${JSON.stringify({ sessionId, cwd: allowedRepo, transcriptPath })}\n`, 'utf8');
+  };
+  const refusal = (id, path) => `Sesja ${id.slice(0, 8)} nie ma pliku transkryptu (${path}), więc nie da się z niej uruchomić rozmowy głosowej.\n`;
+  const checkAndStart = (id) => [run(['check', '--cwd', allowedRepo, '--session', id], env), run(['start', '--session', id, '--cwd', allowedRepo], env)];
+
+  // (1) The hook names a transcript that is gone; a file under the projects root does not stand in for it.
+  const id1 = 'a1b2c3d4-0000-4000-8000-000000000001';
+  const gone = join(projects, 'p', 'gone', `${id1}.jsonl`);
+  event(id1, gone);
+  writeFileSync(join(projects, 'p', `${id1}.jsonl`), '', 'utf8');
+  for (const r of checkAndStart(id1)) {
+    assert.equal(r.status, 2, r.stdout + r.stderr);
+    assert.equal(r.stdout, refusal(id1, gone));
+  }
+  // (2) No hook events, and no transcript under the projects root.
+  const id2 = 'b2c3d4e5-0000-4000-8000-000000000002';
+  for (const r of checkAndStart(id2)) {
+    assert.equal(r.status, 2, r.stdout + r.stderr);
+    assert.equal(r.stdout, refusal(id2, `${projects}/*/${id2}.jsonl`));
+  }
+  assert.equal(existsSync(join(root, 'projects')), false);
+  // (3) No hook events, and a transcript under the projects root.
+  const id3 = 'c3d4e5f6-0000-4000-8000-000000000003';
+  writeFileSync(join(projects, 'p', `${id3}.jsonl`), '', 'utf8');
+  const third = run(['check', '--cwd', allowedRepo, '--session', id3], env);
+  assert.equal(third.status, 0, third.stdout + third.stderr);
+  assert.deepEqual(JSON.parse(third.stdout), { ok: true, project: 'allowed' });
+  // (4) The hook names a transcript that exists, while the projects root has none for the session.
+  const id4 = 'd4e5f6a7-0000-4000-8000-000000000004';
+  const kept = join(hub, 'kept.jsonl');
+  writeFileSync(kept, '', 'utf8');
+  event(id4, kept);
+  const fourth = run(['check', '--cwd', allowedRepo, '--session', id4], env);
+  assert.equal(fourth.status, 0, fourth.stdout + fourth.stderr);
+  assert.deepEqual(JSON.parse(fourth.stdout), { ok: true, project: 'allowed' });
 });

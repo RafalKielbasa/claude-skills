@@ -139,6 +139,7 @@ kodem i nie powinna przechodzić przez składnię języka.
   indeksu wiki tekst `$'\r'`; podwójny ukośnik w literale Pythona dotarł pojedynczy i do pliku trafiły dwa
   prawdziwe znaki CR. Złapane kontrolą `tr -cd '\r' | wc -c` (wynik 2) i naprawione skryptem bez ukośników
   (`chr(92) + 'r'`).
+- 2026-10-22, sesja f8d64eed-4822-47ab-af24-2115a5905b5f (id claude.ai niedostępny), dane testowe bramki przez Prisma: jednolinijkowiec `node -e "…prisma.$disconnect()…"` w narzędziu PowerShell rozpadł się, bo PowerShell w cudzysłowie podwójnym rozwija `$disconnect` jako własną zmienną (pusty ciąg). Naprawa zgodna z tą stroną: skrypty `.cjs` w katalogu zadania z bezwzględną ścieżką do klienta Prisma w `require`, uruchamiane `node plik.cjs`.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją
