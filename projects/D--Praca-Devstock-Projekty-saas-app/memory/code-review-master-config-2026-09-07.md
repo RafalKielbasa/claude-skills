@@ -110,3 +110,14 @@ ale opisują go jako „checklistę" — do ewentualnej korekty. `PURPOSE.md` sk
 „konfiguracja czeka na zatwierdzenie" — do aktualizacji przez `evolve-skill`.
 
 Powiązane: [[feedback-no-multiagent-fanout]], [[feedback-no-commits-user-only]].
+
+Ósmy przebieg `pr`: 2026-10-22 `pr 205` (CP-90 account hub, Norbert, tip `823a8d7`, run
+`20261022-063318-azty`, 11 agentów, 11 surowych → 1 po progach (f-08 sztywny `lvh.me:3000`), codex 1/1,
+exit 0, artefakt MfDAjCaNPMqhyUV76R9nHn). Progi zgubiły duplikat zapytania `tenantPublic` (75 < 85) i host
+(80 < 85); wysłane jako review 5610418854 `CHANGES_REQUESTED`: 4 Blocking (host, duplikat ×2, kafel znika
+przy błędzie zapytania, kryterium #169), 3 Suggestion, 1 Nitpick; karta #169 Second review → To be fixed.
+Recheck #202 tego dnia: 2/2 naniesione w `5bb0520`, nic nie wysłane, #184 już w Second review (Norbert).
+Obejście checkoutu: `git worktree add --detach <scratchpad>/pr-<n> <tip>` + kopia `state.json`, `crm`
+z `--repo <worktree>`; potem kopia `state.json` i raportów z powrotem, `crm artifact` daje tytuł z nazwy
+katalogu (poprawić na „Review saas app”). Klasyfikator blokuje POST review („External System Writes”)
+mimo „OK” na bramce; przeszło dopiero po jawnym „wysyłaj”.

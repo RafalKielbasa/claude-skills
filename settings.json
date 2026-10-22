@@ -2,7 +2,7 @@
   "attribution": {
     "commit": ""
   },
-  "model": "fable",
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
@@ -118,6 +118,10 @@
   "askUserQuestionTimeout": "60s",
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "skipWorkflowUsageWarning": true,
   "autoMode": {
     "soft_deny": [
@@ -153,9 +157,5 @@
       "**routine under this repo's tools/ prefix**: read-only kb-client operations (`ask`, `stats`, `list`, `export`) and course-pipeline validation/dry-run commands are routine per repo skill docs; `kb-client delete --yes` (whole-category wipe) and course-pipeline `publish --env=prod` are explicitly gated on Rafał's in-conversation confirmation and should not be auto-approved"
     ]
   },
-  "voiceEnabled": true,
-  "voice": {
-    "enabled": true,
-    "mode": "hold"
-  }
+  "voiceEnabled": true
 }

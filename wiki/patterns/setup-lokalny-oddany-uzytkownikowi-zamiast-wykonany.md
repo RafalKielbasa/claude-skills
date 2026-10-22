@@ -22,6 +22,13 @@ brak TTY w narzędziu Bash) biorę za blokadę, zamiast szukać trybu nieinterak
   urządzenia zadziałał: link i kod, Rafał zatwierdza w przeglądarce i podaje liczbę, potem
   `--resume <id> --match <liczba>`. Jeden kod wygasł (`expired_token`), bo liczba przyszła po
   kilku minutach; nowy kod rozwiązał sprawę.
+- 2026-10-22, sesja 7f23d848-4179-4042-9697-36f88592a6fa (id claude.ai niedostępny), bramka urządzenia
+  nr 2 planu 3 biblioteki: trzy razy podałem Rafałowi `pnpm storybook:dev` do uruchomienia w jego
+  terminalu (pierwotnie, po poprawce historii i po zatrzymaniu starego Metro). Rafał odbił:
+  „uruchom storybook na 8001”. Uruchomione w tle (`pnpm storybook:dev --port 8001`), gotowość
+  sprawdzona przez `/status`, adres do wpisania w dev cliencie; po „ok” log Metro pokazał czysty
+  start. Serwer deweloperski to odwracalny setup lokalny, a QR nie jest potrzebny, gdy adres
+  wpisuje się ręcznie.
 
 ## Rozwiązanie
 Instalacje narzędzi na komputerze użytkownika i logowania z trybem urządzenia wykonuję sam, gdy są

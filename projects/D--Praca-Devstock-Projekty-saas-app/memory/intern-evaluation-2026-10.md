@@ -28,3 +28,12 @@ Issue założone 2026-10-15: #204 CP-109 (epik #178, `frontend`), przypisane Nor
 **Why:** decyzja o module 5 Norberta i feedback dla K/M opierają się na tych liczbach; regresja na `main` ma ticket #204 (CP-109, Norbert).
 **How to apply:** przy feedbacku dla K/M nie zdradzać zmiany wymagań A (zob. [[internship-exam-2026-09]]);
 przed ponownym cytowaniem liczb przelicz je, bo PR-y #199/#200/#202 wciąż się zmieniają.
+
+2026-10-22: dokument do wysłania Norbertowi `praca/projekty/edu-saas/analiza-pracy-norbert-2026-10-22.md`
+(vault, commit `f23a9de`, wypchnięty) + wiadomość na Discord podana w czacie, wysyła Rafał. Na prośbę Rafała
+porównanie z Konradem i Miłoszem po imieniu, ale tylko liczby (tempo, dni, rundy CR), bez ich słabości i bez
+spraw egzaminu. Październik 05–22.10: N 7 dni z commitem / 2 089 linii, K 9 / 5 765, M 9 / 6 702; tydzień
+12–18.10 N 1 commit; poprawka 14 linii w #202 po 4 d 20 h; 0 odpowiedzi w wątkach #202; #204 (CP-109) bez
+ruchu od 15.10; 0 z 41 commitów z `(CP-n)`; poprawa: brak obcego kodu w #202 i #205. Odczucia Rafała
+(z Discorda): Norbert szczery w statusach (plus), nie wychodzi ok. 20 h/tydz. z regulaminu. Warunki
+zaliczenia: 7 punktów. Harmonogram od Rafała (22.10): termin końcowy 14.01.2027 (6 mies. od startu 14.07), punkt kontrolny w połowie po ~1,5 mies. = 04.12.2026 (data wyliczona przeze mnie z „po 1,5 miesiąca”); commit `c684ccb`.

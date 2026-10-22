@@ -561,3 +561,17 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Dopisano dowód: python-write-text-na-windows-zmienia-konce-linii (drugi) — `io.open(..., 'w')` zapisał CRLF w `index.md`/`log.md` obu wiki, commit `b2db7b58` naprawiony `c74b7fd`; kontrola `grep -c` ze strony dała fałszywe 0
 - Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): 4 nowe i 2 dowody — patrz log repo.
 - Sygnał: dlugi-lancuch-narzedzi-bez-linii-statusu (7 sesji), python-na-windows-drukuje-w-cp1252 (8 dowodów) i windows-path-w-literale-skryptu (17 dowodów) są `ogólny` — kandydaci do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.
+
+## 2026-10-22 — sesja 7f23d848-4179-4042-9697-36f88592a6fa (id claude.ai niedostępny); Baza wiedzy + code-busters-v2/mobile: plan 3 biblioteki komponentów Kodożerców (SDD od zadania 20): review całej gałęzi, fala poprawek, bramka web, bramka urządzenia nr 2, scalenie do DT-37, sekcja 14 specu, indeks
+- Założono: indeks-projektu-rozjechany-miedzy-galeziami-sesji (skill: project-index, porażka) — indeks na gałęzi dnia i w worktree sesji ekranów, 4 konflikty w `git merge-file`, naprawione nadzbiorem `66a0aba5` + wpisy biblioteki
+- Założono: edit-po-odczycie-z-basha-odrzucony (skill: ogólny, porażka) — dwa odrzucenia „File has not been read yet” po `sed`/`cat` (mobile `CLAUDE.md`, `pixel-icon.tsx` z czterema równoległymi `Edit`)
+- Założono: zrzuty-kontrolera-przed-bramka-wizualna (skill: superpowers:subagent-driven-development, sukces) — trzy wady i regresja dekoratora `meta` złapane na zrzutach przed bramką web
+- Dopisano dowód: review-zakresowe-nie-widza-defektu-poza-swoim-diffem (dziewiąty) — domyślna dostępność `@gorhom/bottom-sheet` (arkusz jako jeden element „Bottom Sheet”) znaleziona dopiero w review całości
+- Dopisano dowód: taskstop-nie-zabija-procesu-potomnego-na-windows (trzeci, trzecia sesja) — Metro PID 31248 z 20.10 trzymało `:8081` dwa dni i przesunęło Storybook na `:8082`; PID 39596 przeżył `TaskStop` na `:8001`
+- Dopisano dowód: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (trzeci, trzecia sesja) — Storybook nie startował (elementy React w `args`), potem `ECONNABORTED` na `:8082`; rozwiązanie rozszerzone o serwer stawiany przez kontrolera i czytanie jego logu
+- Dopisano dowód: setup-lokalny-oddany-uzytkownikowi-zamiast-wykonany (drugi) — „uruchom storybook na 8001” po trzykrotnym podaniu `pnpm storybook:dev` do wklejenia
+- Dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (ósmy, ósma sesja) — pięć przypomnień harnessu po kompaktowaniu
+- Dopisano dowód: kontekst-utracony-odtwarzany-z-dysku-nie-z-pamieci (czwarty) — wznowienie zadania 20 z ledgera, 26 rulingów w raporcie przed usunięciem katalogu roboczego
+- Gładko, bez osobnych wzorców: systematic-debugging przy starcie Storybooka (przyczyna znaleziona w źródłach Storybooka i `expo-router` przed poprawką, potwierdzona logiem Metro); board-tracker (kumulatywny ślad #665); project-index w commitach `98f6e04e` i `7c6f47f9`; scalenie `--no-ff`, gdy DT-37 przesunęła sesja ekranów, z kontrolą, że pliki `ds` są równe głowie gałęzi.
+- Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): brak nowych — patrz log repo.
+- Sygnał: taskstop-nie-zabija-procesu-potomnego-na-windows (3 sesje), bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (3 sesje) → `/evolve-skill superpowers:writing-plans`; dlugi-lancuch-narzedzi-bez-linii-statusu (8 sesji) i taskstop… są `ogólny` — kandydaci do reguły w `CLAUDE.md`. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.

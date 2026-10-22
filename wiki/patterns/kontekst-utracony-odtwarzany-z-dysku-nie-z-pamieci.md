@@ -38,6 +38,7 @@ porówna.
   istnieje. Odstępstwo: nie podałem gałęzi, na której leży praca — patrz
   [[gotowe-na-galezi-roboczej-zgloszone-bez-galezi-integracji]].
 - 2026-10-21, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny): kompaktowanie kontekstu w środku egzekucji SDD (review zadania 7 z 7 w toku). Po wznowieniu stan wzięty z ledgera `.superpowers/sdd/2026-10-20-kodozercy-platform-public-catalog-plan-1/progress.md` (zadania 1–6 zamknięte z commitami, odłożone Minor, rulingi) i z `git log` worktree. Kontroler przyjął raport review zadania 7 i ruszył do review całej gałęzi bez ponownego dispatchu żadnego zakończonego zadania; odłożone Minor z ledgera trafiły do triażu w review końcowym, a rulingi do raportu dla Rafała.
+- 2026-10-22, sesja 7f23d848-4179-4042-9697-36f88592a6fa (id claude.ai niedostępny): kompaktowanie w zadaniu 20 planu 3 biblioteki (po weryfikacji, przed review całej gałęzi). Po wznowieniu stan wzięty z ledgera `.superpowers/sdd/2026-10-21-kodozercy-platform-component-library-plan-3/progress.md` (zadania 1–19 zamknięte, rulingi 1–16, odłożone Minor). Kontroler od razu zbudował paczki review i ruszył z review całości, bez ponownego dispatchu zadań. Na koniec 26 rulingów z ledgera trafiło do raportu dla Rafała, zanim katalog roboczy został usunięty.
 
 ## Rozwiązanie
 Gdy pytanie dotyczy czegoś, czego nie ma w kontekście, powiedz to w pierwszym
