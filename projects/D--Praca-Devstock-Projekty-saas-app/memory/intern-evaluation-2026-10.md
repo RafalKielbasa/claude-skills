@@ -30,9 +30,8 @@ Issue założone 2026-10-15: #204 CP-109 (epik #178, `frontend`), przypisane Nor
 przed ponownym cytowaniem liczb przelicz je, bo PR-y #199/#200/#202 wciąż się zmieniają.
 
 2026-10-22: dokument do wysłania Norbertowi `praca/projekty/edu-saas/analiza-pracy-norbert-2026-10-22.md`
-(vault, commit `f23a9de`, wypchnięty) + wiadomość na Discord podana w czacie, wysyła Rafał. Na prośbę Rafała
-porównanie z Konradem i Miłoszem po imieniu, ale tylko liczby (tempo, dni, rundy CR), bez ich słabości i bez
-spraw egzaminu. Październik 05–22.10: N 7 dni z commitem / 2 089 linii, K 9 / 5 765, M 9 / 6 702; tydzień
+(vault, commit `f23a9de`, wypchnięty) + wiadomość na Discord podana w czacie, wysyła Rafał. Porównanie do „reszty zespołu” (zakresy, bez imion, decyzja Rafała 22.10, vault `1eb99de`), tylko
+liczby, bez słabości kolegów i bez spraw egzaminu. Październik 05–22.10: N 7 dni z commitem / 2 089 linii, K 9 / 5 765, M 9 / 6 702; tydzień
 12–18.10 N 1 commit; poprawka 14 linii w #202 po 4 d 20 h; 0 odpowiedzi w wątkach #202; #204 (CP-109) bez
 ruchu od 15.10; 0 z 41 commitów z `(CP-n)`; poprawa: brak obcego kodu w #202 i #205. Odczucia Rafała
 (z Discorda): Norbert szczery w statusach (plus), nie wychodzi ok. 20 h/tydz. z regulaminu. Warunki
@@ -49,3 +48,9 @@ Wyniki 14.07–22.10 (ten sam kalendarz): linie netto/tydz. N 549, K 1 002, M 1 
 Trend CR wg miesiąca stażu: N 2, 3, 9, (3 w 11 dniach m4); K 9, 4, 3, 0; M 5, 4, 5, 2, 1. Fałszywy wyróżnik: odpowiedzi
 w wątkach review — wszyscy prawie nie odpisują (N 4%, K 5%, M 2%), więc nie jako słabość Norberta na tle zespołu.
 Wrzesień: Miłosz miał 4 PR-y (nie 3), 0 CR. Skrypty w scratchpadzie sesji 5c87bf80 (`full/`), nietrwałe.
+
+Godziny Norberta z Discorda 2026-10-22 (vault `cdf63c2`, sekcja 2 dokumentu): statusy mają narastające listy
+„czas: 2h + 8h + …” na zadanie, więc godziny = przyrost między kolejnymi statusami tego zadania. 13.07–30.08 bez
+tygodnia urlopu 10.08: 101 h / 6 tyg. (~17); 31.08–21.10: 50 h / 8 tyg. (~6); razem 151 h / 14 tyg. (~11);
+≥20 h tylko w 4 tygodniach, wszystkie przed wrześniem. 8 statusów „nie miałem czasu” od września. Konrad 0, Miłosz
+2 statusy z godzinami na #edu-saas — godzin nie porównujemy. Parser: scratchpad sesji `discord/hours2.js` (nietrwały).

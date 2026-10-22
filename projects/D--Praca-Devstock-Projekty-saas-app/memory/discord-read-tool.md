@@ -17,6 +17,8 @@ Setup steps (bot, Message Content Intent, View Channels + Read Message History) 
 Chosen by Rafał 2026-10-22 over the `mcp-discord` MCP server (45 tools incl. destructive ones,
 README suggests Administrator). Not under git (`~/.claude` is no repo).
 
-Status 2026-10-22: script written and tested; bot not created yet, channel ID of the status
-channel unknown — Rafał does setup steps 1–6, then hours go into Norbert's analysis, section 2.
+Status 2026-10-22: working. Bot `edu-saas-internship-bot` on server „Kodożercy” (guild 1516170504732409967);
+status channel `#edu-saas` = 1516413461683507252 (text channel, history from 22.06). Token set as user env var
+via the Windows dialog (not `!setx` — that would put the token in the transcript). Konrad and Miłosz post
+almost no hours there (Friday exam summaries), so hours compare only Norbert.
 Related: [[intern-hours-in-discord-status]], [[intern-evaluation-2026-10]].
