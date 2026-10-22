@@ -6,10 +6,11 @@
   "dialogRoot": "C:/Users/rafal/hub-data",
   "agent": {
     "agentId": "agent_5001m5df9a5zeesaff7ney8ypmak",
-    "toolId": "tool_9201m5df99v6e1psq1pcg84kbdt0"
+    "toolId": "tool_9201m5df99v6e1psq1pcg84kbdt0",
+    "endToolId": "tool_4601m5jezbhze889xheh5vcqenxd"
   },
   "interruption": "contextual-update",
   "pauseLimitMinutes": 60,
-  "agentHangup": "end",
-  "rejoinFirstMessage": false
+  "agentHangup": "pause",
+  "rejoinFirstMessage": true
 }
