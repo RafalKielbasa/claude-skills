@@ -62,6 +62,12 @@ dokładnie ten tekst, który kursant zobaczy na ekranie.
   wyjścia po kliknięciu (`{ json: { data: { approved, respondedAt } } }`,
   `utils/sendAndWait/utils.ts:492`) wzięte z kodu zamiast zgadywane — dzięki
   temu warunek IF-a stoi na `data.approved`, a nie na wymyślonej ścieżce.
+- 2026-10-21/22, sesja 0f2e4f59-44c4-458e-a9ee-2d4d39543321 (id claude.ai niedostępny): **granica metody**
+  na pierwszym dowodzie z tej strony. Commit `726438d` dał dosłowny tekst „Explain to the LLM…”, ale lekcja 2.1
+  umieściła go „pod polem”. W kodzie ten tekst jest `description` parametru `toolDescription`, a nie jego `hint`,
+  a n8n pokazuje `description` w dymku znaku zapytania przy etykiecie (`N8nInputLabel`, `show-after` 300 ms).
+  Rozjazd wyszedł dopiero w przebiegu próbnym automatu (krok 15). Cytat z kodu był prawdziwy, a twierdzenie
+  o miejscu na ekranie zostało dopowiedziane.
 
 ## Rozwiązanie
 Gdy lekcja opiera się na konkretnym polu, przycisku albo komunikacie

@@ -52,6 +52,10 @@ Skill powtarza regułę, która ma swoje jedyne źródło w `CLAUDE.md`.
   agenty-ai 1.3. `/kurs-video` krok 6 (`kurs-video/SKILL.md:214`) nadal mówi „Zmiany zostają niezacommitowane —
   commit robi Rafał”. Claude poszedł za `CLAUDE.md`, wpisał gałąź do wariantu A („commituję ten plik na
   `rafal-kielbasa/17-10-2026`”) i po „ok” zacommitował `lekcja.yaml` (`954921eb`). Szósta sesja z tym samym zdaniem.
+- 2026-10-22, sesja 0f2e4f59-44c4-458e-a9ee-2d4d39543321 (id claude.ai niedostępny): `/kurs-uwagi` krok 11 przy
+  uwadze z przebiegu próbnego lekcji agenty-ai 2.1 nadal mówi „Changes stay uncommitted — Rafał commits”. Claude
+  poszedł za `CLAUDE.md` i zacommitował scenariusz, konspekt, plan i `nagrywanie.yaml` z pathspec (`38ed1e52`).
+  Siódma sesja z tym samym zdaniem.
 
 ## Rozwiązanie
 Zastąp w skillach zdania „Zmiany zostają niezacommitowane — commit robi Rafał”

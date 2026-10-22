@@ -383,3 +383,24 @@ Format wpisu:
 ## 2026-10-22 — sesja 7f23d848-4179-4042-9697-36f88592a6fa (id claude.ai niedostępny); plan 3 biblioteki komponentów Kodożerców (review całości, bramki, scalenie do DT-37)
 - Bez nowych wzorców w skillach repo (sesja nie używała skilli z `.claude/skills/` tego repo).
 - Wzorce globalne dotknięte w tej sesji: założono indeks-projektu-rozjechany-miedzy-galeziami-sesji, edit-po-odczycie-z-basha-odrzucony, zrzuty-kontrolera-przed-bramka-wizualna; dowody do review-zakresowe-nie-widza-defektu-poza-swoim-diffem, taskstop-nie-zabija-procesu-potomnego-na-windows, bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska, setup-lokalny-oddany-uzytkownikowi-zamiast-wykonany, dlugi-lancuch-narzedzi-bez-linii-statusu, kontekst-utracony-odtwarzany-z-dysku-nie-z-pamieci.
+
+## 2026-10-22 — sesja 0f2e4f59-44c4-458e-a9ee-2d4d39543321 (id claude.ai niedostępny); lekcja agenty-ai 2.1: przebiegi próbne 3 i 4, poprawka `oauth.js`, uwaga do kroku 15
+- Założono: sonda-p1b-z-reczna-zgoda-nie-sprawdza-regul-rdzenia (skill: kurs-nagrywanie, porażka) — pole „stały dostęp” było na zrzucie P1b z 20.10, a przebieg 3 zatrzymał się na nim; poprawka `d6daae6c`
+- Założono: reczny-krok-u-dostawcy-bez-wskazania-przegladarki (skill: kurs-nagrywanie, porażka) — dwa okna sondy zamknięte z samymi zablokowanymi kartami, zanim padło „incognito w zwykłej przeglądarce”
+- Założono: lokatory-zapasowe-dziedzicza-zalozenie-narracji (skill: kurs-nagrywanie, porażka) — trzy warianty `toolDescriptionHint` szukały „pod polem”; stop przebiegu 4 w kroku 15, już za zgodą OAuth
+- Dopisano dowód: scenariusz-screencastu-pisany-bez-otwarcia-produktu (trzeci, trzecia sesja) — „pod tym polem” złapane dopiero przebiegiem próbnym automatu
+- Dopisano dowód: cytat-z-kodu-produktu-gdy-docs-milcza (czwarty, granica metody) — tekst z commita prawdziwy, miejsce na ekranie dopowiedziane
+- Dopisano dowód: skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo (siódmy, siódma sesja) — `/kurs-uwagi` krok 11, commit `38ed1e52`
+- Gładko, bez osobnych wzorców:
+  - `/kurs-uwagi`: jedna uwaga, propagacja do konspektu z poprawką niewykonalnej kolejności kroku, artykuł świadomie bez zmian, grep starego brzmienia 0 trafień, plan wygenerowany od nowa;
+  - poprawka `oauth.js` z testami sprawdzonymi na starej wersji pliku (2 z 3 nowych testów padają na starym kodzie);
+  - decyzja Rafała przekazana przez hub przyjęta, a bramka kosztu przebiegu została przy Rafale, zgodnie z ograniczeniem huba;
+  - board-tracker: kumulatywny ślad #720.
+- Wzorce globalne dotknięte w tej sesji: dowody do dlugi-lancuch-narzedzi-bez-linii-statusu (dziewiąty), sprawdzenie-galezi-bez-kryterium-zatrzymania (commit na gałęzi z wczorajszej zgody bez pytania, obserwacja wątpliwa) i webfetch-odmawia-pelnego-tekstu-strony.
+- Sygnał repo: scenariusz-screencastu-pisany-bez-otwarcia-produktu (porażka, 3 sesje) → `/evolve-skill kurs-lekcja`; skill-zostawia-commit-rafalowi-po-zmianie-polityki-repo (7 sesji) → `/evolve-skill kurs-uwagi` i reszta rodziny `kurs-*` oraz `spotkanie`.
+
+## 2026-10-22 — sesja 240fd64b-d029-4c19-997c-a49301c018df (id claude.ai niedostępny; lekcja agenty-ai 2.2 przed nagraniem: plansze, migracja konspektu, wymowa V4, `nagrywanie.yaml`, nowa usługa `gmail` w automacie, sonda `probe-ui`, porządek skrzynki kursu; #721)
+- Dopisano dowód: ui-probe-before-actions-surfaces-scenario-drift (trzeci, sukces) — sonda Gmaila znalazła rozjazd danych, nie interfejsu: 24 wiadomości spoza lekcji przed wiadomościami lekcji, więc „Get Many” z Limit 10 zepsułby narrację 2.1 i 2.2; rozwiązanie rozszerzone o ustalenia o stanie konta jako wiersze tabeli przygotowania.
+- Gładko, bez osobnych wzorców: kurs-nagrywanie (`sprawdz` złapał krok 12 bez treści do wpisania, naprawione `z_planu: 2`; `proba` i `diagnoza` czyste; nowa usługa tylko do podglądu z „Wyślij” i „Odrzuć wersję roboczą” jako wyzwalaczami; kolejka `station-*` z celem `other`); board-tracker (kumulatywny ślad #721); `plan-nagrania` po migracji konspektu z 10 znanymi ostrzeżeniami ocenionymi jako niegroźne.
+- Wzorce globalne dotknięte w tej sesji: 3 nowe (hash-commita-w-raporcie-spoza-wyniku-narzedzia, commit-bez-pathspec-wciaga-cudzy-indeks, zasob-wspolny-zwolniony-przy-blokadzie-straznika) i dowód do cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan. Patrz log globalny.
+- Sygnał repo: brak (jedyny dotknięty wzorzec repo to sukces).

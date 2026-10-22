@@ -575,3 +575,18 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Gładko, bez osobnych wzorców: systematic-debugging przy starcie Storybooka (przyczyna znaleziona w źródłach Storybooka i `expo-router` przed poprawką, potwierdzona logiem Metro); board-tracker (kumulatywny ślad #665); project-index w commitach `98f6e04e` i `7c6f47f9`; scalenie `--no-ff`, gdy DT-37 przesunęła sesja ekranów, z kontrolą, że pliki `ds` są równe głowie gałęzi.
 - Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): brak nowych — patrz log repo.
 - Sygnał: taskstop-nie-zabija-procesu-potomnego-na-windows (3 sesje), bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (3 sesje) → `/evolve-skill superpowers:writing-plans`; dlugi-lancuch-narzedzi-bez-linii-statusu (8 sesji) i taskstop… są `ogólny` — kandydaci do reguły w `CLAUDE.md`. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.
+
+## 2026-10-22 — sesja 0f2e4f59-44c4-458e-a9ee-2d4d39543321 (id claude.ai niedostępny); Baza wiedzy, lekcja agenty-ai 2.1 (przebiegi próbne 3–4, `oauth.js`, uwaga do kroku 15)
+- Dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (dziewiąty, dziewiąta sesja) — sześć przypomnień harnessu, linia statusu za każdym razem dopiero po przypomnieniu
+- Dopisano dowód: sprawdzenie-galezi-bez-kryterium-zatrzymania (czwarty) — `38ed1e52` na `rafal-kielbasa/17-10-2026` na podstawie wczorajszej zgody, bez pytania mimo kryterium w `CLAUDE.local.md`; wątpliwe w jednym punkcie
+- Dopisano dowód: webfetch-odmawia-pelnego-tekstu-strony (trzeci) — `InputLabel.vue` „verbatim” odmówione, a streszczenie reguł CSS wystarczyło
+- Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): trzy nowe w kurs-nagrywanie i trzy dowody, patrz log repo.
+- Sygnał: dlugi-lancuch-narzedzi-bez-linii-statusu (9 sesji), sprawdzenie-galezi-bez-kryterium-zatrzymania (3 sesje) i webfetch-odmawia-pelnego-tekstu-strony (3 sesje) są `ogólny` — kandydaci do reguły w `CLAUDE.md`, nie do `/evolve-skill`.
+
+## 2026-10-22 — sesja 240fd64b-d029-4c19-997c-a49301c018df (id claude.ai niedostępny); repo Baza wiedzy: lekcja agenty-ai 2.2 przed nagraniem (#721), usługa `gmail` automatu, skrzynka kursu
+- Założono: hash-commita-w-raporcie-spoza-wyniku-narzedzia (skill: ogólny, porażka) — `b3a1b5f4` w raporcie zamiast `ec7a88f7`; `git commit -q` i `git show … | tail -2` usunęły hash z wyniku
+- Założono: commit-bez-pathspec-wciaga-cudzy-indeks (skill: ogólny, porażka) — `d045f8df` wciągnął cudzy stage (usunięcie pliku 2.1, +11 linii `n8n.js`); kolejne 7 commitów z pathspec czyste
+- Założono: zasob-wspolny-zwolniony-przy-blokadzie-straznika (skill: ogólny, sukces) — strażnik sesji w tle podsunął `bgIsolation: none`; konto kursu zwolnione, ustawienia nietknięte, decyzja Rafała
+- Dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (dziewiętnasty, ze szkodą) — `npm run nagrywanie` z `ENOENT` po `cd` do korzenia przy commicie; dopisany wyjątek dla komend z regułą allow na gołą postać
+- Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`): dowód do ui-probe-before-actions-surfaces-scenario-drift — patrz log repo.
+- Sygnał: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (porażka, 19 dowodów z kilkunastu sesji) jest `ogólny` — kandydat do reguły w `CLAUDE.md`, nie do `/evolve-skill`. Nowe porażki mają dowody z jednej sesji. Brak `nawrót` wśród wzorców dotkniętych w tej sesji.

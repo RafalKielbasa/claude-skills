@@ -37,3 +37,15 @@ spraw egzaminu. Październik 05–22.10: N 7 dni z commitem / 2 089 linii, K 9 /
 ruchu od 15.10; 0 z 41 commitów z `(CP-n)`; poprawa: brak obcego kodu w #202 i #205. Odczucia Rafała
 (z Discorda): Norbert szczery w statusach (plus), nie wychodzi ok. 20 h/tydz. z regulaminu. Warunki
 zaliczenia: 7 punktów. Harmonogram od Rafała (22.10): termin końcowy 14.01.2027 (6 mies. od startu 14.07), punkt kontrolny w połowie po ~1,5 mies. = 04.12.2026 (data wyliczona przeze mnie z „po 1,5 miesiąca”); commit `c684ccb`.
+
+Przeliczenie całego okresu 2026-10-22 (plik zaktualizowany, vault `7a27ea3`). Metoda, która odtwarza liczby z 15.10
+co do linii: linie netto = `git diff merge-base(origin/main, refs/pull/N/head)..head` z filtrem (bez lockfile/.md/obrazów,
+testy osobno), a gdy wychodzi 0 (wczesne PR-y scalone merge commitem) — pliki z `gh pr view --json files`;
+`gh` obcina listę do 100 plików (#199, #200), więc nie jako główne źródło. PR liczony wg daty otwarcia. Commit-sumy
+zawyżają (przepisywany kod, np. #145): Norbert w oknie równego stażu wychodzi wtedy ≈ Miłosz — nie używać do tempa.
+Wyniki 14.07–22.10 (ten sam kalendarz): linie netto/tydz. N 549, K 1 002, M 1 327 (55% / 41%); dni z commitem/tydz.
+2,6 / 2,3 / 3,3; linie na dzień z commitem 214 / 438 / 407; CR na scalony PR 1,9 / 0,7 / 0,3; mediana CR→poprawka
+19,7 / 16,0 / 2,4 h (Norbert po review Rafała 9,1 h, po review kolegów 23,4 h). Równy staż potwierdzony: 574 / 768 / 757.
+Trend CR wg miesiąca stażu: N 2, 3, 9, (3 w 11 dniach m4); K 9, 4, 3, 0; M 5, 4, 5, 2, 1. Fałszywy wyróżnik: odpowiedzi
+w wątkach review — wszyscy prawie nie odpisują (N 4%, K 5%, M 2%), więc nie jako słabość Norberta na tle zespołu.
+Wrzesień: Miłosz miał 4 PR-y (nie 3), 0 CR. Skrypty w scratchpadzie sesji 5c87bf80 (`full/`), nietrwałe.

@@ -29,8 +29,22 @@ probe is an early, partial dry pass.
   - `/run` answering `waitingForWebhook` without an `executionId`.
   Round 1 also carried 8 scenario findings, all of the kind a probe would have shown. Without the probe, each
   disagreement costs a full run instead of one screenshot.
+- 2026-10-20, sesja 240fd64b-d029-4c19-997c-a49301c018df (id claude.ai niedostępny), lesson agenty-ai 2.2: the
+  `probe-ui` run for the new view-only `gmail` service
+  (`kursy/agenty-ai/_nagrywanie/sondy/probe-ui-gmail-2026-10-20T18-30-03-574Z/`) found data drift rather than UI
+  drift. The course inbox held 24 messages:
+  - newest first, Google security alerts (one per n8n OAuth grant);
+  - newsletters;
+  - an Anthropic receipt with a PDF invoice;
+  - the lesson messages at the bottom.
+  The Gmail tool "Get Many" with Limit 10 would have returned non-lesson mail in 2.1 and 2.2, and the invoice
+  could have reached the screen. This came out before any dry pass. Rafał chose manual cleanup (variant A),
+  recorded as a row in the 2.2 konspekt preparation table. Opening "Utwórz" during the probe also left an empty
+  draft "(brak tematu)" on the account.
 
 ## Rozwiązanie
 In `/kurs-nagrywanie`, when a lesson needs new service actions, run the locator probe along the whole lesson
 path with screenshots, and list every narration claim a screenshot contradicts as a candidate finding for the
-dry pass report (step 4), with the probe screenshot as evidence until the dry pass confirms it.
+dry pass report (step 4), with the probe screenshot as evidence until the dry pass confirms it. List data-state
+findings the same way: what the account holds, not only how the UI looks. They need a preparation-table row,
+not a scenario change. Also list what the probe itself left on the account (e.g. an empty draft).

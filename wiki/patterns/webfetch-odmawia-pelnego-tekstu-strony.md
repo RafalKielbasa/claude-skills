@@ -37,6 +37,13 @@ odczytania, a nie jak strona do streszczenia.
   pliku (`.../n8n-nodes-base.gmail.md`) zwrócił `HTTP 404 Not Found`, czyli
   porażkę ze ścieżki, nie z limitu cytowania. Wniosek: „verbatim wróci pusto"
   nie jest regułą pewną - bywa, że wraca komplet.
+- 2026-10-22, sesja 0f2e4f59-44c4-458e-a9ee-2d4d39543321 (id claude.ai niedostępny): surowy plik kodu,
+  `raw.githubusercontent.com/n8n-io/n8n/master/.../N8nInputLabel/InputLabel.vue`, z promptem „Return the full
+  <template> section verbatim and the full <style> section verbatim”. Wrócił z odmową („would exceed the
+  125-character limit on quoted source material”), ale z uporządkowanym streszczeniem: `.main-content:hover
+  .infoIcon` daje opacity 1, `show-after` 300 ms, `content-class` zamiast `popper-class`. Tyle wystarczyło na
+  lokatory kroku 15 lekcji 2.1. Potwierdza korektę z 2026-09-11: rozstrzyga rozmiar pliku, a przy pliku `.vue`
+  ze stylami lepiej od razu pytać o konkretne reguły.
 
 ## Rozwiązanie
 Pytaj `WebFetch` o fakty i krótkie cytaty, nigdy o pełną treść: wymień z nazwy

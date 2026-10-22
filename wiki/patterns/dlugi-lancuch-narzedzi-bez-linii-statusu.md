@@ -41,6 +41,11 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
 - 2026-10-21, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny), egzekucja SDD planu CMS, review końcowe, PR i podsumowanie: sześć przypomnień harnessu po kompaktowaniu, każde po 3–5 wywołaniach bez tekstu — budowa paczki review całej gałęzi, dispatch rundy poprawek, szukanie śladu #651, dopisanie sekcji do specu, sprawdzenie gałęzi sond, przegląd wiki. Linia statusu za każdym razem dopiero po przypomnieniu.
 - 2026-10-21, sesja 541cf3f0-bb8c-449a-92fd-d69e74d140fc (id claude.ai niedostępny; Baza wiedzy, etap 2 `/kurs-video` lekcji agenty-ai 1.3 i podsumowanie): dwa przypomnienia harnessu po kompaktowaniu. Pierwsze po czterech odczytach kodu `video.js` przed sprawdzeniem cache lektora, drugie po trzech odczytach wiki i kodu przy szukaniu przyczyny zawinięcia `lekcja.yaml`. W obu przypadkach linia statusu pojawiła się dopiero po przypomnieniu. Render, poprzedzony własną zapowiedzią, przypomnienia nie wywołał.
 - 2026-10-21/22, sesja 7f23d848-4179-4042-9697-36f88592a6fa (id claude.ai niedostępny; plan 3 biblioteki Kodożerców po kompaktowaniu): pięć przypomnień harnessu. Pojawiły się przy przygotowaniu skryptu zrzutów w czasie review, przy dopisywaniu reguły do `CLAUDE.md` mobile po poprawce historii, przy starcie Metro na 8001, przy przebudowie indeksu projektu i przy przeglądzie wiki w tym podsumowaniu. Za każdym razem 3–6 wywołań bez tekstu, a linia statusu pojawiała się dopiero po przypomnieniu.
+- 2026-10-22, sesja 0f2e4f59-44c4-458e-a9ee-2d4d39543321 (id claude.ai niedostępny; Baza wiedzy, krok 15 lekcji
+  agenty-ai 2.1 po wiadomości z huba, potem to podsumowanie): sześć przypomnień harnessu, każde po 3–6 wywołaniach
+  bez tekstu. Padły przy odczycie `nagrywanie.yaml` i rdzenia przed wstawieniem uwagi, przy `/kurs-uwagi` (odczyt
+  scenariusza, edycje, grep), przy walidacji i commicie, przy sprawdzaniu sond P1b i przy dopisywaniu dowodów
+  w wiki. Linia statusu za każdym razem pojawiała się dopiero po przypomnieniu.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

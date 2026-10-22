@@ -41,6 +41,13 @@ gdy scenariusz jest już zatwierdzony i czasem wyrenderowany.
   tu rozjazd wyszedł PRZED nagraniem, bo Rafał czytał narrację przed
   generowaniem lektora — ale wyszedł z jego pamięci o produkcie, nie z żadnej
   kontroli.
+- 2026-10-21/22, sesja 0f2e4f59-44c4-458e-a9ee-2d4d39543321 (id claude.ai niedostępny): ta sama lekcja 2.1,
+  trzecia sesja. Twierdzenie „Samo "en osiem en" podpowiada to pod tym polem” przetrwało próbne klikanie
+  z 2026-09-11 i bramkę treści. Wyszło dopiero w przebiegu próbnym 4 automatu (krok 15), na zrzucie bez żadnego
+  tekstu pod polem "Description". Źródło lekcji (`zrodla.md`, commit n8n `726438d`) dawało tylko tekst
+  podpowiedzi. Położenie „pod polem” dopisano przy pisaniu, a kod pokazuje dymek przy etykiecie. Przebieg
+  próbny, w którym automat musi znaleźć każdy nazwany element, okazał się kontrolą, której ten wzorzec brakowało.
+  Narracja poprawiona w `38ed1e52`.
 
 ## Rozwiązanie
 
