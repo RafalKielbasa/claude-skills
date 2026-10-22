@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4bd53d28-0d05-40dd-bf31-94901ea828ea
-  modified: 2026-10-22T06:27:12.531Z
+  modified: 2026-10-22T09:05:47.375Z
 ---
 
 Część `nagrywanie-autonomy-gates` (spec `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`,
@@ -17,6 +17,11 @@ n8n/arkusza/Pinecone potwierdzone (flagi `pending_confirmation` usunięte w `da7
 tylko dla lekcji z biletem, scalenie na `rafal-kielbasa/17-10-2026` bez pusha, poprawki specu przy starcie planu 2.
 Gałąź NIE jest scalona i NIE jest wypchnięta; worktree `baza-wiedzy-nagrywanie-autonomia` z ledgerem orzeczeń
 `.superpowers/sdd/2026-10-21-nagrywanie-autonomy-gates-plan-1/progress.md` zostaje do scalenia.
+
+Tego samego dnia Rafał zatrzymał produkcję modułu 2 („wszystko na automacie”): lekcje 2.1–2.3 wracają dopiero w
+trybie biletu po planach 2 i 3. Sekcja 9 specu przeszła do planu 2. Plan 2
+(`docs/superpowers/plans/2026-10-22-nagrywanie-autonomy-gates-plan-2.md`, 12 zadań, `1917f3e6`, poprawki specu D4
+w `6a82d131`) czeka na S2. Plan 3 to tylko sekcja 10 (Gmail, `send_mail`, warianty zgody) po sondach P-B–P-D.
 
 **Why:** sześć bramek (G1 bilet produkcyjny `video/ticket.yaml`, G2 poświadczenia, G3 polityka konta per usługa,
 G4 zakres dydaktyczny, G5 `final.mp4` z kartą lekcji, G6 publikacja) zastępuje 24 miejsca, w których automat
