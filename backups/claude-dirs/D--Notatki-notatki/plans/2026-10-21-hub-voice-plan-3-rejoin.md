@@ -249,6 +249,9 @@ These existing tests change to the new semantics:
 - [ ] **Step 3: Implement.**
   - The calls live in a `Map` from id to `{ startedAt, lastBeat, endedAt, endContext, cleaned }`. `liveCall` holds the id of the call that is live, or null.
   - `ending` stays synchronous, as in Plan 2.
+  - `/api/call-end` sets `liveCall` to null before its cleanup awaits anything. A token request
+    that follows its response is then never refused as `call-live`, which the reconnect after the
+    duration limit relies on (Task 4).
   - `bridge.json` replaces `.url`: it is written after `listen` and removed in `end()`'s `finally`.
 
 - [ ] **Step 4: Run the whole suite, and see it pass.**
@@ -268,7 +271,8 @@ These existing tests change to the new semantics:
 - **Produces:**
   - `POST /api/ask { request, conversationId }`. `conversationId` is new, and the page sends it in Task 4.
   - `GET /api/history` → `{ transcript: [{ at, role, text }] }`.
-  - `POST /api/rejoin-context` → `{ text }`. It is built as in Global Constraints, and it clears the undelivered answers.
+  - `GET /api/rejoin-context` → `{ text, undelivered: number }`. It is built as in Global Constraints and clears nothing.
+  - `POST /api/rejoin-context-sent { undelivered: number }` removes that many of the oldest undelivered answers. The page posts it only after `sendContextualUpdate` returned without throwing, so an answer is lost only when the SDK accepted it.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -290,10 +294,14 @@ test('an answer that arrives after its call ended goes into the next call, once'
   await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'error', context: 'connection_state_changed' } });
   await asked;
   await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_b' } });
-  const { text } = JSON.parse((await call(b.port, 'POST', '/api/rejoin-context')).body);
-  assert.match(text, /^Dalszy ciąg rozmowy po przerwie\. Ostatnie wypowiedzi:/);
-  assert.match(text, /Odpowiedź Claude na pytanie „wolne”, której nie usłyszałeś: echo: /);
-  assert.doesNotMatch(JSON.parse((await call(b.port, 'POST', '/api/rejoin-context')).body).text, /której nie usłyszałeś/);
+  const context = async () => JSON.parse((await call(b.port, 'GET', '/api/rejoin-context')).body);
+  const first = await context();
+  assert.match(first.text, /^Dalszy ciąg rozmowy po przerwie\. Ostatnie wypowiedzi:/);
+  assert.match(first.text, /Odpowiedź Claude na pytanie „wolne”, której nie usłyszałeś: echo: /);
+  assert.equal(first.undelivered, 1);
+  assert.match((await context()).text, /której nie usłyszałeś/); // not sent yet: still there
+  await call(b.port, 'POST', '/api/rejoin-context-sent', { body: { undelivered: 1 } });
+  assert.doesNotMatch((await context()).text, /której nie usłyszałeś/);
   await call(b.port, 'POST', '/api/end', { body: {} }); await b.done;
 });
 test('the rejoin context carries the last eight lines of Rafal and the agent, without notes', async () => { /* 10 user/agent lines + 2 notes → 8 lines `- Rafał: …`/`- Agent: …`, the last 8 */ });
@@ -333,7 +341,8 @@ test('after a break note a read-back that was not confirmed is read back again',
 - [ ] **Step 1: Write the failing tests.**
 
   Extend `loadPage` in `page.test.mjs`:
-  - `posts`: `[path, body]` of every POST;
+  - `posts`: `[path, body]` of every POST, and `requests`: `[method, path]` of every fetch, in order;
+  - token responses taken from a queue (`'conv-tok'`, then `'conv-tok-2'`);
   - a stubbed `setTimeout`, fired by `page.fireTimeouts()`;
   - session objects that record `endSession` calls.
 
@@ -347,8 +356,14 @@ test('a disconnect that is not the end pauses: the button says Połącz ponownie
   // after a status poll with { state: 'paused', calls: 1, pausedUntil }: start.textContent 'Połącz ponownie', start enabled,
   // status 'Rozmowa wstrzymana. Połącz ponownie do HH:MM; potem rozmowa się zakończy.'
 });
-test('a later call starts with the rejoin first message and sends the rejoin context once connected', async () => { /* status calls 1 → sessions[0].overrides.agent.firstMessage 'Wracamy do rozmowy. Słucham.'; onConnect → post /api/rejoin-context, sendContextualUpdate(text) */ });
-test('the duration limit starts the next call by itself', async () => { /* onDisconnect({ reason: 'error', context: { type: 'max_duration_exceeded' } }) → status 'Limit czasu połączenia. Łączę ponownie…', sessions.length 2 without a click */ });
+test('a later call starts with the rejoin first message and sends the rejoin context once connected', async () => { /* status calls 1 → sessions[0].overrides.agent.firstMessage 'Wracamy do rozmowy. Słucham.'; onConnect → GET /api/rejoin-context { text, undelivered: 1 }, sendContextualUpdate(text), then posts ['/api/rejoin-context-sent', { undelivered: 1 }] */ });
+test('a rejoin context the SDK refused is not marked sent', async () => { /* sendContextualUpdate throws → no /api/rejoin-context-sent post, transcript note 'rejoin context not sent' */ });
+test('the duration limit ends the old call at the bridge first, then starts the next call by itself', async () => {
+  // onDisconnect({ reason: 'error', context: { type: 'max_duration_exceeded' } }) with no click:
+  // status 'Limit czasu połączenia. Łączę ponownie…'; the request log (posts and GETs in order) has
+  // '/api/call-end' { conversationId: 'conv_a', reason: 'error', context: 'max_duration_exceeded' } before the second
+  // '/api/conversation-token'; sessions.length 2 and sessions[1].conversationToken is the second token response ('conv-tok-2')
+});
 test('Zakończ rozmowę during a call ends the dialog without a pause', async () => { /* click stop → endSession called; the onDisconnect it triggers posts no /api/call-end; posts end with /api/end */ });
 test('Przerwa ends only the call', async () => { /* click pause → endSession; onDisconnect({ reason: 'user' }) → /api/call-end, no /api/end */ });
 test('a token refused because a call is live in another tab says so', async () => { /* 409 { error: 'call-live' } → 'Rozmowa trwa w innej karcie.', start enabled */ });
@@ -370,6 +385,7 @@ The existing page tests keep passing, after `ready()` is changed.
     - „Zakończ”: `POST /api/end`;
     - „Przerwa”: `POST /api/call-end` with reason `user`.
   - **Every other `onDisconnect`** posts `/api/call-end` with `details.reason` and `details.context?.type`.
+  - **After the duration limit** the page awaits the `/api/call-end` response, and only then requests the next token.
   - **Asks.** `askClaude` sends `{ request, conversationId }`.
 
 - [ ] **Step 4: Run the whole suite, and see it pass.**
@@ -417,11 +433,19 @@ test('start --origin hub reaches the report, --name the page label, and the paus
   // TALK_PAUSE_LIMIT_MS 300: heartbeat conv_a, call-end → the report arrives by itself; report has 'origin: hub';
   // status label 'allowed · dlg-name' with --name dlg-name, 'allowed · s1' without it (session.slice(0, 8))
 });
-test('a session whose hook names a transcript file that is missing is refused before any bridge starts', async () => {
-  // HUB_DATA registry/<id>.events.jsonl with one event { sessionId: id, cwd, transcriptPath: <missing file> }
-  // check --session id and start → exit 2, 'Sesja <id8> nie ma pliku transkryptu (<path>), więc nie da się z niej uruchomić rozmowy głosowej.'
+test('a session whose transcript file is missing is refused before any bridge starts, with or without hook events', async () => {
+  // (1) HUB_DATA registry/<id>.events.jsonl with one event { sessionId: id, cwd, transcriptPath: <missing file> }
+  //     → check --session id and start: exit 2, 'Sesja <id8> nie ma pliku transkryptu (<path>), więc nie da się z niej uruchomić rozmowy głosowej.'
+  // (2) no events for id2, and no <TALK_CLAUDE_PROJECTS>/*/<id2>.jsonl → the same sentence with '(<TALK_CLAUDE_PROJECTS>/*/<id2>.jsonl)' as the path
+  // (3) no events for id3, <TALK_CLAUDE_PROJECTS>/p/<id3>.jsonl exists → check passes
+  // no dialog directory is created in (1) or (2)
 });
-test('start refuses an origin other than session or hub with usage', () => {});
+test('start refuses an origin other than session or hub with usage', () => {
+  const r = run(['start', '--session', 's', '--cwd', allowedRepo, '--origin', 'browser'], { TALK_ELEVEN_STUB: '1' });
+  assert.equal(r.status, 2);
+  assert.match(r.stdout, /^Użycie: .+--origin session\|hub/);
+  assert.equal(existsSync(join(dialogRoot, 'projects')), false);
+});
 // config.test.mjs
 test('the shipped config has the pause limit, the hang-up mode and the rejoin first message', () => { /* 60, 'pause', true */ });
 ```
@@ -429,7 +453,10 @@ test('the shipped config has the pause limit, the hang-up mode and the rejoin fi
 - [ ] **Step 2: Run, and see the new tests fail.** `node --test test/live.test.mjs test/cli.test.mjs test/config.test.mjs` in `TALK/`
 
 - [ ] **Step 3: Implement.**
-  - **The transcript guard runs in `admit`**, whenever `--session` is given. It reads the session's latest `transcriptPath` from the hub registry under `hubRoot(env)`. A session with no events passes.
+  - **The transcript guard runs in `admit`**, whenever `--session` is given:
+    - with hook events, the session's latest `transcriptPath` from the hub registry under `hubRoot(env)` must exist;
+    - without a `transcriptPath`, a file `<projects root>/*/<id>.jsonl` must exist. The projects root is `env.TALK_CLAUDE_PROJECTS`, else `~/.claude/projects`.
+  - **Existing start tests.** `testEnv` in `cli.test.mjs` gets `TALK_CLAUDE_PROJECTS` pointing at a fixture folder holding `p/s.jsonl` and `p/s1.jsonl`, so the existing start tests keep passing.
   - **`start` takes its values in this order:**
     - `pauseLimitMs`: `Number(env.TALK_PAUSE_LIMIT_MS) > 0`, else `config.pauseLimitMinutes * 60000`;
     - `agentHangup`: `config.agentHangup ?? 'pause'`;
@@ -511,8 +538,16 @@ test('voice resolve takes the cwd from the session hook before the poll, with th
   // HUB_CLAUDE_CMD set to a fake that records calls → after the command, no call recorded
   // out: { ok: true, sessionId: s1, cwd: 'C:\\wt', transcriptPath, transcriptExists: true, busy: false, twins: [], resolvedFrom: null }
 });
-test('voice resolve falls back to the poll cwd when no event names one, and reports a missing transcript', () => {});
-test('voice resolve resolves a restarted session by name and lists candidates when two live sessions share it', () => {});
+test('voice resolve falls back to the poll cwd when no event names one, and reports a missing transcript', () => {
+  // events for s1 without cwd, transcriptPath <tmp>/gone.jsonl (absent); agents-json s1 cwd 'C:\\main', status 'busy'
+  // exit 0; out { ok: true, sessionId: s1, cwd: 'C:\\main', transcriptPath: <tmp>/gone.jsonl, transcriptExists: false, busy: true }
+});
+test('voice resolve resolves a restarted session by name and lists candidates when two live sessions share it', () => {
+  // (1) registry events for old id o1 with sessionTitle 'notatki-x'; agents-json has n1 named 'notatki-x', no o1
+  //     → exit 0, { ok: true, sessionId: n1, resolvedFrom: o1, twins: [] }
+  // (2) agents-json has n1 and n2 both named 'notatki-x', no o1 → exit 3, { ok: false, name: 'notatki-x', candidates: [n1, n2] }
+  // (3) live id n1 with another live n2 of the same name → exit 0, { sessionId: n1, resolvedFrom: null, twins: [n2] }
+});
 test('dialog start forks a worktree session from its hook cwd, not from the poll cwd', () => { /* decision „Katalog roboczy w dialog start”, variant A */ });
 // skill.test.mjs
 test('SKILL.md starts a voice conversation through voice resolve and the talk CLI, and sends prompt.md only after wyślij', () => {

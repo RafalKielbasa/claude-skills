@@ -564,6 +564,8 @@ Rafal neither confirmed nor rejected that guess.
      - `talk.mjs start` refuses a session whose transcript file is missing, with one Polish
        sentence. This is the guard against finding F1: a session without a transcript cannot be
        resumed.
+     - A session with no `transcriptPath` in its hook events is checked by a file
+       `~/.claude/projects/*/<id>.jsonl` instead.
    - The resolution code is shared with `dialog start`, so the cwd preference also corrects
      `dialog start` for the same sessions (§20.4).
 3. The hub runs `talk.mjs check --cwd "<cwd>" --session <id>`.
