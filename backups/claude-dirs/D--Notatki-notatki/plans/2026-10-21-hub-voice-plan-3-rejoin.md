@@ -669,4 +669,4 @@ The existing test 'SKILL.md names the skill hub and every command it uses exists
 
 - [ ] **Step 3: The pause limit without voice.** `TALK_PAUSE_LIMIT_MS=60000`, one call (the stub), then the report arrives by itself. Task 8 may serve, if it ran on the final code.
 
-- [ ] **Step 4: Write the report and update the index.** The acceptance report has the runs, the checks, the findings and any deviations. In the index, plan 3 becomes ✅, and the decisions of §20.4 move to Rozstrzygnięte.
+- [ ] **Step 4: Write the report and update the index.** The acceptance report has the runs, the checks, the findings and any deviations. It also lists the known limitation of decision „Odpowiedź utracona przy cięciu” (2026-10-23, variant A): an answer returned seconds before a duration cut is lost, and Rafal asks again (probes report, „Re-probe after the duration-cut fix”). In the index, plan 3 becomes ✅, and the decisions of §20.4 move to Rozstrzygnięte.

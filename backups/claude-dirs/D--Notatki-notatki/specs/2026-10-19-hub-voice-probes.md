@@ -659,3 +659,63 @@ probe); the fallback of §18.3 does not apply, so the question „Silence in the
 Step 4: `agent sync` without the variable, read back `max_duration_seconds` 1800.
 
 Voice minutes of Task 9: 22 s + 64 s + 11 s = 97 s.
+
+### Re-probe after the duration-cut fix (Task 9 Step 5, 2026-10-23)
+
+Run 2026-10-23 12:57, in `notatki`, from session c0987db9 (`/talk sonda limitu`), on the page fix of
+Step 5 after its review. Setup: `TALK_MAX_DURATION_SECONDS=60 agent sync` (2026-10-22), read back
+`max_duration_seconds` 60, two tool ids, the duration message, the `first_message` override allowed.
+
+`transcript.md`, verbatim:
+
+```
+- 12:58:45 **Agent**: Cześć, słucham.
+- 12:58:53 **Rafał**: Cześć. Jaka jest twoja wiedza odnośnie tej sesji?
+- 12:58:53 **Agent**: Chwila, sprawdzę to u Claude'a.
+- 12:58:58 **Agent**: [calm] Claude mówi, że ta sesja dotyczy planu trzech części hub-voice, czyli wznawiania rozmowy głosowej. Sonda pokazała, że cięcie po limicie przychodzi jako close, przez co strona nie łączyła się ponownie. Poprawka rozpoznaje teraz close po komunikacie o limicie jako cięcie i przeszła recenzję. Oba commity są już na remote. Agent ma limit sześćdziesiąt sekund, więc za chwilę powinieneś usłyszeć komunikat o końcu czasu, a nowe połączenie powinno ruszyć samo.
+- 12:59:40 **Rafał**: Okej, yy, czyli sześćdziesiąt sekund to czas-- okienko połączenia?
+- 12:59:40 **Agent**: Sprawdzę to u Claude'a, chwilę potrwa.
+- 12:59:45 **Notatka**: interruption during ask
+- 12:59:45 **Agent**: Kończy się czas tego połączenia, zaraz łączę ponownie.
+- 12:59:49 **Notatka**: call ended: agent/max_duration_exceeded (close: agent disconnected)
+- 13:00:00 **Agent**: Wracamy do rozmowy. Słucham.
+- 13:00:00 **Notatka**: rejoin context sent
+- 13:00:04 **Rafał**: Miałeś mi odpowiedzieć.
+- 13:00:04 **Agent**: Sprawdzę to u Claude'a, zaraz odpowiem.
+- 13:00:09 **Agent**: Tak, sześćdziesiąt sekund to długość jednego połączenia. Limit jest ustawiony tylko na czas tej sondy, potem wraca do pół godziny. Poprawka działa, bo połączenie zostało ucięte po limicie i strona sama zestawiła nowe. Jeśli tak to wyglądało po twojej stronie, powiedz [calm] „Kończymy”, a sesja przywróci limit i zapisze wynik.
+- 13:00:39 **Rafał**: Kończymy.
+- 13:00:40 **Agent**: Kończę rozmowę, zapisuję wynik sesji.
+- 13:00:41 **Agent**: Dziękuję za rozmowę, do usłyszenia!
+- 13:00:45 **Notatka**: call ended: agent/end_call (Agent ended the call)
+```
+
+Closing report: `origin: session`, `deletion: deleted`, `conversations:
+conv_0001m5m6kcr3e7r9yy5et6k3h1dy (64 s), conv_0501m5m6nh8degr8yrjb0hc24z3f (54 s)`; all three
+dialog files `(not written)`.
+
+| Check | Result | Evidence |
+|---|---|---|
+| The cut is read as the cut | passed | `call ended: agent/max_duration_exceeded (close: agent disconnected)`, 4 s after the duration message: the client gave `close` with the reason of the agent's `ParticipantDisconnected` (not LiveKit's numeric `RoomEvent.Disconnected` reason), and `callEnded` (`web/talk.mjs:192-219`) took it for the cut. |
+| The next call starts by itself | passed | 11 s after the cut note, with no click: „Wracamy do rozmowy. Słucham.” and `rejoin context sent`. |
+| „Kończymy” ends the dialog | passed | `end_conversation`, then `call ended: agent/end_call (Agent ended the call)`; the task ended with the closing report. |
+
+**Observation: an answer returned just before the cut is lost.** Rafal's question at 12:59:40
+started `ask_claude`. The fork's log (session `dbf652d3`) has its answer at 12:59:44; the page noted
+the interruption and the agent spoke the duration message at 12:59:45; the call was cut at 12:59:49.
+No `contextual update sent` note followed, so when the answer came the page did not hold the ask
+as interrupted: the answer most likely went back as the tool result, and the cut left it unspoken.
+The bridge counts an answer as heard when its caller's call is live and its response open
+(`unheard`, `lib/bridge.mjs:158`), so nothing was kept for the rejoin context
+(`lib/bridge.mjs:180`, `rejoinContext` at `lib/bridge.mjs:229`), and the prompt rule of Ruling F3
+(`lib/agent-config.mjs:14`: say a kept answer at the next turn) had nothing to say. The next call
+opened with the fixed first message; Rafal had to say „Miałeś mi odpowiedzieć.”, and the agent asked
+again (answered 5 s later). Inferred, not logged: the order of the answer and the interruption at the
+page, since the dialog keeps no ask log. The fork note of a later call worked: the fork's next
+message began „(Połączenie odnowione po limicie czasu. …)”. Decision „Odpowiedź utracona przy
+cięciu” (2026-10-23, variant A): no change in Plan 3; a known limitation, listed in the acceptance
+report.
+
+Step 4 after the re-probe: `agent sync` without the variable (2026-10-23), read back
+`max_duration_seconds` 1800.
+
+Voice minutes of the re-probe: 64 s + 54 s = 118 s; Task 9 in all: 97 s + 118 s = 215 s.
