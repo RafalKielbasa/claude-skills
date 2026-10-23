@@ -23,8 +23,14 @@ w dwa różne miejsca.
   'feature\tor-stacjonarny;.claude\skills\daily\SKILL.md'"; zadziałało z `MSYS_NO_PATHCONV=1`.
   (2) `gh project item-list … > /tmp/board.json` zapisał plik, a `node -e` czytający `/tmp/board.json`
   dostał ENOENT na `D:\tmp\board.json`; zadziałało ze ścieżką Windows scratchpada.
+- 2026-10-22, sesja 109283c8-2c7c-48dd-81f5-5f6ef3cfff2a (id claude.ai niedostępny): `git show
+  rafal-kielbasa/22-10-2026:.claude/wiki/index.md` w Git Bashu → „ambiguous argument
+  'rafal-kielbasa\22-10-2026;.claude\wiki\index.md'”, czyli dokładnie przypadek (1) z tej strony.
+  Regułę znałem z wiki, a i tak złamałem ją odruchowo. To samo `git show` przez narzędzie
+  PowerShell zadziałało bez flagi.
 
 ## Rozwiązanie
-`git show <rev>:<ścieżka>` w Git Bashu zawsze z `MSYS_NO_PATHCONV=1` (albo `<rev>:./<ścieżka>`).
+`git show <rev>:<ścieżka>` w Git Bashu zawsze z `MSYS_NO_PATHCONV=1` (albo `<rev>:./<ścieżka>`),
+a gdy dostępne jest narzędzie PowerShell — tam, bo nie tłumaczy ścieżek.
 Plików wymienianych między bashem a Node/Pythonem nie kłaść w `/tmp`: używać ścieżki Windows
 (`C:/…/scratchpad/…`) w obu miejscach i przekazywać ją Node'owi jako argument, nie literał w kodzie.

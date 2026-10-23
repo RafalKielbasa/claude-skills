@@ -162,6 +162,44 @@ test('a busy target: "send now" passes with --confirm-busy; a delayed send runs 
   assert.equal(hub('prepare', later.id, '--agents-json', idle).status, 0);
 });
 
+test('a target waiting for a decision: prepare passes on one "wyślij" and reports the wait as a notice (U1)', () => {
+  const { repo, log, agents, hub, draftOf } = setup();
+  log([
+    ev('UserPromptSubmit', '2026-10-14T10:02:00Z', { cwd: repo, promptId: 'p2' }),
+    ev('Stop', '2026-10-14T10:03:00Z', { cwd: repo, promptId: 'p2', marker: 'A czy B?', lastFile: 's1.last/y.md' }),
+  ]);
+  const approved = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draftOf('Odpowiedź na bramkę.')).stdout);
+  const prepared = hub('prepare', approved.id, '--agents-json', agents);
+  assert.equal(prepared.status, 0, prepared.stderr);
+  const out = JSON.parse(prepared.stdout);
+  assert.equal(out.ok, true);
+  assert.deepEqual(out.warnings, [{ check: 6, message: 'the session waits for decision: A czy B?' }]);
+
+  // An older caller still passes --confirm-waiting; the flag is accepted and changes nothing.
+  const again = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draftOf('Stara flaga.')).stdout);
+  const compat = hub('prepare', again.id, '--confirm-waiting', '--agents-json', agents);
+  assert.equal(compat.status, 0, compat.stderr);
+  assert.deepEqual(JSON.parse(compat.stdout).warnings, [{ check: 6, message: 'the session waits for decision: A czy B?' }]);
+});
+
+test('a target waiting for permission is busy: prepare fails check 5 and still carries the check 6 notice (U1)', () => {
+  const { root, repo, log, hub, draftOf } = setup();
+  const busy = join(root, 'agents-busy.json');
+  writeFileSync(busy, JSON.stringify([{ sessionId: 's1', id: 's1', name: 'probe-a', kind: 'interactive', status: 'busy', state: null, cwd: repo }]));
+  log([
+    ev('UserPromptSubmit', '2026-10-14T10:02:00Z', { cwd: repo, promptId: 'p2' }),
+    ev('Notification', '2026-10-14T10:02:30Z', { cwd: repo, promptId: 'p2' }),
+  ]);
+  const approved = JSON.parse(hub('approve', '--session', 's1', '--path', 'direct', '--text-file', draftOf('Przy prompcie.')).stdout);
+  const refused = hub('prepare', approved.id, '--agents-json', busy);
+  assert.equal(refused.status, 3);
+  const out = JSON.parse(refused.stdout);
+  assert.deepEqual(out.failures.map((f) => f.check), [5]);
+  assert.deepEqual(out.warnings, [{ check: 6, message: 'the session waits for permission; the message queues until Rafal answers the prompt in the session' }]);
+  // "Send now" passes and prints the same notice next to the success.
+  assert.deepEqual(JSON.parse(hub('prepare', approved.id, '--confirm-busy', '--agents-json', busy).stdout).warnings, out.warnings);
+});
+
 test('judge: a question after a turn without the marker shows "probably waiting for you" until the next turn', () => {
   const { repo, log, agents, hub } = setup();
   assert.equal(hub('judge', 's1', '--verdict', 'maybe').status, 2);

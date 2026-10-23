@@ -697,6 +697,18 @@ test('a call renewed after the duration limit tells the fork so', async () => {
   }
 });
 
+test('the call-end note keeps the client detail the page sends, on one line', async () => {
+  const b = await bridge();
+  try {
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_a' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_a', reason: 'agent', context: 'max_duration_exceeded', detail: 'close: agent\ndisconnected' } });
+    assert.match(readFileSync(join(b.tmp, 'dialog', 'transcript.md'), 'utf8'),
+      /\*\*Notatka\*\*: call ended: agent\/max_duration_exceeded \(close: agent disconnected\)\n/);
+  } finally {
+    await finish(b);
+  }
+});
+
 test('a later call whose snapshot refresh fails still gets the note, without its snapshot clause, and the transcript keeps the failure', async () => {
   const b = await bridge();
   try {

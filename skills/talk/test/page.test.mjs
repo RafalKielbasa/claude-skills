@@ -208,7 +208,7 @@ test('a disconnect that is not the end pauses: the button says Połącz ponownie
     page.sessions[0].onDisconnect({ reason: 'agent', context: { type: 'end_call', reason: 'Agent ended the call' } });
     await page.flush();
     assert.deepEqual(page.posts.filter(([path]) => path === '/api/call-end'),
-      [['/api/call-end', { conversationId: 'conv_a', reason: 'agent', context: 'end_call' }]]);
+      [['/api/call-end', { conversationId: 'conv_a', reason: 'agent', context: 'end_call', detail: 'Agent ended the call' }]]);
     assert.ok(!page.posts.some(([path]) => path === '/api/end'));
     status = PAUSED;
     await page.pollStatus();
@@ -303,6 +303,61 @@ test('the duration limit ends the old call at the bridge first, then starts the 
     assert.equal(page.sessions.length, 2);
     assert.equal(page.sessions[1].conversationToken, 'conv-tok-2');
     assert.equal(page.element('status').textContent, 'Limit czasu połączenia. Łączę ponownie…');
+  } finally {
+    page.restore();
+  }
+});
+
+const DURATION_MESSAGE = 'Kończy się czas tego połączenia, zaraz łączę ponownie.';
+const AGENT_CLOSE = { reason: 'agent', context: { type: 'close', reason: 'agent disconnected' } };
+
+test('a close right after the duration message is the duration cut: the page reconnects by itself', async () => {
+  const page = await loadPage(routes({ '/api/status': ready }));
+  try {
+    await page.click('start');
+    page.sessions[0].onConnect({ conversationId: 'conv_a' });
+    // Rafal may still speak in the seconds before the cut; only the agent's last message counts.
+    page.sessions[0].onMessage({ message: ` ${DURATION_MESSAGE}\n`, role: 'agent' });
+    page.sessions[0].onMessage({ message: 'Dobrze.', role: 'user' });
+    page.sessions[0].onDisconnect(AGENT_CLOSE);
+    await page.flush();
+    assert.deepEqual(page.posts.filter(([path]) => path === '/api/call-end'),
+      [['/api/call-end', { conversationId: 'conv_a', reason: 'agent', context: 'max_duration_exceeded', detail: 'close: agent disconnected' }]]);
+    assert.equal(page.sessions.length, 2);
+    assert.equal(page.element('status').textContent, 'Limit czasu połączenia. Łączę ponownie…');
+  } finally {
+    page.restore();
+  }
+});
+
+test('a close after any other agent message, or after the duration message of an earlier call, pauses the dialog', async () => {
+  const page = await loadPage(routes({ '/api/status': ready, '/api/conversation-token': () => json({ token: 'conv-tok' }) }));
+  try {
+    await page.click('start');
+    page.sessions[0].onConnect({ conversationId: 'conv_a' });
+    page.sessions[0].onMessage({ message: DURATION_MESSAGE, role: 'agent' });
+    page.sessions[0].onMessage({ message: 'Do usłyszenia!', role: 'agent' });
+    page.sessions[0].onDisconnect(AGENT_CLOSE);
+    await page.flush();
+    // The duration message ends this call's messages, but „Przerwa” ends the call: the client is
+    // already closing it, so the disconnect it reports is the platform's close.
+    await page.click('start');
+    page.sessions[1].onConnect({ conversationId: 'conv_b' });
+    page.sessions[1].onMessage({ message: DURATION_MESSAGE, role: 'agent' });
+    page.conversations[1].ended = 1;
+    await page.click('pause');
+    page.sessions[1].onDisconnect(AGENT_CLOSE);
+    await page.flush();
+    await page.click('start');
+    page.sessions[2].onConnect({ conversationId: 'conv_c' });
+    page.sessions[2].onDisconnect(AGENT_CLOSE);
+    await page.flush();
+    assert.deepEqual(page.posts.filter(([path]) => path === '/api/call-end'), [
+      ['/api/call-end', { conversationId: 'conv_a', reason: 'agent', context: 'close', detail: 'agent disconnected' }],
+      ['/api/call-end', { conversationId: 'conv_b', reason: 'user' }],
+      ['/api/call-end', { conversationId: 'conv_c', reason: 'agent', context: 'close', detail: 'agent disconnected' }],
+    ]);
+    assert.equal(page.sessions.length, 3);
   } finally {
     page.restore();
   }

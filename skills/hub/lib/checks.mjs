@@ -1,5 +1,6 @@
-// The six pre-send checks (spec §6.2). Pure apart from gitInfo; every failure carries its check
-// number and a message the hub shows Rafal verbatim.
+// The five blocking pre-send checks and the check 6 notice (spec §6.2, U1). Pure apart from
+// gitInfo; every failure and notice carries its check number and a message the hub shows Rafal
+// verbatim.
 import { spawnSync } from 'node:child_process';
 import { sha256 } from './text.mjs';
 import { pollEntry } from './polls.mjs';
@@ -23,8 +24,9 @@ export function gitInfo(cwd, run = spawnSync) {
 const ACTIVE = ['pending', 'sent', 'held'];
 
 // The confirm* flags carry Rafal's explicit answer after the hub asked (spec §6.2): resend the same
-// text (check 3), send now to a busy session (check 5), send to a waiting session (check 6).
-export function runChecks({ record, records, poll, derived, git, text, confirmWaiting = false, confirmBusy = false, confirmResend = false }) {
+// text (check 3), send now to a busy session (check 5). A waiting session no longer blocks (U1):
+// a `confirmWaiting` key from an older caller is ignored.
+export function runChecks({ record, records, poll, derived, git, text, confirmBusy = false, confirmResend = false }) {
   const failures = [];
   const { baseline } = record;
 
@@ -68,9 +70,16 @@ export function runChecks({ record, records, poll, derived, git, text, confirmWa
     failures.push({ check: 5, message: `the session is busy (${entry?.status ?? derived.phase})` });
   }
 
-  // 6. Not waiting, unless Rafal confirmed after the warning.
-  if (derived.waiting && !confirmWaiting) {
-    failures.push({ check: 6, message: `the session waits for ${derived.waiting.kind}; gates are answered in the session itself` });
-  }
   return failures;
+}
+
+// 6. A notice, not a block (U1): the session waits for a decision (the gate text follows) or for
+//    permission. One "wyślij" is enough; the hub quotes the notice to Rafal with the send result.
+export function waitingNotice(derived) {
+  const waiting = derived?.waiting;
+  if (!waiting) return [];
+  const message = waiting.kind === 'decision'
+    ? `the session waits for decision${waiting.text ? `: ${waiting.text}` : ''}`
+    : 'the session waits for permission; the message queues until Rafal answers the prompt in the session';
+  return [{ check: 6, message }];
 }

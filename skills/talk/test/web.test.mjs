@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { agentConfig } from '../lib/agent-config.mjs';
 
 const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 
@@ -25,4 +26,9 @@ test('the page has the label and the three buttons', () => {
   assert.match(html, /<button id="start"[^>]*>Rozpocznij rozmowę<\/button>/);
   assert.match(html, /<button id="pause"[^>]*>Przerwa<\/button>/);
   assert.match(html, /<button id="stop"[^>]*>Zakończ rozmowę<\/button>/);
+});
+
+test('the duration message the page waits for is the one the agent speaks', () => {
+  const message = agentConfig({}).conversation_config.agent.max_conversation_duration_message;
+  assert.ok(read('../web/talk.mjs').includes(`const DURATION_MESSAGE = '${message}';`));
 });

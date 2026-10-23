@@ -15,6 +15,13 @@ test('SKILL.md names the skill hub and every command it uses exists in the CLI u
   assert.ok(existsSync(fileURLToPath(new URL('../bin/hub-watch.mjs', import.meta.url))));
 });
 
+test('SKILL.md sends to a waiting session on one "wyślij" and quotes the check 6 notice (U1)', () => {
+  const skill = read('../SKILL.md');
+  assert.doesNotMatch(skill, /--confirm-waiting/);
+  assert.doesNotMatch(skill, /confirms again/);
+  assert.match(skill, /check 6[^\n]*warnings/);
+});
+
 test('SKILL.md describes the hub session without start flags (P10)', () => {
   const description = read('../SKILL.md').split('\n').find((line) => line.startsWith('description: '));
   assert.match(description, /working directory is ~\/\.claude\/hub/);

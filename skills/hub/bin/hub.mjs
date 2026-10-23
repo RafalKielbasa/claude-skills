@@ -15,7 +15,8 @@
 //   codex ask (--session <sessionId> | --cwd <dir>) --slug <slug> (--file <path> | --diff <range> | --last <sessionId>) --question-file <file|-> [--project <p>]
 //   codex follow --thread <thread dir> --question-file <file|->
 //   codex note --thread <thread dir> --text-file <file|->
-//   prepare <recordId> [--confirm-waiting] [--confirm-busy] [--confirm-resend] [--agents-json <file>]
+//   prepare <recordId> [--confirm-busy] [--confirm-resend] [--confirm-waiting] [--agents-json <file>]
+//     (--confirm-waiting is accepted for older callers and has no effect since U1)
 //   result <recordId> (--msg-id <id> | --error <literal error>)
 //   notice --text <literal notice>
 //   confirm [--hub-name hub]
@@ -39,7 +40,7 @@ import { loadProjectMap, projectFor, projectOf, renderProjects, isWithin, samePa
 import { registerLaunched, readHubSessions, hubSenderNames } from '../lib/hubsessions.mjs';
 import { composeMessage, questionnaireRequest, withProjectContext } from '../lib/compose.mjs';
 import { newRecordId, loadRecords, saveRecords, findRecord, findRecordByMsgId, listProjects, renderJournal } from '../lib/journal.mjs';
-import { gitInfo, runChecks } from '../lib/checks.mjs';
+import { gitInfo, runChecks, waitingNotice } from '../lib/checks.mjs';
 import { findDelivery, findMismatch, findLaunchDelivery, findLaunchMismatch, classifyNotice, applyNotice } from '../lib/confirm.mjs';
 import { SLUG, newSessionArgs, runClaude, worktreeOf, launchChecks, findLaunched } from '../lib/launch.mjs';
 import { takeSnapshot, forkSettings, forkArgs, forkStartPrompt, fallbackCommand } from '../lib/dialog.mjs';
@@ -443,12 +444,13 @@ switch (command) {
     if (!record.baseline.name) record.baseline.name = pollEntry(poll, record.sessionId)?.name ?? null;
     const failures = runChecks({
       record, records, poll, derived, git: gitInfo(derived.cwd), text,
-      confirmWaiting: Boolean(options['confirm-waiting']),
       confirmBusy: Boolean(options['confirm-busy']),
       confirmResend: Boolean(options['confirm-resend']),
     });
+    // Check 6 is a notice (U1): printed with the failures and with the success, never blocking.
+    const warnings = waitingNotice(derived);
     if (failures.length) {
-      console.log(JSON.stringify({ ok: false, failures }, null, 2));
+      console.log(JSON.stringify({ ok: false, failures, warnings }, null, 2));
       process.exit(3);
     }
     const at = new Date().toISOString();
@@ -457,7 +459,7 @@ switch (command) {
     copyFileSync(record.textFile, sentFile);
     const updated = { ...record, state: 'pending', sentAt: at, sentFile };
     saveRecords(root, project, records.map((r) => (r.id === record.id ? updated : r)));
-    console.log(JSON.stringify({ ok: true, id: record.id, to: pollEntry(poll, record.sessionId)?.name ?? null, sentFile }, null, 2));
+    console.log(JSON.stringify({ ok: true, id: record.id, to: pollEntry(poll, record.sessionId)?.name ?? null, sentFile, warnings }, null, 2));
     break;
   }
   case 'result': {

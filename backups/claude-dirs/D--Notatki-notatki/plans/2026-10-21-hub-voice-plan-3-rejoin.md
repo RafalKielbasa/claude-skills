@@ -640,6 +640,12 @@ The existing test 'SKILL.md names the skill hub and every command it uses exists
 
 - [ ] **Step 4: Restore the limit.** Run `node TALK/bin/talk.mjs agent sync` without the variable, and read back `max_duration_seconds` 1800.
 
+- [ ] **Step 5 (amendment of 2026-10-22): the duration cut arrives as `close`.** The probe got `agent/close` for the cut, so the page did not reconnect (decision „Ponowne połączenie po limicie czasu”, variant A; spec §18.3, „Duration cut”).
+  - `TALK/web/talk.mjs`: a `close` whose last agent message in the call is the duration message counts as the cut; call-end then carries `context: 'max_duration_exceeded'` and `detail` with the client's reason (`close: <reason>`).
+  - `TALK/lib/bridge.mjs`: the call-end note gets ` (<detail>)`.
+  - Tests: two page tests (the cut is recognised; a close after another message, after an earlier call's duration message, or after „Przerwa” is not), one web test (the page constant equals `max_conversation_duration_message`), one bridge test (the note keeps the detail on one line).
+  - Review by a fresh reviewer, then a short re-probe: `TALK_MAX_DURATION_SECONDS=60` `agent sync`, one call left to run into the cut, the next call starts by itself with the note `call ended: agent/max_duration_exceeded (close: …)`, „Kończymy”, and the limit back to 1800 s.
+
 ---
 
 ### Task 10: Acceptance with Rafal (spec §20.2), report, index

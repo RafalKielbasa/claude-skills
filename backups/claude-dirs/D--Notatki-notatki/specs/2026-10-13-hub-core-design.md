@@ -66,7 +66,7 @@ Out of scope for sub-project 1:
 |---|---|---|
 | 1 | What the orchestrator is | A Claude Code session acting as the hub. It sends with `SendMessage` and reads statuses from `claude agents --json` |
 | 2 | Where project sessions come from | Both: the hub adopts sessions Rafal starts himself, and it can start new ones in the background with `claude --bg` |
-| 3 | How decisions reach a project session | The hub sends only prompts Rafal approved. Gates and permission prompts are answered in the session itself; the hub says which session waits and for what |
+| 3 | How decisions reach a project session | The hub sends only prompts Rafal approved. Permission prompts are answered in the session itself; a decision gate is answered in the session or by an approved hub message (U1, §13.5); the hub says which session waits and for what |
 | 4 | How the hub knows the state | Global hooks write a registry. A gate turn ends with a marker line. Waking moved from `notify_when_idle` to a watcher under `Monitor` when design part 2 was accepted (§5.5) |
 | 5 | Who runs the analytical dialog | A fork of the project session (`--resume <id> --fork-session`) that reads the repository and writes only its dialog directory. Only decisions and the prompt draft go back to the hub |
 | 6 | Visibility in v1 | Text in the hub. `PostToolUse` collects "what it is doing" from day one, so the panel (1a) needs no new data |
@@ -268,7 +268,8 @@ A `UserPromptSubmit` caused by a hub message clears `waiting: decision` like any
 event carries the hub's `from-name` (§5.1), so the overview can show that the prompt came from the
 hub. If the gate is still open, the session's next `Stop` with the marker restores it. On the
 questionnaire path (§6.4) the hub's answer message is what resolves the gate, so it must clear the
-wait. The hub never sends to a waiting session without an explicit warning (§6.2, check 6).
+wait. A send to a waiting session needs no second confirmation: `prepare` reports the wait as a
+notice (§6.2, check 6, U1).
 
 **`/clear` continuation.** `/clear` ends a session (`SessionEnd` with `reason: "clear"`) and the
 tab continues under a new `sessionId` with the same `session_title` (probe S8). The overview shows
@@ -418,14 +419,18 @@ Immediately before every `SendMessage` the hub checks that:
    `held` or `delivery-unknown` — otherwise the hub asks;
 4. the text has every section of the template and its hash matches the approved hash;
 5. the session is idle;
-6. the session is not waiting for permission or for a decision — otherwise the hub warns that
-   gates are answered in the session itself (decision 3) and sends only after an explicit
-   confirmation.
+6. (a notice, not a block, since U1) whether the session waits for permission or for a decision.
+   `prepare` reports the wait with the gate text in a `warnings` list, on success and next to any
+   failures; the hub quotes it to Rafal and sends on his one "wyślij", because a draft is usually
+   the answer to the gate its target stands on. A session waiting for permission is also busy
+   (check 5): the message queues until Rafal answers the prompt in the session. Before U1 this
+   check blocked the send until Rafal confirmed a second time (`--confirm-waiting`); the flag is
+   still accepted and has no effect.
 
 If the session is busy, the hub asks whether to wait for the end of the turn or to send now. A
 message to a busy session arrives "between tool calls", so it cuts into the current work; its
 `UserPromptSubmit` carries the running turn's `prompt_id` and is derived as a queued prompt
-(§5.2). On a delayed send the hub runs all six checks again right before sending; any change
+(§5.2). On a delayed send the hub runs all checks again right before sending; any change
 blocks the send and asks Rafal for a new decision.
 
 ### 6.3 Send record
@@ -767,7 +772,7 @@ Node without dependencies, `node --test`.
 | Derived state | Every transition of §5.2, including out-of-order events (ordering by timestamp); `waiting: permission` cleared by a later `PostToolUse` or `Stop` with the same `prompt_id`, and not by one with a different `prompt_id` or an earlier timestamp; the queued-prompt sequence built from the S11 events (05:28:07–05:28:46 and 05:29:55–05:30:12): the `Stop` of the earlier turn sets no `turn-ended` and the queued turn's own `Stop` does; a hub-caused `UserPromptSubmit` clears `waiting: decision`; a `/clear` pair is shown as a continuation and carries no baseline; the raw `state` from `claude agents --json` never overrides the derived state; the priority order of §5.4 |
 | Polls | A failed poll never makes a session vanished; vanishing needs two consecutive successful polls |
 | `hub-watch.js` | Prints only state transitions; never prints "finished" after a long absence of events; prints no "turn ended" for the `Stop` of a turn with a pending queued prompt; reconciles a missed file notification at the next rescan; finds its owner as the nearest `claude` ancestor in a given process table; exits without writing `watch-state.json` once its owner is gone, so a later watcher still reports the transition; without an owner prints one line and keeps running |
-| Pre-send check | Each of the six checks of §6.2 with a negative case; a first send without journal history; detached HEAD; a target restarted or cleared under the same name fails check 1 and shows the new candidate id; a delayed send re-runs all checks and blocks on a changed hash or baseline |
+| Pre-send check | Each of the five blocking checks of §6.2 with a negative case; the check 6 notice for a decision wait (with the gate text) and for a permission wait, also next to a check 5 failure, and a waiting session passing with and without `--confirm-waiting` (U1); a first send without journal history; detached HEAD; a target restarted or cleared under the same name fails check 1 and shows the new candidate id; a delayed send re-runs all checks and blocks on a changed hash or baseline |
 | Send record | Tool success alone leaves `pending`; `pending` → `sent` only on a recipient `UserPromptSubmit` with the hub's `from-name` and a matching inner-text hash (built from the S4 wrapper); a mismatched hash or another `from-name` does not confirm; a hub without `--name` is recognised by the name a poll gave its registered session, and a session outside `hub-sessions.json` with a similar name is not; held notice → `held`; refused notice → `not-sent`; `held` → `not-sent` when the recipient session ends; a tool error → `not-sent`; no evidence → `delivery-unknown`; a resend of the same hash asks, also while `held` |
 | Prompt template and answer message | A missing section blocks sending; **Oczekiwany rezultat** is mandatory; the header line is part of the approved hash and shows local time |
 | Project matching | `C:\repo` vs `C:\repo-old`, case differences, the longest root wins, a duplicate root is reported |
@@ -929,7 +934,7 @@ Not discussed explicitly in the conversation; approved by Rafal with the spec on
    recorded and never count (§5.2).
 9. A sixth pre-send check: a warning and an explicit confirmation before sending to a session
    that waits for permission or a decision; a baseline recorded at approval; all checks re-run
-   on a delayed send (§6.2).
+   on a delayed send (§6.2). The explicit confirmation was dropped by U1 (§13.5).
 10. Send records `pending` / `sent` / `not-sent` / `delivery-unknown` around every send (§6.3).
     Superseded in part by D3 (§13.2): `held` added, `sent` only on the recipient's confirmation.
 11. The origin header line is part of the approved text (§6, §6.1).
@@ -1038,3 +1043,13 @@ the rule of §7 step 3 (M2), the P14 watcher test rescans every second (M3), an 
 `config.toml` no longer fails a Codex call (M5), a malformed `HUB_PROCESS_TABLE` gives an empty
 table (M6). Accepted risk (M4): the watcher checks its owner by PID only, so a PID that Windows
 reuses within the 10-second check keeps an orphan alive until its `Monitor` timeout.
+
+### 13.5 Changes from use (2026-10-23)
+
+Fixes Rafal asked for while using the hub after the Plan 4 acceptance, without a separate plan
+(project index: "poprawki zgłaszane przez Rafała w trakcie użytkowania"). Each is applied in place
+in this spec and listed here.
+
+| # | Change | From | Sections |
+|---|---|---|---|
+| U1 | One "wyślij" is enough for a session that waits for a decision or for permission: check 6 no longer blocks `prepare` and no longer asks for a second confirmation. `prepare` reports the wait with the gate text in a `warnings` list, on success and next to any failures, and the hub quotes it; `--confirm-waiting` is accepted and has no effect, so older callers keep working. Decision 3 keeps permission prompts in the session and lets an approved hub message answer a decision gate, as the questionnaire path always did (§6.4). Reason: nearly every draft answers the gate its target stands on (record `r20261021135346-79cc` of 2026-10-21 needed two "wyślij"), so the second confirmation only repeated the first | Rafal's request through the hub on 2026-10-21; variant A chosen on 2026-10-23 in session `notatki-hub-single-wyslij` | §3 (decision 3), §5.2, §6.2, §9.1, §13.1 item 9 |

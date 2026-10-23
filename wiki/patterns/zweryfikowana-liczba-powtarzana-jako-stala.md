@@ -52,6 +52,14 @@ ten kod, ktorego pomiar dotyczyl.
   nowa liczba poszła do pytania o zgodę zamiast starej. Mirror do `core-team` poprzedzony w tej
   samej komendzie asercją `test "$(git ls-remote … | wc -l)" = "0"`, nie wynikiem sprzed dwóch tur.
   Liczba issues `497` z 5.10 przemierzona 7.10 (`504`) przed cytatem w raporcie.
+- 2026-10-22, sesja 109283c8-2c7c-48dd-81f5-5f6ef3cfff2a (id claude.ai niedostępny): drugi dowód
+  zastosowania (przeciw porażce), w obu przypadkach chodziło o stan tablicy, nie o liczbę.
+  - Streszczenie po kompakcji niosło „zaproponować przesunięcia z daily: quiz #667 → Done, DT-3
+    #595 → Done, DT-19 #657 → Ready”. Przed wpisaniem tego do decyzji uruchomiłem trzy razy
+    `gh issue view`: #667 i #595 były już `CLOSED`/Done, a #657 było w In progress. Decyzja odpadła,
+    bo „do Ready” cofnęłoby #657.
+  - Najwyższy numer DT przeczytany na bramce (DT-55) przemierzyłem tuż przed `gh issue create`.
+    Inna sesja zajęła w tym czasie DT-56 (#745), więc nowe issue dostały DT-57–59.
 
 ## Rozwiazanie
 Liczbe, ktora steruje decyzja albo trafia do promptu subagenta, mierz w tej samej turze, w ktorej

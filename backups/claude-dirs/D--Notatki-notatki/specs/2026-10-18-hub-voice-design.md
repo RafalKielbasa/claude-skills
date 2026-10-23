@@ -431,7 +431,7 @@ Rafal neither confirmed nor rejected that guess.
 | the agent hangs up without `end_conversation` (Rafal asked for a break or stopped answering), or the platform's silence hang-up | the call | paused |
 | a closed or reloaded tab (no heartbeat for 15 s during a call) | the call | paused |
 | a network drop or another client error | the call | paused |
-| the call reaches its duration limit (`max_duration_exceeded`) | the call | the page starts the next call at once, without a click |
+| the call reaches its duration limit (`max_duration_exceeded`, or a `close` right after the agent's duration message; amendment below) | the call | the page starts the next call at once, without a click |
 | no first call within 10 min of the start (the first-call deadline, as today) | the dialog | §5.4 steps 2–4 |
 | the pause limit: 60 min after a call ended with no new call | the dialog | §5.4 steps 2–4 |
 | the fork exits | the dialog | §5.4 steps 2–4 (as today) |
@@ -440,6 +440,13 @@ Rafal neither confirmed nor rejected that guess.
   ponownie”, „Zakończ rozmowę” and the time until which the dialog waits.
 - **After `end_conversation`:** a call that is still running 15 s after the tool returned is
   ended by the page.
+- **Duration cut (amendment of 2026-10-22, probe of §20.1).** Over WebRTC the client reported the
+  cut as a `close`, not `max_duration_exceeded`: the vendored client gives that context only for a
+  server error event, and none reached the page before the room closed. The page therefore also takes a `close`
+  whose last agent message in that call is the duration message for the cut. It tells the bridge
+  `max_duration_exceeded`, so the fork's note says the call was renewed after the limit. The
+  bridge's note of every call end keeps the client's own reason, with the reported type first when
+  the page read the end as the cut. Decision „Ponowne połączenie po limicie czasu”, variant A.
 - **Fallback.** If the probe of §20.1 shows that the agent does not call `end_conversation`
   reliably, the agent's hang-up (the client's `end_call` context) ends the dialog, as in Plan 2.
   It is a setting in the skill's configuration, not a code change.
@@ -644,7 +651,9 @@ A separate probe harness would only duplicate the page. The probe checks four th
 - **(c)** The duration message is spoken, on a call limited to 60 s for the probe; the limit goes
   back to 1800 s afterwards.
 - **(d)** What `onDisconnect` receives in each case. The vendored client 1.28.0 reports the
-  contexts `end_call`, `max_duration_exceeded`, `close` and `connection_state_changed`.
+  contexts `end_call`, `max_duration_exceeded`, `close` and `connection_state_changed`. The probe
+  of 2026-10-22 got `end_call` for the break and the end, and `close` for the duration cut (§18.3,
+  „Duration cut”).
 
 If (a) fails, the fallback of §18.3 applies.
 

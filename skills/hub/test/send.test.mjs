@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { composeMessage, questionnaireRequest, templateProblems } from '../lib/compose.mjs';
-import { runChecks, gitInfo } from '../lib/checks.mjs';
+import { runChecks, gitInfo, waitingNotice } from '../lib/checks.mjs';
 import { findDelivery, classifyNotice, applyNotice } from '../lib/confirm.mjs';
 import { shownState, renderJournal } from '../lib/journal.mjs';
 import { sha256, localTime } from '../lib/text.mjs';
@@ -89,13 +89,23 @@ test('check 3: the same text already pending, sent or held for the session, unle
   assert.deepEqual(runChecks({ record, records: [record, { ...record, id: 'r0', state: 'pending' }], poll, derived, git, text, confirmResend: true }), []);
 });
 
-test('checks 4, 5 and 6: changed text, busy session unless "send now", waiting session unless confirmed', () => {
+test('checks 4 and 5: changed text, busy session unless "send now"', () => {
   assert.deepEqual(checks({ text: `${text} edited` }), [4]);
   assert.deepEqual(checks({ poll: { ok: true, sessions: [{ ...poll.sessions[0], status: 'busy' }] } }), [5]);
   assert.deepEqual(checks({ derived: { ...derived, phase: 'working' } }), [5]);
   assert.deepEqual(checks({ derived: { ...derived, phase: 'working' }, poll: { ok: true, sessions: [{ ...poll.sessions[0], status: 'busy' }] }, confirmBusy: true }), []);
-  assert.deepEqual(checks({ derived: { ...derived, waiting: { kind: 'decision' } } }), [6]);
-  assert.deepEqual(checks({ derived: { ...derived, waiting: { kind: 'decision' } }, confirmWaiting: true }), []);
+});
+
+test('check 6 (U1): a waiting session never blocks the send, with or without the old confirmation flag', () => {
+  assert.deepEqual(checks({ derived: { ...derived, waiting: { kind: 'decision', text: 'A czy B?' } } }), []);
+  assert.deepEqual(checks({ derived: { ...derived, waiting: { kind: 'decision', text: 'A czy B?' } }, confirmWaiting: true }), []);
+});
+
+test('check 6 (U1): the wait is reported as a notice with the gate text', () => {
+  assert.deepEqual(waitingNotice({ ...derived, waiting: { kind: 'decision', text: 'A czy B?' } }), [{ check: 6, message: 'the session waits for decision: A czy B?' }]);
+  assert.deepEqual(waitingNotice({ ...derived, waiting: { kind: 'permission', promptId: 'p1' } }), [{ check: 6, message: 'the session waits for permission; the message queues until Rafal answers the prompt in the session' }]);
+  assert.deepEqual(waitingNotice({ ...derived, waiting: { kind: 'decision' } }), [{ check: 6, message: 'the session waits for decision' }]);
+  assert.deepEqual(waitingNotice(derived), []);
 });
 
 test('delivery needs the hub from-name and a matching inner-text hash after the send', () => {

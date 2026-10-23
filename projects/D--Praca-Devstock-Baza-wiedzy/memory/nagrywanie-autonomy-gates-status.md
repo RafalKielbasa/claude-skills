@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4bd53d28-0d05-40dd-bf31-94901ea828ea
-  modified: 2026-10-22T11:39:29.989Z
+  modified: 2026-10-23T00:05:10.672Z
 ---
 
 Część `nagrywanie-autonomy-gates` (spec `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`,
@@ -32,6 +32,13 @@ credential arkusza wymaga nowej zgody. Plan 3 (`docs/superpowers/plans/2026-10-2
 nadawca jak w konspektach. Plan 2 realizowany na gałęzi `nagrywanie-autonomy-gates-plan-2` (ledger
 `.superpowers/sdd/2026-10-22-nagrywanie-autonomy-gates-plan-2/progress.md`), plan 3 po nim; okno konta planu 3
 (zadanie 10) tylko na słowo Rafała.
+
+W nocy 22/23.10 plan 2 wykonany (gałąź `nagrywanie-autonomy-gates-plan-2`, głowa `c5eb7aa5`, od `8672c677`):
+zadania 1–10, review gałęzi na Opusie, fala poprawek; testy `tools/nagrywanie` 838 passed; ledger z orzeczeniami
+`.superpowers/sdd/2026-10-22-nagrywanie-autonomy-gates-plan-2/progress.md` zostaje do odbioru. Zgodność renderu
+`tools/course-pipeline` sprawdzaj z `PIPELINE_ZGODNOSC_REF=8672c677…` (domyślna przypinka skryptu jest nieaktualna).
+Nowe znaleziska `komunikat`/`przepelnienie` są tylko na kartę do kalibracji na pierwszym przebiegu z biletem.
+Plan 3 realizowany na gałęzi `nagrywanie-autonomy-gates-plan-3` od głowy planu 2.
 
 **Why:** sześć bramek (G1 bilet produkcyjny `video/ticket.yaml`, G2 poświadczenia, G3 polityka konta per usługa,
 G4 zakres dydaktyczny, G5 `final.mp4` z kartą lekcji, G6 publikacja) zastępuje 24 miejsca, w których automat

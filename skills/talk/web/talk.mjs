@@ -224,7 +224,6 @@ async function start(auto) {
   if (finished) return;
   connecting = true;
   ownEnd = null;
-  lastAgentMessage = null;
   buttons();
   // After the duration limit the status keeps saying why the page reconnects.
   if (!auto) $('status').textContent = 'Łączę…';

@@ -35,7 +35,8 @@ plain text or JSON; quote its output literally when Rafal decides on it. Talk to
    judgment with `HUB judge <sessionId> --verdict question` or `--verdict other`, so the overview
    shows "probably waiting for you" until the session's next turn.
 3. For `waiting for decision`, `waiting for permission`, `problem`: say which session and what it
-   waits for. Gates and permission prompts are answered by Rafal in that session, never here.
+   waits for. Gates and permission prompts are answered by Rafal in that session, never by the
+   hub on its own; a draft Rafal approves may answer a decision gate through Sending below (U1).
 4. Tell Rafal in the hub tab; when he is away, also use `PushNotification`.
 
 ## The project map (spec §4.2)
@@ -68,8 +69,11 @@ ask him. Rafal edits `~/.claude/hub/projects.json` himself; never write it.
    - check 5 (busy): ask "czekać na koniec tury czy wysłać teraz?". "Teraz": say that the message
      cuts into the running work between tool calls, then `HUB prepare <id> --confirm-busy`.
      "Czekać": when the watcher reports that session's turn ended (or a wait), run
-     `HUB prepare <id>` again; it repeats all six checks, and any new failure goes back to Rafal;
-   - check 6: send only after Rafal confirms again, then `HUB prepare <id> --confirm-waiting`.
+     `HUB prepare <id>` again; it repeats all checks, and any new failure goes back to Rafal;
+   - check 6 is a notice, not a failure (spec §6.2, U1): `prepare` prints `warnings` with the wait
+     and the gate text, on success and next to failures. Send on the one "wyślij" from step 2 and
+     quote the notice to Rafal with the send result; a session waiting for permission is also
+     busy (check 5), so its message queues until Rafal answers the prompt in that session.
 5. `SendMessage` with `to` = the `to` name printed by prepare and `message` = the draft text
    exactly. Then `HUB result <id> --msg-id <msg_id from the tool result>`, or on a tool error
    `HUB result <id> --error "<literal error>"`.

@@ -91,6 +91,7 @@ reports (`M1` of the Plan 3 final review is not `M1` of the Plan 4 final review;
 | C2 | The watcher's stop line cannot be observed | `specs/2026-10-16-hub-core-plan-4-acceptance.md`, Findings |
 | C3 | The closing time of a panel hub is not recorded | `specs/2026-10-16-hub-core-plan-4-acceptance.md`, Findings |
 | C4 | The Plan 4 acceptance draft was left unsent | `specs/2026-10-16-hub-core-plan-4-acceptance.md`, Findings |
+| U1 | Change from use: one "wyślij" for a waiting session; check 6 is a notice in the `prepare` output, `--confirm-waiting` has no effect | `specs/2026-10-13-hub-core-design.md` §13.5 |
 | T4 | Plan 3 ruling: unknown outcome of a new-session launch (group of P11) | `specs/2026-10-13-hub-core-design.md` §13.4, P11 |
 | T6 | Plan 3 ruling: no fallback command for a fork with an unknown outcome (group of P11) | `specs/2026-10-13-hub-core-design.md` §13.4, P11 |
 | I1 | Plan 3 final review: fork a given live id directly, list twins. Plan 4 final review: `HUB confirm` accepts the hub's sender names from the polls (fixed, part of P10) | `specs/2026-10-14-hub-core-plan-3-acceptance.md`, Open decisions (P12); `specs/2026-10-16-hub-core-plan-4-acceptance.md`, Deviations from the plan; hub spec §13.4, P10 |
