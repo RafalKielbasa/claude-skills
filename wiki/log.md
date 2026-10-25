@@ -611,3 +611,52 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Gładko, bez osobnych wzorców: wznowienie po kompakcji z odczytem kolejek z dysku (stan zgodny ze streszczeniem); push i PR dopiero na „tak” po pytaniu z wariantami, scalenie na „scal”, usunięcie zdalnej gałęzi na „ok”.
 - Wzorce repo (`D:/Praca/Devstock/Baza wiedzy/.claude/wiki/`, zapis w worktree `baza-wiedzy-daily-2026-10-21`): dowody do trzech wzorców `daily`, patrz log repo.
 - Sygnał: brak nowych kandydatów globalnych — dotknięte porażki mają dowody z dwóch sesji, zweryfikowana-liczba-powtarzana-jako-stala jest `ogólny`. Brak `nawrót`.
+
+## 2026-10-23 — sesja 826a9cc6-adba-478b-b4db-47f6fa35bb62 (id claude.ai niedostępny); vault „Notatki”, worktree `notatki-nauka-socratic-later`: przebudowa `nauka-z-claude` (najpierw wyjaśnienie, dialog sokratejski w sprawdzianie kroku i powtórkach), PR my-second-brain#1 scalony
+- założono: protokol-bluf-opakowuje-tury-nauki (skill: nauka-z-claude, typ: porażka) — porcje i pytania sprawdzające w pełnym BLUF z ⏸, a skill nie określa kształtu tury; wątpliwy, bo tylko z przebiegów na sucho.
+- dopisano dowód: zmiana-skilla-poza-evolve-skill-bez-sladu (trzeci, trzecia sesja) — wpis w `skill-impact.md` powstał w porę, ale tylko dlatego, że sesja przeczytała ten wzorzec.
+- dopisano dowód: skill-testowany-na-sucho-skryptem-odpowiedzi (drugi) — skill dialogowy: skrypt z warunkami, sekcja NOTES z racjonalizacjami; RED 4/4, GREEN 4/4, jedna luka złapana i domknięta.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (trzeci, trzecia sesja) — odmowa dla `cd` do kopii głównej tego samego repo i dla dopisania heredokiem do pliku poza worktree bez gita.
+- Skill: nauka-z-claude — zmiana na bezpośrednią prośbę zaakceptowana (wpis w `skill-impact.md` z pełnym diffem).
+- Gładko, bez osobnych wzorców: propozycja z tabelą dowodów (`plik:linia` reguł blokujących i notatek sesji) i decyzjami D1–D6 przyjęta jednym „ok”; push, draft PR, scalenie i usunięcie zdalnej gałęzi — każde na osobne „ok”/„zmerguj”.
+- Bez wzorca, jednorazowe: klasyfikator odmówił `git fetch` po scaleniu („Merge Without Review”); stan sprawdzony przez `gh pr view --json state,mergeCommit`.
+- Wzorce repo (`D:/Notatki/notatki/.claude/wiki/`): bez nowych wzorców, patrz log repo.
+- Sygnał: zmiana-skilla-poza-evolve-skill-bez-sladu (porażka, 3 sesje) → `/evolve-skill evolve-skill`; straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 3 sesje) jest `ogólny`, więc to kandydat na regułę globalną, nie na `/evolve-skill`. Brak `nawrót`.
+
+## 2026-10-24 — sesja session_01UTQuE3EwUpLuJMEs83YJwD (lokalnie 362d75a8-47e4-4b51-a94a-5c747a21b5c6); repo code-busters-v2, worktree `w1-shell`: plan W1 migracji Kodożerców (powłoka, motyw, wejście, konto) w trybie subagent-driven-development, bramka W1 przyjęta, W1 scalone do DT-37 (`794007d1a`)
+- założono: plan-migracji-ekranu-bez-inwentarza-zachowan (skill: superpowers:writing-plans, typ: porażka) — plan migracji bez tabeli zachowań starego ekranu; siedem strat lub fikcji 1:1 wyłapanych dopiero w review zadań.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (czwarty, czwarta sesja) — odmowa także za słowo „git” w treści heredoca; PowerShell przechodzi.
+- dopisano dowód: ruling-z-nieweryfikowana-przeslanka (piąty) — R2 „koszt: brak, plik lokalny” przy sekrecie dzielonym przez aplikację i CMS.
+- dopisano dowód: plan-zaweza-regule-specu (trzeci, trzecia sesja) — płaskie 4,5:1 zamiast WCAG AA z 3:1 dla dużego tekstu.
+- dopisano dowód: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (piąty, piąta sesja) — Docker padł, `cms dev` stawia compose z worktree, rozjechany `SESSION_SECRET`; bramka o noc później.
+- dopisano dowód: kod-decyzji-numerowany-od-nowa-koliduje-w-sesji (drugi, druga sesja) — D1–D3 bramki obok D1–D12 specu i D1–D6 pętli bramki.
+- dopisano dowód: zrzuty-kontrolera-przed-bramka-wizualna (czwarty, sukces) — dwa zrzuty przed arkuszem ujawniły puste dane i nakładkę; arkusz przyjęty za pierwszym razem.
+- Gładko, bez osobnych wzorców: board-tracker przypiął #741 i prowadził jeden kumulatywny ślad; stop huba na Task 3 Step 5 i pytania z wariantami (Docker, konflikty w `packages/**`, bramka) przyjęte jednym „A”/„OK”; scalenie `origin/main` w tymczasowym worktree i `--ff-only` w głównym checkoucie zamiast edycji poza izolacją.
+- Bez wzorca, jednorazowe: git 2.35 bez `merge-tree --write-tree` (próbne scalenie w tymczasowym worktree); klasyfikator zablokował wymuszone zamknięcie zawieszonego Docker Desktop („Interfere With Workloads”).
+- Wzorce repo (`D:/Praca/Devstock/Projekty/code-busters-v2/.claude/wiki/`): bez nowych wzorców. Wiki repo nie powstało: sesja w tle po wyjściu z worktree nie może pisać w głównym checkoucie (strażnik izolacji), więc wpis „Bez nowych wzorców” w logu repo trzeba dodać w następnej sesji z worktree albo ręcznie.
+- Sygnał: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (porażka, 5 sesji) → `/evolve-skill writing-plans`; plan-zaweza-regule-specu (porażka, 3 sesje) → `/evolve-skill writing-plans`; ruling-z-nieweryfikowana-przeslanka (porażka, 5 sesji) → `/evolve-skill subagent-driven-development`; straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 4 sesje) jest `ogólny` — kandydat na regułę globalną. Brak `nawrót`.
+
+## 2026-10-24 — sesja session_018h6huVMv7ymFg4EEx4A78e (lokalnie 0daa3cb0-3d18-4574-9113-63274220e556); repo agent-biznes, worktree `agent-biznes-passive-income-ideas`: brainstorming dochodu półpasywnego → projekt `china-import`, spec badania nisz, etap 1 deep-research (6 badaczy), commit `84f8f9d`
+- założono: zrodlo-kluczowego-filtra-niesprawdzone-przed-fan-outem (skill: anthropic-skills:deep-research, typ: porażka) — test popytu na Allegro rozstrzygał o każdej niszy, a allegro.pl zwracało 403. Wyszło to dopiero u czterech badaczy, więc test nie poszedł dla żadnej z 13 nisz.
+- założono: wspolny-model-liczb-narzucony-piszacemu-raport (skill: anthropic-skills:deep-research, typ: sukces) — autor raportu przeliczył nisze jednym modelem kosztów. Wskaźniki zmieniły się o −44…+14 pkt, a 3 nisze odpadły.
+- założono: builder-check-lapie-mechanike-platformy-i-domysl-o-osobie (skill: superpowers:brainstorming, typ: sukces) — builder check wychwycił wspólną kartę produktu dla tego samego EAN i domysł „etat” (Rafał pracuje na B2B). Oba zmieniły spec.
+- dopisano dowód: rownolegli-badacze-wyczerpuja-wspolny-limit-wyszukiwan (drugi, druga sesja) — limit padł już przy 6 badaczach, bo dwóch uruchomiło własnych pod-badaczy. Rozwiązanie rozszerzone o liczenie poddrzewa.
+- dopisano dowód: subagent-limit-zastapiony-wlasna-ocena (piąty, obsłużony poprawnie) — autor raportu padł na ENOTFOUND. `ls` potwierdził brak pliku, autor wznowiony przez `SendMessage` i raport oddany.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (piąty, piąta sesja) — odmowa dla `cd` do kopii głównej z gitem i dla pętli z `sed` ze zmienną bez gita. Obejście: `awk` ze stałą listą.
+- Gładko, bez osobnych wzorców:
+  - pytania brainstormingu z domysłem jako [A] przyjmowane jednym „A”/„OK” (sześć bramek);
+  - odpowiedź spoza pytania („kategorii nie ustalaj na sztywno”) obsłużona ponowieniem pytania ze zmienionymi wariantami, zamiast przyjęcia rekomendacji;
+  - indeks projektu prowadzony skillem `project-index` przy każdej decyzji.
+- Bez wzorca, jednorazowe: nazwy raportów w specu z myślnikiem kolidowały z regułą tytułów deep-research (tylko litery, cyfry i spacje), poprawione w specu przed rundą.
+- Wzorce repo (`E:/Praca/agent-biznes/.claude/wiki/`): bez nowych wzorców, sesja nie używała skilli repo; patrz log repo.
+- Sygnał: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 5 sesji) i subagent-limit-zastapiony-wlasna-ocena (porażka, 5 sesji) są `ogólny`, więc to kandydaci na regułę globalną, nie na `/evolve-skill`. rownolegli-badacze-wyczerpuja-wspolny-limit-wyszukiwan ma dowody z 2 sesji, poniżej progu. Brak `nawrót`.
+
+## 2026-10-24 — sesja session_01GxQKCzxfs88VmDWqtoSy3P (lokalnie c0987db9-b09b-453f-8cfe-0770239787b8); vault „Notatki”: akceptacja planu 3 `hub-voice` (przebieg 3 kroku 1, limit przerwy bez głosu, rozmowa z huba, raport), skasowanie 8 rozmów w ElevenLabs, zamknięcie części `hub-voice` (`8f68c3b`)
+- założono: odczyt-zaraz-po-kasowaniu-nie-dowodzi-skasowania (skill: ogólny, typ: porażka) — przejściowe 404 po DELETE i sprawdzenie po znanych id przepuściły pozostałości; wyszły na liście rozmów agenta.
+- założono: wysylka-huba-stoi-po-approve-bez-sladu (skill: hub, typ: porażka, wpis wątpliwy) — zlecenie `approved` bez wyniku od 07:59 do 17:26; przyczyny w sesji huba nie sprawdziłem.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (trzeci, trzecia sesja) — DELETE w ElevenLabs po „ok” do listy wariantów odrzucony; Rafał uruchomił komendę sam z `!`.
+- dopisano dowód: decyzja-w-bramce-bez-przed-i-po (drugi, druga sesja) — „dokończ w hubie wysyłkę” bez tego, co Rafał zobaczy i co ma wpisać; „Chyba nie rozumiem tego elementu”.
+- Gładko, bez osobnych wzorców: skill `talk` (przebieg 3 i krok 3 na zaślepce, raport zamknięcia czytany z wyjścia zadania); zatrzymanie przed pushem przy zleceniu z huba mimo reguły vaulta „pushuję sam”; sesja projektu nie pisała do huba sama; `project-index` w każdym commicie raportu.
+- Bez wzorca, jednorazowe: `git push` w vaultcie przekroczył 120 s narzędzia i dokończył się w tle (dalej `timeout 100 git push`).
+- Wzorce repo (`D:/Notatki/notatki/.claude/wiki/`): bez nowych wzorców, patrz log repo.
+- Sygnał: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (porażka, 3 sesje) jest `ogólny`, więc to kandydat na regułę globalną, nie na `/evolve-skill`. Brak `nawrót`.

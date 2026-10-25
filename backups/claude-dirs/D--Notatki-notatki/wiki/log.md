@@ -40,3 +40,14 @@ Format wpisu:
 - Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; tylko odczyt indeksu `.claude/projects/hub.md`, specu i raportów akceptacji `hub-core` oraz globalnych skilli `project-index` i `hub`)
 - Wzorce globalne dotknięte w tej sesji: dlugi-lancuch-narzedzi-bez-linii-statusu (dopisany dowód), nowe-polecenie-przy-otwartej-bramce-nie-jest-zgoda (dopisany dowód), cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (dopisany dowód)
 - Sygnał: brak
+
+## 2026-10-23 — sesja 826a9cc6-adba-478b-b4db-47f6fa35bb62 (id claude.ai niedostępny)
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; przebudowany został skill globalny `nauka-z-claude`, a w vaultcie zmieniły się tylko jego opisy w `README.md`, `.claude/CLAUDE.md`, `AGENTS.md` i `praca/claude-code.md`, PR #1)
+- Wzorce globalne dotknięte w tej sesji: protokol-bluf-opakowuje-tury-nauki (założony), zmiana-skilla-poza-evolve-skill-bez-sladu (dopisany dowód), skill-testowany-na-sucho-skryptem-odpowiedzi (dopisany dowód), straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (dopisany dowód)
+- Skill: nauka-z-claude (globalny) — zmiana na bezpośrednią prośbę zaakceptowana
+- Sygnał: brak (wzorce repo); globalne — patrz log globalny
+
+## 2026-10-24 — sesja session_01GxQKCzxfs88VmDWqtoSy3P (lokalnie c0987db9-b09b-453f-8cfe-0770239787b8)
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmieniły się raport akceptacji planu 3 `hub-voice` i indeks `.claude/projects/hub.md`, poza vaultem używane były globalne skille `talk`, `hub` i `project-index`)
+- Wzorce globalne dotknięte w tej sesji: odczyt-zaraz-po-kasowaniu-nie-dowodzi-skasowania (założony), wysylka-huba-stoi-po-approve-bez-sladu (założony), zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (dopisany dowód), decyzja-w-bramce-bez-przed-i-po (dopisany dowód)
+- Sygnał: brak (wzorce repo); globalne — patrz log globalny

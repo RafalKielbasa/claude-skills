@@ -117,7 +117,24 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    order (EDL `zrodlo` indexes point into that list). **Course with `oprawa`** (`oprawaKursu: true` in
    the list): ask nothing - intro and outro come from the course, and `zrodla.json` written by the
    automation already has them as `null`. Then add highlights, pauses and boards (step 4 effects part)
-   and go on with the sample gate.
+   and go on with the sample gate (a lesson without a ticket).
+   **Lesson with a production ticket** (`video/ticket.yaml`, gate "bilet produkcyjny (G1)" of
+   `/kurs-nagrywanie`; spec `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`,
+   sections 9, 11 and 12): the montage runs without a gate. The state above is the same, but the sample
+   gate (step 5) and Rafał's review of the full montage (steps 6 and 7) do not exist: you still fill the EDL,
+   run `sprawdz`, `probka` per segment and `kontrola`, and review every control sheet yourself, then go on to
+   `/kurs-video` stage 2. Montage warnings reach the lesson card through `npm run karta -- buduj`; whatever
+   you cannot settle and the warnings do not carry goes to the card with
+   `npm run karta -- dopisz ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --json '<entry>'` (kind `miejsce`,
+   `zrodlo: "montaz"`; fields in `/kurs-nagrywanie`, section "Karta lekcji (lekcja z biletem)"; the tool
+   refuses an entry with an e-mail address or a key-shaped string). In a course without `oprawa`, the intro and
+   outro decision is settled on the G1 card ("bilet produkcyjny (G1)") before the ticket is written; this skill
+   never asks for it and never stops on a gate. If it is missing, the ticket was written wrongly: stop with a
+   message naming the missing intro/outro decision (a G1 top-up, not a new gate), and never pick them yourself. Commits: `git branch --show-current` first, then
+   `git commit -m … -- <paths>` (`git add -- <path>` only for a path that is not tracked yet, right before
+   that commit; a path with changes this session did not make is not committed and the turn names it; no
+   push); `video/karta.json` goes into the lesson's next commit. A lesson without a ticket keeps every gate
+   below.
 2. **GATE: lesson and sources.** One `AskUserQuestion` call before any other work: four questions in a
    course without kurs.yaml `oprawa`, two (lekcja, nagranie ekranu) in a course with it (`oprawaKursu: true`
    in the list - intro and outro are decided once per course and attached by `/kurs-video`):
@@ -193,7 +210,9 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    - `wyciszenia`: `[[od, do]]` in seconds of the paragraph's narration — a narrator artifact
      (a drawn-out "uuu", a breath, a stray sound in a pause) replaced with silence; timing does
      not change. Find it on a spectrogram (a flat block of one pitch without consonants) and put
-     both edges in the quiet around it; `sprawdz` and the render reject an edge inside speech.
+     both edges in the quiet around it; `sprawdz` and the render reject an edge inside speech. In a lesson
+     with a ticket `kontrola-lektora --zastosuj` (`/kurs-video` step 4b) may already have added mutes: keep
+     them and put yours next to them.
    - Read rectangles **only** from `npm run montaz -- klatka <lekcja> --akapit=ID --czas=S`:
      the full-resolution frame shown at that second of the paragraph's narration (with a grid
      every 1/16 of the width). Take `--czas` from the middle of the highlight. The screen often
@@ -243,12 +262,23 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    transitions and the effects work. Wait for an explicit yes. His remarks change the EDL; re-render the
    sample (unchanged paragraphs come from the clip cache). The rest of the lesson starts only
    after the yes.
+   **Lesson with a ticket: no sample gate.** Do the same work as your own check, without showing, asking or
+   waiting: for each screencast segment `probka --segment=N` and `kontrola --segment=N`, mute narrator
+   artifacts with `wyciszenia`, review every control sheet by the rules above (A/Z pairs, R tiles, every Z
+   against the next A, sync frames around anchored sentences) and fix mismatches in the EDL and re-render
+   yourself. Then go straight to the full render in step 6. A mismatch the EDL cannot fix (material missing
+   in the recording) goes to the card as a `miejsce` entry. Without a ticket this gate applies unchanged.
 6. **Full render.** Fill the remaining paragraphs, `sprawdz`, then
    `npm run montaz -- render <lekcja>`. If the command refuses because `nagranie-z-lektorem.mp4`
    "nie pochodzi z montażu automatycznego", that file is a manual export. Ask Rafał whether to
    replace it; only on yes run `render <lekcja> --nadpisz`, which moves the old file to
    `video/archiwum/`. Then `npm run montaz -- kontrola <lekcja>` and review every sheet as in
    step 5. Fix, re-render, review again until every pair matches.
+   **Lesson with a ticket:** no question and no review by Rafał. `render` overwrites a
+   `nagranie-z-lektorem.mp4` that the montage made itself without asking (the tool allows it); a refusal
+   "nie pochodzi z montażu automatycznego" means a manual export and still asks, as above. You review every
+   control sheet yourself; accepted warnings (speed above 1.25×, a shot under 1.2 s, an effect under a board)
+   reach the card through `buduj`. Without a ticket nothing changes here.
 7. **Hand-off to `/kurs-video`.** The stage 2 render belongs to `/kurs-video`. Its own gate on the
    avatar engine still applies, and `--avatar=mcp` is the safe choice when the avatars are
    already there. Avatars always live in the lesson's own `video/avatar/` (stage 1 writes them
@@ -259,9 +289,16 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    hands over the film only after the mark's control gate (`video/znak-ai/raport.md`). Tell Rafał that, and that `final.mp4` is his to watch at the
    `/kurs-video` acceptance gate. Montage remarks from that gate come back here: change the EDL,
    then `render`, then `/kurs-video` stage 2 again.
-8. **Close.** Changes stay uncommitted — Rafał commits. Montage leaves nothing to commit in the
+   **Lesson with a ticket:** straight to `/kurs-video` stage 2 in the same turn, with no sample to show and
+   nothing to wait for; the avatar engine comes from `kurs.yaml` `video.avatar_engine`, so its gate asks
+   nothing. The one gate is "film z kartą lekcji (G5)" of `/kurs-video` step 5, where Rafał judges
+   `final.mp4` with `video/lesson-card.md`; remarks about the montage come back here as above.
+8. **Close.** Without a ticket changes stay uncommitted — Rafał commits. Montage leaves nothing to commit in the
    lesson: `video/montaz/` (EDL included) and the media are git-ignored. List what was produced
-   and where it lies on disk.
+   and where it lies on disk. In a lesson with a ticket the card entries you wrote
+   (`video/karta.json`) are the one tracked output: in this repository the session commits it with the
+   lesson's next commit by the rules in step 1 (pathspec, `git add --` only for an untracked path, foreign
+   changes skipped and named, no push).
 
 ## Rules
 

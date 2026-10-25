@@ -409,6 +409,8 @@ test('start --origin hub reaches the report, --name the page label, and the paus
     assert.equal(await s.closed, 0);
     assert.match(s.out(), new RegExp(`\\nTALK CLOSING REPORT\\ndialog: ${escape(s.dialogDir)}\\norigin: hub\\n`));
     assert.match(s.out(), /\nconversations: conv_a \(0 s\)\n/);
+    // The stub's conversation is gone after its delete, so the check after it passes (spec §18.4).
+    assert.match(s.out(), /\ndeletion: deleted[;\n]/);
   } finally {
     stop(s);
   }

@@ -32,9 +32,19 @@ ta sama zmiana na Done przeszła.
   hipotezy, nadal wątpliwe: zapis wynikający ze stałej reguły w `CLAUDE.md` (ślad w issue)
   przechodzi, a zapis, którego jedyną zgodą jest krótkie „ok” do listy wariantów, klasyfikator
   czyta jako niejasny.
+- 2026-10-24, sesja c0987db9-b09b-453f-8cfe-0770239787b8 (claude.ai session_01GxQKCzxfs88VmDWqtoSy3P): po „ok” Rafała przyjmującym naraz trzy
+  warianty („Skasowanie 8 rozmów z 21–22.10” opisane jako nieodwracalne, push, „Zamknięcie części
+  `hub-voice`”) klasyfikator odrzucił `node conv-delete.mjs <8 id>` (DELETE w API ElevenLabs) bez
+  kategorii: „judged this action dangerous (it gave no explanation)”. Claude nie ponawiał komendy inną
+  powłoką; podał ją do uruchomienia z prefiksem `!` z opisem kroków. Rafał uruchomił ją sam
+  (8 × 204, potem 8 × GET 404), a dalsze kroki z tego samego „ok” (commit i `git push` w vaultcie)
+  przeszły. Zgodne z hipotezą: zapis zewnętrzny i nieodwracalny, którego jedyną zgodą jest „ok” do listy
+  wariantów.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu
 zamknięcia) zgłoś przed wykonaniem i poczekaj na „tak”. Każdy zapis puszczaj w osobnym wywołaniu.
 Po blokadzie klasyfikatora nie obchodź jej, tylko podaj komendy i zapytaj. Jawne „spróbuj
-ponownie” od użytkownika to zgoda, po której wolno ponowić.
+ponownie” od użytkownika to zgoda, po której wolno ponowić. Gdy zgoda była jawna, a klasyfikator
+i tak odmawia, zaproponuj, żeby użytkownik uruchomił komendę sam, z prefiksem `!` w tej sesji: wynik
+trafia do rozmowy, a żadna reguła uprawnień nie zostaje na stałe.

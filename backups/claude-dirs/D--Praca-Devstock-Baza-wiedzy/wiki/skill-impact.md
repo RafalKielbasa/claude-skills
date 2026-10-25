@@ -1325,3 +1325,49 @@ index cdd6de82..10f2a18d 100644
  "Thresholds"; do not classify a candidate `duplicate` before then.
  
 ```
+
+## 2026-10-23 — daily — zaakceptowana
+- **Wzorce:** drobne-zadanie-jednej-osoby-odrzucane-przy-bramce
+- **Zmiana:** Karta zadania `action: new` dla drobnego zadania (jedna osoba zadeklarowała je dla siebie, jeden krótki krok: odpisać, podesłać, ustawić, sprawdzić, odzyskać login) ma „Odrzuć” jako pierwszą, rekomendowaną opcję, z `SKUTEK:` mówiącym, że wiersz zostaje w `## Action items` notatki; praca na więcej niż jeden krok i sprawa bez właściciela zostają z „Akceptuj” na pierwszym miejscu. Reguła stoi we wspólnym kontrakcie `docs/spotkania-kolejki.md` („Cards and options”), więc działa też w `/spotkanie`; `daily/SKILL.md` krok 6 dostaje zdanie, że drobne zadanie nadal jest kandydatem, a odrzucenie rekomenduje bramka, nie budowa kolejki.
+- **Powód decyzji:** zaakceptowana przez Rafała („OK”) — 3 dowody z 3 sesji; w sesji 109283c8 rozwiązanie z wiki zastosowane na 6 kartach w 5 spotkaniach, przyjęte każdorazowo. Sesja 109283c8-2c7c-48dd-81f5-5f6ef3cfff2a (id claude.ai niedostępny).
+
+```diff
+diff --git a/.claude/skills/daily/SKILL.md b/.claude/skills/daily/SKILL.md
+index 2cc74d63..00afb72c 100644
+--- a/.claude/skills/daily/SKILL.md
++++ b/.claude/skills/daily/SKILL.md
+@@ -130,6 +130,9 @@ passage — the one Step 5 quoted and flagged instead of interpreting — into a
+ `docs/spotkania-kolejki.md`'s `wpisy.yaml` section states this exclusion once, for every skill that
+ builds this file. Propose each knowledge candidate's category per skill `baza-wiedzy`'s rules; an
+ ambiguous fit is a best guess corrected by Rafał at the gate, not a question asked now.
++A small task — one person, one short step — is still a candidate: the gate, not the build,
++recommends rejecting it (`docs/spotkania-kolejki.md`, "Cards and options"), so Rafał keeps the
++choice.
+ 
+ **Deduplication, run before the gate opens:**
+ 
+diff --git a/docs/spotkania-kolejki.md b/docs/spotkania-kolejki.md
+index 10f2a18d..5cede200 100644
+--- a/docs/spotkania-kolejki.md
++++ b/docs/spotkania-kolejki.md
+@@ -260,11 +260,18 @@ at note acceptance, before its queues exist).
+ | `⚠` passage | `MIEJSCE` (section or person), `CYTAT`, `KONTEKST` (the transcript lines around it, while the transcript is available), `CO NIEJASNE` | Zostaw jako niepewne · Usuń z notatki |
+ | Knowledge, `action: new` | category, `distance` | Akceptuj · Odrzuć |
+ | Knowledge, `action: update` | category, `distance`, `PODOBNY ISTNIEJĄCY` | Akceptuj jako nowy · Nadpisz istniejący · Odrzuć |
+-| Task, `action: new` | `title`, `body`, `labels`, `assignee` (with its `#` comment when `null`) | Akceptuj · Odrzuć |
++| Task, `action: new` | `title`, `body`, `labels`, `assignee` (with its `#` comment when `null`) | Akceptuj · Odrzuć — Odrzuć · Akceptuj for a small task, below |
+ | Task, `action: duplicate` | as above, plus the matched board item | Zostaw odrzucone · Utwórz mimo to |
+ | Task, `action: supplement` | as above, plus the issue the comment goes to | Skomentuj #<issue> · Odrzuć |
+ | Task, `supplement` matched to a draft card | as above, plus the draft card's title | Utwórz nowe issue · Odrzuć |
+ 
++A small task — one person declared it for themselves, and it is a single short step: reply, send
++something over, set one thing up, check one thing, recover one login — stays recorded in the
++note's `## Action items` row, so an issue adds nothing to the board. Its card lists **Odrzuć**
++first, as the recommended option, with `SKUTEK:` saying the row stays in the note, and **Akceptuj**
++second. Work of more than one step, and an item nobody declared, keeps **Akceptuj** first. The
++order is a recommendation, not a decision: the card is still asked.
++
+ ### Recording each answer
+ 
+ Every answer is written to its file before the next question is asked.
+```

@@ -33,6 +33,13 @@ wprowadzoną ręcznie tydzień wcześniej albo odrzuconą poza jego ścieżką.
   2026-09-10 i moglby zaproponowac regule o kolejnosci list jako nowa. Wpis
   dopisany w tej samej sesji, w kroku Wiki Maintainer — tak samo jak
   w pierwszym dowodzie, czyli mechanizm nadal jest reczny.
+- 2026-10-23, sesja 826a9cc6-adba-478b-b4db-47f6fa35bb62 (id claude.ai niedostępny): trzecia
+  sesja, trzeci przypadek drogi bezpośredniej. `nauka-z-claude` przebudowany na decyzje D1–D6
+  („ok”), poza `evolve-skill`. Tym razem bez luki: wpis `zaakceptowana` z pełnym diffem (399 linii)
+  powstał przed raportem z pracy, a nie w kroku Wiki Maintainer. Powód: sesja wczytała
+  `evolve-skill` tylko do odczytu, przeczytała przy tym ten wzorzec i poszła za jego
+  „Rozwiązaniem”. Mechanizm dalej jest ręczny: zadziałał dzięki lekturze wiki, nie dzięki regule
+  w skillu, który zmieniał treść (`superpowers:writing-skills`).
 
 ## Rozwiązanie
 Każdą zmianę treści skilla dopisz do `skill-impact.md` właściwego wiki jako

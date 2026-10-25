@@ -103,14 +103,16 @@ export async function agentSync({ eleven, configPath = CONFIG_PATH, env = {} }) 
 // Test-only stub (TALK_ELEVEN_STUB=1): fixed answers, no network.
 function stubClient() {
   const ok = async () => ({});
+  const deleted = new Set();
   return {
     createTool: async () => ({ id: 'tool_stub' }),
     createAgent: async () => ({ agent_id: 'agent_stub' }),
     updateTool: ok,
     updateAgent: ok,
     getConversationToken: async () => ({ token: 'stub' }),
-    getConversation: async () => ({ metadata: { call_duration_secs: 0 } }),
-    deleteConversation: async () => ({ ok: true, status: 200, text: '' }),
+    readConversation: async (id) => (deleted.has(id) ? { ok: false, status: 404, text: '' }
+      : { ok: true, status: 200, conversation: { status: 'done', metadata: { call_duration_secs: 0 } }, text: '' }),
+    deleteConversation: async (id) => { deleted.add(id); return { ok: true, status: 200, text: '' }; },
   };
 }
 

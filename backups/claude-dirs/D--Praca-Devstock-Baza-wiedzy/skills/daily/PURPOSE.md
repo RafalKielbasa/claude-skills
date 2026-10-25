@@ -16,6 +16,7 @@ Kolejne zmiany szły poza `evolve-skill`, ze speców:
 
 - [kolejka-bez-slownika-statusow](../../wiki/patterns/kolejka-bez-slownika-statusow.md) — krok 7: bramka punkt po punkcie (2026-10-08, poza `evolve-skill`, przez spec)
 - [update-z-deduplikacji-trafia-w-caly-dokument](../../wiki/patterns/update-z-deduplikacji-trafia-w-caly-dokument.md) — deduplikacja wiedzy (2026-10-16, `evolve-skill`): `update` tylko dla korekty wpisu spotkania na ten sam temat
+- [drobne-zadanie-jednej-osoby-odrzucane-przy-bramce](../../wiki/patterns/drobne-zadanie-jednej-osoby-odrzucane-przy-bramce.md) — karta drobnego zadania (2026-10-23, `evolve-skill`): „Odrzuć” jako pierwsza, rekomendowana opcja
 
 ## Historia ewolucji
 
@@ -35,3 +36,7 @@ Kolejne zmiany szły poza `evolve-skill`, ze speców:
   - powód: wzorzec `update-z-deduplikacji-trafia-w-caly-dokument`, 5 dowodów z 5 sesji, w trzech ostatnich bramkach przy 19 kartach `update` ani razu „Nadpisz istniejący”;
   - wynik: zaakceptowana przez `/evolve-skill` („A”);
   - źródło: wpis 2026-10-16 — daily w `.claude/wiki/skill-impact.md`.
+- 2026-10-23 — karta drobnego zadania. Zadanie, które jedna osoba zadeklarowała dla siebie i które jest jednym krótkim krokiem, nadal jest kandydatem, ale jego karta ma „Odrzuć” jako pierwszą, rekomendowaną opcję (wiersz zostaje w `## Action items`). Reguła stoi w `docs/spotkania-kolejki.md` („Cards and options”), więc obejmuje też `/spotkanie`.
+  - powód: wzorzec `drobne-zadanie-jednej-osoby-odrzucane-przy-bramce`, 3 dowody z 3 sesji; w sesji 109283c8 rozwiązanie z wiki zastosowane na 6 kartach w 5 spotkaniach i przyjęte każdorazowo;
+  - wynik: zaakceptowana przez `/evolve-skill` („OK”);
+  - źródło: wpis 2026-10-23 — daily w `.claude/wiki/skill-impact.md`.

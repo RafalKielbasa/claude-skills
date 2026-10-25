@@ -26,7 +26,20 @@ jest błędne; cytat z ⚠ zostawia decyzję człowiekowi i nie wchodzi do kolej
   z mobilką”, a C to Mateusz po „dzięki Szymon i Mateusz” i odpowiedzi „Ja w zasadzie domknąłem…”.
   Fragment z etykietą B zacytowałem z ⚠. Rafał na bramce wybrał „Zostaw jako niepewne” i przypisań
   nie poprawiał. Reguła z kroku 5 wystarczyła także dla etykiety obejmującej dwie osoby.
+- 2026-10-22, sesja 109283c8-2c7c-48dd-81f5-5f6ef3cfff2a (id claude.ai niedostępny):
+  - Daily 21.10: diaryzacja zlała Barta i Grzegorza w jedną etykietę. Przypisywałem tylko tam,
+    gdzie Rafał wywołał osobę po imieniu, a propozycja ceny 49 zł została bez autora. Notatka
+    została zaakceptowana bez poprawek przypisań.
+  - Daily 22.10: prowadzącego nikt nie nazwał, bo to on wywołuje innych. Jego status trafił do
+    karty ⚠ z „Zostaw jako niepewne” na pierwszym miejscu i bez rekomendacji. Rafał odrzucił
+    `AskUserQuestion` i dopisał w czacie: „Rafał prowazi spotkanie”.
+  - Daily 15.10: status o wdrożeniu subskrypcji (najpewniej Wiktora) został ⚠ na wybór Rafała.
+  - Reguła „nie zgadywać” chroni notatkę, ale karta bez propozycji przerzuca na Rafała wpisywanie
+    odpowiedzi, którą da się przewidzieć.
 
 ## Rozwiązanie
 Utrzymać obie reguły bez złagodzeń. Niejasną nazwę własną próbować rozstrzygnąć z innego źródła w
 repo/na tablicy i podać jako propozycję przy bramce, nie wpisywać do notatki bez potwierdzenia.
+To samo z mówcą: przy ⚠ „kto mówi” dać na karcie opcję z hipotezą i jej podstawą („To Rafał —
+prowadzi daily i wywołuje pozostałych”) jako rekomendowaną. Do notatki hipoteza wchodzi dopiero
+po wyborze Rafała.

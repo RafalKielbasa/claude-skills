@@ -24,6 +24,7 @@ ale nie zapobiega kolizji.
   indeksu z nowymi D1–D3. Claude sam wskazał kolizję w propozycji indeksu („„D1” znaczyło raz
   decyzję, raz strumień danych CMS”); w `docs/superpowers/projects/kodozercy-platform.md`
   decyzje zapisane samymi nazwami, bez kodów.
+- 2026-10-24, sesja session_01UTQuE3EwUpLuJMEs83YJwD (lokalnie 362d75a8-47e4-4b51-a94a-5c747a21b5c6), wiadomość bramki W1: decyzje D1–D3 (kolory jasnego motywu, stan aktywacji na arkuszu, wyciszenie tagów analitycznych) w sesji, w której spec ma D1–D12 („D1 Mobile release”, „D5 fallback #1647”), a raport pętli bramki D1–D6 o innych znaczeniach. Każdy kod opatrzyłem nazwą, ale trzy numeracje „D” były w jednym oknie naraz.
 
 ## Rozwiązanie
 Etykiety strumieni, plików roboczych i subagentów nazywaj słowami (`cms-data`, `screens-package`),

@@ -468,6 +468,24 @@ Rafal neither confirmed nor rejected that guess.
 - At the end of the dialog only what is still missing is deleted.
 - The closing report keeps its format. `conversations:` lists every call of the dialog, and the
   first segment of `deletion:` is `deleted` only when every call was deleted.
+- **Deletion waits for the end of processing (amendment of 2026-10-23, acceptance of §20.2).** In
+  the acceptance four of five conversations were still at ElevenLabs after a DELETE that returned
+  success, and a later DELETE of the same conversations, by then `done`, removed them. Inferred: a
+  conversation deleted at once at the call's end, while ElevenLabs still processes it, stays. So the
+  cleanup first waits until the conversation's status is `done` or `failed`, reading it every 2 s
+  for at most 60 s; it takes the length from the last read, deletes, and reads once more: only a 404
+  counts as deleted. A conversation still there after its delete is a failed deletion in the report;
+  after a wait that ran out it is deleted and checked all the same. The closing report may come up
+  to a minute later. Decision „Usuwanie rozmów po połączeniu”, variant A.
+- **No delete before `done` (amendment of 2026-10-23, acceptance run 2).** A call that ElevenLabs
+  processed for more than 60 s was deleted when the wait ran out; that DELETE did not stick either,
+  and the read right after it answered 404 for a while, so the report said `deleted`. So the wait
+  lasts at most 5 min, and a conversation is deleted only once its status is `done` or `failed`.
+  After a wait that runs out it is not deleted: the report names it as a failed deletion
+  (`<id> failed: not done at ElevenLabs within 300 s`), so Rafal knows which conversation stays. The
+  closing report may come up to 5 min later. This replaces „after a wait that ran out it is deleted
+  and checked all the same” and „up to a minute later” above. Decision „Kasowanie po długim
+  przetwarzaniu”, variant A.
 
 ### 18.5 Rejoining
 

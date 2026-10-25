@@ -12,6 +12,24 @@ test('every ElevenLabs request carries xi-api-key and a failed delete is reporte
   assert.equal(seen[0][1].headers['xi-api-key'], 'k');
 });
 
+test('a conversation read gives its body, a 404 once it is gone, and never throws', async () => {
+  const replies = [Response.json({ status: 'done', metadata: { call_duration_secs: 16 } }), new Response('gone', { status: 404 })];
+  const seen = [];
+  const fetch = async (url, init) => { seen.push([init.method, url, init.headers['xi-api-key']]); return replies.shift(); };
+  const c = createElevenClient({ apiKey: 'k', fetch });
+  assert.deepEqual(await c.readConversation('c1'),
+    { ok: true, status: 200, conversation: { status: 'done', metadata: { call_duration_secs: 16 } }, text: '' });
+  assert.deepEqual(await c.readConversation('c1'), { ok: false, status: 404, text: 'gone' });
+  assert.deepEqual(seen[0], ['GET', 'https://api.elevenlabs.io/v1/convai/conversations/c1', 'k']);
+  const offline = await createElevenClient({ apiKey: 'k', fetch: async () => { throw new Error('offline'); } }).readConversation('c1');
+  assert.deepEqual(offline, { ok: false, status: 0, text: 'offline' });
+  // A 200 whose body is not JSON keeps its HTTP status.
+  const garbled = await createElevenClient({ apiKey: 'k', fetch: async () => new Response('<html>') }).readConversation('c1');
+  assert.equal(garbled.ok, false);
+  assert.equal(garbled.status, 200);
+  assert.match(garbled.text, /^unreadable body: /);
+});
+
 test('a network failure on delete is reported, not thrown', async () => {
   const fetch = async () => { throw new Error('offline'); };
   const r = await createElevenClient({ apiKey: 'k', fetch }).deleteConversation('c1');
@@ -35,7 +53,7 @@ test('tools and agents use the documented endpoints and methods', async () => {
   await c.createAgent({ c: 3 });
   await c.updateAgent('a1', { d: 4 });
   await c.getAgent('a1');
-  await c.getConversation('c9');
+  await c.readConversation('c9');
   const base = 'https://api.elevenlabs.io';
   assert.deepEqual(seen.map(([m, u]) => [m, u]), [
     ['POST', `${base}/v1/convai/tools`],

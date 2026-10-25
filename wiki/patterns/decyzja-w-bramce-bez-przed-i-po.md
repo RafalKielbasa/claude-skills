@@ -29,9 +29,15 @@ oprzeć decyzji; punkty z konkretem obok przechodzą za pierwszym razem.
   faktu (`kurs.yaml:3`), rekomendacja — dostała „Zostaje". Punkty 1, 3, 4 i 5
   tej samej listy, każdy z konkretem, zostały rozstrzygnięte za pierwszym
   razem.
+- 2026-10-24, sesja c0987db9-b09b-453f-8cfe-0770239787b8 (claude.ai session_01GxQKCzxfs88VmDWqtoSy3P): bramka „Brak doręczenia zlecenia z huba” kończyła
+  się „⏸ Czeka na decyzję: dokończ w hubie wysyłkę zlecenia `r20261024055940-42fa` albo wklej tu błąd,
+  który hub zgłosił.”, bez tego, co Rafał zobaczy w oknie huba i co ma tam wpisać. Rafał: „Chyba nie
+  rozumiem tego elementu”. Druga wersja: tabela siedmiu kroków wysyłki z miejscem, w którym stanęła,
+  cztery możliwe stany okna huba i dosłowne zdanie do wpisania. Zlecenie przyszło 5 min później.
 
 ## Rozwiązanie
 Każdy punkt, który prosi użytkownika o decyzję, ma stały kształt:
 `plik:linia`, dosłowne „przed", dosłowne „po", jedno zdanie, dlaczego to jego
 decyzja, a nie moja, i rekomendacja. Skrót wolno stosować w tabeli zmian już
-zaakceptowanych, nigdy w liście decyzji.
+zaakceptowanych, nigdy w liście decyzji. Prośba o działanie użytkownika w innym oknie (hub,
+przeglądarka) ma ten sam kształt: gdzie, co tam zobaczy i jakie zdanie wpisać.

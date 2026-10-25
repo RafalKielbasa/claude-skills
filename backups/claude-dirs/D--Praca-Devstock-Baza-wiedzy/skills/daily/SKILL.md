@@ -130,6 +130,9 @@ passage — the one Step 5 quoted and flagged instead of interpreting — into a
 `docs/spotkania-kolejki.md`'s `wpisy.yaml` section states this exclusion once, for every skill that
 builds this file. Propose each knowledge candidate's category per skill `baza-wiedzy`'s rules; an
 ambiguous fit is a best guess corrected by Rafał at the gate, not a question asked now.
+A small task — one person, one short step — is still a candidate: the gate, not the build,
+recommends rejecting it (`docs/spotkania-kolejki.md`, "Cards and options"), so Rafał keeps the
+choice.
 
 **Deduplication, run before the gate opens:**
 

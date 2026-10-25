@@ -19,6 +19,27 @@ Silnik jest ortogonalny do torów A/B — dotyczy tylko segmentów `[ekran: avat
 Wynik: `video/final.mp4` w folderze lekcji, `status.video: wyrenderowane`,
 przedstawione Rafałowi do bramki akceptacji.
 
+## Lekcja z biletem produkcyjnym (tryb biletu)
+
+Lekcja z plikiem `video/ticket.yaml` (bilet produkcyjny (G1), zakłada go `/kurs-nagrywanie`; spec
+`docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`, sekcje 9, 11 i 12) ma etapy lektora,
+kontroli lektora, montażu i filmu **bez bramek**. Czego automat nie rozstrzygnie, trafia na kartę lekcji
+(`video/lesson-card.md`), a Rafał ocenia `final.mp4` razem z kartą w jednej bramce: film z kartą lekcji (G5),
+krok 5. Bramki wejścia z kroku 1 (treść zatwierdzona, brak `[UWAGA]`, zaakceptowany przebieg próbny) obowiązują
+dalej. Kroki niżej mają akapity „Lekcja z biletem”; **lekcja bez `video/ticket.yaml` działa po staremu, ze
+wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
+
+- **Wpisy na kartę:** `cd tools/course-pipeline`, potem
+  `npm run karta -- dopisz ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --json '<wpis>'` (rodzaje i pola wpisów:
+  `/kurs-nagrywanie`, sekcja „Karta lekcji (lekcja z biletem)”). Narzędzie odrzuca wpis z adresem e-mail albo
+  ciągiem w kształcie klucza - pisz bez nich. Powtórzone uwagi kontroli lektora, kadry znaku AI do przejrzenia i
+  ostrzeżenia montażu `buduj` czyta sam z plików, które narzędzia piszą - tych nie dopisujesz.
+- **Commity:** przed commitem `git branch --show-current` (inna gałąź niż gałąź dnia = stop i pytanie do Rafała),
+  potem `git commit -m … -- <ścieżki>`. `git add -- <ścieżka>` tylko dla ścieżki jeszcze nieśledzonej
+  (`git ls-files --error-unmatch -- <ścieżka>` kończy się błędem), tuż przed tym commitem; ścieżki śledzonej nie
+  dodajesz do wspólnego indeksu. Ścieżka ze zmianami, których sesja nie zrobiła, nie jest commitowana, a tura ją
+  nazywa. Bez pusha. `video/karta.json` i `video/lesson-card.md` wchodzą do najbliższego commitu lekcji.
+
 ## Procedura
 
 1. **Bramka wejścia.** Sprawdź `lekcja.yaml`:
@@ -38,6 +59,11 @@ przedstawione Rafałowi do bramki akceptacji.
      podstawie zatwierdzonego scenariusza i przedstawia go Rafałowi do
      akceptacji; dopiero po niej wracasz tutaj. Zmiana treści lekcji przy tej
      okazji = ponowne zatwierdzenie treści.
+     **Lekcja z biletem:** te decyzje (`slajdy.odslanianie`, `montaz.plansze`, `oprawa`, akceptacja brakującego
+     `video/plansze.yaml`) zapadły na karcie bilet produkcyjny (G1), zanim bilet powstał. Skill ich nie
+     zadaje i nie zatrzymuje się na bramce: brak decyzji oznacza, że bilet zapisano błędnie - zatrzymaj się z
+     komunikatem nazywającym brakujący klucz lub plik (to dopłata do bilet produkcyjny (G1), nie nowa bramka).
+     Lekcja bez biletu: pytanie jak wyżej.
    - **Dla `typ_video: demo` dodatkowo:** układ scenariusza musi być avatar →
      screencasty → avatar (waliduje render). Etap renderu zależy od
      `video/nagranie-z-lektorem.mp4`: brak pliku = etap materiałów (paczka
@@ -82,6 +108,19 @@ przedstawione Rafałowi do bramki akceptacji.
    wtedy, gdy pytanie o silnik było bezprzedmiotowe. „Bez kontroli lektora”
    = pomijasz krok 4b; rozpoznanie mowy slajdów wyłącza się tylko kluczem
    `slajdy.odslanianie` w `kurs.yaml`.
+   **Lekcja z biletem** (`video/ticket.yaml`, bilet produkcyjny (G1)): bramka silnika i zgody schodzi do ustawień
+   kursu, a bilet jest zgodą na koszt. Oba klucze `video.avatar_engine` i `video.narrator_control` ustala karta
+   bilet produkcyjny (G1) w `/kurs-nagrywanie` (pozycja (b)), zanim bilet powstanie - tu nie pytasz o żaden z nich.
+   - `kurs.yaml` ma `video.avatar_engine` (`api` albo `mcp`) → silnik z kursu, **bez pytania** (wskazanie Rafała w
+     komendzie nadal wygrywa).
+   - `video.narrator_control: true` w `kurs.yaml` i `budget.stt: true` w bilecie → zgoda na kontrole jest
+     dana, **bez pytania**. `budget.stt: false` wyłącza rozpoznawanie mowy (`kontrola-lektora` odmawia przed
+     żądaniem): pomijasz krok 4b i mówisz o tym jednym zdaniem w podsumowaniu tury. `video.narrator_control:
+     false` to decyzja z karty G1: krok 4b pomijasz tak samo, bez pytania.
+   - Brak klucza `video.avatar_engine` albo `video.narrator_control` (albo wartość spoza `api`/`mcp`,
+     `true`/`false`) oznacza, że bilet zapisano błędnie: zatrzymaj się z komunikatem nazywającym brakujący klucz
+     (to dopłata do bilet produkcyjny (G1), nie nowe pytanie). Brak klucza nie jest zgodą i nie jest `api`.
+   Lekcja bez biletu: bramka silnika i zgoda na kontrole dokładnie jak wyżej.
 3. **Sprawdź konfigurację** przed uruchomieniem, żeby nie wywalić się w
    połowie. Wspólne dla obu silników: `tools/course-pipeline/.env` ma
    `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `HEYGEN_AVATAR_ID`; `ffmpeg`
@@ -112,6 +151,15 @@ przedstawione Rafałowi do bramki akceptacji.
    obejście. Przy bramce akceptacji filmu sprawdź `npm run znak-ai -- kontrola <lekcja>`
    (akceptacja `video/znak-ai/akceptacja.json` zgodna z `final.mp4`). Projekt:
    `docs/superpowers/specs/2026-10-07-oprawa-znak-ai-design.md`.
+   **Znak AI w lekcji z biletem** (bez pokazywania sekcji Rafałowi w tej turze): linie sekcji „Do przejrzenia
+   przez człowieka” trafiają na kartę same (`buduj` czyta `video/znak-ai/pomiar.json`), więc ich nie przepisujesz.
+   Bramka znaku nie przeszła → plan z `npm run znak-ai -- plan <lekcja>` pokazuje, który róg jest wolny w danym
+   przedziale; na każdy niezaliczony przedział dopisz jeden wpis do `video/znak-ai.yaml`
+   (`rogi: [{ od, do, rog }]`, róg wolny wg planu) i wyrenderuj **raz**. Drugie niezaliczenie → bramka film z kartą
+   lekcji (G5) z `video/znak-ai/odrzucony.mp4` i raportem; Rafał wybiera róg. Bez obejścia bramki, jak wyżej.
+   Bez `final.mp4` kontrola `znak-ai -- kontrola` przed tą bramką jest pominięta, a karta mówi dlaczego (wpis
+   `miejsce`, `zrodlo: "znak-ai"`: bramka znaku nie przeszła dwa razy, filmu nie ma).
+   Lekcja bez biletu: sekcja do przejrzenia idzie do Rafała, a poprawka rogu po odrzuceniu jest propozycją.
    **Odsłony punktów (tylko kurs z `slajdy: { odslanianie: true }` w `kurs.yaml`, tor A):**
    render dodatkowo rozpoznaje mowę audio segmentów slajdów (ElevenLabs Speech-to-Text,
    grosze; cache wspólny z `npm run kontrola-lektora`, więc po kontroli lektora zwykle
@@ -134,6 +182,11 @@ przedstawione Rafałowi do bramki akceptacji.
         wygenerowany; ten tryb generuje tylko avatary, więc pełny render po
         nim policzy łańcuch lekcji od nowa — to zamierzone, avatary HeyGen
         idą za `cel` i przeżywają).
+        **Lekcja z biletem:** `--plan-avatara` zapisuje znacznik krótszego łańcucha (same avatary), więc
+        następny pełny render lekcji, która ma już `video/lektor/spis.md`, widzi znacznik nieaktualny,
+        generuje narrację od nowa (płatne TTS) i wydaje jeden licznik `tts_regenerations`. Dlatego w lekcji
+        z biletem **nie uruchamiasz `--plan-avatara` między pełnymi renderami**, chyba że regeneracja narracji
+        jest zamierzona. Pierwszy etap 1 lekcji bez `spis.md` jest bezpieczny: nie ma co unieważnić.
      b. Dla każdej pozycji planu, której plik `cel` **nie istnieje** (istniejący
         = cache, pomiń): przez narzędzia MCP `heygen` (nazwy odkryj w sesji —
         HeyGen może je zmieniać): wgraj `audio` jako asset → utwórz video
@@ -154,7 +207,8 @@ przedstawione Rafałowi do bramki akceptacji.
    `ELEVENLABS_*` w `.env` albo stałych pauz akapitowych regeneruje audio
    **całej lekcji** — sklejonego łańcucha nie da się odbudować od środka.
    To realny koszt API (~13 600 znaków, ok. 1,4 $ za lekcję); uprzedź
-   Rafała, zanim odpalisz render po zmianie ustawień. Slajdy Marp → PNG,
+   Rafała, zanim odpalisz render po zmianie ustawień (lekcja z biletem: regeneracja lektora nie wymaga
+   uprzedzenia, bo zgodą jest budżet `tts_regenerations` w bilecie). Slajdy Marp → PNG,
    avatary HeyGen i montaż ffmpeg mają nadal cache po istnieniu pliku;
    nazwa avatara (`video/avatar/NN-<hasz>.mp4`, NN = numer segmentu)
    niesie odcisk tekstu avatara i profilu głosu, więc render HeyGen
@@ -192,6 +246,34 @@ przedstawione Rafałowi do bramki akceptacji.
    zdania - TTS czyta scenariusz, sam wpis w `wymowa.md` niczego w głosie nie
    zmieni) i nowe audio całej lekcji (uprzedź o koszcie, krok 4). Pomiar tonu (`--ton`) jest eksperymentalny -
    nie uruchamiaj go bez prośby Rafała.
+   **Lekcja z biletem - kontrola lektora bez bramki i bez pokazywania czegokolwiek Rafałowi** (wymaga
+   `video.narrator_control: true` i `budget.stt: true`, krok 2; tor B z EDL; przy `narrator_control: false` albo
+   `budget.stt: false` krok 4b pomijasz bez pytania, a brak klucza zatrzymuje według kroku 2):
+   a. Decyzje kontroli i regeneracja (najwyżej jedna) idą po etapie 1, dokładnie tam, gdzie stawia je kolejność
+      narzędzi: silnik `api` - po jednym przebiegu etapu 1, który renderuje narrację i avatary; silnik `mcp` - po
+      pełnym etapie 1 następującym po `--plan-avatara` i avatarach z MCP (4c). Regeneracja zachowuje avatary:
+      render avatara jest kluczowany numerem segmentu, odciskiem jego własnego tekstu i profilu głosu, więc
+      nie powtarza się, dopóki jego słowa i głos się nie zmienią. Jedno polecenie:
+      `npm run kontrola-lektora -- <lekcja> --decyzje` (samo uruchamia kontrolę).
+      Podejrzenia w chunkach avatarów idą na kartę (`doKarty`), nie do regeneracji. Polecenie zapisuje `video/audio/kontrola/decyzje.json`
+      (`wyciszenia`, `regeneracja`, `doKarty`) i drukuje
+      `Wyciszenia: <n>; regeneracja: potrzebna (<n>) | niepotrzebna; do karty: <n>`.
+   b. `regeneracja: potrzebna` i w `video/ticket.yaml` zostaje `tts_regenerations` (`spent` poniżej `budget`) →
+      `npm run video -- <lekcja> --regeneruj-lektora` (silnik z `video.avatar_engine` kursu: przy `mcp` dodaj
+      `--avatar=mcp`, avatary idą z cache), potem `kontrola-lektora -- <lekcja> --decyzje` jeszcze raz.
+      Podejrzenie liczy się jako powtórzone dopiero po tym, jak narrację naprawdę wygenerowano ponownie (nowy
+      stempel generacji obok markera, `video/audio/.lesson-generation.json` - także przy niezmienionym tekście);
+      powtórzenia idą na kartę, a regeneracja jest najwyżej jedna we wszystkich uruchomieniach. W lekcji z biletem
+      chunk „nie oceniono” (audio nie odpowiada scenariuszowi) też idzie na kartę, z przyczyną. Gdy licznik jest wyczerpany,
+      `--decyzje` samo kieruje każdego kandydata na kartę - nie wołasz wtedy `--regeneruj-lektora`.
+      `--regeneruj-lektora` odmawia po montażu, więc robisz to tylko tu, w etapie 1. Regeneracja nie wymaga
+      pytania o koszt: zgodą jest budżet `tts_regenerations` w bilecie.
+   c. Dalej `/kurs-nagrywanie` od kroku 5. Po jego kroku `edl` (krok 6):
+      `npm run kontrola-lektora -- <lekcja> --zastosuj` dopisuje `wyciszenia` do `video/montaz/edl.json`, nie
+      ruszając istniejących; odrzucone zakresy trafiają do `doKarty`.
+   d. `doKarty` i powtórzenia `buduj` czyta sam, więc niczego nie dopisujesz. Odsłuch miejsc z raportu robi
+      Rafał na karcie w bramce film z kartą lekcji (G5).
+   Lekcja bez biletu: kontrola jak wyżej w tym kroku, a miejsca z raportu idą do Rafała w bramce 5.
 5. **BRAMKA: Rafał ogląda `video/final.mp4`** (lokalnie — plik nie trafia do
    git, patrz Zasady). Uwagi Rafała: jeśli dotyczą treści segmentu
    (scenariusz/slajdy), wróć do `/kurs-lekcja`, popraw treść, usuń
@@ -210,9 +292,23 @@ przedstawione Rafałowi do bramki akceptacji.
    (etap spięcia); jeśli materiału zwyczajnie brakuje, Rafał dokrywa
    nagranie. Za długich cisz NIE traktuj jako usterki — Rafał skraca je w
    postprodukcji.
+   **Lekcja z biletem: bramka film z kartą lekcji (G5).** Zamiast bramki 5 w brzmieniu wyżej: (1) po ostatnim
+   renderze `cd tools/course-pipeline && npm run karta -- buduj ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`,
+   zapisuje `video/lesson-card.md`; (2) commit `video/karta.json` i `video/lesson-card.md` (reguły commitów na
+   początku pliku); (3) bramka pokazuje **pełną ścieżkę** `video/final.mp4` i `video/lesson-card.md`, każdą w
+   bloku kodu - kontrole lektora, kadry znaku AI i ostrzeżenia montażu są już na karcie, nie przepisujesz ich do
+   tury. Przed bramką sprawdź `npm run znak-ai -- kontrola <lekcja>` (kurs z `znak_ai`; po drugim niezaliczeniu
+   znaku nie ma `final.mp4`, więc pomijasz ją i bramka pokazuje `odrzucony.mp4` zamiast filmu). Uwagi Rafała do treści
+   wracają do `/kurs-lekcja` albo `/kurs-uwagi` jak wyżej, uwagi do montażu - do `/kurs-montaz`; po każdym
+   ponownym renderze `buduj` przed następną bramką. `status.video: zaakceptowane` tylko na jego słowo.
+   Lekcja bez biletu: bramka 5 bez zmian.
 6. **Po akceptacji przez Rafała:** ustaw `status.video: zaakceptowane` w
-   `lekcja.yaml`. Zmiany zostają niezacommitowane — commit robi Rafał;
+   `lekcja.yaml`. Lekcja bez biletu: zmiany zostają niezacommitowane — commit robi Rafał;
    do zacommitowania jest sam `lekcja.yaml`, media binarne są w `.gitignore`.
+   **Lekcja z biletem:** w tym repozytorium sesja sama commituje ścieżki lekcji: `lekcja.yaml` razem z
+   niezacommitowanymi `video/karta.json` i `video/lesson-card.md`, według reguł z początku pliku
+   (`git commit -m … -- <ścieżki>`, `git add --` tylko dla ścieżki nieśledzonej, ścieżki z cudzymi zmianami
+   pominięte i nazwane w turze, bez pusha).
 
 ## Zasady
 
@@ -222,7 +318,9 @@ przedstawione Rafałowi do bramki akceptacji.
   `nagranie-z-lektorem.mp4` NIE — jak surowe nagranie, backup po stronie
   Rafała.
 - Silnik avatara wybiera Rafał, nigdy skill: brak wskazania w komendzie =
-  pytanie w bramce (krok 2), nie cichy start na API. To decyzja o tym, z czego
+  pytanie w bramce (krok 2), nie cichy start na API. W lekcji z biletem silnik pochodzi z
+  `kurs.yaml` `video.avatar_engine`, ustalonego na słowo Rafała na karcie bilet produkcyjny (G1); brak klucza
+  zatrzymuje render z nazwą klucza (krok 2), nigdy nie jest `api`. To decyzja o tym, z czego
   schodzą pieniądze (plan konta przez MCP vs kredyty API), a nie detal
   techniczny. Flaga CLI bez `--avatar=` domyśla się `api` — dlatego pełny
   render bez świadomej decyzji jest zakazany.

@@ -665,6 +665,18 @@ The existing test 'SKILL.md names the skill hub and every command it uses exists
 
   After each call: `GET /v1/convai/conversations/<id>` → 404.
 
+- [ ] **Step 1a (amendment of 2026-10-23): deletion waits for `done`.** Run 1 of Step 1 left four of five conversations at ElevenLabs although the report said `deleted` (acceptance report, A1; decision „Usuwanie rozmów po połączeniu”, variant A; spec §18.4, „Deletion waits for the end of processing”).
+  - `TALK/lib/eleven.mjs`: `getConversation` becomes `readConversation(id)`, which never throws and returns `{ ok, status, conversation, text }`: `status` is the HTTP status (0 on a network error), `conversation` the parsed body when `ok`.
+  - `TALK/lib/bridge.mjs`, `clean`: reads the conversation every `donePollMs` (2000) until `conversation.status` is `done` or `failed`, for at most `doneWaitMs` (60000) from the start of the cleanup; both are `startBridge` options. The length comes from the last `ok` read. Then `deleteConversation`, then one `readConversation`: status 404 is deleted; `ok` gives `<id> failed: still at ElevenLabs after delete`; anything else gives `<id> failed: not verified: <status> <text>` (one line). A failed delete keeps its present failure text and skips the check.
+  - `TALK/bin/talk.mjs` stub: `readConversation` gives `status: 'done'` and length 0 before the conversation's delete and 404 after it.
+  - Tests (`test/bridge.test.mjs`): the cleanup waits for `done` (two `processing` reads, then `done` with 16 s: the delete comes after the third read and the report says `(16 s)`); a conversation still there after its delete is reported failed with that text; a wait that runs out still deletes and checks (small `doneWaitMs`); a read that fails during the wait does not end it early. The cli stub test still reports `deletion: deleted` and `conv_check (0 s)`.
+  - Review by a fresh reviewer, then Step 1 again (run 2), then Steps 2–3.
+
+- [ ] **Step 1b (amendment of 2026-10-23, after run 2): no delete before `done`.** Run 2 left its last call at ElevenLabs: the 60 s wait ran out, the DELETE came while ElevenLabs still processed the call, and the check after it got a passing 404 (acceptance report, A5; decision „Kasowanie po długim przetwarzaniu”, variant A; spec §18.4, „No delete before `done`”).
+  - `TALK/lib/bridge.mjs`: `doneWaitMs` defaults to 300000. `clean` deletes only after a read with status `done` or `failed`; when the wait runs out without one it does not delete, and the failure is `<id> failed: not done at ElevenLabs within <doneWaitMs / 1000> s`.
+  - Tests (`test/bridge.test.mjs`): „a wait that runs out still deletes…” becomes „a wait that runs out does not delete, and the report names the conversation” (no `delete` call, that failure text); the never-answering test expects that failure from a hanging read, and a second bridge in it pins `no answer in 100 ms` for a hanging delete after a `done` read; „a read that fails during the wait does not end it early” stays.
+  - Review by a fresh reviewer, then Step 1 again (run 3): one call ended with „Kończymy”, GET → 404 after the report.
+
 - [ ] **Step 2: From the hub, a conversation about a session in `notatki`, ending in a work order.** The hub drafts `prompt.md` with `--origin voice/<dir>`, Rafal says „wyślij”, and the session receives it and stops at the first outward action.
 
 - [ ] **Step 3: The pause limit without voice.** `TALK_PAUSE_LIMIT_MS=60000`, one call (the stub), then the report arrives by itself. Task 8 may serve, if it ran on the final code.

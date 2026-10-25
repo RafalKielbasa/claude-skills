@@ -41,6 +41,14 @@ każdy nowy dispatch pada niezależnie od treści promptu.
   `SendMessage` z prośbą o dokończenie i ponowne załadowanie narzędzi MCP.
   Agent oddał pełny raport („Ready to publish”, ważna uwaga o strefie crona).
   Bramkę publikacji otwarto dopiero po raporcie.
+- 2026-10-24, sesja session_018h6huVMv7ymFg4EEx4A78e (lokalnie
+  0daa3cb0-3d18-4574-9113-63274220e556): piąty dowód, obsłużony poprawnie.
+  Agent piszący raport deep-research (`Write final report`) padł w trakcie
+  czytania notatek na „API Error: Can't reach the API server (ENOTFOUND)”.
+  Najpierw `ls reports/` potwierdził, że raport nie powstał. Po „dalej” Rafała
+  ten sam agent został wznowiony przez `SendMessage` z prośbą o dokończenie od
+  miejsca przerwania. Oddał pełny raport (519 linii) po 12 wywołaniach narzędzi;
+  koordynator nie pisał raportu sam.
 
 ## Rozwiązanie
 Gdy dispatch podagenta zwraca 429, rozróżnić dwa przypadki. Jeśli podagent miał

@@ -55,6 +55,44 @@ przedstawione Rafałowi do bramki review.
       fakt. Reguły z `redakcja.md` zawieszone dla lektora są wymienione w jego
       sekcji "Zawieszenia dla tekstu lektora"; nazwy, fonetyka (`wymowa.md`)
       i typografia obowiązują bez zmian,
+
+      **Ekran zgody Google** (nowa lekcja demo w kursie z `nagrywanie: { automat: true }`, w której na ekranie
+      logujesz się przez Google, np. credential n8n przez „Sign in with Google”): Google pokazuje wtedy jeden z
+      trzech ekranów - pełny ekran zgody z polami wyboru (pierwsza zgoda), ekran tylko z nowymi uprawnieniami albo
+      żaden (zgoda zapamiętana) - i z góry nie wiadomo który. Akapit o zgodzie piszesz więc jako trzy akapity
+      wariantów, a automat nagrywania zostawia w filmie ten, który pasuje do ekranu (`warianty.consent`; spec
+      `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`, sekcja 10, „Consent variants”):
+      - pod linią `[AKCJA: ...]` logowania zostaje wspólna część akapitu, do zdania o ekranie Google (kliknięcie
+        logowania, wybór konta) - nigdy pusta: bez tekstu między tą linią a linią `WARIANT granted`
+        `parsujScenariusz` skleja obie akcje w jedną (`<logowanie>; WARIANT granted - …`);
+      - po niej trzy linie w tej kolejności, każda z własnym akapitem:
+        `[AKCJA: WARIANT granted - Google pokazuje pełny ekran zgody z polami wyboru]`,
+        `[AKCJA: WARIANT incremental - Google pokazuje tylko nowe uprawnienia]`,
+        `[AKCJA: WARIANT remembered - Google nie pokazuje ekranu zgody]`;
+      - akapit wariantu zaczyna się zdaniem stałym: `granted` - "Google pyta o zgodę", `incremental` - "Google
+        dopytuje tylko o nowe uprawnienia", `remembered` - "Google pamięta zgodę i od razu łączy konto" (nazwa w
+        cudzysłowie według „Nazwy w scenariuszu” z `redakcja.md`, np. `"Google" pyta o zgodę`; dalszy ciąg zdania,
+        np. "więc zatwierdzam uprawnienia", w stylu lekcji). Reszta akapitu - wszystko, co narracja mówi po
+        zdaniu o ekranie - jest we wszystkich trzech taka sama, słowo w słowo: fragment narracji kończy się dopiero
+        na linii `[AKCJA: ...]`, więc tekst postawiony za ostatnim akapitem wariantu bez nowej linii należałby do
+        niego i wypadałby z filmu razem z nim;
+      - beat jest ten sam we wszystkich trzech: konto zostaje połączone. Wariant mówi tylko, jaki ekran pokazał
+        Google.
+      Konspekt (punkt d) ma zaraz po kroku logowania trzy kroki wariantów, po jednym na linię `WARIANT`, w tej samej
+      kolejności - jak każdy wiersz wariantu w planie przykładu
+      `tools/nagrywanie/przyklady/kurs-przyklad/lekcja-warianty/video/plan-nagrania.md`. Każdy zaczyna się dosłownie tekstem swojej linii (np. `WARIANT granted - Google pokazuje
+      pełny ekran zgody z polami wyboru`), a dalej ma tę samą czynność we wszystkich trzech (np. "konto zostaje
+      połączone, n8n wraca do węzła"). Wtedy `npm run plan-nagrania` (krok 8) paruje każdą linię `WARIANT` z jej
+      krokiem po treści i dla tych wierszy nie wypisuje żadnego ostrzeżenia. Brak kroku wariantu plan zgłasza
+      ostrzeżeniem „akcja "…" bez kroku w konspekcie” (przy trzech brakujących dalsze kroki segmentu biorą wiersze
+      `WARIANT` po kolejności, a „bez kroku” dostają też ostatnie akcje segmentu); krok wariantu, który nie powtarza
+      tekstu linii, daje „sparowany po kolejności, nie po treści” w wierszu `WARIANT`. To samo „sparowany po
+      kolejności” wypisuje też krótka akcja spoza wariantów (do trzech słów, np. `[AKCJA: zapisz]`), nawet sparowana
+      z właściwym krokiem, więc przy tym ostrzeżeniu sprawdzasz parę, którą nazywa. Gdy ostrzeżenie dotyczy wariantów,
+      poprawiasz konspekt, zanim pokażesz plan. Wyjątek: konspekt wymaga pokazania logowania przez Google
+      w całości (pełny ekran zgody w filmie) - wtedy jeden akapit ze zdaniem `granted`, bez linii `WARIANT`; czy
+      nagranie ten ekran zapewni (`consent: { require: granted }`), rozstrzyga `/kurs-nagrywanie` (krok 3), a gdy nie
+      może, dopisuje warianty przez `/kurs-uwagi` w trybie automatycznym,
    c. `video/prezentacja.yaml` — dla typu prezentacja: mapa prezentacji,
       jeden slajd na segment `[ekran: slajd]`, w tej samej kolejności.
       Każdy slajd deklaruje `id`, `uklad` z kontraktu (tytul, punkty,

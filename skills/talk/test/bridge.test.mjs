@@ -14,11 +14,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function fakeEleven() {
   const calls = [];
+  const deleted = new Set();
   return {
     calls,
     getConversationToken: async (agentId) => { calls.push(['token', agentId]); return { token: 'tok' }; },
-    getConversation: async (id) => { calls.push(['get', id]); return { metadata: { call_duration_secs: 30 } }; },
-    deleteConversation: async (id) => { calls.push(['delete', id]); return { ok: true, status: 200, text: '' }; },
+    // A finished 30 s conversation until it is deleted, then a 404.
+    readConversation: async (id) => {
+      calls.push(['get', id]);
+      return deleted.has(id) ? { ok: false, status: 404, text: 'not found' }
+        : { ok: true, status: 200, conversation: { status: 'done', metadata: { call_duration_secs: 30 } }, text: '' };
+    },
+    deleteConversation: async (id) => { calls.push(['delete', id]); deleted.add(id); return { ok: true, status: 200, text: '' }; },
   };
 }
 
@@ -205,6 +211,125 @@ test('a deletion answered with an error status is reported with the status and t
     b.eleven.deleteConversation = async () => ({ ok: false, status: 500, text: 'boom\n  again' });
     await call(b.port, 'POST', '/api/end', { body: { conversationId: 'conv_x' } });
     assert.match(await b.done, /deletion: conv_x failed: 500 boom again\n/);
+  } finally {
+    await finish(b);
+  }
+});
+
+// The ElevenLabs calls the cleanup made for one conversation, in order.
+const callsFor = (b, id) => b.eleven.calls.filter((c) => c[1] === id).map((c) => c[0]);
+
+test('the cleanup waits until ElevenLabs has finished the conversation, then deletes it and checks it is gone', async () => {
+  const b = await bridge({ donePollMs: 20 });
+  try {
+    // The length grows to its final value only once the conversation is done (finding A2).
+    const reads = [['processing', 0], ['processing', 0], ['done', 16]];
+    const read = b.eleven.readConversation;
+    b.eleven.readConversation = async (id) => {
+      const r = await read(id);
+      if (!r.ok) return r;
+      const [status, secs] = reads.shift();
+      return { ...r, conversation: { status, metadata: { call_duration_secs: secs } } };
+    };
+    await call(b.port, 'POST', '/api/end', { body: { conversationId: 'conv_w' } });
+    const report = await b.done;
+    assert.match(report, /deletion: deleted\n/);
+    assert.match(report, /conversations: conv_w \(16 s\)\n/);
+    assert.deepEqual(callsFor(b, 'conv_w'), ['get', 'get', 'get', 'delete', 'get']);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a conversation ElevenLabs still processes delays neither the call-end answer nor the transcript', async () => {
+  const b = await bridge({ donePollMs: 20, doneWaitMs: 30000 });
+  try {
+    let phase = 'processing';
+    const read = b.eleven.readConversation;
+    b.eleven.readConversation = async (id) => {
+      const r = await read(id);
+      return r.ok ? { ...r, conversation: { status: phase, metadata: { call_duration_secs: 30 } } } : r;
+    };
+    await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_p' } });
+    await call(b.port, 'POST', '/api/transcript', { body: { role: 'user', text: 'pierwsze' } });
+    await call(b.port, 'POST', '/api/call-end', { body: { conversationId: 'conv_p', reason: 'agent', context: 'max_duration_exceeded' } });
+    // Answered while the cleanup still waits: no delete yet, the call is over, the transcript written.
+    assert.ok(!callsFor(b, 'conv_p').includes('delete'), callsFor(b, 'conv_p').join());
+    assert.equal((await status(b)).state, 'paused');
+    assert.match(readFileSync(join(b.tmp, 'dialog', 'transcript.md'), 'utf8'), /pierwsze[\s\S]*call ended: agent\/max_duration_exceeded/);
+    phase = 'done';
+    await waitFor(() => callsFor(b, 'conv_p').includes('delete'), 5000);
+    await call(b.port, 'POST', '/api/end', { body: {} });
+    assert.match(await b.done, /deletion: deleted\nconversations: conv_p \(30 s\)\n/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a conversation still at ElevenLabs after its delete is a failed deletion', async () => {
+  const b = await bridge();
+  try {
+    b.eleven.deleteConversation = async (id) => { b.eleven.calls.push(['delete', id]); return { ok: true, status: 204, text: '' }; };
+    await call(b.port, 'POST', '/api/end', { body: { conversationId: 'conv_s' } });
+    assert.match(await b.done, /deletion: conv_s failed: still at ElevenLabs after delete\n/);
+    assert.deepEqual(callsFor(b, 'conv_s'), ['get', 'delete', 'get']);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a check after the delete that cannot read the conversation is reported as not verified', async () => {
+  const b = await bridge();
+  try {
+    const read = b.eleven.readConversation;
+    b.eleven.readConversation = async (id) => {
+      const r = await read(id);
+      return r.ok ? r : { ok: false, status: 503, text: 'busy\n  later' };
+    };
+    await call(b.port, 'POST', '/api/end', { body: { conversationId: 'conv_v' } });
+    assert.match(await b.done, /deletion: conv_v failed: not verified: 503 busy later\n/);
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a wait that runs out does not delete, and the report names the conversation', async () => {
+  const b = await bridge({ doneWaitMs: 100, donePollMs: 20 });
+  try {
+    const read = b.eleven.readConversation;
+    b.eleven.readConversation = async (id) => {
+      const r = await read(id);
+      return r.ok ? { ...r, conversation: { status: 'processing', metadata: {} } } : r;
+    };
+    await call(b.port, 'POST', '/api/end', { body: { conversationId: 'conv_t' } });
+    const report = await b.done;
+    // A delete before the conversation is done would not stick (Plan 3 acceptance, A5).
+    assert.match(report, /deletion: conv_t failed: not done at ElevenLabs within 0\.1 s\n/);
+    assert.match(report, /conversations: conv_t \(unknown\)\n/);
+    const made = callsFor(b, 'conv_t');
+    assert.ok(made.length >= 2, made.join());
+    assert.ok(!made.includes('delete'), made.join());
+  } finally {
+    await finish(b);
+  }
+});
+
+test('a read that fails during the wait does not end it early', async () => {
+  const b = await bridge({ donePollMs: 20 });
+  try {
+    const read = b.eleven.readConversation;
+    const failures = [{ ok: false, status: 0, text: 'offline' }, { ok: false, status: 503, text: 'busy' }];
+    b.eleven.readConversation = async (id) => {
+      const failure = failures.shift();
+      if (!failure) return read(id);
+      b.eleven.calls.push(['get', id]);
+      return failure;
+    };
+    await call(b.port, 'POST', '/api/end', { body: { conversationId: 'conv_f' } });
+    const report = await b.done;
+    assert.match(report, /deletion: deleted\n/);
+    assert.match(report, /conversations: conv_f \(30 s\)\n/);
+    assert.deepEqual(callsFor(b, 'conv_f'), ['get', 'get', 'get', 'delete', 'get']);
   } finally {
     await finish(b);
   }
@@ -465,17 +590,29 @@ test('a fork that exits after its introduction: an ask answers at once that its 
 });
 
 test('an ElevenLabs call that never answers at the end is cut off and reported', async () => {
-  const b = await bridge({ elevenTimeoutMs: 100 });
+  const b = await bridge({ elevenTimeoutMs: 100, doneWaitMs: 300 });
   try {
-    b.eleven.getConversation = () => new Promise(() => {});
+    b.eleven.readConversation = () => new Promise(() => {});
     b.eleven.deleteConversation = () => new Promise(() => {});
     await call(b.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_h' } });
     await call(b.port, 'POST', '/api/end', { body: {} });
     const report = await b.done;
-    assert.match(report, /deletion: conv_h failed: no answer in 100 ms\n/);
+    assert.match(report, /deletion: conv_h failed: not done at ElevenLabs within 0\.3 s\n/);
     assert.match(report, /conversations: conv_h \(unknown\)\n/);
   } finally {
     await finish(b);
+  }
+  // A done conversation whose delete never answers.
+  const d = await bridge({ elevenTimeoutMs: 100 });
+  try {
+    d.eleven.deleteConversation = () => new Promise(() => {});
+    await call(d.port, 'POST', '/api/heartbeat', { body: { conversationId: 'conv_h' } });
+    await call(d.port, 'POST', '/api/end', { body: {} });
+    const report = await d.done;
+    assert.match(report, /deletion: conv_h failed: no answer in 100 ms\n/);
+    assert.match(report, /conversations: conv_h \(30 s\)\n/);
+  } finally {
+    await finish(d);
   }
 });
 
@@ -514,6 +651,8 @@ test('a call end without an end request pauses: the call is deleted and the tran
     assert.equal(s.callLive, false);
     assert.ok(Date.parse(s.pausedUntil) > Date.now());
     assert.equal(s.ending, false);
+    // The call-end answer does not wait for the cleanup (spec §18.4).
+    await waitFor(() => b.eleven.calls.some((c) => c[0] === 'delete'), 5000);
     assert.deepEqual(b.eleven.calls.filter((c) => c[0] === 'delete').map((c) => c[1]), ['conv_a']);
     assert.match(readFileSync(join(b.tmp, 'dialog', 'transcript.md'), 'utf8'), /pierwsze[\s\S]*call ended: agent\/end_call/);
     assert.equal((await call(b.port, 'GET', '/api/conversation-token')).status, 200);

@@ -34,6 +34,8 @@ const MAX_BODY = 1 << 20;
 // Conversation ids go into ElevenLabs API paths, so only plain ids are kept.
 const CONVERSATION_ID = /^[A-Za-z0-9_-]{1,128}$/;
 const REJOIN_LINES = 8; // the transcript lines a later call's agent gets (spec §18.6)
+// A conversation's statuses after which ElevenLabs keeps no more of it (spec §18.4).
+const FINISHED = new Set(['done', 'failed']);
 const HEADERS = { 'cache-control': 'no-store', 'referrer-policy': 'no-referrer', 'x-content-type-options': 'nosniff' };
 
 // UTF-8 is decoded across reads (a Polish letter may be split between two chunks); anything that is
@@ -78,7 +80,8 @@ function within(fn, ms) {
 export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, command, forkEnv, port = 0,
   token = randomBytes(32).toString('hex'), heartbeatGraceMs = 15000, firstBeatDeadlineMs = 600000, askTimeoutMs = 115000,
   transcriptWaitMs = 1500, openBrowser = true, subject, interruption = 'contextual-update', asksFile, rawLog, elevenTimeoutMs = 20000,
-  endTurnMs = END_TURN_MS, origin = 'session', label = '', pauseLimitMs = 3600000, agentHangup = 'pause', rejoinFirstMessage = true }) {
+  endTurnMs = END_TURN_MS, origin = 'session', label = '', pauseLimitMs = 3600000, agentHangup = 'pause', rejoinFirstMessage = true,
+  doneWaitMs = 300000, donePollMs = 2000 }) {
   const { snapshot, settingsPath } = prepareDialog({ cwd, dialogDir });
   const fork = startFork({ cwd, sessionId, settingsPath, dialogDir, command, env: forkEnv, rawLog,
     startPrompt: voiceStartPrompt({ projectName: basename(cwd), sourceId: sessionId, dialogDir, snapshot, subject }) });
@@ -241,23 +244,47 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
     pauseLimit = setTimeout(() => end(), pauseLimitMs);
   }
 
-  // A call's cleanup (spec §18.4) runs once, at the call's end or at the dialog's: its length is read,
-  // its conversation deleted at ElevenLabs and transcript.md rewritten. It never rejects; a failed
-  // deletion is kept for the report, not retried.
+  // A call's cleanup (spec §18.4) runs once, at the call's end or at the dialog's: transcript.md is
+  // rewritten, then, once ElevenLabs has finished the conversation, its length is read and it is
+  // deleted and read again. A conversation deleted while ElevenLabs still processes it stays there,
+  // and a read right after such a delete may still answer 404 (Plan 3 acceptance, A1 and A5): so
+  // nothing is deleted before a finished status, and only a 404 after the delete counts. It never
+  // rejects; a failed deletion is kept for the report, not retried.
   function clean(id) {
     const c = calls.get(id);
     c.cleaned ??= (async () => {
       let seconds = null;
       let failure = null;
-      try {
-        const secs = (await within(() => eleven.getConversation(id), elevenTimeoutMs))?.metadata?.call_duration_secs;
-        if (typeof secs === 'number') seconds = secs;
-      } catch { /* duration unknown */ }
+      let finished = false;
+      // First, as the wait below may take minutes: a dialog killed meanwhile keeps its transcript.
+      try { writeTranscript(); } catch { /* end() writes it too, and reports a failure */ }
+      const read = async (ms = elevenTimeoutMs) => {
+        try { return (await within(() => eleven.readConversation(id), ms)) ?? { ok: false, status: 0, text: 'no answer' }; }
+        catch (error) { return { ok: false, status: 0, text: reason(error) }; }
+      };
+      const until = Date.now() + doneWaitMs;
+      for (;;) {
+        // No read of the wait runs past its end.
+        const r = await read(Math.max(1, Math.min(elevenTimeoutMs, until - Date.now())));
+        if (r.ok) {
+          const secs = r.conversation?.metadata?.call_duration_secs;
+          if (typeof secs === 'number') seconds = secs;
+          if (FINISHED.has(r.conversation?.status)) { finished = true; break; }
+        }
+        if (Date.now() + donePollMs > until) break;
+        await new Promise((resolve) => setTimeout(resolve, donePollMs));
+      }
+      // A wait that runs out deletes nothing: the report names the conversation left at ElevenLabs.
+      if (!finished) return { seconds, failure: `${id} failed: not done at ElevenLabs within ${doneWaitMs / 1000} s` };
       try {
         const result = await within(() => eleven.deleteConversation(id), elevenTimeoutMs);
         if (!result?.ok) failure = `${id} failed: ${oneLine(`${result?.status ?? ''} ${result?.text ?? ''}`)}`;
       } catch (error) { failure = `${id} failed: ${reason(error)}`; }
-      try { writeTranscript(); } catch { /* end() writes it too, and reports a failure */ }
+      if (!failure) {
+        const check = await read();
+        if (check.ok) failure = `${id} failed: still at ElevenLabs after delete`;
+        else if (check.status !== 404) failure = `${id} failed: not verified: ${oneLine(`${check.status} ${check.text ?? ''}`)}`;
+      }
       return { seconds, failure };
     })();
     return c.cleaned;
@@ -409,9 +436,11 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
       beat((await readBody(req)).conversationId);
       json(res, { ok: true });
     } else if (req.method === 'POST' && path === '/api/call-end') {
-      // The answer waits for the call's cleanup.
+      // The answer comes once the call is no longer live, not after its cleanup: that waits for
+      // ElevenLabs to finish the conversation (spec §18.4), and the page reconnects after the duration
+      // limit only on this answer. end() still awaits every cleanup.
       const body = await readBody(req);
-      await endCall(body.conversationId, field(body.reason), field(body.context), field(body.detail));
+      endCall(body.conversationId, field(body.reason), field(body.context), field(body.detail));
       json(res, { ok: true });
     } else if (req.method === 'POST' && path === '/api/end-request') {
       // Rafal's spoken end (end_conversation): the dialog ends with the current call, or at once when no

@@ -4,7 +4,7 @@ description: "Who Rafał is professionally as of 2026-09: 5-year JS developer at
 metadata:
   type: user
   originSessionId: 6240c354-4541-46c4-b208-2f1c4d09a4b6
-  modified: 2026-09-19T05:31:38.821Z
+  modified: 2026-10-24T15:31:04.667Z
 ---
 
 Rafał (stated 2026-09-18): JavaScript developer with five years of experience at a startup (Devstock, ed-tech) where he codes, deploys, writes teaching material, mentors trainees and runs live broadcasts. He says he does not feel like an expert programmer and fears the AI shift will make his skill mix insufficient; he is interested in cloud and in building systems based on AI agents.
@@ -14,6 +14,7 @@ Before programming he spent six years in gastronomy: cook → shift manager → 
 Facts established in the diagnosis (evidence in the vault and repos, 2026-09-18):
 - Real strength: agentic systems in practice (Devstock multi-agent system in n8n + pgvector, live demos with HITL gates, a dozen Claude Code skills with validators and tests). None of it public.
 - Gaps: the six fundamentals axes in his learning file (Node execution model, TCP, OS resources, distributed guarantees, cryptography, HTTP actor); cloud knowledge is catalogue-level (Google Cloud Digital Leader-type courses), not operational; he mostly reviews backend code rather than authoring it.
+- Employment form (stated 2026-10-24): he works **B2B through his own JDG**, not on an employment contract. The 2026-10-22 tax note `research_notes/Skalowalny biznes na agentach AI/polish_legal_tax_setup.md` assumed an employee (social ZUS covered by the job), so its JDG cost figures do not apply to him as written; new activities go onto the existing JDG. Given 2026-10-24: the JDG is on **liniowy 19%**, IT revenue 60 000–300 000 PLN/year, **active VAT payer filing monthly** — so ryczałt-only rules (rates, the motor-vehicle accessories exclusion, ryczałt health brackets) do not apply to him unless he changes form.
 - Constraints he gave: 5–10 h/week outside work; 100–300k PLN capital for a business by 2028; spoken English weak (reads fine) → Polish job market first; building a house in parallel.
 - Preferences: waits to be asked and answers in chunks; a question without an answer is never consent; Polish conversation, English code/specs/plans.
 

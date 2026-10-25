@@ -25,6 +25,16 @@ sensowną odpowiedzią jest „Usuń z notatki”.
 
   Zostawił 2, które mają konkretną treść: kwoty windykacji w statusie Barta i listę prac Szymona,
   którą diaryzacja przypisała Bartowi.
+- 2026-10-22, sesja 109283c8-2c7c-48dd-81f5-5f6ef3cfff2a (id claude.ai niedostępny):
+  - Robocze 16.10 (`/spotkanie`, tryb transkrypt) miało 3 flagi: Mówca A w „Obecni”, „ikona,
+    tytuły i piramidka” w „uwagach Gala”, „co Bart mówi o blogu”. Karty dawały na pierwszym
+    miejscu „Zostaw jako niepewne” bez rekomendacji, a Rafał wybrał 3 × „Usuń z notatki”.
+  - W kolejnych daily (15–22.10) fragmenty bez treści do odzyskania nadal dostawały ⚠, ale karta
+    miała już „Usuń z notatki (Rekomendowane)” jako pierwszą opcję. Przykłady: „produkt parętny…
+    dla dzieciaków”, „montaż na 12”, „pierwszy weekend listopada i dwa w listopadzie”. Każda taka
+    rekomendacja przeszła bez korekty.
+  - Rekomendacja na karcie zmniejsza koszt, ale flaga nadal powstaje przy budowie notatki, więc
+    reguła z „Rozwiązania” (nie flagować szumu) wciąż nie jest stosowana.
 
 ## Rozwiązanie
 Flagę ⚠ stawiać tylko przy fragmencie, z którego da się odczytać konkretną treść (status, ustalenie,

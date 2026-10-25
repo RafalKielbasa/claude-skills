@@ -17,7 +17,19 @@ export function createElevenClient({ apiKey, fetch = globalThis.fetch, base = 'h
     updateAgent: (agentId, body) => call('PATCH', `/v1/convai/agents/${agentId}`, body),
     getAgent: (agentId) => call('GET', `/v1/convai/agents/${agentId}`),
     getConversationToken: (agentId) => call('GET', `/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`),
-    getConversation: (id) => call('GET', `/v1/convai/conversations/${id}`),
+    // Never throws: the bridge waits on the conversation's status and checks its deletion with it
+    // (a 404 once it is gone). `conversation` is the parsed body when `ok`.
+    async readConversation(id) {
+      try {
+        const res = await fetch(`${base}/v1/convai/conversations/${id}`, { method: 'GET', headers: { 'xi-api-key': apiKey } });
+        const text = await res.text();
+        if (!res.ok) return { ok: false, status: res.status, text };
+        try { return { ok: true, status: res.status, conversation: text ? JSON.parse(text) : {}, text: '' }; }
+        catch (err) { return { ok: false, status: res.status, text: `unreadable body: ${err.message}` }; }
+      } catch (err) {
+        return { ok: false, status: 0, text: String(err?.message ?? err) };
+      }
+    },
     // Never throws: the bridge reports a failed delete in the closing report instead.
     async deleteConversation(id) {
       try {

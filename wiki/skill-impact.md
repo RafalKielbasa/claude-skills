@@ -559,3 +559,410 @@ index 8f5870c..9c8399e 100644
       `D--` keys): items waiting, postponed or due later;
     - `git log` of the four repositories (topics, and whether a pending item was done later).
 ```
+
+## 2026-10-23 — nauka-z-claude — zaakceptowana
+- **Wzorce:** brak (zmiana z bezpośredniej opinii użytkownika z 2026-10-22, poza ścieżką `evolve-skill`; zachowany wzorzec-sukces przekierowanie-uzytkownika-respektowane-bez-oporu)
+- **Zmiana:** Nowy materiał (krok roadmapy i tryb wyjaśnij) Claude wykłada porcjami: porcja z przykładem, jedno pytanie sprawdzające, a błąd albo „nie wiem” dostaje od razu poprawną odpowiedź, pozycję `1d` i następną porcję, bez blokady. Dialog sokratejski przeniesiony do sprawdzianu kroku (najwcześniej następnego dnia, wg „Dowodu”, linia `Stan:` pod krokiem, `[x]` dopiero po zaliczeniu, niezaliczony nie blokuje materiału) i do powtórek. Wznowienie bez rozgrzewki z zaległych pozycji. Nowa sekcja „Pomoc w dialogu sokratejskim”: „nie wiem” → od razu wyjaśnienie, błąd → najwyżej jedno naprowadzenie. Wyzwalacz testu fundamentu zawężony: pojedynczy błąd go nie uruchamia.
+- **Powód decyzji:** użytkownik: „jego forma nie jest dla mnie optymalna ze względu na zbyt duży próg wejścia. (…) dialog sokratejski mógł być formą powtórek albo testu, a nie od początku prowadzony, ponieważ jest frustrujące ciągłe niemożliwość pójścia do przodu”. Warianty D1–D6 przyjęte w całości („ok”, 2026-10-23). Sprawdzone na sucho: 4 scenariusze (nowy temat, błąd w pytaniu sprawdzającym, wznowienie ze sprawdzianem, „nie wiem” w powtórce) — RED na starej wersji, GREEN na nowej; zawężenie wyzwalacza testu fundamentu dodane po GREEN, w którym pojedynczy błąd zatrzymał krok pytaniem o przerwanie, i potwierdzone powtórką tego scenariusza.
+
+```diff
+--- SKILL.md (przed)
++++ SKILL.md (po)
+@@ -7,14 +7,24 @@
+ 
+ ## Overview
+ 
+-Prowadzisz naukę metodą sokratejską: pytaniami, nie wykładem. Postęp każdego
+-tematu żyje w pliku `D:\Notatki\notatki\nauka-z-claude.md`, więc naukę można
+-przerwać i wznowić po tygodniu bez straty kontekstu. Obok nauki działa tryb
+-powtórek interwałowych (sekcja „Powtórki") na pozycjach z tego samego pliku.
+-
+-**Zasada nadrzędna: na „naucz mnie X" NIE odpowiadasz wykładem.** Odpowiadasz
+-sprawdzeniem pliku postępu i diagnozą poziomu. Wykład — nawet świetny — to
+-porażka tego skilla.
++Prowadzisz naukę w dwóch fazach. **Nowy materiał wykładasz**: porcja
++wyjaśnienia z przykładem, potem jedno krótkie pytanie sprawdzające.
++**Dialog sokratejski zostawiasz na czas, gdy materiał już był**: sprawdzian
++kroku w jednej z kolejnych sesji i powtórki interwałowe. Postęp każdego tematu
++żyje w pliku `D:\Notatki\notatki\nauka-z-claude.md`, więc naukę można przerwać
++i wznowić po tygodniu bez straty kontekstu.
++
++**Zasada nadrzędna: o materiał, którego użytkownik jeszcze nie widział, nie
++pytasz sokratejsko — najpierw go wykładasz.** Czego się nigdy nie widziało,
++tego nie da się wydedukować, a ciągła niemożność pójścia do przodu zniechęca
++do nauki. Na „naucz mnie X" nie wykładasz jednak od razu całego tematu:
++najpierw plik postępu, diagnoza i roadmapa, potem porcje.
++
++| Faza | Kto prowadzi | Błąd albo „nie wiem" |
++|---|---|---|
++| Nowy materiał (krok roadmapy, tryb wyjaśnij) | Ty wykładasz porcjami | od razu poprawna odpowiedź, pozycja `1d`, następna porcja |
++| Sprawdzian kroku (kolejna sesja) | dialog sokratejski | „Pomoc w dialogu sokratejskim"; nie blokuje nowego materiału |
++| Powtórki (trzy pule) | dialog sokratejski | „Pomoc w dialogu sokratejskim"; reset interwału |
+ 
+ ## Krok 0 — plik postępu
+ 
+@@ -50,15 +60,107 @@
+ 2. **Roadmapa** — zaproponuj 5–10 kroków od fundamentów, dopasowanych do
+    zdiagnozowanego poziomu. Jeden krok = porcja do przejścia w jednej sesji.
+ 3. **Zatwierdzenie** — użytkownik może kroki dodać, wyciąć, przestawić.
+-   Dopiero po zatwierdzeniu zapisz sekcję tematu do pliku i zacznij krok 1.
++   Dopiero po zatwierdzeniu zapisz sekcję tematu do pliku i zacznij materiał
++   kroku 1 (sekcja „Krok: nowy materiał").
++
++## Krok: nowy materiał (rdzeń)
++
++Krok roadmapy przerabiasz tak: **Ty wykładasz porcjami, użytkownik po każdej
++porcji odpowiada na jedno pytanie sprawdzające.** Pierwsza wiadomość kroku to
++zakres i pierwsza porcja, nie pytanie.
++
++1. **Zakres:** 3–6 mechanizmów kroku, każdy jednym zdaniem, a zaraz pod nimi
++   pierwsza porcja. Roadmapa jest już zatwierdzona, więc na zakres nie
++   czekasz; użytkownik może w każdej chwili wyciąć to, co umie.
++2. **Porcja:** 2–4 akapity wyjaśnienia jednego mechanizmu i przykład. Przykład
++   kotwicz w projekcie albo kodzie użytkownika, gdy temat go ma; kod cytuj
++   snippetem, nie samym `plik:linia` — użytkownik nie zawsze ma repo otwarte.
++3. **Pytanie sprawdzające:** dokładnie jedno, na koniec porcji, o to, co
++   właśnie padło („co się stanie, gdy…", „który z dwóch…", zastosowanie na
++   prostym przykładzie). Odpowiedź musi wynikać z porcji.
++4. **Ocena:**
++   - Dobra odpowiedź → następna porcja.
++   - Zła, częściowa albo „nie wiem" → **w tej samej wiadomości** poprawna
++     odpowiedź i krótkie wyjaśnienie z innej strony niż porcja (inny przykład,
++     analogia, co dokładnie nie gra w odpowiedzi), potem następna porcja.
++     Mechanizm dostaje pozycję w `### Powtórki` tematu (interwał `1d`,
++     `następna` = jutro) od razu, w tej samej turze. Bez pytań
++     naprowadzających i bez ponownego pytania o to samo — **błąd nie blokuje
++     kroku**; luka wraca jutro w powtórce.
++5. **Koniec materiału kroku:** pod krokiem w roadmapie dopisz linię
++   `Stan: materiał RRRR-MM-DD, sprawdzian zaległy`. Checkbox zostaje pusty —
++   `[x]` daje dopiero zaliczony sprawdzian. Materiał następnego kroku możesz
++   zacząć w tej samej sesji; sprawdzian poprzedniego nie musi go poprzedzać.
++   Gdy nowy krok wprost stoi na mechanizmie, który padł w sprawdzianie albo
++   w pytaniu sprawdzającym, przypomnij go jedną porcją przed nowym materiałem.
++
++- Tematy techniczne: realne fragmenty kodu i mini-ćwiczenia, gdy to naturalne;
++  ćwiczenie przychodzi po porcji, która daje do niego narzędzia.
++- **Test fundamentu** uruchamiasz **wyłącznie po wyzwalaczu**: dwa błędy albo
++  „nie wiem" pod rząd na tej samej warstwie, albo użytkownik sam mówi, że nie
++  zna pojęcia spoza tematu („nie wiem, co to fsync"). **Pojedyncza błędna
++  odpowiedź nie jest wyzwalaczem**, nawet gdy wygląda na lukę z niższej
++  warstwy — to luka tematyczna: pozycja od razu i następna porcja, bez pytania
++  o przerwanie. Nie odkładasz też zapisu, „dopóki warstwa się nie wyjaśni".
++  Po wyzwalaczu rozstrzygnij warstwę. Luka jest **fundamentem**, gdy odpowiedź
++  wymaga pojęcia spoza dziedziny bieżącego tematu (Redis wymagający TCP, JWT
++  wymagający kryptografii) albo gdy ta sama oś padła już w innym temacie.
++  W przeciwnym razie to luka tematyczna.
++  - Luka tematyczna → pozycja w `### Powtórki` tematu, interwał `1d`.
++  - Fundament → wpis w `## Koncepty do poznania` (albo dopisanie bieżącego
++    tematu do „wywołany przez" istniejącego wpisu), a potem **pytanie do
++    użytkownika**: przerywamy teraz na tryb wyjaśnij, czy notujemy i idziemy
++    dalej. Czekasz na decyzję; brak odpowiedzi nie jest zgodą na żaden wariant.
++
++## Sprawdzian kroku
++
++Tu wchodzi dialog sokratejski: materiał już był, więc pytania sprawdzają, czy
++został, a nie czy da się go wydedukować.
++
++- **Kiedy:** na początku sesji nauki tematu (sekcja „Wznowienie") dla kroku
++  z linią `Stan: … sprawdzian zaległy` albo `sprawdzian niezaliczony`, jeśli od
++  daty materiału, a po niezaliczeniu od daty tego podejścia, minął co najmniej
++  jeden dzień. **Nigdy w tej samej sesji co materiał** — powtórzenie świeżo
++  usłyszanego wyjaśnienia nie dowodzi zrozumienia. „Pomiń" od użytkownika →
++  sprawdzian czeka do następnej sesji.
++- **Pytania:** 1–3, z innego ujęcia niż porcje (inny przykład, przypadek
++  brzegowy, „a co jeśli…"), wyprowadzone z linii „Dowód" kroku, a bez niej —
++  z mechanizmów jego zakresu. Jedno pytanie na wiadomość. Nie cytuj porcji ani
++  pozycji powtórek przed odpowiedzią — to ściąga.
++- **Gdy nie wie** → sekcja „Pomoc w dialogu sokratejskim".
++- **Zaliczenie:** każde pytanie poprawnie, własnymi słowami, bez naprowadzenia
++  → `[x]`, linia `Stan: materiał …, sprawdzian zaliczony RRRR-MM-DD` i pozycja
++  kroku w `### Powtórki` z interwałem `3d` (sprawdzian był pierwszą powtórką po
++  dniu przerwy).
++- **Niezaliczenie:** każda luka wyjaśniona na miejscu i zapisana jako pozycja
++  w `### Powtórki` (`1d`, `następna` = jutro) — luka, która ma już pozycję,
++  resetuje tę pozycję zamiast zakładać drugą. Linia stanu →
++  `sprawdzian niezaliczony RRRR-MM-DD`.
++  Sprawdzian wraca na początku następnej sesji. **Nie blokuje** nowego
++  materiału — po sprawdzianie, z dowolnym wynikiem, przechodzisz do materiału.
++
++## Pomoc w dialogu sokratejskim
++
++Dotyczy sprawdzianu kroku i wszystkich trzech pul powtórek. Nie dotyczy
++nowego materiału — tam zła odpowiedź dostaje od razu poprawną (sekcja „Krok:
++nowy materiał").
++
++- „Nie wiem" → od razu wyjaśnienie: poprawna odpowiedź i dlaczego. Przy
++  „nie wiem" nie ma od czego naprowadzać. Samo „nie wiem" wystarcza — nie
++  czekasz na dopisek „wytłumacz".
++- Błędna albo częściowa odpowiedź → **najwyżej jedno** pytanie naprowadzające,
++  wskazujące lukę w rozumowaniu (np. „a jaką wartość ma `i`, kiedy pętla już
++  się skończy?"). Nie trafiło albo padło „nie wiem" → wyjaśnienie.
++- Wyjaśnienie jest krótkie i kończy się przejściem dalej (następne pytanie,
++  następna pozycja albo materiał), nie kolejnym pytaniem o to samo.
++- Poprawna odpowiedź dopiero po naprowadzeniu albo wyjaśnieniu nie jest
++  zaliczeniem: pozycja dostaje reset, sprawdzian — niezaliczenie.
+ 
+ ## Tryb wyjaśnij
+ 
+-Jedyny tryb, w którym **wykładasz**. Istnieje, bo metoda sokratejska nie działa
+-na materiale, którego użytkownik nigdy nie widział: nie da się wydedukować, że
+-handshake TCP to trzy pakiety. Jednostką jest **koncept** z rejestru „Koncepty
+-do poznania" — oś wiedzy leżąca poniżej tematów, na jedną, najwyżej dwie sesje.
+-Materiał na pięć sesji to temat: idzie ścieżką „Nowy temat" z roadmapą.
++Ekspozycja **konceptu** z rejestru „Koncepty do poznania" — osi wiedzy leżącej
++poniżej tematów, na jedną, najwyżej dwie sesje. Materiał na pięć sesji to
++temat: idzie ścieżką „Nowy temat" z roadmapą.
+ 
+ Wchodzi **wyłącznie** na jawne `/nauka-z-claude wyjaśnij <koncept>`.
+ 
+@@ -66,65 +168,41 @@
+    dopisz go przed startem.
+ 2. **Pokaż zakres i czekaj na zatwierdzenie:** 3–6 mechanizmów składających się
+    na tę oś, wypisanych jednym zdaniem każdy. Użytkownik może wyciąć te, które
+-   już umie. Bez jego odpowiedzi nie zaczynasz.
+-3. Mechanizm po mechanizmie: porcja **2–4 akapity** → **jedno** pytanie
+-   sprawdzające → ocena.
+-   - Dobra odpowiedź → następny mechanizm.
+-   - Zła → ten sam mechanizm z innej strony. Nie następna porcja i nie to samo
+-     wyjaśnienie powtórzone tymi samymi słowami.
++   już umie. Bez jego odpowiedzi nie zaczynasz — inaczej niż w kroku roadmapy,
++   tu nikt zakresu wcześniej nie zatwierdzał.
++3. Mechanizm po mechanizmie — porcja, pytanie sprawdzające i ocena dokładnie
++   jak w sekcji „Krok: nowy materiał" (punkty 2–4): zła odpowiedź dostaje od
++   razu poprawną i wyjaśnienie z innej strony, potem następny mechanizm.
+ 4. Przykłady kotwicz w miejscach, które ten koncept wywołały — RTT tłumaczysz na
+-   jego Redisie z kroku 2, nie na abstrakcyjnym serwerze. Kod cytuj snippetem,
+-   nie samym `plik:linia`: użytkownik nie zawsze ma repo otwarte.
++   jego Redisie z kroku 2, nie na abstrakcyjnym serwerze.
+ 5. Zapis na koniec sesji:
+    - Pozycję w `### Powtórki fundamentów` (interwał `1d`, `następna` = jutro)
+-     dostaje mechanizm, który **wymagał drugiego podejścia albo poprawki**.
++     dostaje mechanizm, którego pytanie sprawdzające **wymagało poprawki**.
+      Zrozumiany od razu — nie dostaje. Sufit **3 pozycje na sesję**.
+    - Wszystkie mechanizmy z zatwierdzonego zakresu przerobione → wpis w rejestrze
+      na `[x]` z datą. Inaczej → `**Następny krok:**` przy wpisie.
+ 
+-Tryb wyjaśnij nie rusza roadmap tematów ani ich pozycji powtórkowych.
+-
+-## Pętla sokratejska (rdzeń)
+-
+-Krok przerabiasz serią pytań: otwierające, potem naprowadzające.
+-
+-- **Nie wykładasz.** Wyjaśniasz dopiero, gdy dwa naprowadzenia z rzędu nie
+-  przybliżyły odpowiedzi albo użytkownik wprost prosi („nie wiem, wytłumacz").
+-  Wyjaśnienie ma być krótkie i kończyć się pytaniem sprawdzającym z innej
+-  strony niż ta, która zawiodła.
+-- **Błędna odpowiedź nie dostaje poprawki.** Dostaje pytanie wskazujące lukę
+-  w rozumowaniu (np. „a jaką wartość ma `i`, kiedy pętla już się skończy?").
+-  Poprawny wynik użytkownik ma wywnioskować, nie usłyszeć.
+-- **Zaliczenie kroku:** poprawna odpowiedź na pytanie kontrolne własnymi
+-  słowami. Parafraza świeżo usłyszanego wyjaśnienia nie wystarcza — zapytaj
+-  z innego ujęcia (inny przykład, przypadek brzegowy, „a co jeśli…").
+-- Zaliczony krok od razu dopisz do `### Powtórki` tematu z interwałem 1d
+-  (`następna` = jutro) — wróci jako powtórka, nie tylko odhaczenie.
+-- Widoczna luka w rozumieniu blokuje przejście dalej, nawet po formalnie
+-  poprawnej odpowiedzi.
+-- **Test fundamentu.** Zanim zapiszesz trudność jako pozycję powtórkową tematu,
+-  rozstrzygnij, na której warstwie leży. Luka jest **fundamentem**, gdy
+-  odpowiedź wymaga pojęcia spoza dziedziny bieżącego tematu (Redis wymagający
+-  TCP, JWT wymagający kryptografii) albo gdy ta sama oś padła już w innym
+-  temacie. W przeciwnym razie to luka tematyczna.
+-  - Luka tematyczna → pozycja w `### Powtórki` tematu, interwał `1d`.
+-  - Fundament → wpis w `## Koncepty do poznania` (albo dopisanie bieżącego
+-    tematu do „wywołany przez" istniejącego wpisu), a potem **pytanie do
+-    użytkownika**: przerywamy teraz na tryb wyjaśnij, czy notujemy i idziemy
+-    dalej. Czekasz na decyzję; brak odpowiedzi nie jest zgodą na żaden wariant.
+-  - Wyzwalacz testu: dwa „nie wiem" pod rząd na tej samej warstwie albo
+-    naprowadzenia, które nie trafiają, bo brakuje pojęcia niższego poziomu.
+-- Tematy techniczne: używaj realnych fragmentów kodu i mini-ćwiczeń, gdy to
+-  naturalne — ale to nadal tryb pytaniowy, nie zadaniowy.
++Tryb wyjaśnij nie ma sprawdzianu — koncept sprawdza pula fundamentów
++w powtórkach. Nie rusza roadmap tematów ani ich pozycji powtórkowych.
+ 
+ ## Wznowienie
+ 
+ 1. Przeczytaj sekcję tematu z pliku.
+-2. Przypomnij w 1–2 zdaniach, gdzie skończyliście.
+-3. Zadaj 1–2 pytania rozgrzewkowe z już przerobionych kroków — zwłaszcza
+-   z zaległych pozycji `### Powtórki` tego tematu. Odpowiedź potraktuj jak
+-   powtórkę (aktualizacja interwału i daty). Luka → najpierw ją załataj.
+-4. Kontynuuj od pierwszego nieodhaczonego kroku roadmapy.
++2. Przypomnij w 1–2 zdaniach, gdzie skończyliście. Ty mówisz, nie pytasz.
++3. Krok z zaległym albo niezaliczonym sprawdzianem, dzień lub więcej od
++   materiału → sprawdzian (sekcja „Sprawdzian kroku").
++4. Potem nowy materiał: od miejsca z „Następny krok", gdy krok został
++   przerwany w połowie materiału, inaczej od pierwszego kroku bez linii `Stan:`.
++
++Zaległych pozycji `### Powtórki` nie przepytujesz przy wznowieniu — należą do
++trybu „Powtórki". Są zaległe → na koniec sesji zaproponuj powtórkę jednym
++zdaniem.
++
++Krok bez linii `Stan:`, którego materiał już omawialiście (świadczą o tym
++notatki sesji w `### Notatki`), to krok sprzed rozdzielenia materiału od
++sprawdzianu. Zapytaj, czy uznać jego materiał za przerobiony (dopisanie linii
++`Stan:` z datą ostatniej sesji, sprawdzian zaległy), czy dokończyć materiał.
++Bez odpowiedzi linii nie dopisujesz.
+ 
+ ## Powtórki
+ 
+@@ -160,8 +238,8 @@
+    pozycji** (inny przykład, przypadek brzegowy, „a co jeśli…"). Nie cytuj
+    treści pozycji przed odpowiedzią — to ściąga.
+ 3. Ocena własnymi słowami. Poprawna → następny interwał drabinki
+-   1 → 3 → 7 → 14 → 30 dni, `następna = dziś + nowy interwał`. Błędna →
+-   naprowadzenie jak w pętli sokratejskiej, a przy zapisie reset:
++   1 → 3 → 7 → 14 → 30 dni, `następna = dziś + nowy interwał`. Błędna albo
++   „nie wiem" → sekcja „Pomoc w dialogu sokratejskim", a przy zapisie reset:
+    interwał 1d, `następna = jutro`. Ta sama drabinka i ten sam reset obowiązują
+    pozycje z puli fundamentów; pula notatek ma własną drabinkę (patrz „Powtórki
+    z notatek").
+@@ -221,8 +299,7 @@
+    potrzebny, to sygnał do wpisu w `## Koncepty do poznania`, nie temat pytania.
+    Nie cytuj zdań notatki przed odpowiedzią.
+ 3. Pozycja ze wskazówką → **pierwsze pytanie idzie z tego wątku**.
+-4. Błędna odpowiedź dostaje naprowadzenie jak w pętli sokratejskiej, nie poprawkę;
+-   wyjaśnienie dopiero po dwóch nieudanych naprowadzeniach.
++4. Błędna odpowiedź albo „nie wiem" → sekcja „Pomoc w dialogu sokratejskim".
+ 5. Zapisz pozycję po skończeniu notatki, przed przejściem do następnej.
+ 
+ ### Ocena
+@@ -273,11 +350,13 @@
+ 
+ ## Zapis postępu
+ 
+-Aktualizuj plik po każdym zaliczonym kroku i na koniec sesji (odhaczenia,
+-notatki, „Następny krok"). Trudność wykryta w trakcie nauki → od razu pozycja
++Aktualizuj plik po każdej porcji, która zostawiła pozycję, po końcu materiału
++kroku, po sprawdzianie i na koniec sesji (linie `Stan:`, odhaczenia, notatki,
++„Następny krok"). Trudność wykryta w trakcie nauki → od razu pozycja
+ w `### Powtórki` z interwałem 1d, nie luźna notatka — chyba że test fundamentu
+-z „Pętli sokratejskiej" wskaże warstwę niższą; wtedy wpis idzie do
+-`## Koncepty do poznania`. Edytuj wyłącznie sekcję
++z sekcji „Krok: nowy materiał" wskaże warstwę niższą; wtedy wpis idzie do
++`## Koncepty do poznania`. „Następny krok" przy wyjściu z tematu, także nagłym,
++mówi, od czego zacząć i czego nie powtarzać. Edytuj wyłącznie sekcję
+ bieżącego tematu — innych sekcji nie dotykasz (wyjątek: tryb „Powtórki"
+ aktualizuje pozycje `### Powtórki` we wszystkich tematach, ale tylko te
+ linie). Pustą podsekcję pomiń, nie zostawiaj gołego nagłówka.
+@@ -295,7 +374,10 @@
+ ### Roadmapa
+ 
+ - [x] Krok 1 — <nazwa>
++  Stan: materiał YYYY-MM-DD, sprawdzian zaliczony YYYY-MM-DD
+ - [ ] Krok 2 — <nazwa>
++  Stan: materiał YYYY-MM-DD, sprawdzian niezaliczony YYYY-MM-DD
++- [ ] Krok 3 — <nazwa>
+ 
+ ### Powtórki
+ 
+@@ -309,6 +391,11 @@
+ **Następny krok:** <od czego zacząć następną sesję>
+ ```
+ 
++Linia `Stan:` pojawia się pod krokiem po końcu jego materiału. Sprawdzian ma trzy
++wartości: `zaległy`, `niezaliczony YYYY-MM-DD` (data ostatniego podejścia)
++i `zaliczony YYYY-MM-DD`. Krok bez linii `Stan:` ma materiał przed sobą albo
++w toku.
++
+ Format `[następna: YYYY-MM-DD, interwał: Nd]` czyta regexem hook powtórek
+ (`~\.claude\hooks\powtorki-check.ps1`) — nie zmieniaj go.
+ 
+@@ -351,7 +438,7 @@
+ Rejestr trzyma osie wiedzy leżące **warstwę poniżej** tematów: pojęcia, których
+ brak wysadza naukę niezależnie od tego, który temat akurat przerabiacie.
+ 
+-- Wpis zakłada tryb „pytania" (test fundamentu), tryb „wyjaśnij" (gdy wskazanego
++- Wpis zakłada test fundamentu w trakcie kroku, tryb „wyjaśnij" (gdy wskazanego
+   konceptu jeszcze nie ma) albo użytkownik jawnie.
+ - Ta sama oś wywołana z kolejnego tematu **dopisuje się do listy „wywołany
+   przez"**; drugiego wpisu nie zakładasz.
+@@ -365,12 +452,33 @@
+ 
+ ## Red flags — zatrzymaj się
+ 
+-Każda z tych myśli oznacza, że właśnie porzucasz metodę — wróć do pytań:
++Każda z tych myśli oznacza, że mieszasz fazy albo porzucasz metodę. Nowy
++materiał wykładasz; dialog sokratejski zostaje na sprawdzian i powtórki:
+ 
+-- „Użytkownik jest zaawansowany, szybciej będzie wyłożyć całość"
+-- „To klasyczna pułapka, po prostu ją wyjaśnię" (po pierwszej błędnej odpowiedzi)
+-- „Odpowiedź była blisko, zaliczam krok"
+-- „Zadam pytanie, ale od razu dopiszę pełne wyjaśnienie"
++- „Zacznę krok od pytania otwierającego, niech sam do tego dojdzie" (pierwsza
++  wiadomość kroku to zakres i porcja)
++- „Zła odpowiedź na pytanie sprawdzające — zadam naprowadzające, niech sam
++  znajdzie błąd" (w nowym materiale poprawka od razu, potem następna porcja)
++- „Nie zrozumiał porcji, nie puszczę dalej, dopóki nie odpowie dobrze" (błąd
++  nie blokuje: pozycja `1d` i następna porcja)
++- „Wyłożę mu od razu cały temat" (najpierw plik, diagnoza, roadmapa; potem
++  porcje z pytaniem po każdej)
++- „Materiał przerobiony, zrobię sprawdzian od razu, póki pamięta" (najwcześniej
++  następnego dnia — świeża parafraza nie dowodzi zrozumienia)
++- „Sprawdzian niezaliczony, więc nie zaczynamy kroku 2" (sprawdzian nie
++  blokuje materiału)
++- „Na rozgrzewkę przepytam go z zaległych pozycji" (wznowienie to przypomnienie
++  i sprawdzian; pozycje należą do trybu powtórek)
++- „Powiedział «nie wiem», naprowadzę go pytaniem" (przy „nie wiem" od razu
++  wyjaśnienie)
++- „Samo «nie wiem» to nie prośba o wyjaśnienie, nie napisał «wytłumacz»"
++  („nie wiem" wystarcza)
++- „Nie zapiszę pozycji, dopóki nie rozstrzygnę, na której warstwie leży luka"
++  (bez wyzwalacza testu fundamentu luka jest tematyczna — pozycja od razu)
++- „W powtórce padła błędna odpowiedź, drugie naprowadzenie na pewno trafi"
++  (najwyżej jedno naprowadzenie, potem wyjaśnienie)
++- „Odpowiedź była blisko, zaliczam sprawdzian"
++- „Zadam pytanie w sprawdzianie, ale od razu dopiszę pełne wyjaśnienie"
+ - „Plik sprawdzę po rozmowie, najpierw zacznę uczyć"
+ - „Dużo zaległych powtórek, streszczę je wykładem" (powtórka to nadal pytania)
+ - „Hook zgłosił zaległe, więc od razu zaczynam przepytywać" (najpierw
+@@ -388,26 +496,33 @@
+ - „Przy powtórce notatki brakuje mu mechanizmu, dopytam o ten mechanizm"
+   (pytanie musi mieścić się w notatce; mechanizm idzie do rejestru konceptów)
+ - „W trybie wyjaśnij zrozumiał wszystko od razu, zapiszę i tak pozycje ze
+-  wszystkich mechanizmów" (pozycję dostaje tylko mechanizm, który się oparł;
+-  sufit 3 na sesję)
++  wszystkich mechanizmów" (pozycję dostaje tylko mechanizm, który wymagał
++  poprawki; sufit 3 na sesję)
+ - „Wykryłem fundament, od razu przerywam temat i tłumaczę" (wpis do rejestru
+   tak, przerwanie dopiero po decyzji użytkownika)
+-- „W trybie wyjaśnij zadam pytanie sokratejskie zamiast wyłożyć" (to jedyny
+-  tryb, w którym masz wyłożyć — ekspozycja jest tu celem, nie porażką)
++- „Ten jeden błąd zdradza lukę z niższej warstwy, zapytam, czy przerywamy na
++  tryb wyjaśnij" (pojedynczy błąd to luka tematyczna; test fundamentu dopiero
++  po wyzwalaczu)
+ 
+ ## Częste błędy
+ 
+ | Błąd | Zamiast tego |
+ |---|---|
+-| Wykład w odpowiedzi na „naucz mnie X" | Krok 0 → diagnoza → roadmapa |
+-| Poprawny wynik podany po pierwszym błędzie | Pytanie wskazujące lukę; wyjaśnienie dopiero po 2 nieudanych naprowadzeniach |
+-| Zaliczenie kroku po parafrazie | Pytanie kontrolne z innego ujęcia |
++| Krok zaczęty pytaniem o materiał, którego jeszcze nie było | Zakres i pierwsza porcja; pytanie dopiero po porcji |
++| Cały temat wyłożony od razu na „naucz mnie X" | Krok 0 → diagnoza → roadmapa → porcje |
++| Pytanie naprowadzające po błędzie w nowym materiale | Od razu poprawna odpowiedź, pozycja `1d`, następna porcja |
++| Krok zablokowany przez błąd albo niezaliczony sprawdzian | Luka → pozycja `1d`; materiał idzie dalej |
++| Sprawdzian w tej samej sesji co materiał | Najwcześniej następnego dnia, z innego ujęcia |
++| `[x]` po samym przerobieniu materiału | Linia `Stan:`; `[x]` dopiero po zaliczonym sprawdzianie |
++| Rozgrzewka z zaległych pozycji przy wznowieniu | Przypomnienie, zaległy sprawdzian, materiał; pozycje w trybie powtórek |
++| Naprowadzanie po „nie wiem" albo drugie naprowadzenie | „Pomoc w dialogu sokratejskim": „nie wiem" → wyjaśnienie, błąd → jedno naprowadzenie |
++| Zaliczenie sprawdzianu po naprowadzeniu albo parafrazie | Każde pytanie poprawnie, własnymi słowami, bez pomocy |
+ | „Powiedz, na czym skończyliśmy" przy wznowieniu | Sekcja tematu w pliku jest źródłem prawdy |
+ | Nadpisanie innych sekcji pliku postępu | Edytuj tylko sekcję bieżącego tematu |
+ | Krok-moloch na kilka sesji | Krok ma się mieścić w jednej sesji |
+ | Diagnoza w tonie egzaminu | Rozmowa o tym, z czym użytkownik pracował |
+ | Powtórka zadana słowami zapisu pozycji | Inne ujęcie — zapis to notatka dla Ciebie, nie gotowe pytanie |
+-| Reset interwału i od razu następna pozycja | Najpierw naprowadzenie jak w pętli; reset dopiero przy zapisie |
++| Reset interwału i od razu następna pozycja | Najpierw „Pomoc w dialogu sokratejskim"; reset dopiero przy zapisie |
+ | Zmiana formatu `[następna: …, interwał: …]` | Ten format czyta hook — zostaw jak jest |
+ | Pytanie zadane zdaniem z notatki | Inne ujęcie — notatka to materiał, nie gotowy quiz |
+ | Reset notatki po pierwszej, diagnostycznej powtórce | Diagnoza bez kary: zostaje `7d` i wskazówka z lukami |
+@@ -417,5 +532,5 @@
+ | Luka fundamentalna zapisana jako pozycja tematyczna | Test fundamentu: pojęcie spoza dziedziny tematu idzie do rejestru konceptów |
+ | Pytanie z notatki wychodzące poza jej treść | Odpowiedź musi dać się wyprowadzić z samej notatki |
+ | Pula notatek przepytywana przed fundamentami | Kolejność: fundamenty → tematyczne → notatki |
+-| Tryb wyjaśnij prowadzony jak wykład bez przerw | Porcja 2–4 akapity, potem jedno pytanie sprawdzające |
+-| Zakres konceptu ustalony bez pytania użytkownika | 3–6 mechanizmów pokazanych do zatwierdzenia przed startem |
++| Nowy materiał wyłożony ciągiem bez przerw | Porcja 2–4 akapity, potem jedno pytanie sprawdzające |
++| Zakres konceptu w trybie wyjaśnij ustalony bez pytania użytkownika | 3–6 mechanizmów pokazanych do zatwierdzenia przed startem |
+```
