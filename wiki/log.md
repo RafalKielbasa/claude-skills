@@ -698,3 +698,18 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Gładko, bez osobnych wzorców: faza materiału wg skilla (dwie częściowe odpowiedzi → od razu poprawna odpowiedź z innej strony, pozycja `1d` w tej samej turze, następna porcja bez pytań naprowadzających); snippet kodu w porcji wg pamięci `nauka-code-snippety`; plik postępu commitowany i pushowany po każdej pozycji.
 - Wzorce repo (`D:/Notatki/notatki/.claude/wiki/`): bez nowych wzorców, patrz log repo.
 - Sygnał: dlugi-lancuch-narzedzi-bez-linii-statusu (10 sesji, `ogólny`) — kandydat na regułę globalną, nie na `/evolve-skill`. Wzorce `nauka-z-claude` mają po 1 sesji (protokol-bluf: 2 dowody, ale jeden na sucho) — poniżej progu. Brak `nawrót`.
+
+## 2026-10-26 (część 2) — sesja session_01QxjrWc65U98yvi7rPWyHoa (lokalnie bdda6800-f7c7-4172-b436-16c321621fcf); code-busters-mobile: bramka M1 na telefonie (13/14), naprawa 4 zapytań GraphQL po code-busters#1670 (`34ae34b`, `a8cebbf`, `1298350`), scalenie M1 do DT-37 (`34dfec8`), #765 → In review, usunięty workspace SDD
+- założono: sledzone-typy-codegen-ukrywaja-zmiane-schematu-backendu (skill: ogólny, typ: porażka) — typecheck zielony przez cały plan, a 4 dokumenty były niezgodne z backendem. Wyszło na telefonie („Brak paska na mobilce, jest jedynie na web”), a walidator schematu znalazł wszystkie w jednym przebiegu.
+- założono: wiersz-bramki-bez-drogi-do-ekranu (skill: ogólny, typ: porażka) — wiersz 10 bez drogi do `/goal`. Rafał: „nie wiem jak trafić”, a wtedy wyszło, że ekran nie ma wejścia z aplikacji.
+- dopisano dowód: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (szósty, szósta sesja) — brak `.env` w worktree i trzy dopytania o przygotowanie. Edycję `.env` na LAN IP Rafał odrzucił i backend uruchomił sam. Rozwiązanie rozszerzone o sekcję „Przygotowanie”.
+- dopisano dowód: agent-w-tle-wznowiony-przez-sendmessage (drugi, druga sesja) — recenzent wznowiony po zniknięciu procesu o 15:54. Odstępstwo: równoległa sesja `4beed02f` zdublowała recenzję. Rozwiązanie rozszerzone o sprawdzenie równoległych sesji.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (jedenasty, jedenasta sesja) — cztery przypomnienia, wszystkie przy szybkich wywołaniach.
+- Gładko, bez osobnych wzorców:
+  - bramka przechodzona wiersz po wierszu, z odpowiedzią „tak” w jednej turze na wiersz;
+  - naprawa GraphQL jako decyzja B w M1, z recenzją i ponowną recenzją przed scaleniem;
+  - status #765 zmieniony dopiero po „ok” (D1 A);
+  - workspace SDD skasowany po „ok”, z własnym sprawdzeniem `ListAgents` i czasu zapisu ledgera.
+- Bez wzorca, jednorazowe: TalkBack nie działał na telefonie Rafała, więc wiersz 6 bramki sprawdziła tylko recenzja kodu.
+- Wzorce repo: repo `code-busters-mobile` nie ma `.claude/skills/`, więc nie ma wiki repo.
+- Sygnał: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (porażka, 6 sesji, superpowers:writing-plans) — `/evolve-skill` nie obejmuje skilli wtyczki, więc to kandydat na regułę w `CLAUDE.md` przy writing-plans. dlugi-lancuch-narzedzi-bez-linii-statusu (11 sesji, `ogólny`) — kandydat na regułę globalną. Nowe porażki mają po 1 sesji. Brak `nawrót`.

@@ -52,6 +52,12 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   starcie tego kroku wiki, po zapisie pliku postępu i dwóch wywołaniach Bash, które też
   przekroczyły 120 s ([[bash-przekracza-120-s-takze-na-trywialnej-komendzie]]). Linia
   statusu za każdym razem dopiero po przypomnieniu.
+- 2026-10-26, sesja session_01QxjrWc65U98yvi7rPWyHoa (lokalnie bdda6800-f7c7-4172-b436-16c321621fcf),
+  code-busters-mobile, zamknięcie M1 i to podsumowanie: cztery przypomnienia. Pierwsze padło po
+  zmianie statusu #765, usunięciu workspace SDD i edycji śladu: trzy wywołania bez tekstu. Trzy
+  kolejne przyszły w kroku wiki, przy serii `Grep`/`Read`/`Write` stron wzorców. Wszystkie
+  wywołania wracały szybko, więc licznik „trzech wywołań z rzędu” działa także bez długich komend.
+  Linia statusu za każdym razem dopiero po przypomnieniu.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

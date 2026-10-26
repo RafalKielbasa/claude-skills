@@ -1,7 +1,8 @@
 {
   "allow": [
     "notatki",
-    ".claude"
+    ".claude",
+    "baza-wiedzy"
   ],
   "dialogRoot": "C:/Users/rafal/hub-data",
   "agent": {
