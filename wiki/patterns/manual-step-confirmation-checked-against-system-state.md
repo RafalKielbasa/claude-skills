@@ -28,6 +28,19 @@ describes what the person did, not what the system holds.
   prompt `krok 3 gotowyt` (wrong window) and the journal had no answers record. After "krok 6 gotowy" the
   fork had no event after its first turn and no `prompt.md`. Each time the next step waited, and the reply
   named the cause with a table "where to type what" instead of asking in general terms.
+- 2026-10-25, sesja 4bd53d28-0d05-40dd-bf31-94901ea828ea (id claude.ai niedostępny; Baza wiedzy, merge of
+  plans 1-4): Rafał answered "scalone, testy zielone" after a merge prompt handed to a main-checkout session.
+  - Readout, all from the worktree with no git in the main checkout:
+    - `git merge-base --is-ancestor b8701e7e rafal-kielbasa/22-10-2026` → exit 1;
+    - `git branch -a --contains b8701e7e` → only the plan branch;
+    - no merge commit since 24.10;
+    - main checkout `.git/HEAD` log ending on a 22.10 commit, no `MERGE_HEAD`;
+    - `station/state.json` last written 24.10, so the station step never ran.
+  - The index, memory and trail were not marked merged. The reply quoted the readout and asked where the
+    session ran.
+  - Next turn: the state had moved again. Rafał's commit `23-10-work` and an unfinished merge of `main` showed
+    up as `MERGE_HEAD` and `MERGE_MSG` with two wiki conflicts. Reading those files told what he had actually
+    done before anything was touched.
 
 ## Rozwiązanie
 After a user confirms a manual change that an automated step depends on, read the state from the system (API,

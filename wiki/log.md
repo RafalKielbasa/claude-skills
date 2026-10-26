@@ -660,3 +660,41 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Bez wzorca, jednorazowe: `git push` w vaultcie przekroczył 120 s narzędzia i dokończył się w tle (dalej `timeout 100 git push`).
 - Wzorce repo (`D:/Notatki/notatki/.claude/wiki/`): bez nowych wzorców, patrz log repo.
 - Sygnał: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (porażka, 3 sesje) jest `ogólny`, więc to kandydat na regułę globalną, nie na `/evolve-skill`. Brak `nawrót`.
+
+## 2026-10-26 — sesja session_01QxjrWc65U98yvi7rPWyHoa (lokalnie bdda6800-f7c7-4172-b436-16c321621fcf); code-busters-mobile: plan M1 migracji Kodożerców (subagent-driven, 35 commitów, do bramki na telefonie), sync tokenów z huba, epik #741 z podzadaniami DT-60…DT-69 (github-tickets)
+- założono: prompt-uprawnien-commita-wstrzymuje-subagenta-na-godziny (skill: ogólny, typ: porażka) — implementery stały na prompcie commita 5,7–16 h, bramka przesunęła się z 23.10 na 26.10.
+- założono: istniejace-issue-podpiete-bez-sprawdzenia-rodzica (skill: github-tickets, typ: porażka) — #650 i #651 miały rodzica #528, wyszło dopiero przy draftach; Rafał: „zmień rodzica”.
+- założono: self-check-nie-sprawdza-twierdzen-epiku-o-dzieciach (skill: github-tickets, typ: porażka) — 7 uwag `codex` przeszło przez self-check; propozycja trzech linii „Per batch”.
+- założono: paczka-dt-przez-gh-create-i-ensure (skill: github-tickets/board-tracker, typ: sukces) — paczka DT bez assigneeów i bez przypinania każdego issue.
+- założono: review-zadania-rownolegle-z-kolejnym-implementerem (skill: superpowers:subagent-driven-development, typ: sukces) — recenzja N równolegle z implementerem N+1 w zadaniach 8–13.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (szósty, szósta sesja) — `bash <skrypt skilla>` przechodzi z jawnym `cd "<ten worktree>" &&`, bez niego odmowa.
+- dopisano dowód: kod-referencyjny-planu-nigdy-nie-uruchomiony (czternasty) — komenda weryfikacji z planu niewykonalna, złapana uruchomieniem w pre-flight.
+- dopisano dowód: plan-migracji-ekranu-bez-inwentarza-zachowan (drugi, druga sesja) — teksty „skopiowane ze starych wstęg”, których nie było, i `disabled={!isValid}` blokujący wiersz bramki.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (czwarty, czwarta sesja) — „zmień rodzica” w trakcie draftów zablokowane, po „wyślij” przeszło.
+- Gładko, bez osobnych wzorców: decyzje Recommendation-First przyjmowane jednym „OK”; wiadomość z huba (sync tokenów) obsłużona i odpowiedziana tylko do huba; ślad board-tracker kumulatywny na #741 i #765.
+- Bez wzorca, jednorazowe: ruling R25 (ogłaszanie pustej ankiety tylko dla TalkBack) cofnięty po recenzji jako regres dla osoby widzącej; `review-package` raz przekroczył 120 s i dokończył się w tle.
+- Wzorce repo: repo `code-busters-mobile` nie ma `.claude/skills/`, więc nie ma wiki repo.
+- Sygnał: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (6 sesji) i zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (4 sesje) są `ogólny` — kandydaci na regułę globalną, nie na `/evolve-skill`; kod-referencyjny-planu-nigdy-nie-uruchomiony (superpowers:writing-plans, wiele sesji) — `/evolve-skill` nie obejmuje skilli wtyczki, kandydat na regułę w `CLAUDE.md` przy writing-plans. Wzorce github-tickets mają po 1 sesji, poniżej progu. Brak `nawrót`.
+
+## 2026-10-21/26 — sesja 4bd53d28-0d05-40dd-bf31-94901ea828ea (id claude.ai niedostępny); Baza wiedzy: `nagrywanie-autonomy-gates` plany 3–4 z oknami konta Gmaila, scalenie gałęzi dnia 17-10 i 22-10 do `main` (PR #763, #762), odbiór planów 2–4 (PR #776), #735 Done, #774 (DT-70)
+- założono: plik-wyjety-z-repo-kasowany-przy-przejsciu-przez-commit-ktory-go-sledzi (skill: ogólny, typ: porażka) — `google-grant.json` zniknął po `switch main` i `pull`; przywrócony z `05f545e9`.
+- założono: subagent-sesji-w-tle-bez-izolacji-nie-pisze-w-checkoucie (skill: ogólny, typ: porażka) — po `ExitWorktree` subagent od raportów odbioru nie mógł zapisać w kopii głównej; pliki przez nowy worktree.
+- założono: indeks-wiki-koliduje-przy-scalaniu-galezi-dnia (skill: podsumuj-sesja-claude, typ: porażka) — konflikty `index.md`/`log.md` wiki repo przy scalaniu 17-10 i 22-10 z `main`.
+- założono: plik-danych-sprawdzony-czytnikiem-narzedzia (skill: ogólny, typ: sukces) — `readTicket` złapał `": "` w `notes` biletu 2.2.
+- założono: ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby (skill: ogólny, typ: porażka) — „ExitWorktree is a no-op” z podsumowania, dwa przekazania scalenia do innej sesji.
+- dopisano dowód: playwright-goto-z-samym-hashem-nie-przeladowuje (drugi, druga sesja) — `send_mail` Gmaila, 7 z 10 wysyłek `NIEUSTALONY`, naprawa `page.reload` w `5d9c076c`.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (siódmy, siódma sesja) — heredoki ze skryptem node odrzucone; scalenie gałęzi dnia przez gałąź pomocniczą w worktree i push `pomocnicza:gałąź dnia`.
+- dopisano dowód: manual-step-confirmation-checked-against-system-state (trzeci) — „scalone, testy zielone” bez scalenia w repo.
+- Gładko, bez osobnych wzorców: SDD planów 3–4 z recenzją zakresową po każdym zadaniu i jedną falą poprawek; pełne testy na wyniku scalenia 22-10 (994 passed) przed pushem; karty board-tracker („Nowe issue” #774, Done #735, ranking po Done).
+- Wzorce repo dotknięte: dowód do ui-probe-before-actions-surfaces-scenario-drift (kurs-nagrywanie) — patrz log repo.
+- Sygnał: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (7 sesji, `ogólny`) — kandydat na regułę globalną, nie na `/evolve-skill`. Nowe porażki mają po 1 sesji. Brak `nawrót`.
+
+## 2026-10-26 — sesja 13cf4e4b-eabc-4759-85fd-9f693f32f51f (id claude.ai niedostępny; id z katalogu zadań tła); vault „Notatki”: `nauka-z-claude`, temat „Agent notatek” — ponowny sprawdzian kroku 1 zaliczony 3/3, porcje 3–5 kroku 2, dwie pozycje `1d` (`b797910`, `584d415`, `ef0f5a9`)
+- założono: sprawdzian-przed-powtorkami-tego-samego-materialu (skill: nauka-z-claude, typ: sukces) — przy 6 zaległych powtórkach z tego samego materiału rekomendacja „sprawdzian pierwszy” przyjęta jednym „A”.
+- założono: sprawdzian-kroku-z-wgladem-w-kod-bez-reguly (skill: nauka-z-claude, typ: porażka, wpis wątpliwy) — wgląd w `agent.py` w sprawdzianie dopuszczony bez reguły w skillu.
+- założono: bash-przekracza-120-s-takze-na-trywialnej-komendzie (skill: ogólny, typ: porażka) — `sed -n`, `cat` i `git push` w tle; dwa wcześniejsze wpisy „jednorazowe” z 24.10 i 26.10 policzone jako dowody.
+- dopisano dowód: protokol-bluf-opakowuje-tury-nauki (drugi, pierwsza prawdziwa sesja) — pełny BLUF z ⏸ w każdej turze nauki, bez widocznego tarcia.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (dziesiąty, dziesiąta sesja) — dwa przypomnienia, oba przy wywołaniach Bash przekraczających 120 s.
+- Gładko, bez osobnych wzorców: faza materiału wg skilla (dwie częściowe odpowiedzi → od razu poprawna odpowiedź z innej strony, pozycja `1d` w tej samej turze, następna porcja bez pytań naprowadzających); snippet kodu w porcji wg pamięci `nauka-code-snippety`; plik postępu commitowany i pushowany po każdej pozycji.
+- Wzorce repo (`D:/Notatki/notatki/.claude/wiki/`): bez nowych wzorców, patrz log repo.
+- Sygnał: dlugi-lancuch-narzedzi-bez-linii-statusu (10 sesji, `ogólny`) — kandydat na regułę globalną, nie na `/evolve-skill`. Wzorce `nauka-z-claude` mają po 1 sesji (protokol-bluf: 2 dowody, ale jeden na sucho) — poniżej progu. Brak `nawrót`.

@@ -40,6 +40,7 @@ ta sama zmiana na Done przeszła.
   (8 × 204, potem 8 × GET 404), a dalsze kroki z tego samego „ok” (commit i `git push` w vaultcie)
   przeszły. Zgodne z hipotezą: zapis zewnętrzny i nieodwracalny, którego jedyną zgodą jest „ok” do listy
   wariantów.
+- 2026-10-25, sesja session_01QxjrWc65U98yvi7rPWyHoa (lokalnie bdda6800-f7c7-4172-b436-16c321621fcf): w trakcie pisania draftów epiku (`github-tickets`, przed gate 2) Rafał przerwał i napisał „zmień rodzica”. Przeniesienie #650 i #651 pod #741 (`POST …/sub_issues` z `replace_parent=true`) klasyfikator odrzucił („[External System Writes]”). Claude nie ponawiał, dołączył operację do paczki wysyłki. Po jawnym „wyślij, D1 B” ta sama operacja przeszła razem z resztą zapisów. Zgodne z hipotezą: dwa słowa w środku pracy nad draftami to dla klasyfikatora za mało, jawne polecenie wysyłki wystarcza.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu

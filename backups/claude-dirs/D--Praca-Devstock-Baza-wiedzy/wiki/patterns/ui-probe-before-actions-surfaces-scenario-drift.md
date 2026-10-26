@@ -41,6 +41,19 @@ probe is an early, partial dry pass.
   could have reached the screen. This came out before any dry pass. Rafał chose manual cleanup (variant A),
   recorded as a row in the 2.2 konspekt preparation table. Opening "Utwórz" during the probe also left an empty
   draft "(brak tematu)" on the account.
+- 2026-10-24, sesja 4bd53d28-0d05-40dd-bf31-94901ea828ea (id claude.ai niedostępny), plan 4 account window
+  of `nagrywanie-autonomy-gates`, both cases in one window:
+  - Converse: `send_mail` (compose window of the sender account) ran on provisional locators with no DOM probe.
+    Three runs stopped before „Wyślij”, and each cost one `executions` of the 2.2 ticket:
+    - the To candidate;
+    - Gmail's address suggestion list covering Subject until Tab;
+    - the pre-send check's recipient field („Adresaci w polu Do/DW/UDW”).
+  - Probe: one read-only DOM probe of the open compose window (`sonda --script`, `read_attribute` on
+    `div[role="dialog"]`) gave the To field, the recipient labels and the absence of `[email]` in an empty window
+    at once.
+  - Success case in the same window: Rafał's `probe-ui` click on the reply's own menu came before any automated
+    delete ran. It named the per-message menu („Więcej opcji wiadomości”) and the item („Usuń”,
+    `li[role=menuitem]`); those locators replaced the provisional ones in `5d9c076c` without a stopped run.
 
 ## Rozwiązanie
 In `/kurs-nagrywanie`, when a lesson needs new service actions, run the locator probe along the whole lesson

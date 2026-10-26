@@ -126,6 +126,8 @@ wierność jest tym, o co się go prosi.
   jedno `grep '"format:write"' package.json` przed zapisem kroku.
 - 2026-10-21, sesja 0f7d3ee3-3f43-459d-b22d-93a1f726f081 (id claude.ai niedostępny), plan 1 warstwy CMS katalogu publicznego: trzynasty dowód. Plan kazał podpiąć `isCourseEditor(session)` wprost jako dostęp pól Keystone (i list w zadaniach 3–4). Keystone woła funkcję dostępu z obiektem `{ session, context, listKey, … }`, więc pól katalogu nie mógł zapisać nikt (fail closed, bez błędu). Testy z planu wołały pomocnika z gołą sesją i były zielone; złapało to review zadania 2, nie test. Poprawka: `courseEditorAccess({ session })` i ruling na zadania 3–4. Odmiana wzorca: kod pomocnika poprawny, błędne jego podpięcie do frameworka, którego żaden test nie wykonuje.
 
+- 2026-10-22, sesja session_01QxjrWc65U98yvi7rPWyHoa (lokalnie bdda6800-f7c7-4172-b436-16c321621fcf), plan M1 migracji Kodożerców: czternasty dowód, tym razem złapany przed dispatchem. Task 6 kazał sprawdzić `lib/forms/form-errors.ts` przez `node --experimental-strip-types -e "import(...)"`, a w tym samym pliku umieścić `announceFormErrors` z importem `react-native`. Skan pre-flight uruchomił `node -e "import('react-native')"` → `Unexpected token 'typeof'`, więc sprawdzenie z planu nie mogło przejść; ruling R3 rozdzielił plik na czysty helper i plik z `react-native`. Odmiana: defekt w **komendzie weryfikacji** planu, wykryty jej jednym uruchomieniem w pre-flight.
+
 ## Rozwiązanie
 
 Zanim plan stanie się źródłem briefów, uruchom jego kod: dla każdego bloku,

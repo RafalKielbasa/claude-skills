@@ -51,3 +51,8 @@ Format wpisu:
 - Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmieniły się raport akceptacji planu 3 `hub-voice` i indeks `.claude/projects/hub.md`, poza vaultem używane były globalne skille `talk`, `hub` i `project-index`)
 - Wzorce globalne dotknięte w tej sesji: odczyt-zaraz-po-kasowaniu-nie-dowodzi-skasowania (założony), wysylka-huba-stoi-po-approve-bez-sladu (założony), zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (dopisany dowód), decyzja-w-bramce-bez-przed-i-po (dopisany dowód)
 - Sygnał: brak (wzorce repo); globalne — patrz log globalny
+
+## 2026-10-26 — sesja 13cf4e4b-eabc-4759-85fd-9f693f32f51f (id claude.ai niedostępny)
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmienił się tylko `nauka-z-claude.md` przez globalny skill `nauka-z-claude`)
+- Wzorce globalne dotknięte w tej sesji: sprawdzian-przed-powtorkami-tego-samego-materialu (założony), sprawdzian-kroku-z-wgladem-w-kod-bez-reguly (założony), bash-przekracza-120-s-takze-na-trywialnej-komendzie (założony), protokol-bluf-opakowuje-tury-nauki (dopisany dowód), dlugi-lancuch-narzedzi-bez-linii-statusu (dopisany dowód)
+- Sygnał: brak (wzorce repo); globalne — patrz log globalny

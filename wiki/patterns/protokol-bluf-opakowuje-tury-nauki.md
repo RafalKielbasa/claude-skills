@@ -22,6 +22,11 @@ nie zawęża protokołu do tego trybu. Kształt tury zależy przez to od interpr
   pytaniem szły w formacie BLUF, np. „⏸ Czeka na decyzję: Twoja odpowiedź na pytanie sprawdzające
   o przepisywanie AOF”. Rafał formatu nie komentował. Jego opinia z 22.10 („zbyt duży próg
   wejścia”) dotyczyła metody sokratejskiej, nie formatu, więc związek jest niesprawdzony.
+- 2026-10-26, sesja 13cf4e4b-eabc-4759-85fd-9f693f32f51f (id claude.ai niedostępny), pierwsza
+  prawdziwa sesja po przebudowie: sprawdzian kroku 1 i porcje 3–5 kroku 2 „Agent notatek”,
+  każda tura w pełnym BLUF z ⏸ po pytaniu („⏸ Czeka na decyzję: twoja odpowiedź na pytanie
+  2/3 sprawdzianu kroku 1”). Rafał odpowiadał krótko na każde pytanie i formatu nie
+  komentował, więc tarcia nie widać. Pytanie o hub (quiz wygląda jak bramka) dalej otwarte.
 
 ## Rozwiązanie
 Hipoteza, do decyzji Rafała, bo dotyczy jego globalnego protokołu. W `nauka-z-claude` określić

@@ -46,6 +46,12 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   bez tekstu. Padły przy odczycie `nagrywanie.yaml` i rdzenia przed wstawieniem uwagi, przy `/kurs-uwagi` (odczyt
   scenariusza, edycje, grep), przy walidacji i commicie, przy sprawdzaniu sond P1b i przy dopisywaniu dowodów
   w wiki. Linia statusu za każdym razem pojawiała się dopiero po przypomnieniu.
+- 2026-10-26, sesja 13cf4e4b-eabc-4759-85fd-9f693f32f51f (id claude.ai niedostępny; vault,
+  nauka „Agent notatek” i to podsumowanie): dwa przypomnienia. Pierwsze padło po commicie
+  i pushu, który przekroczył 120 s, bo czekałem na wynik bez tekstu. Drugie przyszło przy
+  starcie tego kroku wiki, po zapisie pliku postępu i dwóch wywołaniach Bash, które też
+  przekroczyły 120 s ([[bash-przekracza-120-s-takze-na-trywialnej-komendzie]]). Linia
+  statusu za każdym razem dopiero po przypomnieniu.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.
