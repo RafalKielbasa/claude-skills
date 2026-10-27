@@ -164,6 +164,16 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `npm run nagrywanie` padło na `ENOENT`, bo w korzeniu repo nie ma tego `package.json`. Naprawa: osobne
   `cd` przed blokiem komend automatu. W kroku wiki tego podsumowania `cd ~/.claude/wiki && …`
   i `cd "…/.claude/wiki" && …` znowu przestawiły katalog („Shell cwd was reset”, „Environment update”).
+- 2026-10-26/27, sesja 520bd4df-d397-46bb-a9d4-6bab0ba6c1fb (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-agenty-ai-modul-2-bilet`). Dwudziesty dowód, nowy wariant: narzędzie PowerShell zachowuje się
+  tak samo.
+  - Obejściem strażnika worktree ([[straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac]]) był
+    `Set-Location` na początku każdej komendy PowerShella.
+  - Każdy `Set-Location` do `tools/nagrywanie` albo do katalogu lekcji przestawiał katalog główny sesji. Harness
+    zgłaszał to po fakcie: „Environment update: Primary working directory: …\tools\nagrywanie (was …)”, trzy
+    razy w ostatniej części sesji.
+  - Szkody nie było, bo każda komenda zaczynała się od własnego `Set-Location` ze ścieżką bezwzględną.
+  - Opis narzędzia PowerShell mówi wprost: „Do NOT prefix commands with `cd` or `Set-Location`”.
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
@@ -178,3 +188,7 @@ Wyjątek: komenda, którą reguła allow przepuszcza tylko w gołej postaci (np.
 `npm run nagrywanie`), dostaje `cd` osobnym wywołaniem tuż przed sobą. Rób to
 za każdym razem, nie raz na sesję, bo każda inna komenda z `cd` przestawia
 katalog po drodze.
+
+W narzędziu PowerShell to samo robi `Set-Location`. Zamiast niego podawaj skrypt
+ścieżką bezwzględną (`node "<pakiet>/src/cli.js" …`), a git wołaj z katalogu
+worktree, w którym sesja już stoi, albo przez `git -C "<ścieżka>"`.

@@ -31,6 +31,19 @@ głowy.
     `git worktree remove`.
   - Akcji `remove` nie użyłem, bo kasuje też gałąź, a Rafałowi obiecałem, że gałąź zostanie. Gałęzie usunąłem
     dopiero po jego „tak”.
+- 2026-10-26/27, sesja 520bd4df-d397-46bb-a9d4-6bab0ba6c1fb (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-agenty-ai-modul-2-bilet`, lekcje agenty-ai 2.1–2.3). Tym razem chodziło o kolejność pracy, nie
+  o ograniczenie narzędzia.
+  - Podsumowanie po kompaktowaniu niosło bez powodu „2.1 has priority on the course account” i „2.3 dry passes
+    only after 2.1 releases the account (28.10)”.
+  - W karcie biletu produkcyjnego (G1) lekcji 2.3 podałem to jako fakt: „Przebiegi próbne 2.3 ruszą dopiero po
+    zwolnieniu konta przez 2.1”.
+  - W szkicu śladu #789 dopisałem niesprawdzone „reset 2.3 przed nagraniem 2.1 naruszyłby jej skrzynkę”.
+    Złagodziłem to przed wysłaniem.
+  - Rafał zapytał: „Dlaczego nagrywanie ruszy dopiero po 2.1”. Dopiero wtedy `station-show` pokazał „Konto
+    kursu: wolne”, „Kolejka: pusta”, czyli brak blokady narzędzia.
+  - Powody znalazłem dopiero wtedy: maile 2.1 z `mail_age days_ago 1` oraz ścieżki resetu, które nigdy nie
+    działały na koncie. Rafał przyjął kolejność („ok”), ale kosztowało to dodatkową turę.
 
 ## Rozwiązanie
 Ograniczenie narzędzia, które znasz tylko z podsumowania kontekstu, traktuj jak hipotezę. Zanim oddasz pracę
@@ -39,3 +52,8 @@ odczytuje) i dopiero jego wynik podaj jako powód. W podsumowaniu zapisuj ograni
 padło. To samo dotyczy ograniczeń z opisu narzędzia. Sesja uruchomiona przez harness w worktree bywa dla
 `ExitWorktree` sesją worktree, choć `EnterWorktree` nie padło. Próbę rób wariantem, który da się cofnąć
 (`keep`, nie `remove`).
+
+To samo dotyczy kolejności i terminów przeniesionych z podsumowania („X dopiero po Y”). Zanim wpiszesz taką
+kolejność do karty bramki, sprawdź stan, który ją wymusza (np. `station-show` dla konta kursu). W karcie podaj
+powód z dowodem albo napisz wprost, że to wybór, a nie blokada. Ograniczenie bez powodu wraca jako pytanie
+„dlaczego”.

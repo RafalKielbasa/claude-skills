@@ -734,3 +734,15 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
   - zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (porażka, 5 sesji, dotyczy board-tracker): `/evolve-skill board-tracker` albo reguła globalna;
   - bez zmian: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska i dlugi-lancuch-narzedzi-bez-linii-statusu.
   - Brak `nawrót`.
+
+## 2026-10-26/27 — sesja 520bd4df-d397-46bb-a9d4-6bab0ba6c1fb (id claude.ai niedostępny; Baza wiedzy, worktree `baza-wiedzy-agenty-ai-modul-2-bilet`, lekcje agenty-ai 2.1–2.3 w trybie biletu)
+- dopisano dowód: ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby (trzeci, trzecia sesja). Tym razem chodziło o kolejność: zdanie „2.3 dopiero po 2.1” z podsumowania trafiło do karty G1 bez powodu. Rafał zapytał „dlaczego”, a `station-show` pokazał wolne konto. Rozwiązanie rozszerzone o kolejność i terminy.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu (dwunasty, dwunasta sesja). W transkrypcie 82 wiersze z przypomnieniem; w ostatniej części trzy, linia statusu za każdym razem dopiero po przypomnieniu.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (dziewiąty, dziewiąta sesja). Co najmniej sześć odmów: `cd` ze zmienną przed git, zmienna w konstrukcji, `sed` z numerem liczonym w locie. Przeszły PowerShell i `Grep -A`.
+- dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (dwudziesty). Nowy wariant: `Set-Location` w narzędziu PowerShell też przestawia katalog główny sesji. Rozwiązanie rozszerzone o PowerShell.
+- dopisano dowód: plik-danych-sprawdzony-czytnikiem-narzedzia (drugi, druga sesja, sukces). Bilet 2.3 przeszedł `sprawdz` i `budzet` przed commitem `3674d860`.
+- Wzorce repo: założono sprawdz-przed-biletem-nie-widzi-wspolnego-stanu-kursu i pelny-suite-nagrywanie-dwa-naraz-zawiesza-sie (wiki repo „Baza wiedzy” w worktree; drugi wątpliwy).
+- Sygnał:
+  - ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby (porażka, 3 sesje, `ogólny`): nowy kandydat na regułę globalną;
+  - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 9 sesji), cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (porażka, 20 dowodów) i dlugi-lancuch-narzedzi-bez-linii-statusu (porażka, 12 sesji): dalej kandydaci na regułę globalną w `~/.claude/CLAUDE.md`;
+  - Brak `nawrót`.

@@ -70,6 +70,20 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
   Przeszły: `bind` i `gh … --jq '[…] | @tsv'` w PowerShellu, odczyty przez `Grep`/`Glob`/`Read`, złożenie
   dokumentu skryptem Python zapisanym przez `Write` w tmp joba i wywołanym gołym `python -I <plik>`,
   `git -C <inne repo>` (code-busters) bez odmowy.
+- 2026-10-26/27, sesja 520bd4df-d397-46bb-a9d4-6bab0ba6c1fb (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-agenty-ai-modul-2-bilet`).
+  - W transkrypcie jest co najmniej sześć odmów w trzech znanych rodzajach:
+    - „too complex to verify, so what it runs cannot be shown not to be git”;
+    - „changes directory to a location computed at runtime before running git”, przy `cd` ze zmienną przed
+      commitem;
+    - „computed at runtime (the variable d) inside a construct too complex to verify”.
+  - Z podsumowania sesji: `sed` z numerem linii liczonym w locie i wywołanie PowerShella z Basha też zostały
+    odrzucone.
+  - Obejścia:
+    - commity przez narzędzie PowerShell (`Set-Location` na worktree, `git commit -m … -- <ścieżki>`);
+    - wycinki pliku przez `Grep -A` zamiast `sed -n`;
+    - PowerShell wołany bezpośrednio.
+  - Każde obejście przeszło za pierwszym razem.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych

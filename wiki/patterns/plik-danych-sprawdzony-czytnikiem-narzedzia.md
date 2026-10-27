@@ -22,6 +22,13 @@ Edycja przez `sed` albo heredoc nie widzi składni YAML. Na przykład zwykły sk
     zwróciło „niepoprawny YAML - Nested mappings are not allowed in compact mappings at line 13”.
   - Poprawka: przecinek zamiast dwukropka, ponowny odczyt z `"bledy":[]`.
   - Bez tego sprawdzenia bilet z błędem wszedłby do `main`, a pierwszy przebieg lekcji stanąłby na G1.
+- 2026-10-27, sesja 520bd4df-d397-46bb-a9d4-6bab0ba6c1fb (id claude.ai niedostępny; Baza wiedzy, bilet lekcji
+  agenty-ai 2.3).
+  - Bilet zapisałem przez `Write`, z `notes` jako zwykłym skalarem w wielu liniach, bez `": "`.
+  - Przed commitem uruchomiłem dwie komendy narzędzia, które czytają bilet. `sprawdz` dał czysty wynik:
+    „39 kroków automatu … 41 kroków planu i 47 akapitów lektora pokryte”. `budzet --dry-passes 14 --retakes 3`
+    dał `executions = 2 × (14 + 1 + 3) + 10 … = 46`, zgodnie z budżetem w pliku.
+  - Dopiero potem commit `3674d860`.
 
 ## Rozwiązanie
 Po ręcznej zmianie pliku, który czyta narzędzie projektu (bilet, manifest, konfiguracja), wczytaj go funkcją

@@ -58,6 +58,14 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   kolejne przyszły w kroku wiki, przy serii `Grep`/`Read`/`Write` stron wzorców. Wszystkie
   wywołania wracały szybko, więc licznik „trzech wywołań z rzędu” działa także bez długich komend.
   Linia statusu za każdym razem dopiero po przypomnieniu.
+- 2026-10-26/27, sesja 520bd4df-d397-46bb-a9d4-6bab0ba6c1fb (id claude.ai niedostępny; Baza wiedzy, lekcje
+  agenty-ai 2.1–2.3 w trybie biletu, kilka kompaktowań). W transkrypcie 82 wiersze zawierają przypomnienie
+  „The user hasn't heard from you in a while”.
+  - W ostatniej części sesji przyszły trzy przypomnienia. Pierwsze po pięciu odczytach (dwa bilety, skill
+    `kurs-nagrywanie`, README) przed zapisem biletu 2.3.
+  - Drugie po zapisie biletu, `sprawdz`, edycjach indeksu projektu i commicie.
+  - Trzecie w tym kroku wiki, po czterech odczytach indeksów i stron wzorców.
+  - Linia statusu za każdym razem pojawiła się dopiero po przypomnieniu.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.
