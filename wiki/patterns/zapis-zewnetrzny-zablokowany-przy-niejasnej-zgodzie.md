@@ -41,6 +41,7 @@ ta sama zmiana na Done przeszła.
   przeszły. Zgodne z hipotezą: zapis zewnętrzny i nieodwracalny, którego jedyną zgodą jest „ok” do listy
   wariantów.
 - 2026-10-25, sesja session_01QxjrWc65U98yvi7rPWyHoa (lokalnie bdda6800-f7c7-4172-b436-16c321621fcf): w trakcie pisania draftów epiku (`github-tickets`, przed gate 2) Rafał przerwał i napisał „zmień rodzica”. Przeniesienie #650 i #651 pod #741 (`POST …/sub_issues` z `replace_parent=true`) klasyfikator odrzucił („[External System Writes]”). Claude nie ponawiał, dołączył operację do paczki wysyłki. Po jawnym „wyślij, D1 B” ta sama operacja przeszła razem z resztą zapisów. Zgodne z hipotezą: dwa słowa w środku pracy nad draftami to dla klasyfikatora za mało, jawne polecenie wysyłki wystarcza.
+- 2026-10-26, sesja 2be43b78-0126-44ba-97e1-4c5eaa736bf3 (id claude.ai niedostępny; Baza wiedzy, koordynacja `kodozercy-platform`): „OK” przyjmujące naraz osiem decyzji D1–D8, z których D8 brzmiało „#688 i #764 do Done (#688 zamykam), #765 do Done”. Trzy osobne wywołania `board-tracker status --to done` w jednej turze: #764 przeszło (`closed: true`), #688 i #765 odrzucone („[External System Writes]”). Claude nie ponawiał, podał obie komendy z prefiksem `!`. Po „ponów sam #688 i #765” oba przeszły. Nowe: przy tej samej zgodzie i tej samej postaci komendy klasyfikator przepuścił jeden zapis z trzech, więc decyzja jest niedeterministyczna nawet w obrębie jednej tury.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu

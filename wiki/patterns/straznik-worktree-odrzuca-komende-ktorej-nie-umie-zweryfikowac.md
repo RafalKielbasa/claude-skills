@@ -62,6 +62,14 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
     komenda działała na refach z cwd w worktree.
   - Kopię główną (przerwanie cudzego `merge`, `switch main`, `pull`) dało się ruszyć dopiero po `ExitWorktree`,
     o które poprosił użytkownik.
+- 2026-10-26, sesja 2be43b78-0126-44ba-97e1-4c5eaa736bf3 (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-kodozercy-koordynacja`). Odmowy: `git -C "<kopia główna>"` i `cd <kopia główna> && git …`
+  („redirects git to the shared checkout”), `board-tracker bind` w Bashu (ścieżka bezwzględna i względna),
+  `gh issue view … --jq '"#\(.number) …"'` w pętli („too complex”), `node -e "require('$M/package.json')"`
+  ze zmienną, `n=$(grep …); sed -n "${n},…"` oraz `{ printf …; sed …; } > plik` składający dokument.
+  Przeszły: `bind` i `gh … --jq '[…] | @tsv'` w PowerShellu, odczyty przez `Grep`/`Glob`/`Read`, złożenie
+  dokumentu skryptem Python zapisanym przez `Write` w tmp joba i wywołanym gołym `python -I <plik>`,
+  `git -C <inne repo>` (code-busters) bez odmowy.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych

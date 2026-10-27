@@ -26,6 +26,14 @@ odpala, dlatego psuje się tylko pierwsza odpowiedź.
   zero linii `rmcp`, plik stanu hooka nietknięty; review Planu 4 przez Codexa z tymi flagami czyste.
   `-c mcp_servers."x".enabled=false` (nazwa w cudzysłowie) wywraca całe wywołanie:
   `Error loading config.toml: invalid transport`.
+- 2026-10-26, sesja 2be43b78-0126-44ba-97e1-4c5eaa736bf3 (id claude.ai niedostępny; Baza wiedzy, review
+  planów W2 i M2 migracji Kodożerców): komenda z przykładu w `~/.claude/CLAUDE.md`
+  (`codex exec --sandbox read-only "…pliki…"`, bez flag z Rozwiązania) dała `hook: SessionStart Failed`,
+  błędy `rmcp` dla Figmy i `localhost:5678`, a każde wywołanie PowerShella w sandboxie zawisło, także
+  `cmd /c echo ok`; Codex odpowiedział „Nie mogę rzetelnie wykonać review … środowisko nie pozwoliło
+  odczytać wskazanych plików”. Obejście: `cat plan spec inwentarz | codex exec --sandbox read-only
+  "…dokumenty na standardowym wejściu, nie czytaj plików z dysku…"` — dwa takie wywołania dały
+  pełne review (20 i 9 uwag). Nie sprawdzone, czy zawieszenie powłoki znika z flagami z Rozwiązania.
 
 ## Rozwiązanie
 Każde `codex exec` (i `codex exec resume`) uruchamiane przez Claude dostaje
@@ -33,4 +41,6 @@ Każde `codex exec` (i `codex exec resume`) uruchamiane przez Claude dostaje
 `-c mcp_servers.<nazwa>.enabled=false` dla każdej tabeli `[mcp_servers.<nazwa>]`
 z `~/.codex/config.toml` (dziś `n8n` i `node_repl`). Nazwa idzie bez cudzysłowów: nazwę
 w cudzysłowie zdejmij do gołego klucza, a gdy nie jest gołym kluczem, pomiń. Hub robi to od Planu 4
-w kodzie; przykład komendy review w `~/.claude/CLAUDE.md` tych flag jeszcze nie ma.
+w kodzie; przykład komendy review w `~/.claude/CLAUDE.md` tych flag jeszcze nie ma. Review dokumentów
+(plan, spec, inwentarz) podawaj Codexowi na standardowym wejściu (`cat … | codex exec … "dokumenty na
+stdin, nie czytaj plików"`): nie zależy wtedy od powłoki w sandboxie, która potrafi zawisnąć.

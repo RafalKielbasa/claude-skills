@@ -713,3 +713,24 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Bez wzorca, jednorazowe: TalkBack nie działał na telefonie Rafała, więc wiersz 6 bramki sprawdziła tylko recenzja kodu.
 - Wzorce repo: repo `code-busters-mobile` nie ma `.claude/skills/`, więc nie ma wiki repo.
 - Sygnał: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (porażka, 6 sesji, superpowers:writing-plans) — `/evolve-skill` nie obejmuje skilli wtyczki, więc to kandydat na regułę w `CLAUDE.md` przy writing-plans. dlugi-lancuch-narzedzi-bez-linii-statusu (11 sesji, `ogólny`) — kandydat na regułę globalną. Nowe porażki mają po 1 sesji. Brak `nawrót`.
+
+## 2026-10-26 (część 3) — sesja session_01QxjrWc65U98yvi7rPWyHoa (lokalnie bdda6800-f7c7-4172-b436-16c321621fcf); code-busters-mobile: usunięty worktree M1 i dwie scalone gałęzie lokalne (`dt-37-mobile-shell` `1298350`, `worktree-…-m1-shell` `17d18b0`)
+- założono: git-worktree-remove-pada-na-dlugich-sciezkach-windows (skill: ogólny, typ: porażka) — `Filename too long`, wpis worktree zniknął, a katalog został. Dokończone przez `rd /s /q "\\?\…"` i `git worktree prune`.
+- dopisano dowód: ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby (drugi, druga sesja, zgodny z rozwiązaniem) — opis `ExitWorktree` zapowiadał no-op, a `keep` zadziałał. `remove` odrzucone, bo kasuje gałąź.
+- Gładko, bez osobnych wzorców:
+  - przed usunięciem `git merge-base --is-ancestor` i sprawdzenie procesów trzymających katalog;
+  - gałęzie usunięte przez `git branch -d` dopiero po „tak”, z hashami do odtworzenia w raporcie.
+- Wzorce repo: brak wiki repo (`code-busters-mobile` bez `.claude/skills/`).
+- Sygnał: bez zmian względem części 2 — bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (6 sesji, reguła w `CLAUDE.md` przy writing-plans) i dlugi-lancuch-narzedzi-bez-linii-statusu (11 sesji, reguła globalna). Brak `nawrót`.
+
+## 2026-10-26 (część 4) — sesja 2be43b78-0126-44ba-97e1-4c5eaa736bf3 (id claude.ai niedostępny); Baza wiedzy, koordynacja `kodozercy-platform`: plany W2 i M2 z inwentarzami i review codexa, decyzje Rafała, #688, #764 i #765 Done
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (piąty, piąta sesja). Po „OK” do ośmiu decyzji przeszedł jeden z trzech identycznych `board-tracker status --to done`, pozostałe dwa przeszły po „ponów sam #688 i #765”. Nowe: blokada niedeterministyczna w obrębie jednej tury.
+- dopisano dowód: codex-exec-dziedziczy-hooki-i-mcp-uzytkownika (drugi, druga sesja). Przy przykładzie z `~/.claude/CLAUDE.md` wisiała powłoka w sandboxie i nie dało się zrobić review. Obejście: dokumenty na stdin. Rozwiązanie rozszerzone o review przez stdin.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (ósmy, ósma sesja). Odmowy dostały `git -C <kopia główna>`, `bind` w Bashu, pętle `gh --jq` i składanie dokumentu w `{ … } > plik`. Przeszły PowerShell i skrypt Python w tmp joba.
+- Gładko, bez osobnych wzorców: blokady klasyfikatora nie obchodzone, komendy podane z `!`, ponowienie dopiero na słowo Rafała.
+- Wzorce repo: założono plan-zmian-ui-kodozercow-bez-konsultanta-ux (wiki repo „Baza wiedzy”, wpis wątpliwy).
+- Sygnał:
+  - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 8 sesji, `ogólny`): kandydat na regułę globalną;
+  - zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (porażka, 5 sesji, dotyczy board-tracker): `/evolve-skill board-tracker` albo reguła globalna;
+  - bez zmian: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska i dlugi-lancuch-narzedzi-bez-linii-statusu.
+  - Brak `nawrót`.
