@@ -1,6 +1,6 @@
 ---
 name: kurs-nagrywanie
-description: Automatyczne nagrywanie ekranu lekcji demo Playwrightem (tools/nagrywanie) - automat sam klika w przeglądarce według planu nagrania, zapisuje znaczniki kroków i oddaje gotowy EDL montażowi automatycznemu. Przy pierwszej lekcji z nową usługą (np. n8n) prowadzi przez jednorazowe przygotowanie - warunki bezpieczeństwa konta, logowanie w osobnym profilu, sonda interfejsu i obsługa usługi sprawdzona na koncie zespołu. Używaj, gdy kurs ma `nagrywanie: { automat: true }` w kurs.yaml i lekcja demo ma zatwierdzoną treść i plan nagrania - najpierw przed lektorem (przebieg próbny ze zrzutami ekranu i raport rozjazdów scenariusza z aplikacją), potem po paczce lektora (nagranie); woła go /kurs-video zamiast ręcznego nagrania. NIE do pracy poza przeglądarką (terminal, aplikacje desktopowe) - te kroki nagrywa się ręcznie jako dogrywki.
+description: Automatyczne nagrywanie ekranu lekcji demo Playwrightem (tools/nagrywanie) - automat sam klika w przeglądarce według planu nagrania, zapisuje znaczniki kroków i oddaje gotowy EDL montażowi automatycznemu. Przy pierwszej lekcji z nową usługą (np. n8n) prowadzi przez jednorazowe przygotowanie - warunki bezpieczeństwa konta, logowanie w osobnym profilu, sonda interfejsu i obsługa usługi sprawdzona na koncie zespołu. Używaj, gdy kurs ma `nagrywanie: { automat: true }` w kurs.yaml i lekcja demo ma zatwierdzoną treść i plan nagrania - najpierw przed lektorem (przebieg próbny ze zrzutami ekranu i raport rozjazdów scenariusza z aplikacją), potem po paczce lektora (nagranie); w lekcji z biletem produkcyjnym jedna pętla przed lektorem (przebiegi uczą automat, zaraz po nich finalne nagranie, potem dopasowanie scenariusza do nagrania); woła go /kurs-video zamiast ręcznego nagrania. NIE do pracy poza przeglądarką (terminal, aplikacje desktopowe) - te kroki nagrywa się ręcznie jako dogrywki.
 ---
 
 # /kurs-nagrywanie - automat nagrywa ekran lekcji demo
@@ -8,6 +8,9 @@ description: Automatyczne nagrywanie ekranu lekcji demo Playwrightem (tools/nagr
 Wejście: ścieżka lekcji demo, np. `kursy/<slug>/modul-03-x/lekcja-01-y`. Wynik w dwóch częściach: przed lektorem
 zaakceptowany raport przebiegu próbnego `video/przebieg-probny.md` (kroki 0-4), po paczce lektora surowe nagrania
 ujęć ze znacznikami kroków i `video/montaz/edl.json` + `zrodla.json` lekcji, gotowe dla `/kurs-montaz` (kroki 5-6).
+Lekcja z biletem produkcyjnym (`video/ticket.yaml`) ma inną kolejność (sekcja „Lekcja z biletem: pętla produkcji”): przed
+lektorem finalne nagrania ujęć i zaakceptowany raport nagrania `video/recording-report.md` z dopasowanym scenariuszem,
+po paczce lektora tylko `edl` (krok 6).
 Projekt: `docs/superpowers/specs/2026-10-07-nagrywanie-wspolne-design.md`,
 `docs/superpowers/specs/2026-10-10-nagrywanie-przebieg-probny-design.md` i dla lekcji z biletem produkcyjnym
 `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`; narzędzie i formaty:
@@ -27,19 +30,21 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    `video/plan-nagrania.md` (jeśli `npm run validate` mówi, że jest nieaktualny - `npm run plan-nagrania` w
    `tools/course-pipeline`). Kurs ma `nagrywanie: { automat: true }`. Inaczej przerwij i powiedz Rafałowi, czego brakuje.
    **BRAMKA G1: bilet produkcyjny** (lekcja wchodzi w tryb biletu; spec `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`,
-   sekcje 3, 4, 12). **Kolejność:** `budzet` liczy wykonania z `video/nagrywanie.yaml` i waliduje lekcję jak `sprawdz`
+   sekcje 3, 4, 12 i 20). **Kolejność:** `budzet` liczy wykonania z `video/nagrywanie.yaml` i waliduje lekcję jak `sprawdz`
    (pod `autonomy: full` także nazwy z `secrets.yaml`), więc działa dopiero, gdy `sprawdz` przechodzi. Lekcja bez
    `video/nagrywanie.yaml` przechodzi więc najpierw kroki 2 i 3 bez pracy na koncie i bez płatnych wywołań: ustalasz
    usługi, piszesz `video/nagrywanie.yaml`, uruchamiasz `sprawdz` i `proba` (oba bez przeglądarki); `przygotowanie`
    (czyta konto) i przebieg czekają na bilet. Gdy oba są czyste, w tej samej turze idzie karta G1. Usługa bez obsługi
    (krok 2 kieruje do sekcji „Pierwsza lekcja z nową usługą”) to praca na koncie z Rafałem - ta sekcja idzie wtedy
    przed kartą G1, jak dotąd. Karta dla Rafała: (a) propozycja budżetu z lekcji: uruchom `budzet <lekcja>` (bez
-   przeglądarki i bez stanowiska) i wklej jego wynik: rozbicie `E` po ujęciach i grupach oraz blok `budget` z
-   `executions = E × (dry_passes + 1 + retakes) + M` (`M` - maile `video/mail.yaml`, których tematy deklaruje
+   przeglądarki i bez stanowiska) i wklej jego wynik: rozbicie `E` po ujęciach i grupach oraz blok `budget`
+   (`executions`, `tts_regenerations`, `stt`) z `executions = E × 7 + M` („Limit kosztu zamiast licznika prób” (T1):
+   mnożnik to 4 przebiegi próbne + 1 nagranie + 2 nagrania ponowne; `--dry-passes N` i `--retakes N` zmieniają tylko
+   te części mnożnika, licznikami biletu nie są; `M` - maile `video/mail.yaml`, których tematy deklaruje
    `start_state.gmail.inbox`: `send-mail` wysyła każdy raz na przygotowanie lekcji; lekcja bez poczty ma `M = 0`),
-   domyślnie `dry_passes: 4`, `retakes: 2`, `tts_regenerations: 1`
-   (2, gdy lekcja ma już `video/lektor/spis.md`: zmiana treści zużyje jedną regenerację w etapie 1), `stt: true`
-   (`--dry-passes N` i `--retakes N` zmieniają liczby) - Rafał zmienia liczby w karcie; (b) ustawienia kursu z
+   `tts_regenerations: 1` (2, gdy lekcja ma już `video/lektor/spis.md`: zmiana treści zużyje jedną regenerację w
+   etapie 1), `stt: true` - Rafał zmienia liczby w karcie. Bilet nie ma liczników prób: pętlę produkcji ogranicza
+   wyłącznie `budget.executions` i reguła braku postępu (sekcja „Lekcja z biletem: pętla produkcji”); (b) ustawienia kursu z
    `kurs.yaml`: każdy brakujący klucz `video.avatar_engine` (`api` albo `mcp`) i `video.narrator_control` (`true` albo
    `false`) to pytanie w tej karcie z twoją propozycją; po „OK” Rafała zapisujesz je w `kurs.yaml` razem z biletem (jak
    pozycje (e)), a `/kurs-video` w lekcji z biletem już o nie nie pyta;
@@ -68,7 +73,10 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    other`, `station-mark --state waiting`; jego kroki: „Dwa konta Google” w sekcji „Kurs z `autonomy: full`”), a po
    każdej `karta dopisz` `konto`. Po jego „OK” zapisujesz
    `video/ticket.yaml` z `approved: <dziś>` i budżetem (format i licznik po liczniku: README `tools/nagrywanie`, sekcja
-   „Bilet produkcyjny”); brak „OK” = brak pliku. Wyczerpany licznik otwiera G1 „bilet produkcyjny” ponownie z licznikami i następną akcją;
+   „Bilet produkcyjny”); brak „OK” = brak pliku. Odmowa próby, na którą nie starczy wykonań, albo próby bez postępu
+   otwiera G1 „bilet produkcyjny” ponownie (pętla produkcji, punkt „Karty pętli”); bilet sprzed tej zmiany z
+   `budget.dry_passes` albo `budget.retakes` jest ważny - narzędzie ignoruje oba z ostrzeżeniem, a `spent.dry_passes`
+   i `spent.retakes` liczy dalej tylko jako statystyki na kartę lekcji;
    odrzucony plik (ręcznie zmieniony `spent`) odbudowujesz z manifestów (README, „Odbudowa `spent`”).
    Bilet włącza też `shared_state` kursu (z `delete` i `recreate`) w resecie `start_state` lekcji i wymaganie
    `reset_policy` (bramka polityka konta (G3)) - bez biletu reset obejmuje tylko własną deklarację lekcji, bez żadnej polityki.
@@ -113,7 +121,8 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    - `sprawdz` odrzuca temat `inbox` spoza `video/mail.yaml`, a `budzet` dolicza te maile (`+ M`). Wysyła je
      `send-mail` (sekcja „Poczta lekcji”), nigdy reset.
    **Ekran zgody Google** (krok z `google_sign_in` na ekranie; README „Warianty narracji: klucz `consent`”):
-   - domyślnie `warianty.consent: { wartosci: [granted, incremental, remembered], rozstrzyga: <numer kroku z
+   - domyślnie (lekcja bez biletu i lekcja z biletem, której scenariusz ma już trzy akapity wariantów)
+     `warianty.consent: { wartosci: [granted, incremental, remembered], rozstrzyga: <numer kroku z
      google_sign_in> }`: Google pokazuje pełny ekran zgody, ekran tylko z nowymi uprawnieniami albo żaden - zależnie od
      tego, co pamięta - a scenariusz ma na to trzy akapity wariantów (wzór: `/kurs-lekcja`, „Ekran zgody Google”).
      Konspekt ma po kroku logowania trzy kroki wariantów, a plan nagrania - trzy wiersze wariantów z własnymi numerami
@@ -129,35 +138,34 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
      `granted`. Pełny ekran wymaga cofnięcia dostępu `n8n.cloud` przed ujęciem („Cofnięcie dostępu Google” w sekcji
      „Kurs z `autonomy: full`”), a cofnięcie unieważnia każdy credential Google na koncie, więc ujęcie, które trzyma
      inny credential Google, `sprawdz` odrzuca (`consent.require: granted - cofnięcie dostępu przed ujęciem <i>
-     unieważni credential …`) - wtedy warianty. Ujęcie z `require: granted` potrzebuje karty Gmaila i `start_state`
+     unieważni credential …`) - wtedy warianty (w lekcji z biletem z jednym akapitem zgody - bez wariantów, punkt
+     niżej). Ujęcie z `require: granted` potrzebuje karty Gmaila i `start_state`
      (cofnięcie biegnie przed resetem);
-   - zatwierdzona lekcja z jednym akapitem zgody, sprzed wariantów, dostaje akapity wariantów przez `/kurs-uwagi` w
-     trybie automatycznym (zmiana w granicy samodzielnych zmian (D1) z decyzji specu, sekcja 10), więc dopiero z
-     biletem: po G1 „bilet produkcyjny”, przed pierwszym przebiegiem, wstaw pod tym akapitem znacznik
-     `[UWAGA: przebieg próbny, krok K: <zdanie o ekranie Google, dosłownie>. Propozycja: warianty consent | wspólne:
-     <to zdanie bez części o ekranie Google> | granted: <zdanie> | incremental: <zdanie> | remembered:
-     <zdanie>]` (jedna linia; K = `numer` kroku z `google_sign_in`; zdanie każdego wariantu zaczyna się zdaniem stałym
-     z `/kurs-lekcja`), potem `/kurs-uwagi` w trybie automatycznym. Część wspólna - tekst, który zostaje pod linią
-     `[AKCJA]` logowania (to, co akapit mówi przed zdaniem o ekranie Google, razem z `wspólne`) - nigdy nie jest pusta:
-     bez tekstu między tą linią a `[AKCJA: WARIANT granted - …]` `parsujScenariusz`
-     (`tools/course-pipeline/src/scenariusz.js`) skleja obie akcje w jedną (`<logowanie>; WARIANT granted - …`). Gdy po
-     wycięciu części o ekranie Google pod linią logowania nic by nie zostało, `wspólne` to krótkie zdanie o kliknięciu
-     logowania i wyborze konta, w stylu narracji lekcji. `/kurs-uwagi` doda też do konspektu trzy kroki wariantów i
-     przenumeruje dalsze kroki o trzy (numer kroku, za którym numery się przesunęły, podaje w odpowiedzi), więc w
-     `video/nagrywanie.yaml` dopisujesz kroki wariantów i przesuwasz o trzy każde odwołanie do dalszych kroków planu
-     (`krok_planu`, `z_planu`, `warianty.<klucz>.kroki_planu`) oraz numery `akapit` za zmianą; potem `sprawdz` i
-     `proba`. Zmiana zmienia `zrodla-hasz`, więc przebieg całej lekcji. Lekcji
-     nagranej i zaakceptowanej (0.2) nie przerabiasz.
+   - lekcja z biletem, której scenariusz ma jeden akapit zgody: wariantów zgody nie potrzebuje i ich nie dopisujesz
+     (spec sekcja 20.7, wiersz 10): bez `warianty.consent`, krok z `google_sign_in` narruje ten jeden akapit. Jaki
+     ekran pokazał Google, rdzeń zapisuje w znaczniku kroku (`wariantZgody`, `zgodaOkna`), a dopasowanie do nagrania
+     (pętla produkcji, etap 7) przeredaguje akapit do ekranu finalnego nagrania w granicy samodzielnych zmian (D1), bez
+     kolejnego przebiegu. Dawnej zamiany jednego akapitu na trzy warianty znacznikiem `przebieg próbny` przez
+     `/kurs-uwagi` przed pierwszym przebiegiem już nie robisz; warianty, które lekcja ma, zostają i rozstrzyga je
+     nagranie jak dotąd. Lekcji nagranej i zaakceptowanej (0.2) nie przerabiasz.
    Lekcja, która wchodzi w tryb biletu i nie ma jeszcze `video/ticket.yaml`, kończy ten krok na czystych `sprawdz`
    i `proba` (bez `przygotowanie`) i wraca do karty G1 „bilet produkcyjny” z kroku 1; krok 4 rusza dopiero z biletem.
-4. **Przebieg próbny (przed lektorem).** Lekcja nie potrzebuje jeszcze paczki lektora - ten krok idzie zaraz po
+4. **Przebieg próbny (przed lektorem).** **Lekcja z biletem** (`video/ticket.yaml`) przechodzi kroki 4 i 5 jedną
+   pętlą przed lektorem, w kolejności sekcji „Lekcja z biletem: pętla produkcji” (po kroku 6; spec sekcja 20.3):
+   przebiegi próbne uczą automat, zaraz po przebiegu, który przeszedł ujęcie, idzie jego finalne nagranie, a scenariusz
+   dopasowujesz do nagrań na końcu. Z tego kroku obowiązują ją tylko akapity, które tamta sekcja przywołuje:
+   przygotowanie konta „Lekcja z biletem” niżej, „Kontrola zrzutów”, „Raport” (same wiersze `automat`), „Commity
+   pętli” i „Scalanie po `--ujecie N`”; analizy zrzutów pod scenariusz, bramki raportu i akceptacji przebiegu nie ma.
+   Lekcja nie potrzebuje jeszcze paczki lektora - ten krok idzie zaraz po
    zatwierdzeniu treści, zanim `/kurs-video` wygeneruje płatne audio. Lekcja, która ma już paczkę lektora (`video/lektor/spis.md`), a nie ma
    nagrania, też przechodzi przebieg przed nagraniem; przyjęta uwaga `scenariusz` oznacza wtedy nowe audio całej lekcji -
-   uprzedź Rafała o koszcie (w lekcji z biletem bez uprzedzania: regenerację liczy `tts_regenerations` biletu).
+   uprzedź Rafała o koszcie (w lekcji z biletem bez uprzedzania: lektor i tak powstaje po dopasowaniu do nagrania, a
+   regenerację liczy `tts_regenerations` biletu).
    Najpierw `npm run diagnoza -- <lekcja>`: zero
    BŁĘDÓW, każdą UWAGĘ powiedz Rafałowi.
    **Lekcja z biletem (`video/ticket.yaml`, G1 „bilet produkcyjny”):** bez tabeli przygotowania i bez pytania o zgodę na koszt - zgodą jest
-   bilet, a narzędzie liczy `executions` i `dry_passes` i samo odmawia po wyczerpaniu budżetu. Przygotowanie konta
+   bilet, a narzędzie liczy `executions` i samo odmawia próby ujęcia, na którą nie starczy wykonań, albo próby bez
+   postępu (pętla produkcji, „Karty pętli”). Przygotowanie konta
    sprawdza blok `preparation` przed każdym ujęciem przebiegu (komunikat `Przygotowanie ujęcia ... niespełnione`
    zatrzymuje ujęcie przed nagraniem); to, czego predykat nie obejmuje, jest w `account_setup` (G1 „bilet produkcyjny”). Lekcja ze
    `start_state`, której usługi mają w `kurs.yaml` potwierdzoną `reset_policy` obejmującą rodzaje z deklaracji (polityka konta (G3) raz
@@ -166,9 +174,11 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    dalej. Usługa bez polityki, z polityką czekającą na potwierdzenie (`pending_confirmation`) albo rodzaj spoza `covers`
    = błąd walidacji z nazwą bramki polityka konta (G3): wtedy karta tej bramki dla Rafała (co reset usuwa, na jakim koncie) i zapis
    `reset_policy` w `kurs.yaml` po jego „tak” - polityki czekającej nie traktujesz jak zatwierdzonej; Rafał potwierdza ją,
-   usuwając `pending_confirmation` (albo poprawiając datę). Potem `przebieg <lekcja>` (bez `--przygotowane`; podane jest
-   ignorowane z ostrzeżeniem) - cała lekcja, bez wideo, zrzut po każdym kroku. Lekcja z `video/mail.yaml`: po zajęciu
-   konta, przed `preview-start-state` i przed każdym `przebieg`, najpierw `send-mail` (sekcja „Poczta lekcji”). Lekcja z
+   usuwając `pending_confirmation` (albo poprawiając datę). Potem przebiegi ujęcie po ujęciu w pętli produkcji (etap
+   4): `przebieg <lekcja> --ujecie N` (bez `--przygotowane`; podane jest ignorowane z ostrzeżeniem), bez wideo, zrzut
+   po każdym kroku. Lekcja z `video/mail.yaml`: pierwsze `send-mail` w krótkim zajęciu konta przed rezerwacją
+   `production` (pętla produkcji, „Przed rezerwacją”), a pod rezerwacją przed `preview-start-state` i przed każdym
+   `przebieg` jeszcze raz `send-mail` (sekcja „Poczta lekcji”; wysyła tylko brakujące). Lekcja z
    `consent: { require: granted }`: `preview-start-state` wymienia cofnięcie dostępu wśród trwałych operacji, a
    `przebieg` robi je sam przed resetem ujęcia („Cofnięcie dostępu Google” w sekcji „Kurs z `autonomy: full`”).
    **Lekcja bez biletu (dotychczasowe kroki):** przejdź z Rafałem tabelę `## Przygotowanie przed nagraniem` z konspektu
@@ -180,8 +190,10 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    (kolejne resety tej lekcji idą bez bramki, dopóki deklaracja `start_state` się nie zmieni - zmieniona deklaracja wymaga nowego `preview-start-state` i nowej bramki B4 „lista trwałych usunięć”). Po jego "tak": `przebieg <lekcja> --przygotowane` - cała lekcja,
    bez wideo, zrzut po każdym kroku. Wynik: `<dane>/przebiegi/<lekcja>/<czas>/` z `przebieg.json`, zrzutami
    i `galeria.html`; komenda wypisuje niesprawdzone kroki i zasoby do usunięcia.
-   Konto kursu współdzielą równoległe lekcje: `preview-start-state` i każdy `przebieg` zajmują je i oddają według sekcji „Lekcje równolegle”.
-   **Analiza.** Dla każdego kroku z `przebieg.json` otwórz zrzut (`Read`) i porównaj go z polami kroku: `narracja`,
+   Konto kursu współdzielą równoległe lekcje: `preview-start-state` i każdy `przebieg` zajmują je i oddają według sekcji „Lekcje równolegle”
+   (lekcja z biletem trzyma je przez całą pętlę produkcji, rezerwacja `production`).
+   **Analiza** (lekcja bez biletu; w lekcji z biletem zrzutów przebiegu nie porównujesz ze scenariuszem - te same
+   pytania zadaje dopasowanie na klatkach finalnego nagrania, pętla produkcji, etap 7). Dla każdego kroku z `przebieg.json` otwórz zrzut (`Read`) i porównaj go z polami kroku: `narracja`,
    `opis` (kroki planu, czyli `[AKCJA]`), `przyjecie` i `elementy` (lokator i widoczna nazwa). Pytania:
    - czy wszystko, co narracja nazywa (przycisk, zakładka, pole, etykieta, sekcja), jest na ekranie pod tą nazwą;
    - czy opisany stan się zgadza (kolor, liczba elementów, pusta lista, połączenie);
@@ -193,8 +205,7 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    Ujęcie z więcej niż 15 zrzutami analizuje subagent (jeden na ujęcie) z tymi samymi pytaniami i formatem uwagi
    poniżej. Każdy zgłoszony rozjazd otwierasz sam na zrzucie, zanim trafi do raportu; czego nie potwierdzisz - typ
    `niepewne`, nigdy ciche pominięcie. Krok z `zrzutBlad` (w `niesprawdzone` z powodem `brak zrzutu`) i krok z powodem
-   `grupa pominięta po wyczerpaniu budżetu` to zawsze uwaga `niepewne` dla Rafała - bez zrzutu nie ma porównania (w lekcji
-   z biletem zamiast Rafała druga metoda i karta lekcji, niżej). Przebieg zatrzymany: zrzut `stop.png` i komunikat automatu oceniasz tak samo
+   `grupa pominięta po wyczerpaniu budżetu` to zawsze uwaga `niepewne` dla Rafała - bez zrzutu nie ma porównania. Przebieg zatrzymany: zrzut `stop.png` i komunikat automatu oceniasz tak samo
    (rozjazd scenariusza czy błąd automatu).
    **Kontrola zrzutów.** Każdy wpis `kontrolaZrzutow` z `przebieg.json` bez `doradcze: true` (`pasek`, `styl`; README
    `tools/nagrywanie`, „Kontrola ekranu”) to uwaga `automat` przy swoim kroku, z `opis` w polu `Na zrzucie:`. Wpis
@@ -203,34 +214,36 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    kalibracji), a na kartę lekcji trafiają z kontroli ujęcia nagrania. Gdy `przebieg.json` ma `kontrolaZrzutow`, o
    paskach przewijania i przepełnieniu rozstrzyga ona, nie oko (reguła pikselowa sondy P-A nie dała fałszywego
    alarmu). Pasek, który widzisz na zrzucie kroku bez wpisu `kontrolaZrzutow` o pasku, nie znika po cichu: to uwaga
-   `niepewne` (w lekcji z biletem druga metoda, potem karta lekcji - jak każda `niepewne`, niżej; bez biletu decyduje
-   Rafał). Inny defekt obrazu (pusty prostokąt, obce okno) zgłaszasz jak dotąd.
-   **Raport** `video/przebieg-probny.md` (format: spec przebiegu próbnego, część 2), po każdym przebiegu, w obu trybach:
+   `niepewne` (decyduje Rafał). Inny defekt obrazu (pusty prostokąt, obce okno) zgłaszasz jak dotąd. W lekcji z
+   biletem wpisy `kontrolaZrzutow` bez `doradcze: true` rozstrzygają, czy przebieg przeszedł ujęcie (pętla produkcji,
+   etap 4), a zrzutów w poszukiwaniu innych wad nie przeglądasz: obraz nagrania sprawdza kontrola ujęcia i dopasowanie.
+   **Raport** `video/przebieg-probny.md` (format: spec przebiegu próbnego, część 2), po każdym przebiegu, w obu trybach
+   (w lekcji z biletem tylko wiersze `automat` - dziennik nauki automatu, bez akceptacji):
    - frontmatter: `narzedzie: tools/nagrywanie przebieg`, `data`, `zrodla-hasz` = `zrodlaHasz` z `przebieg.json`,
-     `nagrywanie-hasz` = `hasz.model`, `przebiegi` (lista `"<numer ujęcia>: <katalog przebiegu względem <dane>>"`), `wynik`
+     `nagrywanie-hasz` = `hasz.model`, `przebiegi` (lista `"<numer ujęcia>: <katalog przebiegu względem <dane>>"`; w
+     lekcji z biletem wpis ujęcia to przebieg, który je przeszedł i który przypinasz w `nagraj --przebieg`, a do tego
+     czasu najnowszy przebieg ujęcia), `wynik`
      (`czysty` | `rozjazdy` | `zatrzymany`), `status: do_decyzji`, a po akceptacji `status: zaakceptowany` i
-     `accepted_by` (`automat <RRRR-MM-DD>` albo `rafal <RRRR-MM-DD>`, niżej „Koniec pętli”);
+     `accepted_by` (`automat <RRRR-MM-DD>` albo `rafal <RRRR-MM-DD>`, niżej „Koniec pętli”); w lekcji z biletem
+     `status: do_decyzji` zostaje i `accepted_by` nie ma - etap 1 `/kurs-video` czyta raport nagrania
+     `video/recording-report.md`;
    - `## Zatrzymanie` (jeśli było): krok, ujęcie, komunikat automatu dosłownie, zrzut, diagnoza w jednym zdaniu;
    - uwagi `### N. Krok K (akapit S:A) - tytuł` (K to `numer` kroku automatu z `przebieg.json`, nie numer kroku planu -
-     po nim `galeria` oznacza kroki) z polami `Typ:` (`scenariusz` | `automat` | `niepewne`), `Cytat:`,
+     po nim `galeria` oznacza kroki) z polami `Typ:` (`scenariusz` | `automat` | `niepewne`; w lekcji z biletem tylko
+     `automat`: wpisy `kontrolaZrzutow` bez `doradcze` i przyczyna zatrzymania), `Cytat:`,
      `Na zrzucie:`, `Propozycja:`, `Zrzut:`;
    - `## Niesprawdzone kroki` (z `niesprawdzone`), `## Do usunięcia przed nagraniem` (z `utworzone`),
      `## Podsumowanie` (liczba uwag na typ);
    - lekcja z biletem: `## Naniesione automatycznie` - tabela `| krok | typ | przed | po | commit |`, wiersz na każdą
-     zmianę, którą automat naniósł i zacommitował (`scenariusz`: zdanie przed i po; `scenariusz (decyzja G4)`: zmiana
-     z decyzji Rafała w G4 „zakres dydaktyczny”; `automat`: plik oraz stara i nowa wartość), pod tabelą notatki G4 „zakres dydaktyczny” (krok, otwarta albo
-     rozstrzygnięta i jak). Nową wersję raportu (kolejny przebieg, scalanie po `--ujecie N`) piszesz z pliku poprzedniej
-     wersji: sekcję przenosisz w całości, z wierszami `automat` i notatkami G4 „zakres dydaktyczny”. Z wpisów `zmiana-tresci` w
-     `video/karta.json` odbudowujesz ją tylko wtedy, gdy żadna poprzednia wersja raportu tej sekcji nie ma;
-   - lekcja z biletem: `## Na karcie lekcji` - uwagi `niepewne`, których druga metoda nie rozstrzygnęła, i kroki z
-     `zrzutBlad` albo z powodem `grupa pominięta po wyczerpaniu budżetu`, które poszły na kartę (`miejsce`,
-     `zrodlo: niepewne`): krok, akapit, co obejrzeć w filmie.
+     poprawkę `automat`, którą automat naniósł i zacommitował (plik oraz stara i nowa wartość). Nową wersję raportu
+     (kolejny przebieg, scalanie po `--ujecie N`) piszesz z pliku poprzedniej wersji: sekcję przenosisz w całości,
+     także wiersze `scenariusz` i notatki G4 „zakres dydaktyczny” sprzed pętli produkcji. Uwag `scenariusz` i
+     `niepewne` ani sekcji `## Na karcie lekcji` raport przebiegu lekcji z biletem już nie dostaje - są w raporcie
+     nagrania (pętla produkcji, etap 7).
    `wynik: czysty` tylko wtedy, gdy każde ujęcie lekcji przeszło przebieg na tym samym `zrodla-hasz`, nie ma żadnej uwagi, a
-   `niesprawdzone` zawiera wyłącznie kroki z powodem `dogrywka` albo `nieaktywny wariant`. W lekcji z biletem uwagi
-   i kroki z `## Na karcie lekcji` do `wynik` się nie liczą. Sekcja 2.1 specu (nierozstrzygnięte `niepewne` nie
-   blokuje przebiegu) ma tu pierwszeństwo przed brzmieniem sekcji 2.4 („definicja bez zmian”) dla pozycji, które
-   poszły na kartę: `wynik: czysty` zapada, gdy każda pozostała uwaga poszła na kartę, a `niesprawdzone` poza
-   `dogrywka` i `nieaktywny wariant` ma wyłącznie kroki z tej sekcji.
+   `niesprawdzone` zawiera wyłącznie kroki z powodem `dogrywka` albo `nieaktywny wariant`. W lekcji z biletem
+   `wynik: czysty`, gdy każde ujęcie z krokami automatu ma przebieg, który je przeszedł (pętla produkcji, etap 4);
+   `wynik` niczego tam nie odblokowuje.
    Potem `galeria <lekcja>` - oznacza kroki z uwag.
    **Lekcja bez biletu - BRAMKA: raport.** Pokaż Rafałowi tabelę `nr | krok | akapit | typ | rozjazd | propozycja`, zatrzymanie,
    niesprawdzone kroki, listę do usunięcia i pełną ścieżkę `galeria.html` w bloku kodu. Rafał decyduje o każdej
@@ -244,119 +257,38 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
      kolejny przebieg: całej lekcji po zmianie scenariusza, `--ujecie N` po poprawce automatu w jednym ujęciu.
      Pod `autonomy: full` z `start_state` lista "Do usunięcia przed nagraniem" jest tylko informacyjna: kolejny
      przebieg startuje od automatycznego resetu, Rafał niczego nie usuwa.
-   **Lekcja z biletem - bez bramki raportu** (spec `2026-10-21-nagrywanie-autonomy-gates-design.md`, sekcja 2). Każdą
-   uwagę obsługujesz sam, według typu; Rafał zobaczy wynik na karcie lekcji (sekcja „Karta lekcji”) przy bramce
-   film z kartą lekcji (G5).
-   **Najpierw aktualność przebiegu.** Przegeneruj plan (`npm run plan-nagrania -- <lekcja>` w `tools/course-pipeline`),
-   żeby porównanie nigdy nie szło do nieaktualnego planu, i porównaj `zrodlaHasz` przebiegu każdego ujęcia (wpisy
-   `przebiegi` raportu) z `zrodla-hasz` w `video/plan-nagrania.md`. Różne - przebieg jest nieaktualny: jego uwag nie
-   obsługujesz (żadnej poprawki ani bramki zakres dydaktyczny (G4) za „wróciła po poprawce”; uwagę z nieaktualnego
-   przebiegu sprawdza dopiero następny przebieg), akceptacji nie ma, a dalej idzie przebieg całej lekcji w ramach
-   `dry_passes`.
-   - `automat` (w tym każdy wpis `kontrolaZrzutow` bez `doradcze`): poprawkę w pliku lekcji (`video/nagrywanie.yaml`)
-     robisz od razu. Poprawkę pliku wspólnego (`_nagrywanie/uslugi/<usługa>.js`, `kurs.yaml` i reszta listy z sekcji
-     „Lekcje równolegle”) w tej turze tylko zapisujesz jako propozycję w raporcie (plik i zmiana), a robisz ją po
-     decyzjach bramek, gdy `station-wait --purpose dry-pass` przed następnym przebiegiem odda ci konto (kod 0). Potem
-     `sprawdz` i `proba`, commit samych plików poprawki (`kurs(<slug>): lekcja <n> poprawka automatu z przebiegu
-     próbnego (automat)`, „Commity pętli” niżej) i `przebieg <lekcja> --ujecie N` ujęcia z poprawką.
-   - `scenariusz`: napisz nowe brzmienie (to, co jest na zrzucie, w stylu narracji lekcji; nazwy w cudzysłowie tylko
-     wtedy, gdy zatwierdzona narracja lekcji tak je zapisuje) i zrób **test zakresu**: granica samodzielnych zmian
-     (D1, spec sekcja 2.2). Zmiana mieści się w granicy samodzielnych zmian (D1) tylko wtedy, gdy zachodzą wszystkie
-     cztery warunki (cytat ze specu; „D1” w cytacie to ta granica):
-     > A `scenariusz` change is within D1 when all of these hold:
-     > - the segment count, order and screen types do not change (the `/kurs-uwagi` invariant);
-     > - the `[AKCJA]` still acts in the same service on the same kind of resource (a renamed button, a moved field, a
-     >   tooltip instead of a hint are within; a different node, tool or service is outside);
-     > - the narration keeps its claim (the beat still shows what it showed; a claim of absence that is false becomes a
-     >   rewording, not a removed beat);
-     > - no lesson step is removed and no new step is added beyond a one-click transition (open, close, scroll).
-
-     Warunki dotyczą zmiany w całości: narracja, która po zmianie nazwałaby inny węzeł, narzędzie albo usługę niż
-     przed nią, jest poza granicą samodzielnych zmian (D1) także wtedy, gdy linia `[AKCJA]` już zgadza się z ekranem
-     (zmienia się to, czego beat uczy); zmieniona etykieta tego samego elementu mieści się w tej granicy (D1).
-     W granicy samodzielnych zmian (D1): wstaw pod akapitem tego zdania `[UWAGA: przebieg próbny, krok K: <rozjazd>. Propozycja: <brzmienie>]`
-     (`<rozjazd>` cytuje stare zdanie, `<brzmienie>` to całe nowe zdanie albo nowa linia `[AKCJA: ...]`) i uruchom
-     `/kurs-uwagi` w trybie automatycznym (jego sekcja „Auto mode”): naniesie zmianę, przeniesie ją do artykułu i
-     konspektu, przegeneruje plan nagrania, zacommituje ścieżki lekcji jako
-     `kurs(<slug>): lekcja <n> uwagi z przebiegu próbnego (automat)` (`<n>` = `<moduł>.<numer>` z `lekcja.yaml`, np.
-     `1.3`) i dopisze na kartę po jednym wpisie `zmiana-tresci` na zmianę. Potem przebieg całej lekcji (`zrodla-hasz`
-     się zmienił). Poza granicą samodzielnych zmian (D1) - karta bramki zakres dydaktyczny (G4), bez żadnej edycji.
-     Znacznik, którego `/kurs-uwagi` nie naniesie chirurgicznie (zostaje na miejscu), też idzie do tej bramki (G4).
-   - `niepewne`: najpierw druga metoda, na tym samym kroku i w tej kolejności: (a) `layout` kroku i wpisy
-     `kontrolaZrzutow` tego kroku, (b) `zrzut2s` (drugi zrzut 2 s po pierwszym), (c) wycinek prostokąta elementu z
-     `elementy[].prostokat` (`[x, y, szer, wys]`) powiększony 2x:
-     `ffmpeg -i <zrzut> -vf "crop=w:h:x:y,scale=iw*2:ih*2" <plik roboczy>.png` (plik roboczy poza repo). Metoda, która
-     rozstrzyga, zmienia typ na `scenariusz` albo `automat` - dalej jak wyżej. Czego żadna z trzech nie rozstrzygnie
-     (krok bez zrzutu: nie ma czego wyciąć, a bez `layout` i `zrzut2s` nie ma czego czytać), to `karta dopisz`
-     `miejsce` z `zrodlo: niepewne` (krok, akapit, `t: null`, co obejrzeć w filmie); przebiegu to nie blokuje. Zrzutów
-     sąsiednich kroków nie używasz jako dowodu.
-   - zatrzymanie (`## Zatrzymanie`): klasa z `ujecia[].stop.triage` i tabela triage z kroku 5 w wersji dla przebiegu:
-     „nowe ujęcie” to `przebieg <lekcja> --ujecie N` (licznik `dry_passes`, nie `retakes`), kolejka to
-     `station-wait --purpose dry-pass` (nie `recording`), `NIEUSTALONY` to
-     `stan-wykonania <lekcja> --ujecie N --przebieg <katalog przebiegu>`; zatrzymanie bez `stop.triage` - reguła
-     „Zatrzymanie bez klasy” pod tabelą triage z kroku 5. Poprawka w `kurs.yaml` przychodzi wyłącznie
-     z klasy `STAN` (deklaracje: `shared_state`, `preparation`), z trzymanym kontem; nowa albo szersza `reset_policy` to
-     bramka polityka konta (G3). Klasa `CEL` nigdy nie zmienia `kurs.yaml` (wiersz `CEL`).
-
-   Ta sama uwaga (ten sam krok i typ), która wraca w aktualnym przebiegu po swojej poprawce (krok jest w `## Naniesione
-   automatycznie` albo ma wpis `zmiana-tresci` na karcie), to bramka zakres dydaktyczny (G4) - drugi raz jej nie
-   poprawiasz.
-   **Kolejność w turze:** najpierw naniesienia w D1 „granica samodzielnych zmian” (z commitem) i poprawki `automat` w plikach lekcji, propozycje
-   poprawek plików wspólnych i raport, dopiero na końcu karta bramki. Poprawki plików wspólnych i kolejny przebieg -
-   po decyzjach Rafała, nie przed nimi.
-   **Karta: zakres dydaktyczny (G4).** Pola: uwaga (cytat i to, co na zrzucie), pełna ścieżka zrzutu w bloku kodu,
-   naruszona granica (który warunek granicy samodzielnych zmian (D1) nie zachodzi albo „wróciła po poprawce”),
-   propozycja automatu. Decyzję Rafała zapisujesz najpierw jako `karta dopisz` `decyzja-g4` (bez tego wpisu
-   `/kurs-uwagi` potraktuje znacznik decyzji jak zwykły znacznik przebiegu) i notatkę w `## Naniesione
-   automatycznie`. Zmianę samej narracji albo linii `[AKCJA]` wykonujesz znacznikiem z dopiskiem decyzji -
-   `[UWAGA: przebieg próbny, krok K (decyzja G4): <rozjazd>. Propozycja: <brzmienie Rafała>]` - i `/kurs-uwagi` w trybie
-   automatycznym, z jego brzmieniem dosłownie, bez dostosowania; na kartę idzie też `zmiana-tresci`, do `## Naniesione
-   automatycznie` wiersz `scenariusz (decyzja G4)`. Zmiana segmentów idzie przez `/kurs-lekcja`.
-   **Karta: bilet produkcyjny (G1), dopłata.** Zużyte i budżet obu liczników, `dry_passes` i `executions`, następna
-   akcja i propozycja nowego budżetu z `executions` przeliczonym przez
-   `budzet <lekcja> --dry-passes <nowe> --retakes <r>` (`<r>` z biletu) - nie sam `dry_passes`.
-   **Karta w turze:** jedna na turę, także gdy bramek jest kilka; decyzje nazwane bramką z nazwą i kodem
-   (`zakres dydaktyczny (G4), krok 8`, `bilet produkcyjny (G1)`), nigdy numerami D1, D2 (kod D1 to granica
-   samodzielnych zmian), każda z rekomendacją i wariantami jak w `CLAUDE.md`; na końcu jedna linia
-   `⏸ Czeka na decyzję: ...`.
-   **Kolejny przebieg:** po zmianie treści przebieg całej lekcji, po samych poprawkach `automat` `--ujecie N` każdego
-   poprawionego ujęcia (scalanie niżej); uwagi z `## Na karcie lekcji` kolejnego przebiegu nie wymagają. Gdy przebieg
-   skończył się uwagami spoza karty (kolejny będzie potrzebny), od razu porównaj w `video/ticket.yaml`
-   `spent.dry_passes` z `budget.dry_passes`: równe - karta bilet produkcyjny (G1) w tej samej turze (razem z kartą
-   zakres dydaktyczny (G4), jeśli jest), nigdy zakres dydaktyczny (G4) za budżet, i przebiegu nie planujesz przed
-   dopłatą. Każdy przebieg to dołączenie do kolejki (`station-wait --purpose dry-pass`) i oddanie konta po nim.
-   **Commity pętli** (poprawka `automat`, akceptacja): przed commitem `git diff HEAD -- <ścieżka>` każdej ścieżki
+   **Lekcja z biletem - bez bramki raportu i bez analizy pod scenariusz** (spec `2026-10-21-nagrywanie-autonomy-gates-design.md`,
+   sekcje 2 i 20.3). Przebiegi, poprawki `automat`, odmowy i karty idą w pętli produkcji (sekcja „Lekcja z biletem:
+   pętla produkcji”, etapy 4-5); test zakresu (D1), druga metoda dla `niepewne` i karta zakresu dydaktycznego (G4) -
+   w jej dopasowaniu do nagrania (etap 7). Rafał zobaczy wynik na karcie lekcji przy bramce film z kartą lekcji (G5).
+   **Commity pętli** (poprawka `automat`, akceptacja; w lekcji z biletem także raport nagrania): przed commitem `git diff HEAD -- <ścieżka>` każdej ścieżki
    (pokazuje też to, co ktoś zaindeksował) i porównanie z tym, co pętla sama zmieniła. Ścieżki ze zmianami, których
    pętla nie zrobiła (Rafała albo innej sesji), nie commitujesz; pozostałe idą `git commit -m … -- <ścieżki>`, a tura
    nazywa pominiętą ścieżkę i powód. Bez tymczasowego indeksu. `git add -- <ścieżka>` tylko dla ścieżki jeszcze
    nieśledzonej (`git ls-files --error-unmatch -- <ścieżka>` kończy się błędem, np. pierwszy `video/karta.json`,
-   pierwszy `video/przebieg-probny.md`, nowy moduł usługi), tuż przed commitem, który ją wymienia; ścieżki śledzonej
+   pierwszy `video/przebieg-probny.md`, pierwszy `video/recording-report.md`, nowy moduł usługi), tuż przed commitem, który ją wymienia; ścieżki śledzonej
    nigdy nie dodajesz do wspólnego indeksu.
    **Scalanie po `--ujecie N`.** `przebiegi` w raporcie to lista wpisów `"<numer ujęcia>: <katalog względem <dane>>"`.
    Najpierw porównaj `zrodlaHasz` nowego `przebieg.json` z `zrodla-hasz` raportu: różne = treść się zmieniła,
-   potrzebny przebieg całej lekcji, nie scalasz. Równe: usuń z raportu uwagi o krokach tego ujęcia (numery kroków
+   potrzebny przebieg całej lekcji, nie scalasz. W lekcji z biletem różny `zrodlaHasz` przebiegu całej lekcji nie
+   wymaga („Poprawne nagranie” (T2); spec sekcja 20.1, przyczyna 2): treść zmienia tam tylko dopasowanie do nagrania
+   albo decyzja w bramce zakres dydaktyczny (G4), po której ujęcie dostaje nowe finalne nagranie. Wtedy zaczynasz
+   nową wersję raportu przebiegu (nowy `zrodla-hasz`, wpis tego ujęcia w `przebiegi`, sekcja `## Naniesione
+   automatycznie` przeniesiona w całości, wpisy pozostałych ujęć bez zmian) i po nagraniu nową wersję
+   `video/recording-report.md` (pętla produkcji, etap 7), zamiast przebiegu całej lekcji. Równe: usuń z raportu uwagi o krokach tego ujęcia (numery kroków
    ujęcia są w `ujecia[].kroki` obu `przebieg.json`) i jego sekcję "Zatrzymanie", dopisz uwagi z nowej analizy,
    ponumeruj wszystkie uwagi od 1 w kolejności kroków, podmień wpis tego ujęcia w `przebiegi`, przelicz
    "Niesprawdzone kroki", "Do usunięcia przed nagraniem" i `wynik`.
    **Koniec pętli.** Pętla kończy się raportem `wynik: czysty` albo "tak" Rafała dla pozostałych uwag - dopiero wtedy ustaw
-   `status: zaakceptowany` i zacommituj raport. W lekcji z biletem `wynik: czysty` (definicja wyżej, z sekcją
-   `## Na karcie lekcji`) na aktualnym przebiegu - po `npm run plan-nagrania` `zrodlaHasz` każdego ujęcia równe
-   `zrodla-hasz` w `video/plan-nagrania.md`, inaczej przebieg całej lekcji w ramach `dry_passes` - to od razu
-   `status: zaakceptowany` i `accepted_by: automat <RRRR-MM-DD>`, bez pytania, oraz commit raportu i `video/karta.json`
-   (`kurs(<slug>): lekcja <n> przebieg próbny zaakceptowany (automat)`, „Commity pętli”). Raport przyjęty ręcznie
-   przez Rafała (lekcja bez biletu albo jego „tak” w bramce zakres dydaktyczny (G4) dla pozostałych uwag) dostaje
-   `accepted_by: rafal <RRRR-MM-DD>`; w lekcji z biletem jego commit to
-   `kurs(<slug>): lekcja <n> przebieg próbny zaakceptowany (rafal)`, razem z `video/karta.json`. Etap 1 `/kurs-video` (lektor) odmówi bez zaakceptowanego raportu
-   zgodnego z bieżącą treścią; `--bez-przebiegu` tylko na jawne słowo Rafała w tej rozmowie, także w lekcji z biletem.
-5. **Nagranie (po paczce lektora).** Wymaga zaakceptowanego przebiegu próbnego (krok 4) i paczki lektora z etapu 1 `/kurs-video`; zasoby utworzone przez ostatni przebieg muszą być usunięte. Pod `autonomy: full` z `start_state` nic nie sprzątasz ręcznie przed nagraniem (reset przed ujęciem robi to sam), a `--wznow` takiego ujęcia narzędzie odmawia - nagrywasz je od początku. Najpierw `npm run diagnoza -- <lekcja>`: zero BŁĘDÓW, inaczej nie nagrywasz; każdą UWAGĘ powiedz Rafałowi (np. brak sygnatur przy lekcji bez `wykonaj` jest w porządku).
-   **Lekcja z biletem:** tabeli nie przechodzisz z Rafałem - stan konta (otwarte workflow, credentials) sprawdza blok
-   `preparation` przed każdym ujęciem (pomijany tylko przy `--wznow`), a B4 „lista trwałych usunięć” nie ma, gdy potwierdzona `reset_policy`
-   usługi (bez `pending_confirmation`) obejmuje rodzaje (podgląd idzie do logu). Przed krokami konta usługi z `session_expires: true` w `kurs.yaml` (dziś pinecone)
-   uruchom `login <lekcja> --usluga <nazwa> --refresh`; `AUTH` odsyła Rafała do zwykłego `login`. Nagrywaj ujęcie po
-   ujęciu **do jednego przebiegu**: `nagraj <lekcja> --ujecie N --run <nazwa>` z tą samą `<nazwa>` dla wszystkich
-   ujęć lekcji (`--przygotowane` jest ignorowane z ostrzeżeniem). Przy `--wznow` blok `preparation` nie jest sprawdzany.
-   Lekcja z `video/mail.yaml`: po zajęciu konta, przed pierwszym `nagraj`, najpierw `send-mail` (sekcja „Poczta
-   lekcji”); cofnięcie dostępu przy `consent: { require: granted }` `nagraj` robi sam przed resetem ujęcia.
+   `status: zaakceptowany` i zacommituj raport. Raport przyjęty ręcznie przez Rafała dostaje
+   `accepted_by: rafal <RRRR-MM-DD>`. Etap 1 `/kurs-video` (lektor) odmówi bez zaakceptowanego raportu
+   zgodnego z bieżącą treścią; `--bez-przebiegu` tylko na jawne słowo Rafała w tej rozmowie. W lekcji z biletem raport
+   przebiegu nie jest akceptowany: pętlę kończą finalne nagrania i zaakceptowany raport nagrania
+   `video/recording-report.md` (pętla produkcji, etapy 6-7), który czyta etap 1 `/kurs-video`; `--bez-przebiegu` także
+   tam tylko na jawne słowo Rafała w tej rozmowie (ujęcie bez przebiegów, pierwsza próba to nagranie).
+5. **Nagranie (po paczce lektora).** **Lekcja z biletem** nagrywa w pętli produkcji (etap 5), zaraz po przebiegu,
+   który przeszedł ujęcie, przed lektorem i bez akceptacji przebiegu próbnego (sekcja „Lekcja z biletem: pętla
+   produkcji”); z tego kroku obowiązuje ją tylko akapit „Oba warianty”. Lekcja bez biletu: wymaga zaakceptowanego przebiegu próbnego (krok 4) i paczki lektora z etapu 1 `/kurs-video`; zasoby utworzone przez ostatni przebieg muszą być usunięte. Pod `autonomy: full` z `start_state` nic nie sprzątasz ręcznie przed nagraniem (reset przed ujęciem robi to sam), a `--wznow` takiego ujęcia narzędzie odmawia - nagrywasz je od początku. Najpierw `npm run diagnoza -- <lekcja>`: zero BŁĘDÓW, inaczej nie nagrywasz; każdą UWAGĘ powiedz Rafałowi (np. brak sygnatur przy lekcji bez `wykonaj` jest w porządku).
    **Lekcja bez biletu (dotychczasowe kroki):** przejdź z Rafałem tabelę `## Przygotowanie przed nagraniem` z konspektu (stan konta, otwarte
    workflow, credentials) - dopiero po jego potwierdzeniu nagrywaj ujęcie po ujęciu **do jednego przebiegu**:
    `nagraj <lekcja> --przygotowane --ujecie N --run <nazwa>` z tą samą `<nazwa>` dla wszystkich ujęć lekcji (bez
@@ -365,7 +297,7 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    każdym nagraniu narzędzie wypisuje ujęcia, których jeszcze brakuje. Przerwane ujęcie:
    `nagraj <lekcja> --ujecie N --run <nazwa> --wznow <nazwa>` (w lekcji bez biletu dodaj `--przygotowane`) - narzędzie odmówi wznowienia grupy z rozpoczętym wykonaniem
    albo skutkiem ubocznym; wtedy w lekcji bez biletu decyduje Rafał, a w lekcji z biletem nagrywasz ujęcie od nowa
-   (triage niżej). Automat powtarza grupę prób w ramach budżetu. Po każdym ukończonym ujęciu `nagraj` uruchamia kontrolę
+   (tabela triage w pętli produkcji). Automat powtarza grupę prób w ramach budżetu. Po każdym ukończonym ujęciu `nagraj` uruchamia kontrolę
    ujęcia i wypisuje werdykt `Kontrola ujęcia <i> <nazwa>: <werdykt> (<k> uwag)` (README, „Kontrola ujęcia”); zatrzymane
    ujęcie werdyktu nie ma, tylko linię `Triage: <klasa> - <dalej>` (README, „Klasy zatrzymań”).
    **Lekcja bez biletu (dotychczasowe kroki):** zatrzymanie z komunikatem
@@ -373,48 +305,6 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    i nie obchodź - pokaż komunikat Rafałowi. **BRAMKA: pierwsze ujęcie lekcji** - daj Rafałowi ścieżkę surowego
    nagrania i poproś, żeby je obejrzał; jego uwagi zmieniają `nagrywanie.yaml`, potem ujęcie od nowa. Kolejne ujęcia
    tylko po jego "tak". Werdykt kontroli ujęcia i linia `Triage:` są tu tylko informacją dla niego.
-   **Lekcja z biletem - bez bramki pierwszego ujęcia** (spec sekcje 6 i 7). Po każdym `nagraj` czytasz werdykt:
-   - `przyjete` - następne ujęcie;
-   - `powtorka` - gdy uwaga nazywa znaną przyczynę (`pasek` i `styl`: styl nagrania usługi; `okno`: okno, którego krok
-     nie deklaruje; `material`: nieczytelny plik ujęcia), popraw ją (pliki wspólne tylko z trzymanym kontem), potem
-     polecenie z linii `Dalej:`, czyli `nagraj <lekcja> --ujecie N --run <ten sam>` (zużywa `retakes`), i `karta dopisz`
-     `powtorka` z powodem;
-   - `przyjete-z-karta` - następne ujęcie; powtórzone uwagi trafiają na kartę same (`buduj` czyta `powtorzone` i
-     `doradcze` z `kontrola.json` nagrania wybranego do montażu), więc ich nie dopisujesz.
-
-   Zatrzymania nie pokazujesz Rafałowi - działasz według klasy z linii `Triage:` (README, „Klasy zatrzymań”; spec
-   sekcja 7):
-
-   | Klasa | Co robisz | Bramka |
-   |---|---|---|
-   | `LIMIT_SIEC` | `station-release`, odczekaj kolejny odstęp z `TRIAGE_ODSTEPY_MIN` (2, 10, 30 min, dalej co 30) w tle (`sleep` narzędziem Bash z `run_in_background: true`), wróć przez `station-wait --purpose recording` i nagraj ujęcie od nowa | G1 „bilet produkcyjny”, gdy `retakes` wyczerpane |
-   | `NIEUSTALONY` | `stan-wykonania <lekcja> --ujecie N --run <nazwa>` (odczyt z usługi, sprawdza stanowisko jak `przygotowanie`); każde wykonanie ze stanem końcowym - nowe ujęcie (`nagraj --ujecie N --run <ten sam>`, nigdy `--wznow`). Komunikat `revoke_google_access: …` to nie wykonanie - „Cofnięcie dostępu Google” w sekcji „Kurs z `autonomy: full`” | stan `null` albo `trwa` - karta jak G4 „zakres dydaktyczny” z identyfikatorem wykonania (Rafał sprawdza ręcznie) |
-   | `AUTH` | nic | G2 „poświadczenia i pierwsza zgoda OAuth”: karta z komunikatem; loguje się Rafał (`login <lekcja> --usluga <nazwa>`) |
-   | `BUDZET` | nic | G1 „bilet produkcyjny”: karta jak w kroku 4 (liczniki, następna akcja, propozycja z `budzet <lekcja> --dry-passes <d> --retakes <nowe>`) |
-   | `CEL` | popraw konfigurację - `video/nagrywanie.yaml` albo lokatory modułu usługi - albo krok i nagraj od nowa; zatrzymania bezpieczeństwa nie powtarzasz bez zmiany. Listy bezpieczeństwa w `kurs.yaml` (`hosty`, `hostyLogowania`, `identyfikatory`, `widokiBezId`, hosty i zakresy OAuth - `oauth_hosts`, `oauth_scopes` - oraz `wyzwalaczeSieci`) zmienia wyłącznie Rafał | G2 „poświadczenia i pierwsza zgoda OAuth”, gdy to sprawa okna zgody albo gdy poprawka wymaga zmiany listy bezpieczeństwa: karta z komunikatem zatrzymania dosłownie; ten sam `CEL` po poprawce - G4 „zakres dydaktyczny” |
-   | `STAN` | popraw deklarację (`shared_state`, `preparation`), gdy różnica to zasób innej lekcji; inaczej jeden ponowny reset (nowe ujęcie). Komunikaty skrzynki Gmail i cofnięcia dostępu - sekcje „Poczta lekcji” i „Kurs z `autonomy: full`” (brak maila w Odebranych to `send-mail`, nie ponowny reset; odpowiedź konta kursu w wątku lekcji z biletem usuwa sam reset, `usun-odpowiedz`, bez stopu; odmowy `send-mail` i kart stanów skrzynki nie obchodzisz wysyłką ani resetem) | polityka konta (G3) tylko dla nowej polityki; stany skrzynki, których automat nie naprawi (sekcja „Poczta lekcji”): karta klasy G4 „zakres dydaktyczny” (odpowiedź albo kopia w wątku lekcji - w lekcji z biletem już tylko wiersz bez identyfikatora wątku, wątek ze szkicem i wątek z odpowiedzią zadeklarowaną w `sent` -, wiadomość, której reset nie usuwa, zdublowany temat, mail lekcji już w skrzynce poza swoim wierszem w Odebranych; także powody `konto kursu nieustalone`, `rozmowa niezgodna z licznikiem (<n> z <count> wiadomości)`, `wersja robocza w rozmowie`, `wiadomość niewidoczna w całości`) albo karta klasy polityka konta (G3) („kosz NIE opróżniony”, także rozmowa zmieniona przed usunięciem odpowiedzi, odpowiedź, która nie zniknęła z rozmowy, i rozmowa, która po usunięciu nie jest samym mailem lekcji; rozmowa zmieniona od planu, niewczytana w 15 s albo nierozwinięta - dopiero, gdy po jednym nowym ujęciu ten sam komunikat (ta sama przyczyna w nawiasie) wraca drugi raz) |
-   | `BRAK_ELEMENTU`, `PRZYJECIE` | sonda automatyczna (niżej), potem lokatory (`automat`) i nowe ujęcie; zmiana `scenariusz` (test zakresu z kroku 4) to powrót do kroku 4 (przebieg całej lekcji i akceptacja), potem `/kurs-video` etap 1 (nowy lektor, zużywa `tts_regenerations`) i nagranie od nowa - nigdy nowe ujęcie na zmienionej treści ze starym lektorem | G4 „zakres dydaktyczny”, gdy sonda pokaże, że funkcji nie ma |
-   | `INNY` | jedno nowe ujęcie w ramach `retakes`; zatrzymania nie pokazujesz Rafałowi | ten sam komunikat drugi raz - karta G4 „zakres dydaktyczny” z komunikatem dosłownie (automat nie pójdzie dalej bez zmiany tego, co robi) |
-
-   **Zatrzymanie bez klasy** (manifest ujęcia z `triage: null`, bez linii `Triage:`; README „Klasy zatrzymań”): ujęcie
-   przerwał błąd, który nie jest jego własnym zatrzymaniem. Komunikat „konto kursu zajęte” (inna lekcja zajęła konto
-   między sprawdzeniem a otwarciem profilu; tak samo odmowa z tym komunikatem przed startem ujęcia) to
-   `station-wait <lekcja> --purpose recording` w tle (koniec tury bez znacznika bramki), a po kodzie 0 ujęcie od nowa. Każde inne zatrzymanie bez klasy (np. Chrome nie wystartował)
-   obsługujesz jak `INNY`: jedno nowe ujęcie w ramach `retakes`, ten sam komunikat drugi raz - karta G4 „zakres
-   dydaktyczny” z komunikatem dosłownie. W przebiegu próbnym (krok 4) tak samo, z `--purpose dry-pass` i licznikiem
-   `dry_passes` zamiast `retakes`.
-   Każda decyzja triage to `karta dopisz` `triage` (ujęcie, klasa, decyzja jednym zdaniem; zatrzymanie bez klasy:
-   `klasa` `INNY` albo `bez klasy - konto kursu zajęte`), a każde nowe ujęcie po triage także wpis `powtorka`. Wyczerpany licznik to odmowa `bilet produkcyjny: licznik ... wyczerpany` (klasa
-   `BUDZET`) - G1 „bilet produkcyjny”, nigdy G4 „zakres dydaktyczny”.
-   **Sonda automatyczna** (lekcja z biletem; klasy `BRAK_ELEMENTU` i `PRZYJECIE` w nagraniu i w przebiegu próbnym; spec
-   sekcja 5): napisz skrypt sondy pod pytanie (YAML: README, „Sonda automatyczna”; plik w `<dane>/sondy/`, poza
-   gitem, plik wspólny - tylko z trzymanym kontem), uruchom `probe-auto <lekcja> --usluga <nazwa> --script <plik>`
-   (tylko odczyt; `--allow-writes` wyłącznie, gdy pytanie wymaga działania `cel: wykonaj`, z `tworzy: [executions]` -
-   zużywa `executions`), przeczytaj raport (`<dane>/sondy/probe-auto-<usługa>-<czas>/raport.json` i zrzuty), potem
-   popraw lokatory (`automat`) albo napisz zmianę `scenariusz` z testem zakresu (krok 4). Zmiana `scenariusz` w trakcie
-   nagrania wraca do kroku 4 (przebieg całej lekcji i akceptacja), potem `/kurs-video` etap 1 (nowy lektor, zużywa
-   `tts_regenerations`), potem nagranie od nowa - nigdy nowe ujęcie na zmienionej treści ze starym lektorem. Sonda
-   zajmuje konto jak każda komenda profilu. Funkcji, którą pokazuje scenariusz, już nie ma - G4 „zakres dydaktyczny”.
    Konto kursu zajmujesz i oddajesz według sekcji „Lekcje równolegle” (kolejka; bez biletu zwolnienie przed bramką
    pierwszego ujęcia).
 6. **EDL.** `edl <lekcja> --run <nazwa>` (wszystkie ujęcia nagrane) - granice klatek muszą zgodzić się z osią lektora (bramka narzędzia). Istniejący `edl.json` z ręcznymi
@@ -424,10 +314,370 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    `npm run kontrola-lektora -- <lekcja> --zastosuj` w `tools/course-pipeline` (czyta zapisane decyzje, bez
    rozpoznawania mowy i bez kosztu): `edl` układa EDL od nowa bez wyciszeń z kontroli lektora, więc bez tego kroku
    wyciszenia znikałyby po cichu. Dalej `/kurs-montaz` (zoomy, ramki, plansze), potem `/kurs-video` etap 2.
+   W lekcji z biletem `edl` biegnie w etapie 8 pętli produkcji, po etapie 1 `/kurs-video` na dopasowanym scenariuszu,
+   z runu finalnych nagrań. Nagranie wiąże ze scenariuszem szkielet planu, nie jego tekst (spec sekcja 20.4): `edl`
+   przyjmuje nagranie po dopasowaniu narracji, a po zmianie tekstu do wpisania, kroków albo działań odmawia
+   (`… nagranie powstało dla innego szkieletu planu (segmenty, kroki, akapity, tekst do wpisania) albo innego
+   nagrywanie.yaml - nagraj ujęcie ponownie`) - to nowe finalne nagranie tego ujęcia (pętla produkcji, etap 3),
+   po słowie Rafała w bramce zakres dydaktyczny (G4), gdy zmiana przyszła z treści.
 
 Kurs z `oprawa: { znak_ai: true }` w `kurs.yaml`: znaczniki kroków niosą dodatkowo prostokąty elementów akcji
 (początek i koniec akcji, prostokąt przed i po), a `edl` zapisuje `video/montaz/obszary-nagrania.json` - strażnik rogu
 znaku AI nie zasłoni miejsca, w którym coś się dzieje. Nic do zrobienia ręcznie; kurs bez klucza - znaczniki jak dotąd.
+
+## Lekcja z biletem: pętla produkcji
+
+Lekcja z `video/ticket.yaml` (bilet produkcyjny (G1)) idzie od kroku 4 kolejnością specu
+`docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`, sekcja 20 („Rola przebiegów próbnych” (T3),
+„Poprawne nagranie” (T2), „Trzymanie konta kursu” (T4), „Limit kosztu zamiast licznika prób” (T1)): przebiegi próbne
+uczą automat poruszać się po stronie (lokatory, elementy, oczekiwania, reset) i nie sprawdzają narracji; zaraz po
+przebiegu, który przeszedł ujęcie, idzie finalne nagranie tego ujęcia; scenariusz dopasowujesz do nagrań raz, po
+ostatnim ujęciu, a lektor powstaje dopiero na dopasowanym scenariuszu. Lekcja bez biletu zostaje przy krokach 4-6 bez
+zmian (przebieg z raportem i bramką, lektor, nagranie). Lekcja z biletem, która była w produkcji przed tą zmianą
+(2.2), przechodzi na pętlę od następnej próby dopiero na słowo Rafała w jej sesji - pytasz raz (spec sekcja 20.9).
+
+| Etap | Co robisz | Konto |
+|---|---|---|
+| 1 | bilet produkcyjny (G1): krok 1 (budżet `executions`, ustawienia kursu, czynności ręczne) | bez konta |
+| 2 | przygotowanie bez konta: kroki 2 i 3 (`video/nagrywanie.yaml`, `preparation`, `start_state`, `sprawdz`, `proba`), plansze, `npm run diagnoza -- <lekcja>`; poczta lekcji i czynności na koncie - krótkie zajęcia (punkt „Przed rezerwacją”) | bez konta |
+| 3 | `station-wait <lekcja> --purpose production` w tle (sekcja „Lekcje równolegle”); od kodu 0 lekcja trzyma konto | zajęte |
+| 4 | ujęcie po ujęciu, w kolejności ujęć: przebiegi próbne `przebieg <lekcja> --ujecie N`, aż jeden przejdzie ujęcie; między nimi wyłącznie poprawki `automat` (punkt „Przebiegi próbne”) | trzymane |
+| 5 | od razu po przebiegu, który przeszedł ujęcie N: `nagraj <lekcja> --ujecie N --run <nazwa> --przebieg <katalog tego przebiegu>` i werdykt kontroli (punkt „Nagranie i kontrola”); poprawne - finalne nagranie ujęcia N, następne ujęcie od etapu 4; niepoprawne - poprawka `automat` i kolejna próba ujęcia N, zawsze nagranie | trzymane |
+| 6 | po finalnym nagraniu ostatniego ujęcia: sprawdzenie haszy (punkt „Koniec nagrań”), `station-release <lekcja>` | oddane |
+| 7 | dopasowanie scenariusza do nagrań i raport `video/recording-report.md` (punkt „Dopasowanie do nagrania”) | bez konta |
+| 8 | `/kurs-video` etap 1 (lektor, kontrola lektora) na dopasowanym scenariuszu, avatary, `edl` z finalnych nagrań (krok 6), `/kurs-montaz`, etap 2, film z kartą lekcji (G5) | bez konta |
+
+- Ujęcie z samymi dogrywkami (bez kroków automatu) pomija etapy 4 i 5.
+- Po pierwszym przebiegu, który przeszedł ujęcie, każda dalsza próba tego ujęcia jest nagraniem, nigdy kolejnym
+  przebiegiem (nagranie kosztuje tyle co przebieg, a pętlę kończy tylko poprawne nagranie).
+- `--bez-przebiegu` tylko na jawne słowo Rafała w tej rozmowie: ujęcie bez etapu 4, pierwsza próba to nagranie
+  (`nagraj` bez `--przebieg`).
+- **Próba** (spec sekcja 20.5): jedno ujęcie uruchomione jedną komendą - przebieg (`przebieg`, cały albo `--ujecie N`),
+  nagranie (`nagraj`) albo próba resetu (`przebieg --tylko-reset`). Każda zostawia manifest ujęcia `znaczniki.json` ze
+  `startedAt`; komenda odrzucona przed jego zapisem (walidacja, stanowisko, bilet) próbą nie jest, ponowne
+  `kontrola-ujecia` też nie (wynik próby to jej najnowszy `kontrola.json`).
+- **Limit pętli** („Limit kosztu zamiast licznika prób” (T1)): wyłącznie `budget.executions` i reguła braku postępu.
+  Przed każdą próbą `przebieg` i `nagraj` sprawdzają, czy zostało tyle wykonań, ile potrzebuje próba ujęcia (`E`
+  ujęcia z `budzet`), i czy dwie ostatnie próby ujęcia nie są nieudane z tym samym podpisem; obie odmowy przychodzą
+  przed otwarciem profilu, bez kosztu (punkt „Karty pętli”). Przebiegi próbne i nagrania ponowne bilet liczy tylko
+  jako statystyki (`spent.dry_passes`, `spent.retakes`), które niczego nie odmawiają.
+
+### Przed rezerwacją (etapy 1-2)
+
+- Przed `station-wait --purpose production` kończysz całą pracę bez konta (kroki 1-3, plansze). Paczki lektora i
+  avatarów lekcja z biletem przed nagraniem nie potrzebuje - powstają w etapie 8.
+- Praca na koncie przed rezerwacją idzie w krótkich zajęciach, oddawanych zaraz po niej (`station-release`):
+  `send-mail` lekcji z `video/mail.yaml` (`station-wait <lekcja> --purpose other`, sekcja „Poczta lekcji”), czynności
+  Rafała na koncie z karty bilet produkcyjny (G1) (pozycje (c) i (f)) i `save-start-state` nowej lekcji (`other`
+  albo `preview`).
+  Czekanie na `mail_age` (`Dalej: ujęcie najwcześniej <data> …`) jest bez konta; tego dnia dołączasz
+  `--purpose production`.
+
+### Przebiegi próbne (etap 4)
+
+- **Przed pierwszym przebiegiem ujęcia** konto przygotowuje automat jak w kroku 4 („Lekcja z biletem”): blok
+  `preparation`, `preview-start-state <lekcja> --ujecie N` do logu (karta polityka konta (G3) tylko przy błędzie
+  walidacji), `send-mail`, cofnięcie dostępu Google przy `consent: { require: granted }`; przed krokami konta usługi z
+  `session_expires: true` w `kurs.yaml` (dziś pinecone) `login <lekcja> --usluga <nazwa> --refresh` (`AUTH` odsyła
+  Rafała do zwykłego `login`).
+- **Przebieg** `przebieg <lekcja> --ujecie N` (bez `--przygotowane`). Czy **przeszedł ujęcie**, rozstrzygają wyłącznie
+  maszynowe kontrole `przebieg`: w `przebieg.json` ujęcie ma `status: gotowe` (każdy krok przyjęty), a
+  `kontrolaZrzutow` nie ma żadnego wpisu tego ujęcia bez `doradcze: true`. Zrzutów nie porównujesz ze scenariuszem i
+  nie dajesz ich do analizy subagentowi; otwierasz je tylko do diagnozy przyczyny `automat` (`stop.png`, krok z wpisem
+  `kontrolaZrzutow`). Rozjazdu scenariusza nie szukasz i nie poprawiasz; ten, który zauważysz przy diagnozie, sprawdzi
+  dopasowanie na klatkach nagrania (etap 7).
+- **Poprawki między przebiegami** - wyłącznie przyczyny `automat`: `video/nagrywanie.yaml` lekcji (lokatory,
+  oczekiwania, warunki przyjęcia, sesje czatu, kliknięcia), moduły usług i ich kod resetu
+  (`_nagrywanie/uslugi/<usługa>.js`, `tools/nagrywanie/uslugi/`) oraz deklaracje klasy `STAN` w `kurs.yaml`
+  (`shared_state`, `preparation`; nowa albo szersza `reset_policy` to polityka konta (G3), a listy bezpieczeństwa
+  zmienia wyłącznie Rafał - wiersz `CEL`). Pliki wspólne poprawiasz od razu: lekcja trzyma konto, więc reguła plików
+  wspólnych z sekcji „Lekcje równolegle” jest spełniona. Scenariusza, artykułu, konspektu i tekstu do wpisania nie
+  zmieniasz. Potem `sprawdz`, `proba`, commit samych plików poprawki (`kurs(<slug>): lekcja <n> poprawka automatu z
+  przebiegu próbnego (automat)`, `<n>` = `<moduł>.<numer>` z `lekcja.yaml`; „Commity pętli” w kroku 4), wiersz w
+  `## Naniesione automatycznie` raportu przebiegu i kolejny `przebieg <lekcja> --ujecie N`.
+- **Sonda automatyczna** po pierwszym zatrzymaniu `BRAK_ELEMENTU` albo `PRZYJECIE` ujęcia (punkt „Triage zatrzymań”),
+  nie dopiero po drugim; drugie zatrzymanie z tym samym podpisem to karta braku postępu, nie kolejna sonda.
+- **Próba resetu** („Próba resetu” (T5)): `przebieg <lekcja> --tylko-reset [--ujecie N]` - reset stanu startowego
+  ujęcia (`start_state` i `shared_state`, `recreate`, skrzynka), predykaty `preparation` i odczyt kontrolny, bez kroków
+  i bez wideo, zwykle bez wykonań. Uruchamiasz ją tylko po zmianie kodu resetu (kod resetu modułu usługi, `start_state`
+  lekcji, `shared_state` kursu), przed następnym przebiegiem - nigdy jako rutynową próbę: to też próba dla reguły
+  braku postępu, a udana próba resetu między dwoma takimi samymi niepowodzeniami rozbija ich parę i ukrywa brak
+  postępu. Przebiegiem referencyjnym nagrania nie jest (`nagraj --przebieg` jej odmawia); zatrzymana - tabela triage.
+- **Raport** `video/przebieg-probny.md` po każdym przebiegu, w formacie z kroku 4, tylko z wierszami `automat`
+  (`## Zatrzymanie`, uwagi z `kontrolaZrzutow`, `## Naniesione automatycznie`), bez akceptacji.
+- **Zatrzymanie przebiegu**: ujęcie ze `status: zatrzymane` - klasa z jego `stop.triage` (linia `Triage:`) i tabela
+  triage niżej; ujęcie zatrzymane bez `stop.triage` (rejestrator zapisał `triage: null`, np. „konto kursu zajęte”) -
+  reguła „Zatrzymanie bez klasy” pod tabelą triage. **Odmowa próby** to przebieg ze `status: zatrzymane`, w którym
+  żadne ujęcie nie ma `status: zatrzymane`: odmówione ujęcie i dalsze mają `pominiete`, a `przebieg.json` `powod`
+  niesie odmowę (`bilet produkcyjny (G1): …`; komenda wypisała ją też po podsumowaniu). Wtedy otwierasz kartę bilet
+  produkcyjny (G1) według treści - `brak postępu w ujęciu` albo `potrzeba … wykonań, zostało …` (punkt „Karty
+  pętli”). Odmowa pierwszego ujęcia komendy przychodzi jako błąd komendy, zanim cokolwiek powstanie - karta tak samo.
+
+### Nagranie i kontrola (etap 5)
+
+- **Nagranie** zaraz po przebiegu, który przeszedł ujęcie N, z tym samym trzymanym kontem:
+  `nagraj <lekcja> --ujecie N --run <nazwa> --przebieg <katalog>` (`<katalog>`: nazwa katalogu tego przebiegu w
+  `<dane>/przebiegi/<lekcja>/` albo ścieżka w katalogu danych; `--przygotowane` jest ignorowane z ostrzeżeniem). Ta
+  sama `<nazwa>` runu dla wszystkich ujęć lekcji i to samo `--przebieg` przy każdej próbie ujęcia N. `--przebieg`
+  przypina przebieg referencyjny w manifeście ujęcia (`referencePass`): kontrola ujęcia porównuje z nim, a późniejsze
+  `kontrola-ujecia` tego ujęcia czyta przypięty przebieg, nigdy najnowszy. Przebiegu, który ujęcia nie przeszedł
+  (status inny niż `gotowe`, wpis `kontrolaZrzutow` bez `doradcze`, próba resetu), `nagraj` odmawia
+  (`nagraj --przebieg: przebieg … nie przeszedł ujęcia … - nagranie zaczyna się od przebiegu, który przeszedł całe
+  ujęcie.`) - wtedy wracasz do etapu 4.
+- **Poprawne nagranie** („Poprawne nagranie” (T2), w pojęciach kontroli, fail-closed): werdykt `przyjete` i kontrola
+  kompletna (`kontrola.json` bez `kompletna: false`: klatka odczytana dla każdego przyjętego kroku, dźwięk
+  sprawdzony). Każda uwaga w `uwagi` (kontrole 2-4: reguła poziomego paska przewijania, uwagi układu, obce `okno`,
+  `audio`) dyskwalifikuje nagranie; rodzaje tylko na kartę (`pasek-pionowy`, `dymek`, doradcze `komunikat` i
+  `przepelnienie`) zostają tylko na karcie. Werdyktu `przyjete-z-karta` w lekcji z biletem nie ma: powtórzona uwaga
+  to `powtorka`, a o powtórzeniu rozstrzyga reguła braku postępu. Rozjazd narracji z ekranem nie unieważnia nagrania -
+  poprawi go dopasowanie (etap 7).
+- **Kontrola niekompletna**: `powtorka` z `kompletna: false` i bez uwag (notatki `klatka nieodczytana`,
+  `audio: nie udało się sprawdzić` albo `przebieg referencyjny nie wczytany`). `nagraj` wypisuje wtedy
+  `Dalej: npm run nagrywanie -- kontrola-ujecia <lekcja> --run "<run>" --ujecie N` - wykonujesz ją raz (bez
+  przeglądarki, bez nowej próby). Kompletna z `przyjete` - nagranie finalne; nadal niekompletna - to `powtorka` jak
+  niżej. Kontrola, która się nie powiodła (uwaga `rodzaj: kontrola`, też z `kompletna: false`), to `powtorka` z uwagą.
+- **`powtorka` z uwagą**: przyczyna `automat` (`pasek` i `styl`: styl nagrania usługi; `okno`: okno, którego krok nie
+  deklaruje; `material`: nieczytelny plik ujęcia; `kontrola`: przyczyna z opisu uwagi; kontrola nadal niekompletna:
+  przyczyna z notatki), poprawka jak w etapie 4 (pliki wspólne od razu), `sprawdz`, `proba`, commit poprawki, potem
+  kolejna próba ujęcia N - nagranie `nagraj <lekcja> --ujecie N --run <ta sama> --przebieg <ten sam>` (tak wypisuje je
+  linia `Dalej:` po kontroli) - i `karta dopisz` `powtorka` z powodem. Dwie próby z rzędu z tą samą uwagą
+  `(krok K, rodzaj)` - narzędzie odmówi następnej (karta braku postępu, wariant [B]).
+- **Zatrzymane nagranie** - tabela triage niżej; kolejna próba ujęcia to znów nagranie.
+- Po finalnym nagraniu ujęcia N - następne ujęcie od etapu 4, z tym samym trzymanym kontem.
+
+### Koniec nagrań (etap 6)
+
+- Przed `station-release`, przy trzymanym koncie: `proba` (bez przeglądarki) i porównanie `hasz.skeleton` i
+  `hasz.model` manifestu syntetycznego `proba` (`<dane>/proba/<lekcja>/…/ujecie-NN/znaczniki.json`) z manifestem
+  finalnego nagrania każdego ujęcia (wpis ujęcia w `wybrane.json` runu). Poprawka `automat` po finalnym nagraniu
+  wcześniejszego ujęcia, która zmieniła `hasz.model` (`haszModelu` w `tools/nagrywanie/src/schemat.js` obejmuje kroki
+  z działaniami, grupy, ujęcia ze `start_state` i warianty; poza nim są blok `lokatory`, adresy kart, opisy
+  `przyjecie`, `limit_s` i budżety grup), unieważnia tamto nagranie - `edl` by go odmówił. Takie ujęcie nagrywasz
+  jeszcze raz przy tym samym koncie (etap 5 z jego przypiętym `--przebieg`). Dlatego poprawki ujęć po pierwszym
+  finalnym nagraniu kładziesz najpierw poza haszem (blok `lokatory`, `przyjecie`, `limit_s`, moduł usługi).
+  Wyjątek: nagrania przyjętego słowem Rafała (wariant [B] karty braku postępu) sam ponownie nie nagrywasz. Gdy
+  późniejsza poprawka mimo to zmieniła `hasz.model`, karta bilet produkcyjny (G1) z wyborem: cofnąć tę poprawkę albo
+  nagrać to ujęcie jeszcze raz.
+- Potem `station-release <lekcja>` - koniec rezerwacji `production`.
+
+### Karty pętli
+
+- **Konto przy karcie.** Rezerwacji `production` przed kartą nie oddajesz („Trzymanie konta kursu” (T4)): przed kartą
+  `station-mark <lekcja> --state waiting`, po odpowiedzi Rafała `station-mark <lekcja> --state working`. Po karcie,
+  która czekała dłużej niż 2 h (puls kończy się po `PULSE_IDLE_MS` bez komend), najpierw
+  `station-wait <lekcja> --purpose production` w tle - zajmie trzymaną rezerwację od nowa i wystartuje puls. Inne
+  lekcje czekają za tobą do 12 h bez kodu 3 (sekcja „Lekcje równolegle”).
+- **Kolejność w turze:** najpierw to, co automat robi sam (poprawki `automat` albo naniesienia dopasowania, z
+  commitem, i raport), na końcu karta. Jedna karta na
+  turę, także gdy bramek jest kilka; decyzje nazwane bramką z nazwą i kodem (`bilet produkcyjny (G1), brak postępu w
+  ujęciu <ujęcie>`, `zakres dydaktyczny (G4), krok 8`), nigdy numerami D1, D2 (kod D1 to granica samodzielnych zmian),
+  każda z rekomendacją i wariantami jak w `CLAUDE.md`; na końcu jedna linia `⏸ Czeka na decyzję: ...`.
+- **Bilet produkcyjny (G1), brak postępu.** Odmowa `przebieg` albo `nagraj` przed otwarciem profilu:
+  `bilet produkcyjny (G1): brak postępu w ujęciu <ujęcie> - <podpis>: <manifest 1>, <manifest 2>. Karta dla Rafała; po
+  jego słowie ticket.yaml stall_ack: { take: "<ujęcie>", attempt: "<manifest 2>", approved: <data> }.` Dwie ostatnie
+  próby ujęcia (dowolnego rodzaju) są nieudane z tym samym podpisem: to samo miejsce (`reset` albo `krok K`), klasa i
+  znormalizowany komunikat dwóch zatrzymań albo co najmniej jedna wspólna para `(krok K, rodzaj)` dwóch niepowodzeń
+  kontroli (do trzech zatrzymań `LIMIT_SIEC` z rzędu reguła pomija, czwarte z rzędu to brak postępu). Drugiego takiego
+  samego niepowodzenia nie zamieniasz w kartę sam: robisz poprawkę, jeśli ją masz, i uruchamiasz kolejną próbę - kartę
+  otwiera odmowa, bo niesie wpis `stall_ack` do przepisania. Wyjątek: przy dwóch nagraniach z tą samą uwagą kontroli
+  ujęcia poprawki, która zmienia `hasz.model` (działanie kroku, grupa, ujęcie, wariant - punkt „Koniec nagrań”), przed
+  odpowiedzią Rafała nie nanosisz, tylko ją opisujesz: naniesiona unieważniłaby nagranie, które wariant [B] może
+  przyjąć. Karta: obie próby (rodzaj, katalog, wynik), podpis z
+  odmowy dosłownie, poprawka, którą proponuje automat (plik i zmiana, naniesiona albo do naniesienia; bez poprawki -
+  napisz to wprost), statystyki ujęcia i `spent.executions`/`budget.executions`. Warianty:
+  - [A] jeszcze jedna próba z tą poprawką - po słowie Rafała dopisujesz wpis z odmowy do listy `stall_ack` w
+    `video/ticket.yaml` (`approved: <dziś>`), nanosisz wstrzymaną poprawkę i robisz kolejną próbę; wpis wpuszcza
+    dokładnie jedną kolejną próbę (gdy powstanie nowsza, przestaje pasować);
+  - [B] tylko gdy obie próby to nagrania z tą samą uwagą kontroli ujęcia (klatki): przyjmij to nagranie z uwagą na
+    karcie lekcji - nagranie zostaje finalne (najnowsze w `wybrane.json`), `karta dopisz` `miejsce`
+    (`zrodlo: "kontrola-ujecia"`, `co`: uwaga i „przyjęte słowem Rafała”), raport nagrania dostaje
+    `accepted_by: rafal`; dalej następne ujęcie. Wstrzymanej poprawki nie nanosisz: przyjęte nagranie zostaje ważne, a
+    „Koniec nagrań” nie nagrywa go ponownie wbrew słowu Rafała;
+  - [C] zatrzymaj lekcję: `station-release <lekcja>` (koniec rezerwacji `production`), lekcja stoi do jego słowa.
+
+  Po każdym wariancie `karta dopisz` `triage` (`klasa`: `brak postępu (G1)`, `decyzja`: podpis krótko i wariant
+  Rafała, bez ścieżek manifestów - narzędzie odrzuca ciąg 32 znaków i więcej bez spacji). Gdzie sekcje „Poczta
+  lekcji” albo „Kurs z `autonomy: full`” dają przy tym samym komunikacie drugi raz kartę innej bramki (poświadczenia i
+  pierwsza zgoda OAuth (G2), polityka konta (G3)), w lekcji z biletem kartą jest ta karta braku postępu: w poprawce
+  wariantu [A] nazywasz tamtą bramkę i czynność Rafała (np. sprawdzenie połączonych aplikacji konta Google).
+- **Bilet produkcyjny (G1), dopłata.** Odmowa `bilet produkcyjny (G1): na próbę ujęcia <ujęcie> potrzeba <E> wykonań,
+  zostało <n> (<spent>/<budget>) - dopłata budżetu wykonań w video/ticket.yaml.` (także zatrzymanie `BUDZET`,
+  `bilet produkcyjny: licznik executions wyczerpany …`, np. przy `send-mail` albo `probe-auto --allow-writes`).
+  Karta: odmowa dosłownie, `spent.executions`/`budget.executions`, `E` ujęcia z `budzet <lekcja>`, statystyki prób
+  ujęcia, następna akcja i propozycja nowego `budget.executions` = `spent.executions` + `E` ujęcia × `n`, gdzie `n`
+  to liczba prób ujęcia, które Rafał finansuje (dopłata = `E` × `n` − zostało); budżet liczony od „zostało” spadłby
+  poniżej `spent` i następne sprawdzenie odmówiłoby znowu (2.2: 56 + 7 × 2 = 70, nie 3 + 7 × 2 = 17). `budzet <lekcja>
+  --dry-passes <d> --retakes <r>` drukuje liczbę dla całej lekcji, `E` lekcji × (d + 1 + r) + M - to tylko liczba do
+  porównania, nie ta propozycja. Po „OK” zmieniasz `budget.executions` w `video/ticket.yaml` (z notatką w `notes`);
+  liczników prób do budżetu nie dopisujesz.
+- **Oba teksty w jednej odmowie.** Gdy odmowa niesie oba teksty (najpierw `brak postępu w ujęciu …`, w następnej
+  linii `na próbę ujęcia … potrzeba …`), jedna karta niesie obie decyzje: warianty [A]/[B]/[C] braku postępu i dopłatę.
+- **Poświadczenia i pierwsza zgoda OAuth (G2), polityka konta (G3) i zakres dydaktyczny (G4) w pętli** - według
+  wiersza tabeli triage albo sekcji, która je daje, zawsze z trzymanym kontem.
+  Zakres dydaktyczny (G4) przychodzi w pętli tylko z sondy (funkcji już nie ma), z `NIEUSTALONY`, którego
+  `stan-wykonania` nie ustalił, ze stanów skrzynki, których automat nie naprawi, i z odmów `send-mail` klasy zakres
+  dydaktyczny (G4) (sekcja „Poczta lekcji”). Reguły „ta sama uwaga wraca po
+  poprawce” ani „ten sam komunikat drugi raz → zakres dydaktyczny (G4)” w lekcji z biletem nie ma („Bez zakresu
+  dydaktycznego za powrót po poprawce” (T7)): powtórzenie rozstrzyga reguła braku postępu.
+
+### Triage zatrzymań
+
+Zatrzymania próby (przebiegu i nagrania) nie pokazujesz Rafałowi - działasz według klasy z linii
+`Triage: <klasa> - <dalej>` (README, „Klasy zatrzymań”; spec sekcje 7 i 20.7). „Kolejna próba” to przed przebiegiem,
+który przeszedł ujęcie, `przebieg <lekcja> --ujecie N`, a po nim `nagraj <lekcja> --ujecie N --run <nazwa> --przebieg
+<katalog>`. Konto trzymasz przy każdym wierszu, także w odstępach.
+
+| Klasa | Co robisz | Bramka |
+|---|---|---|
+| `LIMIT_SIEC` (limit, błąd sieci, awaria usługi: HTTP 502, 503, 504, „Workspace offline”; „Awaria usługi” (T6)) | bez `station-release`: odczekaj kolejny odstęp z `TRIAGE_ODSTEPY_MIN` (2, 10, 30 min) w tle (`sleep` narzędziem Bash z `run_in_background: true`) i powtórz tę samą próbę od nowa (przebieg albo nagranie, jak była); do trzech takich zatrzymań z rzędu reguła braku postępu nie liczy | bilet produkcyjny (G1): odmowa braku postępu po czwartym z rzędu; dopłata, gdy nie starczy wykonań |
+| `NIEUSTALONY` | `stan-wykonania <lekcja> --ujecie N --run <nazwa>` (nagranie) albo `--przebieg <katalog przebiegu>` (przebieg; odczyt z usługi, sprawdza stanowisko jak `przygotowanie`); każde wykonanie ze stanem końcowym - kolejna próba, nigdy `--wznow`. Komunikat `revoke_google_access: …` to nie wykonanie - „Cofnięcie dostępu Google” w sekcji „Kurs z `autonomy: full`” | stan `null` albo `trwa` - karta jak G4 „zakres dydaktyczny” z identyfikatorem wykonania (Rafał sprawdza ręcznie) |
+| `AUTH` | nic | G2 „poświadczenia i pierwsza zgoda OAuth”: karta z komunikatem; loguje się Rafał (`login <lekcja> --usluga <nazwa>`) przy trzymanym koncie |
+| `BUDZET` | nic | G1 „bilet produkcyjny”, dopłata (punkt „Karty pętli”) |
+| `CEL` | popraw konfigurację - `video/nagrywanie.yaml` albo lokatory modułu usługi - albo krok i powtórz próbę; zatrzymania bezpieczeństwa nie powtarzasz bez zmiany. Listy bezpieczeństwa w `kurs.yaml` (`hosty`, `hostyLogowania`, `identyfikatory`, `widokiBezId`, hosty i zakresy OAuth - `oauth_hosts`, `oauth_scopes` - oraz `wyzwalaczeSieci`) zmienia wyłącznie Rafał | G2 „poświadczenia i pierwsza zgoda OAuth”, gdy to sprawa okna zgody albo gdy poprawka wymaga zmiany listy bezpieczeństwa: karta z komunikatem zatrzymania dosłownie; ten sam `CEL` drugi raz - brak postępu, bilet produkcyjny (G1) |
+| `STAN` | popraw deklarację (`shared_state`, `preparation`), gdy różnica to zasób innej lekcji; inaczej jeden ponowny reset (kolejna próba). Komunikaty skrzynki Gmail i cofnięcia dostępu - sekcje „Poczta lekcji” i „Kurs z `autonomy: full`” (brak maila w Odebranych to `send-mail`, nie ponowny reset; odpowiedź konta kursu w wątku lekcji z biletem usuwa sam reset, `usun-odpowiedz`, bez stopu; odmowy `send-mail` i kart stanów skrzynki nie obchodzisz wysyłką ani resetem) | polityka konta (G3) tylko dla nowej polityki; stany skrzynki, których automat nie naprawi (sekcja „Poczta lekcji”): karta klasy G4 „zakres dydaktyczny” (odpowiedź albo kopia w wątku lekcji - w lekcji z biletem już tylko wiersz bez identyfikatora wątku, wątek ze szkicem i wątek z odpowiedzią zadeklarowaną w `sent` -, wiadomość, której reset nie usuwa, zdublowany temat, mail lekcji już w skrzynce poza swoim wierszem w Odebranych; także powody `konto kursu nieustalone`, `rozmowa niezgodna z licznikiem (<n> z <count> wiadomości)`, `wersja robocza w rozmowie`, `wiadomość niewidoczna w całości`) albo karta klasy polityka konta (G3) („kosz NIE opróżniony”, także rozmowa zmieniona przed usunięciem odpowiedzi, odpowiedź, która nie zniknęła z rozmowy, i rozmowa, która po usunięciu nie jest samym mailem lekcji); rozmowa zmieniona od planu, niewczytana w 15 s albo nierozwinięta i każda inna ta sama przyczyna drugi raz - brak postępu, bilet produkcyjny (G1), z bramką klasy w karcie (punkt „Karty pętli”) |
+| `BRAK_ELEMENTU`, `PRZYJECIE` | sonda automatyczna po pierwszym takim zatrzymaniu ujęcia (niżej), potem poprawka `automat` (lokatory, oczekiwania, warunek przyjęcia) i kolejna próba; scenariusza w pętli nie zmieniasz - rozjazd nazwy albo układu poprawi dopasowanie (etap 7) | G4 „zakres dydaktyczny”, gdy sonda pokaże, że funkcji nie ma; ta sama przyczyna drugi raz - brak postępu, bilet produkcyjny (G1), nie druga sonda |
+| `INNY` | kolejna próba ujęcia | ten sam komunikat drugi raz - brak postępu, bilet produkcyjny (G1), karta z komunikatem dosłownie |
+
+**Zatrzymanie bez klasy** (manifest ujęcia z `triage: null`, bez linii `Triage:`; README „Klasy zatrzymań”): próbę
+przerwał błąd, który nie jest jej własnym zatrzymaniem. Komunikat „konto kursu zajęte” (pod rezerwacją `production`
+znaczy, że rezerwacja wygasła albo ktoś ją zwolnił siłą; tak samo odmowa z tym komunikatem przed startem próby) to
+`station-wait <lekcja> --purpose production` w tle (koniec tury bez znacznika bramki), a po kodzie 0 ta sama próba od
+nowa. Każde inne zatrzymanie bez klasy (np. Chrome nie wystartował) obsługujesz jak `INNY`.
+Każda nieudana próba to `karta dopisz` `triage` (ujęcie; `klasa` - klasa zatrzymania, `kontrola zrzutów` albo
+`kontrola ujęcia` przy niepowodzeniu kontroli, przy zatrzymaniu bez klasy `INNY` albo `bez klasy - konto kursu
+zajęte`; `decyzja` jednym zdaniem: miejsce - `reset` albo `krok K` -, przyczyna i co zrobiłeś), a każda kolejna próba
+nagrania także wpis `powtorka`. Odmowa przed próbą (dopłata, brak postępu) i zatrzymanie `BUDZET` to G1 „bilet
+produkcyjny”, nigdy G4 „zakres dydaktyczny”.
+
+**Sonda automatyczna** (klasy `BRAK_ELEMENTU` i `PRZYJECIE`, w przebiegu i w nagraniu; spec sekcje 5 i 20.7): po
+pierwszym takim zatrzymaniu ujęcia napisz skrypt sondy pod pytanie (YAML: README, „Sonda automatyczna”; plik w
+`<dane>/sondy/`, poza gitem, plik wspólny), uruchom `probe-auto <lekcja> --usluga <nazwa> --script <plik>` (tylko
+odczyt; `--allow-writes` wyłącznie, gdy pytanie wymaga działania `cel: wykonaj`, z `tworzy: [executions]` - zużywa
+`executions`), przeczytaj raport (`<dane>/sondy/probe-auto-<usługa>-<czas>/raport.json` i zrzuty), potem popraw
+lokatory, oczekiwania albo warunek przyjęcia (`automat`) i kolejna próba. Zmiany `scenariusz` po sondzie nie piszesz:
+rozjazd nazwy albo układu zobaczy dopasowanie na klatkach finalnego nagrania. Sonda zajmuje konto jak każda komenda
+profilu - pod rezerwacją `production` już je trzymasz. Funkcji, którą pokazuje scenariusz, już nie ma - G4 „zakres
+dydaktyczny”.
+
+### Dopasowanie do nagrania (etap 7)
+
+Bez konta, raz, po `station-release` z etapu 6. „Poprawne nagranie” (T2): rozjazd narracji z ekranem nie unieważnia
+nagrania - to scenariusz dopasowujesz do nagrania, w granicy samodzielnych zmian (D1), a nagranie zostaje.
+
+- **Materiał.** Finalne nagranie każdego ujęcia (wpis ujęcia w `wybrane.json` runu): klatki `kontrola/krok-NN.png` z
+  kontroli ujęcia i manifest `znaczniki.json` (kroki z `numer`, `proba`, `start`, `end`, `status`; przy kroku z
+  `google_sign_in` `wariantZgody` i `zgodaOkna`; w kursie z `oprawa: { znak_ai: true }` także `elementy` z
+  prostokątami `przed` i `po`). Manifest nagrania nie ma pól treści: `akapit` i `przyjecie` kroku bierzesz z
+  `video/nagrywanie.yaml`, `narracja` (tekst akapitu) i `opis` (kroki planu, czyli `[AKCJA]`) z bieżącego
+  `video/plan-nagrania.md`; przypięty przebieg referencyjny (`referencePass`, jego `przebieg.json`) ma je zebrane przy
+  każdym kroku, razem z `elementy`, ale z treści z chwili przebiegu. Każdą klatkę porównujesz z polami kroku
+  (`narracja`, `opis`, `przyjecie`, `elementy`) pytaniami „Analizy” z kroku 4 i z jej regułą ekranu
+  przejściowego; ujęcie z więcej niż 15 klatkami analizuje subagent (jeden na ujęcie), a każdy zgłoszony rozjazd
+  otwierasz sam na klatce. Typy uwag: `scenariusz` (opis rozjeżdża się z ekranem), `automat` (wada obrazu, którą
+  przebieg nazwałby `automat`: pasek akcji po najechaniu, obrys zaznaczenia) i `niepewne`.
+- **Dwie „akcje”** (spec sekcja 20.4). Opis tego, co dzieje się na ekranie - linie `[AKCJA: …]` w `scenariusz.md`,
+  kroki konspektu i kolumna „Ekran (krok)” w `plan-nagrania.md` - dopasowanie może przeredagować w granicy
+  samodzielnych zmian (D1), razem z narracją i artykułem. Działań wykonywalnych - `nagrywanie.yaml: kroki[].dzialania`
+  i wszystkiego, co obejmuje `haszModelu` (kroki, grupy, ujęcia, warianty) - dopasowanie nigdy nie rusza; wyjątek: opisy
+  `przyjecie`, poza haszem, mogą pójść za nowym brzmieniem. Zmiana, która zmieniłaby `hasz.skeleton` (segmenty, kroki,
+  akapity i ich kolejność, tekst do wpisania - kolumna „Do wpisania” i bloki pod tabelą) albo `hasz.model`, nie jest
+  dopasowaniem: to bramka zakres dydaktyczny (G4), a po słowie Rafała nowe finalne nagranie tego ujęcia (etap 3).
+- **`scenariusz`:** napisz nowe brzmienie (to, co jest na klatce, w stylu narracji lekcji; nazwy w cudzysłowie tylko
+  wtedy, gdy zatwierdzona narracja lekcji tak je zapisuje) i zrób **test zakresu**: granica samodzielnych zmian (D1,
+  spec sekcja 2.2). Zmiana mieści się w granicy samodzielnych zmian (D1) tylko wtedy, gdy zachodzą wszystkie cztery
+  warunki (cytat ze specu; „D1” w cytacie to ta granica):
+  > A `scenariusz` change is within D1 when all of these hold:
+  > - the segment count, order and screen types do not change (the `/kurs-uwagi` invariant);
+  > - the `[AKCJA]` still acts in the same service on the same kind of resource (a renamed button, a moved field, a
+  >   tooltip instead of a hint are within; a different node, tool or service is outside);
+  > - the narration keeps its claim (the beat still shows what it showed; a claim of absence that is false becomes a
+  >   rewording, not a removed beat);
+  > - no lesson step is removed and no new step is added beyond a one-click transition (open, close, scroll).
+
+  Warunki dotyczą zmiany w całości: narracja, która po zmianie nazwałaby inny węzeł, narzędzie albo usługę niż przed
+  nią, jest poza granicą samodzielnych zmian (D1) także wtedy, gdy linia `[AKCJA]` już zgadza się z ekranem (zmienia
+  się to, czego beat uczy); zmieniona etykieta tego samego elementu mieści się w tej granicy (D1). W granicy (D1) i bez
+  zmiany szkieletu: pod akapitem tego zdania znacznik `[UWAGA: nagranie, krok K: <rozjazd>. Propozycja: <brzmienie>]`
+  (K - `numer` kroku automatu z manifestu nagrania, ten sam co w `nagrywanie.yaml`; `<rozjazd>` cytuje stare zdanie, `<brzmienie>` to całe nowe zdanie
+  albo nowa linia `[AKCJA: ...]`). Poza granicą (D1) - karta bramki zakres dydaktyczny (G4), bez żadnej edycji.
+- **Ekran zgody Google.** Lekcja z biletem bez wariantów `consent`: akapit zgody przeredagowujesz do ekranu, który
+  pokazało finalne nagranie (klatka kroku z `google_sign_in`, jego `wariantZgody` i `zgodaOkna`), znacznikiem jak wyżej
+  (D1; spec sekcja 20.7, wiersz 10), bez kolejnego przebiegu. Warianty, które lekcja już ma, zostają - rozstrzyga je
+  nagranie jak dotąd.
+- **`automat`** (wada obrazu): nagranie zostaje (zmiana działań ujęcia zmieniłaby `hasz.model` i je unieważniła) -
+  `karta dopisz` `miejsce` (`zrodlo: "kontrola-ujecia"`, krok, akapit, `t: null`, co obejrzeć w filmie) i wiersz w
+  `## Na karcie lekcji` raportu nagrania; trafia na kartę do „Miejsc do obejrzenia”.
+- **`niepewne`:** druga metoda na materiale nagrania, na tym samym kroku i w tej kolejności: (a) druga klatka z
+  `surowe.mp4` sekundę wcześniej (`ffmpeg -ss <kroki[].end − 1> -i surowe.mp4 -frames:v 1 <plik roboczy>.png`), (b)
+  wycinek prostokąta elementu z klatki, powiększony 2x - prostokąt `elementy[].przed` albo `po` kroku z manifestu
+  nagrania (`{ x, y, width, height }`, tylko w kursie ze znakiem AI), a bez nich `elementy[].prostokat` tego kroku w
+  przypiętym przebiegu referencyjnym (`[x, y, szer, wys]`)
+  (`ffmpeg -i <klatka> -vf "crop=w:h:x:y,scale=iw*2:ih*2" <plik roboczy>.png`; pliki robocze poza repo). Metoda,
+  która rozstrzyga, zmienia typ na `scenariusz` albo `automat` - dalej jak wyżej; czego żadna nie rozstrzygnie, to
+  `karta dopisz` `miejsce` z `zrodlo: niepewne` (krok, akapit, `t: null`, co obejrzeć w filmie). Klatek sąsiednich
+  kroków nie używasz jako dowodu.
+- **Naniesienie, raz.** Wszystkie znaczniki naraz, potem `/kurs-uwagi` w trybie automatycznym (jego sekcja „Auto
+  mode”) jeden raz: naniesie zmiany, przeniesie je do artykułu i konspektu, przegeneruje plan nagrania, zacommituje
+  ścieżki lekcji jako `kurs(<slug>): lekcja <n> dopasowanie do nagrania (automat)` i dopisze na kartę po jednym wpisie
+  `zmiana-tresci` na zmianę. Po nim nie ma ani przebiegu, ani nagrania: lektor powstaje na dopasowanym scenariuszu
+  (etap 8). Znacznik, którego `/kurs-uwagi` nie naniesie chirurgicznie (zostaje na miejscu), idzie do bramki zakres
+  dydaktyczny (G4).
+- **Szkielet po dopasowaniu.** `sprawdz`, `proba` i to samo porównanie `hasz.skeleton` i `hasz.model` co w etapie 6.
+  Różne - zmiana nie była dopasowaniem (`edl` odrzuciłby nagranie): karta zakres dydaktyczny (G4) z tą zmianą.
+- **Karta: zakres dydaktyczny (G4).** Pola: uwaga (cytat i to, co na klatce), pełna ścieżka klatki w bloku kodu,
+  naruszona granica (który warunek granicy samodzielnych zmian (D1) nie zachodzi, zmiana szkieletu albo działania,
+  znacznik nie do naniesienia), propozycja automatu. Decyzję Rafała zapisujesz najpierw jako `karta dopisz`
+  `decyzja-g4` (bez tego wpisu `/kurs-uwagi` potraktuje znacznik decyzji jak zwykły znacznik) i notatkę w `## Naniesione
+  automatycznie` raportu nagrania. Zmianę samej narracji albo linii `[AKCJA]` wykonujesz znacznikiem z dopiskiem
+  decyzji - `[UWAGA: nagranie, krok K (decyzja G4): <rozjazd>. Propozycja: <brzmienie Rafała>]` - i `/kurs-uwagi` w
+  trybie automatycznym, z jego brzmieniem dosłownie, bez dostosowania; na kartę idzie też `zmiana-tresci`, do
+  `## Naniesione automatycznie` wiersz `scenariusz (decyzja G4)`. Decyzja, która zmienia tekst do wpisania, krok albo
+  działanie, to nowe finalne nagranie tego ujęcia (etap 3, potem etapy 4-5 dla niego i dopasowanie jego klatek).
+  Zmiana segmentów idzie przez `/kurs-lekcja`. Konto: dopasowanie biegnie po `station-release`, więc karta zakres
+  dydaktyczny (G4) tego etapu konta nie trzyma.
+- **Raport nagrania** `video/recording-report.md` (format niżej) po naniesieniu: `status: zaakceptowany` i
+  `accepted_by: automat`, gdy każda uwaga poszła do naniesienia w granicy (D1) albo na kartę i nie ma otwartej
+  bramki zakres dydaktyczny (G4) - także wtedy, gdy uwag nie było, bez pytania; inaczej `status: do_decyzji` i karta
+  zakres dydaktyczny (G4), a po decyzjach Rafała `status: zaakceptowany` z `accepted_by: rafal` (tak samo po wariancie [B] karty braku
+  postępu). Commit raportu z `video/karta.json`: `kurs(<slug>): lekcja <n> dopasowanie do nagrania (automat)`, przy
+  `accepted_by: rafal` - `(rafal)` („Commity pętli” w kroku 4). Etap 1 `/kurs-video` odmówi bez zaakceptowanego
+  raportu nagrania, którego `zrodla-hasz` zgadza się z bieżącym scenariuszem i konspektem.
+
+**Format** `video/recording-report.md` (spec sekcja 20.4; raport przebiegu zostaje w `video/przebieg-probny.md`):
+
+```markdown
+---
+status: do_decyzji            # albo zaakceptowany
+accepted_by: automat          # albo rafal; dopiero przy zaakceptowany
+data: RRRR-MM-DD
+nagrania:                     # finalne nagranie każdego ujęcia, katalog względem <dane>
+  - "1: runs/<lekcja>/<nazwa>/ujecie-01"
+  - "2: runs/<lekcja>/<nazwa>/ujecie-02-p2"
+skeleton-hasz: <hasz.skeleton z manifestów finalnych nagrań>
+zrodla-hasz: <zrodla-hasz z video/plan-nagrania.md po dopasowaniu>
+---
+
+### 1. Krok K (akapit S:A) - tytuł
+Typ: scenariusz | automat | niepewne
+Cytat: <zdanie scenariusza dosłownie>
+Na klatce: <co widać>
+Propozycja: <nowe brzmienie albo co obejrzeć w filmie>
+Klatka: runs/<lekcja>/<nazwa>/ujecie-NN/kontrola/krok-KK.png
+
+## Naniesione automatycznie
+
+| krok | typ | przed | po | commit |
+|---|---|---|---|---|
+
+## Na karcie lekcji
+
+- krok K, akapit S:A: <co obejrzeć w filmie> (automat | niepewne | wariant B)
+```
+
+Uwagi numerujesz od 1 w kolejności kroków; `## Naniesione automatycznie` ma wiersz na każdą naniesioną zmianę
+(`scenariusz`: zdanie przed i po; `scenariusz (decyzja G4)`), pod tabelą notatki G4 „zakres dydaktyczny” (krok,
+otwarta albo rozstrzygnięta i jak). `zrodla-hasz` bierzesz z `video/plan-nagrania.md` po przegenerowaniu planu (po
+`/kurs-uwagi` albo, gdy nic nie naniosłeś, `npm run plan-nagrania -- <lekcja>` w `tools/course-pipeline`).
 
 ## Pierwsza lekcja z nową usługą (jednorazowo na usługę)
 
@@ -502,10 +752,12 @@ sekcja "Poziom autonomii kursu"). Reszta procedury bez zmian.
 - **Zostaje u Rafała:** jednorazowe zalogowanie kont w profilu kursu (`login`), ręczne wpisanie `secrets.yaml`
   (Claude pliku nie czyta i nie prosi o klucze w rozmowie), hasło i drugi składnik, wszystkie bramki (B3 „hosty i zakresy OAuth”, G1 „bilet produkcyjny”, polityka konta (G3) raz na usługę - w lekcji z biletem, gdy potwierdzona `reset_policy` obejmuje rodzaje deklaracji, podgląd `preview-start-state` idzie tylko do logu, bez bramki (jak czyta w nim Gmail - punkt „Gmail w sesjach tylko do odczytu” niżej);
   w lekcji bez biletu także B4 „lista trwałych usunięć”, zatwierdzenie raportu i pierwsze ujęcie; w lekcji z biletem zamiast dwóch ostatnich
-  zakres dydaktyczny (G4), tylko z wyzwalaczy: w przebiegu zmiana poza granicą samodzielnych zmian (D1), znacznik nie
-  do naniesienia chirurgicznie i uwaga wracająca po poprawce (krok 4); w nagraniu ten sam `CEL` po poprawce, funkcja,
-  której wg sondy już nie ma, ten sam komunikat `INNY` drugi raz i wykonanie, którego stanu `stan-wykonania` nie
-  ustalił (krok 5); wyzwalacze triage obowiązują też przy zatrzymaniu przebiegu w kroku 4). W lekcji z biletem
+  karta braku postępu i dopłata (bilet produkcyjny (G1)) oraz zakres dydaktyczny (G4), tylko z wyzwalaczy: w
+  dopasowaniu do nagrania zmiana poza granicą samodzielnych zmian (D1) albo zmieniająca tekst do wpisania, krok lub
+  działanie, i znacznik nie do naniesienia chirurgicznie; w pętli produkcji funkcja, której wg sondy już nie ma, i
+  wykonanie, którego stanu `stan-wykonania` nie ustalił (sekcja „Lekcja z biletem: pętla produkcji”). Powtórzone
+  zatrzymanie albo uwaga - także ten sam `CEL` i ten sam komunikat `INNY` drugi raz - to w lekcji z biletem karta
+  braku postępu (bilet produkcyjny (G1)), nigdy zakres dydaktyczny (G4)). W lekcji z biletem
   zostają u niego także: rozstrzygnięcie wątpliwej wysyłki maila, której nie ustalił odczyt Wysłanych, i stany
   skrzynki, których automat nie naprawi (sekcja „Poczta lekcji”); w lekcji bez biletu - cofnięcie dostępu Google przed
   ujęciem z pełnym ekranem zgody.
@@ -553,10 +805,9 @@ sekcja "Poziom autonomii kursu"). Reszta procedury bez zmian.
     `n8n.cloud` zniknął, na jego słowo polecenie `google-grant …` z końca komunikatu (z czasem kliknięcia), potem nowe
     ujęcie. `STAN` `revoke_google_access: n8n.cloud odłączony o <czas>, ale zapis google-grant.json się nie udał (…) -
     dopisz go: google-grant …`: cofnięcie się stało, brakuje tylko lokalnego wpisu, który oznacza credentiale jako
-    martwe, żeby reset je odtworzył - uruchamiasz dokładnie polecenie z komunikatu (bez pytania), potem ponownie
-    dołączasz do kolejki i powtarzasz ujęcie od nowa: w przebiegu próbnym `przebieg <lekcja> --ujecie N`
-    (`station-wait --purpose dry-pass`, licznik `dry_passes`), w nagraniu nowe ujęcie (`--purpose recording`, licznik
-    `retakes`); nigdy zwykły ponowny reset z wiersza `STAN`;
+    martwe, żeby reset je odtworzył - uruchamiasz dokładnie polecenie z komunikatu (bez pytania), potem przy trzymanej
+    rezerwacji `production` kolejną próbę ujęcia od nowa (pętla produkcji: przed przebiegiem, który przeszedł ujęcie,
+    `przebieg <lekcja> --ujecie N`, po nim nagranie z `--przebieg`); nigdy zwykły ponowny reset z wiersza `STAN`;
   - lekcja bez biletu: automat niczego nie cofa. Zostaje karta poświadczeń i pierwszej zgody OAuth (G2), na której
     cofa Rafał, przy trzymanym koncie (sekcja „Lekcje równolegle”, `waiting`);
   - po każdym cofnięciu - automatu, Rafała albo sondy - martwe są wszystkie credentiale Google OAuth n8n na koncie
@@ -571,7 +822,8 @@ sekcja "Poziom autonomii kursu"). Reszta procedury bez zmian.
     shared_state (polityka konta (G3)) albo utwórz go na ekranie.`) - karta polityki konta (G3);
   - `STAN` `consent.require: granted, a Google pokazał ekran <wariant> - ujęcie bez pełnego ekranu zgody`: jedno nowe
     ujęcie (cofnięcie biegnie znowu przed resetem); ten sam komunikat drugi raz - karta poświadczeń i pierwszej zgody
-    OAuth (G2) z komunikatem dosłownie.
+    OAuth (G2) z komunikatem dosłownie (w lekcji z biletem karta braku postępu z tą bramką, pętla produkcji, „Karty
+    pętli”).
 - **Dwa konta Google w profilu kursu** (ustalenia sondy P-C o tej nazwie): konto kursu na `/mail/u/0/`
   (`kurs.yaml` `gmail.course_account`), konto nadawcy maili lekcji na `/mail/u/1/` (`gmail.sender_account`). Automat
   dochodzi do nadawcy wyłącznie adresem `/mail/u/1/`, nigdy przez menu konta (w oknie narzędzia menu nie działa, a jego
@@ -627,7 +879,10 @@ Rafał według tabeli przygotowania).
 
 - **Kiedy.** Z trzymanym kontem (`station-wait` kod 0), przed pierwszym krokiem konta ujęcia ze
   `start_state.gmail.inbox`: w kroku 4 przed `preview-start-state` i przed każdym `przebieg`, w kroku 5 przed pierwszym
-  `nagraj` lekcji - `send-mail <lekcja>` (`--ujecie N`, gdy skrzynkę deklaruje inne ujęcie niż pierwsze). Wysyła tylko
+  `nagraj` lekcji - `send-mail <lekcja>` (`--ujecie N`, gdy skrzynkę deklaruje inne ujęcie niż pierwsze). W pętli
+  produkcji pierwsze `send-mail` idzie w krótkim zajęciu `station-wait <lekcja> --purpose other` przed rezerwacją
+  `production` (maile muszą się postarzeć, `mail_age`), a pod rezerwacją przed `preview-start-state` i przed każdą
+  próbą ujęcia ze skrzynką jeszcze raz (zwykle `OK: wysłane 0`). Wysyła tylko
   maile, których brakuje w Odebranych, każdy jednym wykonaniem z licznika `executions`; `OK: wysłane 0` - idziesz
   dalej. Mail, którego wątek lekcji ma odpowiedź konta kursu (np. agent 2.3 odpowiedział w wątku storczyków), w lekcji
   z biletem `send-mail` pomija jako obecny, a odpowiedź usuwa reset ujęcia (`usun-odpowiedz`,
@@ -636,7 +891,8 @@ Rafał według tabeli przygotowania).
   Gmail wysyła `POST /sync/u/1/i/s` kilka razy na jeden mail), a karta wraca na konto kursu (`/mail/u/0/`) jeszcze w
   tym oknie, także po zatrzymaniu. Żądanie sygnatury poza tym oknem albo ponad 20 strażnik blokuje (do Gmaila nie
   dochodzi) i zatrzymuje `send-mail` kodem `CEL` (punkt „Inne zatrzymania `send-mail`”). Reset, który staje `STAN` `gmail: brak wiadomości „<s>” w Odebranych - wyślij ją: send-mail …` (np. reset
-  innej lekcji skasował maile spoza swojej deklaracji), to też `send-mail` przy trzymanym koncie, potem nowe ujęcie;
+  innej lekcji skasował maile spoza swojej deklaracji), to też `send-mail` przy trzymanym koncie, potem nowe ujęcie
+  (w pętli produkcji kolejna próba);
   gdy `send-mail` odmawia, bo mail jest już w skrzynce kursu - punkt niżej. Bilet bez wolnych `executions` na
   wszystkie brakujące maile: odmowa przed pierwszą wysyłką, karta bilet produkcyjny (G1), dopłata.
 - **Mail lekcji już w skrzynce poza swoim wierszem w Odebranych.** Odmowa dotyczy tylko maili, które `send-mail`
@@ -668,13 +924,19 @@ Rafał według tabeli przygotowania).
   ujęcie ma `mail_age`): kończysz turę BEZ znacznika bramki - to nie decyzja Rafała (spec sekcja 10). Przed końcem tury
   oddajesz konto (`station-release <lekcja>`), wychodzisz z kolejki (`station-leave <lekcja>` - lekcja nie stoi w niej
   do tego dnia) i w tle (narzędzie Bash z `run_in_background: true`) czekasz do tego dnia (czas Warszawy), a wtedy
-  dołączasz `station-wait <lekcja> --purpose <dry-pass|recording>` w tle. Rafałowi jedna linia: co wysłane i którego
+  dołączasz `station-wait <lekcja> --purpose production` w tle (pętla produkcji, etap 3).
+  Rafałowi jedna linia: co wysłane i którego
   dnia lekcja wraca do kolejki. Wcześniej `mail_age` i tak zatrzymałby ujęcie (`Przygotowanie ujęcia ... niespełnione`).
+  W lekcji z biletem to czekanie przypada przed rezerwacją `production`; gdy `send-mail` pod rezerwacją coś wyśle i
+  każe czekać do innego dnia, też oddajesz konto i czekasz bez niego (spec sekcja 20.7, wiersz 16: czekanie na
+  `mail_age` bez konta) - to koniec rezerwacji, a tego dnia wracasz przez `--purpose production`.
 - **`NIEUSTALONY`** (`gmail: wysyłka „<temat>” w nieznanym stanie - sprawdź Wysłane konta nadawcy; send-mail nie
   powtarza jej sam.`): komenda staje i dalszych maili nie próbuje. Ty: `karta dopisz` `konto` (`co`: wysyłka maila
-  `<id>` w nieznanym stanie, send-mail) i `station-release`. W tej turze nie powtarzasz `send-mail` (ani bez flag, ani
+  `<id>` w nieznanym stanie, send-mail). W krótkim zajęciu przed rezerwacją `production`: `station-release`. W tej
+  turze nie powtarzasz `send-mail` (ani bez flag, ani
   z `--rozstrzygnij` z własnej inicjatywy) i nie pytasz Rafała; kończysz turę bez znacznika bramki, a po 2 min (odstęp
-  w tle, jak `LIMIT_SIEC`) dołączasz `station-wait <lekcja> --purpose <dry-pass|recording>` w tle. Wysyłkę ustala
+  w tle, jak `LIMIT_SIEC`) dołączasz `station-wait <lekcja> --purpose other` w tle. Pod rezerwacją `production` bez
+  `station-release` i bez dołączania: odstęp 2 min z trzymanym kontem, potem zwykłe `send-mail`. Wysyłkę ustala
   następne zwykłe `send-mail` - to przed następnym krokiem konta tej lekcji, po tym dołączeniu, albo `send-mail` innej
   lekcji z tym mailem: zanim cokolwiek wyśle, czyta Wysłane nadawcy, a wiersz z tematem, którego przed kliknięciem nie
   było, uznaje wysyłkę za wysłaną (mail pominięty, kolejne idą). W oknie konta planu 4 (2026-10-24) tak skończyło się
@@ -686,8 +948,8 @@ Rafał według tabeli przygotowania).
 - **Inne zatrzymania `send-mail`.** `STAN` przed „Wyślij” (np. `gmail: wysyłka „<temat>” nie ruszyła (<krok>):
   <przyczyna> - nic nie wysłane.` i pozostałe `STAN` sesji): przyczyna nazwana w plikach lekcji (`video/mail.yaml`, deklaracja
   `start_state.gmail`) - poprawiasz ją, `sprawdz`, potem zwykłe `send-mail` (mail nie wyszedł, więc może wyjść);
-  przyczyna poza plikami lekcji - karta klasy G4 „zakres dydaktyczny” z komunikatem dosłownie, jak przy powtórzonym
-  `INNY` w tabeli triage (automat nie pójdzie dalej bez zmiany tego, co robi); wyjątek: inne konto na `/mail/u/1/` to
+  przyczyna poza plikami lekcji - karta klasy G4 „zakres dydaktyczny” z komunikatem dosłownie (automat nie pójdzie
+  dalej bez zmiany tego, co robi); wyjątek: inne konto na `/mail/u/1/` to
   karta klasy G2 „poświadczenia i pierwsza zgoda OAuth”. `AUTH` na `/mail/u/1/` (konto nadawcy wylogowane) - karta
   poświadczeń i pierwszej zgody OAuth (G2): Rafał loguje nadawcę jak przy pierwszym logowaniu („Dwa konta Google” w
   sekcji „Kurs z `autonomy: full`”). `CEL` - jak wiersz `CEL` tabeli triage; `CEL` z okna wysyłki (żądanie sygnatury
@@ -783,13 +1045,20 @@ Rafał według tabeli przygotowania).
     „<s>” nie rozwinęła się - nic nie usunięte.` (osobna przyczyna: „Rozwiń wszystkie” po 5 s od kliknięcia nadal
     widać; jako `<co>` - `rozmowa nie rozwinęła się`). To zwykły `STAN` z wiersza triage: jedno nowe ujęcie (nowy plan czyta rozmowę od
     nowa); ten sam komunikat (ta sama przyczyna w nawiasie) drugi raz - karta klasy polityka konta (G3) z komunikatem
-    dosłownie, jak przy „kosz NIE opróżniony” (stan konta, do którego reset nie dociera). Jedną rodziną liczą się
+    dosłownie, jak przy „kosz NIE opróżniony” (stan konta, do którego reset nie dociera). Dwa dosłownie te same
+    komunikaty zatrzymuje w pętli produkcji odmowa braku postępu przed następną próbą: wtedy ta karta jest kartą braku
+    postępu z bramką polityka konta (G3) w wariancie [A] („Karty pętli”); dwa różne komunikaty jednej rodziny (niżej)
+    narzędzie przepuściłoby, więc kartę klasy polityka konta (G3) otwierasz sam, bez kolejnej próby. Jedną rodziną liczą się
     `nie wczytała się w 15 s` i `zmieniła się od planu (rozmowa nie wczytała się w 15 s)`, a osobno `nie rozwinęła się`
     i `zmieniła się od planu (rozmowa nie rozwinęła się)`: dwa komunikaty jednej rodziny to ten sam komunikat drugi
     raz.
 - **Konto w kartach dla Rafała.** Przed kartą oddajesz konto (`station-release`), jak przed każdą bramką, która nie
-  potrzebuje konta. Gdy Rafał chce coś sprawdzić albo poprawić w profilu kursu (Wysłane nadawcy, skrzynka kursu),
-  dzieje się to przy trzymanym koncie: `station-wait <lekcja> --purpose other`, `station-mark <lekcja> --state waiting`
+  potrzebuje konta - poza rezerwacją `production`. Pod rezerwacją `production` („Trzymanie konta kursu” (T4)) konta
+  przed kartą nie oddajesz, także tam, gdzie punkty tej sekcji mówią „`station-release`, potem karta”:
+  `station-mark <lekcja> --state waiting`, po odpowiedzi Rafała `station-mark <lekcja> --state working` (pętla
+  produkcji, „Karty pętli”). Gdy Rafał chce coś sprawdzić albo poprawić w profilu kursu (Wysłane nadawcy, skrzynka kursu),
+  dzieje się to przy trzymanym koncie: `station-wait <lekcja> --purpose other` (pod rezerwacją `production` konto już
+  trzymasz), `station-mark <lekcja> --state waiting`
   na czas jego kliknięć, potem `station-mark <lekcja> --state working` (sekcja „Lekcje równolegle”).
 
 ## Lekcje równolegle
@@ -798,11 +1067,14 @@ Kilka sesji dzieli jedno konto kursu (profil, n8n, konto Google, arkusz). Stanow
 `tools/nagrywanie`, sekcja „Kolejka do konta kursu”. Kolejność zgłoszeń, bez przeskakiwania.
 
 - **Lekcja wchodzi do kolejki dopiero gotowa.** Wcześniej zamknij każdą bramkę, która nie potrzebuje konta: w lekcji z biletem
-  G1 „bilet produkcyjny”, a przed nagraniem (krok 5) także paczkę lektora i avatary; w lekcji bez biletu zgodę na koszt i limit
-  wykonań oraz tabelę `## Przygotowanie przed nagraniem` (i paczkę lektora z avatarami przed nagraniem). Do `dry-pass` i `recording` każde ujęcie lekcji musi mieć `start_state`; bez niego `station-wait` z tym
+  G1 „bilet produkcyjny” i całe przygotowanie bez konta (pętla produkcji, etapy 1-2: `video/nagrywanie.yaml`,
+  `preparation`, `start_state`, `sprawdz`, `proba`, plansze) - paczki lektora i avatarów przed nagraniem lekcja z
+  biletem nie potrzebuje, powstają po dopasowaniu do nagrania; w lekcji bez biletu zgodę na koszt i limit
+  wykonań oraz tabelę `## Przygotowanie przed nagraniem` (i paczkę lektora z avatarami przed nagraniem). Do `dry-pass`, `recording` i `production` każde ujęcie lekcji musi mieć `start_state`; bez niego `station-wait` z tym
   celem odmawia (najpierw `save-start-state`; w lekcji bez biletu także bramka B4 „lista trwałych usunięć”, w lekcji z biletem bramka polityka konta (G3) raz na usługę, a gdy potwierdzona `reset_policy` obejmuje rodzaje deklaracji - podgląd `preview-start-state` tylko do logu, bez bramki). `preview` i `other` tego wymogu nie mają.
-- **Dołączanie.** `station-wait <lekcja> --purpose <preview|dry-pass|recording|other>` uruchom narzędziem Bash z
-  `run_in_background: true` (nie `Monitor` - kończy komendę po najwyżej 30 min). Powiedz w jednej linii, na której
+- **Dołączanie.** `station-wait <lekcja> --purpose <preview|dry-pass|recording|production|other>` uruchom narzędziem Bash z
+  `run_in_background: true` (nie `Monitor` - kończy komendę po najwyżej 30 min). Lekcja z biletem dołącza do pętli
+  produkcji raz, z `--purpose production` (etap 3), a nie przed każdym przebiegiem i nagraniem. Powiedz w jednej linii, na której
   pozycji stoisz i kto trzyma konto (`station-show <lekcja>`), i zakończ turę BEZ znacznika bramki (nie czekasz na
   Rafała). W kolejce nie robisz nic innego. Jeśli Rafał zagadnie sesję o cokolwiek innego, najpierw
   `station-leave <lekcja>` (tracisz miejsce) - to kończy też działające w tle `station-wait` tej lekcji kodem 4, bez
@@ -814,7 +1086,11 @@ Kilka sesji dzieli jedno konto kursu (profil, n8n, konto Google, arkusz). Stanow
   lekcja wyszła z kolejki (`station-leave`), konto nie jest twoje; dołączasz ponownie dopiero gotowa. Kod 1 - zacytuj
   Rafałowi komunikat dosłownie i zrób `station-leave <lekcja>`, zanim spróbujesz ponownie.
   Kod 3 - jedyny przypadek, który kolejka zostawia człowiekowi: trzymający konto czeka na Rafała (`station-mark --state
-  waiting`) dłużej niż 30 min. Powiedz Rafałowi ze znacznikiem bramki, cytując komunikat dosłownie; na „czekaj” uruchom
+  waiting`) dłużej niż 30 min, a trzymający z celem `production` (lekcja z biletem w pętli produkcji) dopiero po 12 h
+  (`PRODUCTION_WAITING_REPORT_MS`): jego karta i tak dochodzi do Rafała przez hub, a 12 h to jedyny sygnał, że jego
+  sesja umarła w `waiting` (`station-show` podaje trzymającego, cel i od kiedy czeka). Za trzymającym `production`
+  lekcja najpierw kończy całą pracę bez konta (treść, `nagrywanie.yaml`, `sprawdz`, `proba`, plansze; lektor, avatary
+  i montaż lekcji już nagranej), dopiero potem staje w kolejce. Powiedz Rafałowi ze znacznikiem bramki, cytując komunikat dosłownie; na „czekaj” uruchom
   w tle `station-wait` ponownie z `--ack "<lekcja>|<początek rezerwacji>"` (pełna komenda jest na końcu komunikatu), na
   „zwolnij” `station-force-release <lekcja>` - wyłącznie na jego jawne słowo. Po jego odpowiedzi od razu uruchom własne
   `station-wait` ponownie w tle; ponowne dołączenie czyści znacznik zgłoszenia.
@@ -826,28 +1102,37 @@ Kilka sesji dzieli jedno konto kursu (profil, n8n, konto Google, arkusz). Stanow
 - **Rezerwacja po zajęciu konta.** Po kodzie 0 odłączony proces `station-pulse` podtrzymuje rezerwację do 2 h bez
   żadnych komend. Praca na koncie dłuższa niż 2 h bez komend: `station-mark <lekcja> --state working` odświeża
   aktywność. Po dłuższej ciszy rezerwacja mogła wygasnąć: uruchom `station-wait` ponownie - zajmie konto od razu, gdy
-  jest wolne, i wystartuje puls od nowa. Pulsu nie uruchamiasz ręcznie.
-- **Punkty zwolnienia (`station-release <lekcja>`).** Po `preview-start-state` (lekcja bez biletu: B4 „lista trwałych usunięć” zatwierdza Rafał bez trzymanego
-  konta; lekcja z biletem: bramka polityka konta (G3) raz na usługę, a gdy potwierdzona `reset_policy` obejmuje rodzaje deklaracji - podgląd `preview-start-state` tylko do logu, bez bramki); po każdym `przebieg` od razu, gdy komenda się skończy - analizę zrzutów i raport robisz bez konta, a kolejny
+  jest wolne, i wystartuje puls od nowa. Pulsu nie uruchamiasz ręcznie. Trzymający w stanie `waiting` nie wygasa
+  nigdy, więc rezerwacja `production` przetrwa kartę każdej długości; puls kończy się jednak po 2 h bez komend i po
+  takiej karcie `station-wait <lekcja> --purpose production` zajmie trzymaną rezerwację od nowa i wystartuje puls.
+- **Punkty zwolnienia (`station-release <lekcja>`).** Lekcja bez biletu: po `preview-start-state` (B4 „lista trwałych
+  usunięć” zatwierdza Rafał bez trzymanego
+  konta); po każdym `przebieg` od razu, gdy komenda się skończy - analizę zrzutów i raport robisz bez konta, a kolejny
   przebieg po poprawkach to nowe dołączenie; po nagraniu ujęć, przed bramką pierwszego ujęcia - każde dalsze ujęcie
   (ponowne nagranie albo kolejne) to nowe `station-wait --purpose recording`, a konto przywraca reset `start_state`
   tego ujęcia. B4 „lista trwałych usunięć” (lekcja bez biletu) zatwierdza deklarację `start_state` lekcji; że reset skasuje też to, co zostawiły inne lekcje, jest
-  oczekiwane i nie wymaga nowej bramki. W lekcji z biletem bramki pierwszego ujęcia nie ma: konto trzymasz od pierwszego
-  do ostatniego ujęcia (także przy powtórkach z werdyktu kontroli i po triage, które nie czeka) i oddajesz je po
-  ostatnim ujęciu, przed odstępem `LIMIT_SIEC` i przed każdą bramką, która nie potrzebuje konta.
+  oczekiwane i nie wymaga nowej bramki. Lekcja z biletem („Trzymanie konta kursu” (T4); spec sekcja 20.6) punktów
+  zwolnienia między próbami nie ma: rezerwację `production` trzyma od etapu 3 pętli produkcji bez przerwy - między
+  przebiegami, między przebiegiem a nagraniem, przy kolejnych próbach, w odstępach `LIMIT_SIEC` i przy każdej karcie
+  (bilet produkcyjny (G1) - dopłata i brak postępu -, poświadczenia i pierwsza zgoda OAuth (G2), polityka konta (G3)
+  i zakres dydaktyczny (G4) z pętli) - i oddaje ją tylko po finalnym nagraniu
+  ostatniego ujęcia (etap 6), przy wariancie [C] karty braku postępu i na czekanie `mail_age` (sekcja „Poczta
+  lekcji”). Krótkie zajęcia przed rezerwacją (`other`: `send-mail`, czynności Rafała z karty bilet produkcyjny (G1); `preview`:
+  `save-start-state`) oddaje zaraz po nich.
 - **Przygotowanie konta przez Rafała** (np. odebranie dostępu n8n w koncie Google przed ujęciem lekcji bez biletu; w
   lekcji z biletem cofa automat) dzieje się przy
   trzymanym koncie: `station-mark <lekcja> --state waiting`, zakończ turę ze znacznikiem bramki, po jego odpowiedzi
   `station-mark <lekcja> --state working`.
 - **`waiting` w lekcji z biletem:** `station-mark <lekcja> --state waiting` tylko przy bramce od G1 „bilet produkcyjny” do G4 „zakres dydaktyczny” zamykanej z
-  trzymanym kontem i przy czynności Rafała klasy G2 „poświadczenia i pierwsza zgoda OAuth” na koncie (logowanie, także
+  trzymanym kontem (pod rezerwacją `production` - przy każdej karcie pętli, także karcie braku postępu) i przy czynności Rafała klasy G2 „poświadczenia i pierwsza zgoda OAuth” na koncie (logowanie, także
   pierwsze logowanie konta nadawcy, okno zgody P1b „sonda okna ze zgodą”, odebranie dostępu, ręczna wysyłka sondy
   sygnatur Gmaila, sprawdzenie Wysłanych nadawcy). Każda
   inna praca przy trzymanym koncie - poprawka automatu, sonda automatyczna, `stan-wykonania`, kolejne ujęcie -
   zostaje w `working`.
 - **Pliki wspólne kursu** - `tools/**`, `kursy/<slug>/_nagrywanie/**` (w tym skrypty sond w `<dane>/sondy/`) i
-  `kursy/<slug>/kurs.yaml` - zmieniasz tylko trzymając konto. Poprawka „automat” z przebiegu: po ponownym dołączeniu,
-  gdy `station-wait` odda ci konto (kod 0), przed kolejnym `przebieg`.
+  `kursy/<slug>/kurs.yaml` - zmieniasz tylko trzymając konto. Poprawka „automat” z przebiegu: w lekcji bez biletu po
+  ponownym dołączeniu, gdy `station-wait` odda ci konto (kod 0), przed kolejnym `przebieg`; w lekcji z biletem od
+  razu, bo rezerwacja `production` trzyma konto przez całą pętlę.
 - **Commity:** commity lekcji biorą tylko jej ścieżki. Dwa nazwane wyjątki: commit poprawki `automat` w plikach
   wspólnych (z trzymanym kontem) i commit `kursy/<slug>/wymowa.md` z trybu automatycznego `/kurs-uwagi`. Zawsze
   `git commit -m … -- <ścieżki>`, nigdy `git add -A` (folder jest wspólny). `git add -- <ścieżka>` tylko dla ścieżki
@@ -865,27 +1150,36 @@ zdarzeniu: `cd tools/course-pipeline`, potem
 `npm run karta -- dopisz ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --json '<wpis>'` (README `tools/course-pipeline`,
 „Karta lekcji”).
 
+Sekcje karty z pętli produkcji: „Bilet” (sekcja 1) `buduj` liczy sam z `video/ticket.yaml` - `executions` zużyte i
+budżet, przebiegi próbne i nagrania ponowne na ujęcie jako statystyki (bez budżetu); „Zmiany treści naniesione przez
+automat” (sekcja 2) to zmiany dopasowania do nagrania; „Przebieg produkcji” (sekcja 4) to każda próba ujęcia z
+miejscem i przyczyną (wpisy `triage` i `powtorka` niżej, próby nagrań z werdyktem `buduj` czyta z runu) i każda karta
+braku postępu.
+
 | Zdarzenie | `rodzaj` | Pola wpisu |
 |---|---|---|
-| zmiana treści z przebiegu próbnego, po commicie `/kurs-uwagi` (wpis na każdą zmianę) | `zmiana-tresci` | `krok`, `akapit`, `przed`, `po`, `pliki`, `commit`, `data` |
+| zmiana treści z dopasowania do nagrania (pętla produkcji, etap 7; dawniej z przebiegu próbnego), po commicie `/kurs-uwagi` (wpis na każdą zmianę) | `zmiana-tresci` | `krok`, `akapit`, `przed`, `po`, `pliki`, `commit`, `data` |
 | decyzja Rafała w G4 „zakres dydaktyczny” | `decyzja-g4` | `krok`, `opis`, `decyzja`, `data` |
-| `niepewne`, którego druga metoda nie rozstrzygnęła (krok 4) | `miejsce` | `krok`, `akapit`, `t: null`, `co`, `zrodlo: "niepewne"` |
-| każde ponowne nagranie ujęcia (werdykt `powtorka`, nowe ujęcie po triage) | `powtorka` | `ujecie`, `powod`, `data` |
-| każda decyzja triage (krok 5, także zatrzymanie przebiegu w kroku 4) | `triage` | `ujecie`, `klasa`, `decyzja`, `data` |
+| `niepewne`, którego druga metoda nie rozstrzygnęła (dopasowanie do nagrania) | `miejsce` | `krok`, `akapit`, `t: null`, `co`, `zrodlo: "niepewne"` |
+| wada obrazu finalnego nagrania z dopasowania (nagranie zostaje) i uwaga kontroli ujęcia przyjęta słowem Rafała (wariant [B] karty braku postępu) | `miejsce` | `krok`, `akapit`, `t: null`, `co`, `zrodlo: "kontrola-ujecia"` |
+| każda kolejna próba nagrania ujęcia (werdykt `powtorka`, kolejna próba po triage) | `powtorka` | `ujecie`, `powod`, `data` |
+| każda nieudana próba ujęcia (zatrzymanie przebiegu albo nagrania, niepowodzenie kontroli; `decyzja`: miejsce `reset` albo `krok K`, przyczyna, co zrobione) i każda karta braku postępu (`klasa: "brak postępu (G1)"`, `decyzja`: podpis i wariant Rafała) | `triage` | `ujecie`, `klasa`, `decyzja`, `data` |
 | czynność ręczna Rafała w G2 „poświadczenia i pierwsza zgoda OAuth” i w bramce polityka konta (G3) (logowanie, okno zgody, zatwierdzona polityka, pozycja `account_setup`, ręczne cofnięcie dostępu Google), wysyłka maila lekcji w nieznanym stanie (`send-mail` `NIEUSTALONY`) i jej rozstrzygnięcie przez Rafała | `konto` | `co`, `data` |
 
-Przykład: `--json '{"rodzaj":"triage","ujecie":"lekcja","klasa":"LIMIT_SIEC","decyzja":"odczekane 2 min, ujęcie od nowa","data":"2026-10-22"}'`.
+Przykład: `--json '{"rodzaj":"triage","ujecie":"lekcja","klasa":"LIMIT_SIEC","decyzja":"krok 11, Workspace offline; odczekane 2 min, ta sama próba od nowa","data":"2026-10-22"}'`.
 
 - Każde pole jest wymagane, a obce pole albo nieznany `rodzaj` to `BŁĄD:` i plik bez zmian. Wpis z adresem e-mail albo
   ciągiem w kształcie klucza (w polach tekstowych także 32 znaki i więcej bez spacji, np. pełna ścieżka) narzędzie
   odrzuca - napisz go bez nich, bo karta idzie do gita.
-- `akapit` to `S:A` kroku z `przebieg.json`; `t` w `miejsce` to sekunda w akapicie (`null` - jego początek), czas w
+- `akapit` to `S:A` kroku z `przebieg.json` (w dopasowaniu do nagrania z przypiętego przebiegu referencyjnego) albo z
+  `video/nagrywanie.yaml` - manifest nagrania go nie ma; `t` w `miejsce` to sekunda w akapicie (`null` - jego początek), czas w
   filmie liczy `buduj` z osi montażu.
 - Powtórzone i doradcze uwagi kontroli ujęcia, decyzje kontroli lektora, kadry znaku AI do przejrzenia i ostrzeżenia
   montażu `buduj` czyta sam - tych nie dopisujesz.
-- `video/karta.json` z niezacommitowanymi wpisami wchodzi do najbliższego commitu lekcji: commitu trybu
-  automatycznego `/kurs-uwagi` albo commitu akceptacji przebiegu (wpis `zmiana-tresci` niesie hash commitu treści,
-  więc trafia do następnego). Wpisy z nagrania (`powtorka`, `triage`, `konto`) idą do następnego commitu lekcji,
+- `video/karta.json` z niezacommitowanymi wpisami wchodzi do najbliższego commitu lekcji: commitu poprawki
+  automatu, commitu trybu automatycznego `/kurs-uwagi` albo commitu raportu nagrania (dawniej akceptacji przebiegu;
+  wpis `zmiana-tresci` niesie hash commitu treści,
+  więc trafia do następnego). Wpisy z pętli (`powtorka`, `triage`, `konto`) idą do następnego commitu lekcji,
   najpóźniej razem z `video/lesson-card.md` przy budowie karty na G5 „film z kartą lekcji” (`/kurs-video`, krok 5).
 - Przed G5 „film z kartą lekcji” (`/kurs-video`, krok 5): `npm run karta -- buduj ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` zapisuje
   `video/lesson-card.md`.
@@ -899,6 +1193,7 @@ Przykład: `--json '{"rodzaj":"triage","ujecie":"lekcja","klasa":"LIMIT_SIEC","d
   PRZED pierwszym prawdziwym wykonaniem** - także w sondzie, próbie obsługi usługi, przygotowaniu i resecie, nie
   dopiero przed nagraniem lekcji. Powiedz, ile wykonań przewiduje budżet grup (z resetami) i jakie węzły zużywają
   tokeny; bez zgody tylko kroki bez wykonań. W lekcji z biletem tą zgodą jest bilet (G1 „bilet produkcyjny”): `executions` liczy przebiegi,
-  ujęcia i `probe-auto --allow-writes`, a wyczerpany licznik otwiera G1 „bilet produkcyjny”.
-- Surowe nagrania, zrzuty przebiegu próbnego i profil przeglądarki nie idą do gita (mogą zawierać dane konta). W raporcie `video/przebieg-probny.md` (idzie do gita) pola `Cytat:` i `Na zrzucie:` nie przepisują danych konta: adresów e-mail, nazw spoza projektu testowego, fragmentów kluczy. To samo dotyczy sekcji `## Naniesione automatycznie` i wpisów `video/karta.json`.
+  ujęcia, `send-mail` i `probe-auto --allow-writes`, a odmowa próby, na którą nie starczy wykonań (i wyczerpany
+  licznik `executions`), otwiera G1 „bilet produkcyjny”, dopłatę.
+- Surowe nagrania, zrzuty przebiegu próbnego, klatki kontroli ujęcia i profil przeglądarki nie idą do gita (mogą zawierać dane konta). W raportach `video/przebieg-probny.md` i `video/recording-report.md` (idą do gita) pola `Cytat:`, `Na zrzucie:` i `Na klatce:` nie przepisują danych konta: adresów e-mail, nazw spoza projektu testowego, fragmentów kluczy. To samo dotyczy sekcji `## Naniesione automatycznie` i wpisów `video/karta.json`.
 - `kursy/misja-ai-start/_nagrywanie/` to osobny, zamrożony automat Misji - ten skill go nie używa i nie zmienia.

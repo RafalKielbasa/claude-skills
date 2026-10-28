@@ -25,8 +25,12 @@ Lekcja z plikiem `video/ticket.yaml` (bilet produkcyjny (G1), zakłada go `/kurs
 `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`, sekcje 9, 11 i 12) ma etapy lektora,
 kontroli lektora, montażu i filmu **bez bramek**. Czego automat nie rozstrzygnie, trafia na kartę lekcji
 (`video/lesson-card.md`), a Rafał ocenia `final.mp4` razem z kartą w jednej bramce: film z kartą lekcji (G5),
-krok 5. Bramki wejścia z kroku 1 (treść zatwierdzona, brak `[UWAGA]`, zaakceptowany przebieg próbny) obowiązują
-dalej. Kroki niżej mają akapity „Lekcja z biletem”; **lekcja bez `video/ticket.yaml` działa po staremu, ze
+krok 5. Bramki wejścia z kroku 1 (treść zatwierdzona, brak `[UWAGA]`, zaakceptowany raport: w lekcji z biletem
+raport nagrania `video/recording-report.md`, w lekcji bez biletu przebieg próbny) obowiązują dalej. **Kolejność toru B
+w lekcji z biletem** (spec sekcja 20.3): finalne nagrania ujęć i raport nagrania (`/kurs-nagrywanie`, pętla
+produkcji, etapy 3-7) → etap 1 tego skilla i kontrola lektora → avatary → `edl` z finalnych nagrań →
+`/kurs-montaz` → etap 2 → bramka film z kartą lekcji (G5). Po etapie 1 niczego się nie nagrywa: lektor powstaje na
+scenariuszu dopasowanym do nagrań. Kroki niżej mają akapity „Lekcja z biletem”; **lekcja bez `video/ticket.yaml` działa po staremu, ze
 wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
 
 - **Wpisy na kartę:** `cd tools/course-pipeline`, potem
@@ -75,6 +79,11 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
      zgodnym z bieżącym scenariuszem i konspektem - `npm run video` odmówi przed pierwszym płatnym wywołaniem.
      Brak albo odmowa = najpierw `/kurs-nagrywanie` (kroki 0-4, do zaakceptowanego raportu). `--bez-przebiegu`
      tylko na jawne słowo Rafała w tej rozmowie.
+     **Lekcja z biletem** (`video/ticket.yaml`, bilet produkcyjny (G1)): etap 1 wymaga zamiast tego zaakceptowanego
+     raportu nagrania: `video/recording-report.md` ze `status: zaakceptowany` i `zrodla-hasz` zgodnym z bieżącym
+     scenariuszem i konspektem (po dopasowaniu scenariusza do nagrań, nie przed nim). `npm run video` odmawia przed
+     pierwszym płatnym wywołaniem; brak albo odmowa = najpierw `/kurs-nagrywanie` (pętla produkcji, do etapu 7).
+     `video/przebieg-probny.md` nie jest tu warunkiem. Lekcja bez biletu: przebieg próbny jak wyżej.
      Dokumentem do nagrywania jest `video/plan-nagrania.md` (kroki ekranu,
      kolumna „Do wpisania" z tym, co przy kroku idzie z klawiatury, narracja
      z nazwami plików lektora, a pod tabelą segmentu bloki do wklejenia).
@@ -230,7 +239,14 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
    nagrania ekranu nie robi człowiek - przebieg próbny `/kurs-nagrywanie`
    jest już za lekcją (bramka w kroku 1); po paczce lektora uruchom
    `/kurs-nagrywanie` od kroku 5 (automat Playwrighta nagrywa ujęcia i pisze EDL), potem
-   `/kurs-montaz` od kroku zaznaczeń i plansz (EDL już wypełniony), potem etap 2. Kroki z kontem kursu w `/kurs-nagrywanie` idą przez kolejkę (sekcja „Lekcje równolegle”). Po zmianie treści scenariusza przypomnij
+   `/kurs-montaz` od kroku zaznaczeń i plansz (EDL już wypełniony), potem etap 2. Kroki z kontem kursu w `/kurs-nagrywanie` idą przez kolejkę (sekcja „Lekcje równolegle”).
+   **Lekcja z biletem - inna kolejność, bez nagrywania po etapie 1:** finalne nagrania ujęć i raport nagrania są już
+   za lekcją (bramka w kroku 1). Po paczce lektora (i kontroli lektora, krok 4b) uruchom z `/kurs-nagrywanie`
+   wyłącznie `edl` (krok 6) z runu finalnych nagrań, potem `/kurs-montaz`, etap 2 i bramka film z kartą lekcji
+   (G5). Nagrania nie powtarzasz: wiąże je ze scenariuszem szkielet planu (`hasz.skeleton`), nie tekst narracji,
+   więc `edl` przyjmuje je po dopasowaniu. Gdy `edl` odmawia, bo nagranie powstało dla innego szkieletu planu albo
+   innego `nagrywanie.yaml`, zmiana nie była dopasowaniem: wróć do `/kurs-nagrywanie` (karta zakres dydaktyczny (G4)),
+   nie nagrywaj na własną rękę. Po zmianie treści scenariusza przypomnij
    Rafałowi, że zmontowany materiał trzeba zaktualizować ręcznie — pipeline
    tego nie wykryje.
 4b. **Kontrola lektora (objęta zgodą z bramki 2):**
@@ -268,7 +284,7 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
       `--decyzje` samo kieruje każdego kandydata na kartę - nie wołasz wtedy `--regeneruj-lektora`.
       `--regeneruj-lektora` odmawia po montażu, więc robisz to tylko tu, w etapie 1. Regeneracja nie wymaga
       pytania o koszt: zgodą jest budżet `tts_regenerations` w bilecie.
-   c. Dalej `/kurs-nagrywanie` od kroku 5. Po jego kroku `edl` (krok 6):
+   c. Dalej tylko `edl` z `/kurs-nagrywanie` (jego krok 6; nagrania ujęć są już zrobione, krok 5 nie biegnie). Po `edl`:
       `npm run kontrola-lektora -- <lekcja> --zastosuj` dopisuje `wyciszenia` do `video/montaz/edl.json`, nie
       ruszając istniejących; odrzucone zakresy trafiają do `doKarty`.
    d. `doKarty` i powtórzenia `buduj` czyta sam, więc niczego nie dopisujesz. Odsłuch miejsc z raportu robi

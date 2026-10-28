@@ -66,9 +66,23 @@ poprawia sie osobno, wiec rozbieznosc powstaje domyslnie, a kosztuje dopiero prz
   Granica z tamtego dowodu nadal obowiązuje: zadziałało z uznania piszącego
   raport, nie z kroku procedury — `kurs-video` wciąż nie ma punktu „przejdź
   ostrzeżenia planu przed nagraniem".
+- 2026-10-27, sesja 02151e54-95d0-46bd-89d5-2cb15d49d5f0 (id claude.ai niedostępny; lekcja agenty-ai 3.1):
+  siódmy dowód, granica mechanizmu. Commit `7ec94c76` (29.09, autor spoza tej sesji, „kurs(agenty):
+  poprawki”) zmienił scenariusz i artykuł w krokach 4, 21, 25, 29, 31, 32, 34, 47 i 50 oraz dodał
+  `dane-do-nagrania.md`, ale nie ruszył `konspekt-nagrania.md`; ściąga ma przy tym test przed nagraniem
+  z frazą 'cennik' zamiast 'uszek'. Rozjazd przeleżał cztery tygodnie, bo lekcja jest w starym układzie:
+  `npm run plan-nagrania` odmawia, dopóki istnieje `dane-do-nagrania.md`, a `npm run validate` dał tylko
+  dwa ostrzeżenia (długość tytułu, stary układ), bez słowa o konspekcie. Wyszedł dopiero z ręcznego
+  porównania diffu `7ec94c76` z konspektem. Ten sam commit wniósł dwa drukarskie cudzysłowy, które
+  walidator zgłasza jako BŁĄD, więc zakładam, że po nim walidacji nikt nie uruchomił.
 
 ## Rozwiazanie
 Po kazdej redakcji scenariusza lekcji demo przegenerowac plan nagrania i przeczytac ostrzezenia,
 zanim lekcja pojdzie do nagrania. Konspekt i scenariusz maja nazywac ten sam kadr tymi samymi
 slowami: rozjazd nazewnictwa objawia sie jako „sparowany po kolejnosci” i jest sygnalem
 do ujednolicenia tresci, nie do zmiany progu.
+
+Lekcja w starym układzie (z `video/dane-do-nagrania.md`) jest poza tym mechanizmem: generator odmawia, więc
+ostrzeżeń nie ma. Przed pracą nad taką lekcją porównać `git log -1 -- video/scenariusz.md`
+z `git log -1 -- video/konspekt-nagrania.md`; scenariusz nowszy niż konspekt oznacza przejrzenie diffu
+scenariusza krok po kroku, zanim lekcja pójdzie do migracji albo do nagrania.

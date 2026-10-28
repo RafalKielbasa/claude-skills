@@ -28,6 +28,14 @@ a zła decyzja idzie w dziesiątki wystąpień i unieważnia gotowe rendery.
   i 2 super 0 zły akcent, n 8 n 1 wygrywa" — czyli wariant z cudzysłowem dla
   `n8n` i oba warianty dobre dla `dżejson`. Bez odsłuchu cudzysłów zostałby
   zgadnięty, a w grze było 57 wystąpień w siedmiu scenariuszach.
+- 2026-10-27, sesja 02151e54-95d0-46bd-89d5-2cb15d49d5f0 (id claude.ai niedostępny; lekcja agenty-ai 3.1):
+  odstępstwo od reguły. Przy przepisaniu narracji pod lektora V4 weszły do `wymowa.md` bez próbek dwie nowe
+  decyzje: „Notion” i „Google Drive” bez odmiany (`w "Notion"` zamiast „w Nołszynie”) oraz „mime type”
+  w dwóch słowach. Odsłuch z 16.10 („zapis angielski wygrał 22/22”) rozstrzygał pisownię nazw, nie ich
+  odmianę ani dzielenie identyfikatora, ale wyglądał na rozstrzygający, więc pytanie o próbkę nie padło.
+  Wpis w `wymowa.md` mówi „decyzja Rafała, bez próbek”, choć Rafał przyjął ogólnym „ok” wariant prac, a nie
+  te dwie formy. Raport oznaczył obie jako decyzje na wyczucie; lektor V4 jeszcze nie powstał, więc próbka
+  jest wciąż tania.
 
 ## Rozwiązanie
 Nowa albo zmieniona decyzja fonetyczna nie wchodzi do `wymowa.md` z głowy.
@@ -36,3 +44,7 @@ obecny, kandydat w cudzysłowie, kandydat bez cudzysłowu, każdy w zdaniu
 z terminem dwa razy), potem odsłuch Rafała, potem wpis na listę — i dopiero
 potem podmiana w scenariuszach. Wariant lokalny wzorca globalnego
 `kalibracja-na-jednym-elemencie-przed-paczka`.
+
+Ogólna reguła pisowni (np. „angielskie nazwy po angielsku na V4”) nie rozstrzyga odmiany nazwy ani
+rozbicia identyfikatora na słowa. To osobne decyzje fonetyczne: idą przez próbki, zanim staną się regułą
+w `wymowa.md`, a wpis nie przypisuje ich Rafałowi, dopóki nie zobaczył tych konkretnych form.

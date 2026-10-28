@@ -423,3 +423,27 @@ Format wpisu:
 - Gładko, bez osobnych wzorców: kurs-nagrywanie w trybie biletu (`send-mail` nie wysłał żadnego maila dwa razy, 7 wysyłek `NIEUSTALONY` rozstrzygniętych samoczynnie z Wysłanych, licznik 13/59); project-index przy każdym commicie dokumentu; konflikty wiki przy scalaniu gałęzi dnia rozwiązane per linię.
 - Wzorce globalne dotknięte w tej sesji: 5 nowych (plik-wyjety-z-repo-kasowany-przy-przejsciu-przez-commit-ktory-go-sledzi, subagent-sesji-w-tle-bez-izolacji-nie-pisze-w-checkoucie, indeks-wiki-koliduje-przy-scalaniu-galezi-dnia, plik-danych-sprawdzony-czytnikiem-narzedzia, ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby) i dowody do 3 (playwright-goto-z-samym-hashem-nie-przeladowuje, straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, manual-step-confirmation-checked-against-system-state). Patrz log globalny.
 - Sygnał repo: brak nowych kandydatów (jedyny dotknięty wzorzec repo to sukces); bez zmian według wcześniejszych wpisów.
+
+## 2026-10-26 — sesja 2be43b78-0126-44ba-97e1-4c5eaa736bf3 (id claude.ai niedostępny; koordynacja `kodozercy-platform`: indeks i sekcja 13 specu na stan 26.10, plany W2 (28 zadań) i M2 (21 zadań) z inwentarzami zachowań i review codexa, decyzje W2-D1–D4 i M2-D1–D8, #688, #764 i #765 Done)
+- założono: plan-zmian-ui-kodozercow-bez-konsultanta-ux (skill: konsultant-ux-kodozercy, typ: porażka, wpis wątpliwy). Plan M2 zapisał zmiany ekranów bez konsultanta: quiz bez liter A–H, usunięte `RadialGlow` i wibrację przycisku.
+- Gładko, bez osobnych wzorców:
+  - inwentarze zachowań W2 i M2, każdy z czterech równoległych agentów Explore, zapisane jako załączniki planów;
+  - uwagi codexa (20 do W2, 9 do M2) ocenione i wcielone samodzielnie, z tabelą dla Rafała;
+  - `project-index` przy każdym commicie dokumentu;
+  - zależność M2 od gałęzi kontraktów W2 rozwiązana kolejnością zadań (Task 3 przed Task 2).
+- Wzorce globalne dotknięte w tej sesji: dowody do zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie, codex-exec-dziedziczy-hooki-i-mcp-uzytkownika i straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac. Patrz log globalny.
+- Sygnał repo: brak (nowy wzorzec ma 1 sesję).
+
+## 2026-10-26/27 — sesja 520bd4df-d397-46bb-a9d4-6bab0ba6c1fb (id claude.ai niedostępny; worktree `baza-wiedzy-agenty-ai-modul-2-bilet`: lekcja 2.2 do G5, bilet 2.1, przygotowanie i bilet 2.3; #721, #720, #789)
+- założono: sprawdz-przed-biletem-nie-widzi-wspolnego-stanu-kursu (skill: kurs-nagrywanie, typ: porażka) — krok 3 wymaga czystego `sprawdz` przed biletem, a credentiale z `shared_state` dołączają się tylko z biletem, więc do walidacji 2.3 trzeba było tymczasowego `ticket.yaml`.
+- założono: pelny-suite-nagrywanie-dwa-naraz-zawiesza-sie (skill: ogólny `tools/nagrywanie`, typ: porażka) — dwa równoległe pełne `vitest run` zawisły przy bezczynnym CPU, a pojedynczy przebieg trwał 2628 s. Wpis wątpliwy: przyczyna nieustalona, dowód tylko z podsumowania sesji.
+- Gładko, bez osobnych wzorców: kurs-nagrywanie w trybie biletu, czyli 2.2 od przebiegu 7 do G5 z sześcioma dopłatami G1, każda przyjęta jednym słowem; karta G1 lekcji 2.3 z trzema decyzjami D1–D3 przyjęta jednym „ok”; project-index i ślad board-tracker przy każdym commicie.
+- Wzorce globalne dotknięte w tej sesji: dowody do 5 (ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby, dlugi-lancuch-narzedzi-bez-linii-statusu, straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan, plik-danych-sprawdzony-czytnikiem-narzedzia). Patrz log globalny.
+- Sygnał repo: brak nowych kandydatów (oba nowe wzorce mają po 1 dowodzie); bez zmian według wcześniejszych wpisów.
+
+## 2026-10-27 — sesja 02151e54-95d0-46bd-89d5-2cb15d49d5f0 (id claude.ai niedostępny; worktree `baza-wiedzy-agenty-ai-modul-2-bilet`: lekcja agenty-ai 3.1, pisownia V4 i plansze; #795)
+- dopisano dowód: rozjazd-scenariusza-z-konspektem-wykrywany-maszynowo (siódmy) — lekcja w starym układzie jest poza generatorem planu, więc rozjazd z `7ec94c76` przeleżał cztery tygodnie bez ostrzeżenia.
+- dopisano dowód: decyzja-fonetyczna-rozstrzygana-odsluchem (drugi, odstępstwo) — odmiana „Notion”/„Google Drive” i „mime type” weszły do `wymowa.md` bez próbek, bo reguła V4 o pisowni wyglądała na rozstrzygającą.
+- Gładko, bez osobnych wzorców: board-tracker (issue #795 założone dopiero po „ok”, ślad po commitach); kurs-lekcja zatrzymała się przed migracją starego układu zgodnie z sekcją „Migracja lekcji ze starego układu”; kurs-nagrywanie zatrzymało się przed warunkami bezpieczeństwa nowych usług `dysk` i `notion`.
+- Wzorce globalne dotknięte w tej sesji: dowody do 4 (python-na-windows-drukuje-w-cp1252, straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan, skrypt-z-asercja-zamiast-serii-edycji).
+- Sygnał repo: brak nowych kandydatów (oba dotknięte wzorce repo to sukcesy); bez zmian według wcześniejszych wpisów.

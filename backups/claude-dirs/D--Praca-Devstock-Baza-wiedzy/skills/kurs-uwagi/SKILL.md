@@ -142,7 +142,8 @@ its scope test (the self-applied change bound, D1) on every `scenariusz` finding
 writes a marker for each finding within that bound (D1) and calls this skill in auto mode.
 
 **Entry.** The run is in auto mode only when both hold: every marker it applies starts with
-`przebieg próbny, krok`, and the lesson has a valid `video/ticket.yaml` (present, with `approved`,
+`przebieg próbny, krok` (a dry pass) or `nagranie, krok` (the fitting of the scenario to the final
+recording, below), and the lesson has a valid `video/ticket.yaml` (present, with `approved`,
 `spent` within `budget`; `tools/nagrywanie` `sprawdz` warns about a refused one). Otherwise this
 is the normal mode with all its gates. The marker is
 `[UWAGA: przebieg próbny, krok K: <rozjazd>. Propozycja: <brzmienie>]`, where `<rozjazd>` quotes
@@ -151,7 +152,10 @@ sentence, or a whole `[AKCJA: ...]` line). A marker `[UWAGA: przebieg próbny, k
 <rozjazd>. Propozycja: <brzmienie>]` carries Rafał's own wording from his decision at the teaching
 scope gate (G4): it is honoured only when `video/karta.json` has a `decyzja-g4` entry for step K,
 and then applied verbatim, with no adaptation of any kind (steps 4 to 6 below do not touch its
-text); without that entry it is an ordinary dry-pass marker. Any other marker in the file is Rafał's own: auto mode does not touch it, and it
+text); without that entry it is an ordinary dry-pass marker. The same holds for the fitting's two forms:
+`[UWAGA: nagranie, krok K: <rozjazd>. Propozycja: <brzmienie>]` is read exactly like the dry-pass marker, and
+`[UWAGA: nagranie, krok K (decyzja G4): <rozjazd>. Propozycja: <brzmienie>]` is Rafał's wording from the
+teaching scope gate (G4) applied literally, under the same `decyzja-g4` entry condition. Any other marker in the file is Rafał's own: auto mode does not touch it, and it
 keeps every gate of the normal mode (a normal run applies it, on his word). While his marker stays
 at `status.tresc: zatwierdzona`, the validator error of step 9 is the documented exception, not a
 defect.
@@ -182,6 +186,18 @@ defect.
   step 8 appends to `kursy/<slug>/wymowa.md` is a course file, not a lesson path: commit it on its
   own right after step 11 (`kurs(<slug>): wymowa po przebiegu próbnym lekcji <n> (automat)`), by the
   same rules.
+- **Markers of the fitting (`nagranie, krok K`), a lesson with a ticket after its final recordings.**
+  `/kurs-nagrywanie` (production loop, stage 7) writes them for the scenario findings of the recordings'
+  frame control and calls this skill once; K is the `numer` of the automation step in the take manifest. The
+  procedure is the one above, with three differences: the commit is
+  `kurs(<slug>): lekcja <n> dopasowanie do nagrania (automat)` (the same pathspec and fail-closed rules); the
+  hand-back and its report line call the run "dopasowanie do nagrania" (not "uwagi z przebiegu próbnego");
+  and this skill never asks for a pass or a recording afterwards - the caller decides, and in a lesson with
+  a ticket the voice-over is generated only after the fitting. A fitting changes narration, the `[AKCJA: ...]`
+  lines, the konspekt wording and the article only; it never touches `video/nagrywanie.yaml` actions or
+  anything that moves the skeleton hash (typed or pasted text, steps, paragraph ids): a marker that would is a
+  teaching scope (G4) trigger below. A new phonetic spelling for `wymowa.md` is committed as
+  `kurs(<slug>): wymowa po dopasowaniu do nagrania lekcji <n> (automat)`.
 - **Step 11 comes before step 10.** Check the branch (`git branch --show-current`): it must be the
   branch this session commits to (in the main checkout of "Baza wiedzy" the branch of the day,
   `rafal-kielbasa/DD-MM-YYYY`). Any other branch means stop and ask Rafał: no commit, no branch
@@ -217,7 +233,9 @@ approved lesson whose on-screen Google sign-in still has a single consent paragr
 `[UWAGA: przebieg próbny, krok K: <the sentence about Google's screen>. Propozycja: warianty consent | wspólne: <that
 sentence without the part about Google's screen> | granted: <sentence> | incremental: <sentence> |
 remembered: <sentence>]` (one line), where K is the `numer` of the `google_sign_in` step in `video/nagrywanie.yaml`.
-Adding the three consent-variant paragraphs is a rewording within the self-applied change bound (D1) by the spec's own
+A lesson with a ticket writes no consent variants: its fitting rewords the consent paragraph to the screen the
+final recording shows, with a `nagranie, krok K` marker and no further pass (spec section 20.7, row 10); variants
+a lesson already has stay. Adding the three consent-variant paragraphs is a rewording within the self-applied change bound (D1) by the spec's own
 call: only the sentence about Google's screen changes, and the beat (the account gets connected) is the same in all
 three. For this marker, steps 4 to 6 work like this:
 - the paragraph stays under the sign-in `[AKCJA: ...]` line, with the quoted sentence replaced by the `wspólne` text.
