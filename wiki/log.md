@@ -746,3 +746,27 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
   - ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby (porażka, 3 sesje, `ogólny`): nowy kandydat na regułę globalną;
   - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 9 sesji), cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (porażka, 20 dowodów) i dlugi-lancuch-narzedzi-bez-linii-statusu (porażka, 12 sesji): dalej kandydaci na regułę globalną w `~/.claude/CLAUDE.md`;
   - Brak `nawrót`.
+
+## 2026-10-27 — sesja 02151e54-95d0-46bd-89d5-2cb15d49d5f0 (id claude.ai niedostępny; Baza wiedzy, worktree `baza-wiedzy-agenty-ai-modul-2-bilet`, lekcja agenty-ai 3.1: pisownia V4 i plansze, #795)
+- dopisano dowód: python-na-windows-drukuje-w-cp1252 (dziewiąty). Nowy wariant: `python -I` pomija `PYTHONIOENCODING`, przeszło `-X utf8`. Rozwiązanie rozszerzone.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (dziesiąty, dziesiąta sesja). Pętla, zmienna i łańcuch commita odrzucone; osobne `git -C` z dosłowną ścieżką przeszły.
+- dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (dwudziesty pierwszy). Ścieżki względne po przestawionym katalogu; dalej tylko bezwzględne.
+- dopisano dowód: skrypt-z-asercja-zamiast-serii-edycji (jedenasty, sukces). 42 zamiany pisowni z licznikiem na parę; jedna pomyłka licznika zatrzymała skrypt przed zapisem.
+- Wzorce repo: dowody do rozjazd-scenariusza-z-konspektem-wykrywany-maszynowo i decyzja-fonetyczna-rozstrzygana-odsluchem (wiki repo „Baza wiedzy” w worktree).
+- Sygnał:
+  - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 10 sesji), cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (porażka, 21 dowodów) i python-na-windows-drukuje-w-cp1252 (porażka, 9 dowodów): dalej kandydaci na regułę globalną w `~/.claude/CLAUDE.md`, nie na `/evolve-skill`;
+  - Brak `nawrót`.
+
+## 2026-10-27 — sesja session_01WryF5VMEsMHtnHj5CCKTC4 (lokalnie 1faa07a7-ff1f-431b-bc16-b826e84f3e24; code-busters-mobile, worktree `code-busters-mobile-app-migration-m2-learning`, plan 4 M2 subagent-driven, #767)
+- założono: wspolny-plik-kontekstu-dla-serii-dispatchy (skill: superpowers:subagent-driven-development, sukces) — dwa pliki w workspace zamiast powtarzania kontekstu w 14 dispatchach ekranowych.
+- dopisano dowód: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (siódmy, siódma sesja) — skrypt bramki bez katalogów; „adresy do uruchomienia” wzięte za URL, Rafał: „chodziło mi o adresy na dysku”. Rozwiązanie rozszerzone o katalog każdej usługi.
+- dopisano dowód: zrzuty-kontrolera-przed-bramka-wizualna (piąty, strona przeciwna) — bez zrzutów mobile trzy wady układu dotarły na telefon, jedna wprowadzona poprawką z review. Rozwiązanie rozszerzone o rachunek miejsca.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (szósty) — `status --to done` po „OK” odrzucone, Rafał uruchomił z `!`.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (jedenasty, jedenasta sesja) — odmowy także dla komend bez gita z „bind”/„git” w tekście; scalenie w kopii głównej przez PowerShell (wątpliwe, do oceny Rafała). Dowód najpierw wpisany pomyłkowo do zlozona-komenda-git-z-cd-poza-regulami-allow i stamtąd usunięty.
+- dopisano dowód: review-zakresowe-nie-widza-defektu-poza-swoim-diffem (dziesiąty, sukces) — review gałęzi M2 (opus, przejścia po obszarach) znalazło 3 Important po 21 czystych review zadaniowych.
+- dopisano dowód: twierdzenie-o-pliku-bez-odczytu (siódmy) — recenzent-subagent: „historia rzuci, brak providera”, obalone grepem przez kontrolera.
+- dopisano dowód: kod-referencyjny-planu-nigdy-nie-uruchomiony (piętnasty) — sprawdzenie planu „code tokens equal” obalone sondą przed dispatchem, dane z innego strumienia.
+- Sygnał:
+  - bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (porażka, 7 sesji) → `/evolve-skill superpowers:writing-plans`;
+  - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 11 sesji), zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (porażka, 6 dowodów), twierdzenie-o-pliku-bez-odczytu (porażka, 7 dowodów) i kod-referencyjny-planu-nigdy-nie-uruchomiony (porażka, 15 dowodów): dalej kandydaci;
+  - Brak `nawrót`.

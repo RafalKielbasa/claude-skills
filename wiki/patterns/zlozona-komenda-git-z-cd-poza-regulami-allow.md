@@ -29,4 +29,4 @@ a każda pojedyncza komenda git przeszła.
 W repo z regułami `allow` na git każda komenda git idzie osobnym wywołaniem: bez `cd` z przodu,
 bez `&&`, z katalogu repo jako cwd, ze ścieżkami względem tego cwd. Kolejność z reguły repo
 (`git branch --show-current` → `git add <pliki>` → `git commit` → `git push`) to cztery wywołania,
-nie jedno.
+nie jedno. W sesji izolowanej w worktree działa osobny mechanizm o podobnym skutku: [[straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac]].

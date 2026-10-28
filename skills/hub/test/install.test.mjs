@@ -32,6 +32,12 @@ test('the rules block is appended once and replaced in place on a rerun', () => 
   assert.equal(upsertRulesBlock(edited), once);
 });
 
+test('the rules block tells a session to quote a hub message it acts on (hub-panel probe D7)', () => {
+  const block = upsertRulesBlock('');
+  assert.match(block, /\*\*Hub messages\.\*\*/);
+  assert.match(block, /quoting\s+that message verbatim/);
+});
+
 test('install.mjs on a temporary claude dir: dry run writes nothing, a real run installs idempotently', () => {
   const claude = tempRoot();
   writeFileSync(join(claude, 'settings.json'), JSON.stringify({ hooks: { SessionEnd: [backupHook] } }));

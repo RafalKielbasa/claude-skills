@@ -1,0 +1,2 @@
+- [Worktree session git guard](worktree-session-git-guard.md) — isolated sessions can't run git in the main checkout (even via `!`); Rafał merges in his own terminal, verify with `pnpm -C`
+- [W2 gate harness lessons](w2-gate-harness-lessons.md) — Tailwind 3.3 silent classes, course modals, learner survey seed, Cloudflare/Vimeo noise, light-theme ink tokens

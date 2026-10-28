@@ -32,6 +32,10 @@ widać z repo, więc nie wychodzi ani w self-review, ani w review planu, ani w b
   - Worktree nie miał `.env`, bo pliki ignorowane nie przechodzą do nowego worktree. Aplikacja rzuciła `EXPO_PUBLIC_GRAPHQL_URL is not set`, a `.env` trzeba było skopiować z głównego checkoutu.
   - Moją edycję `.env` na LAN IP Rafał odrzucił w prompcie i uruchomił backend sam („już uruchomiłem BE”). Mój start CMS-u zatrzymałem (`TaskStop`).
   - Zanim padł wiersz 1, Rafał dopytał trzy razy: „podaj adres pliku do uruchomienia”, „podaj dane do logowania”, „podaj jeszcze raz krok po kolei”.
+- 2026-10-27, sesja session_01WryF5VMEsMHtnHj5CCKTC4 (lokalnie 1faa07a7-ff1f-431b-bc16-b826e84f3e24), bramka M2 mobile: siódmy dowód, siódma sesja.
+  - Skrypt bramki `m2-gate.md` (52 wiersze) miał jedną linię „Uruchom” bez katalogów, choć rozwiązanie tej strony je wymienia. Szkic pisał subagent z briefem bez wymogu sekcji „Przygotowanie”, a ja go nie dopisałem.
+  - Rafał: „Podaj mi adresy do uruchomienia CMS oraz mobilki do testów”. Odpowiedziałem URL-ami (`localhost:3001`, LAN IP, `adb reverse`). Rafał: „chodziło mi o adresy na dysku”.
+  - Nowe: dla Rafała „adres” w kontekście uruchamiania to ścieżka katalogu, tak samo jak w szóstym dowodzie („adres pliku do uruchomienia”).
 
 ## Rozwiązanie
 Gdy spec albo plan zawiera krok, który wykonuje użytkownik na swoim sprzęcie lub koncie (urządzenie,
@@ -44,7 +48,7 @@ sprawdzeniu, że port nie jest zajęty przez stary proces), podaje adres do wpis
 i czyta log serwera po otwarciu aplikacji: błędy uruchomienia i połączenia widzi wtedy sam, zanim
 użytkownik przejdzie tabelę bramki.
 Skrypt bramki zaczyna się od sekcji „Przygotowanie” z gotowymi wartościami:
-- katalog, z którego uruchomić aplikację (ścieżka worktree);
+- katalog, z którego uruchomić aplikację (ścieżka worktree), i katalog każdej usługi (np. CMS) — gdy Rafał prosi o „adres” do uruchomienia, chodzi o ścieżkę na dysku, nie o URL;
 - komenda i adres do wpisania w dev cliencie;
 - konto testowe albo informacja, skąd je wziąć;
 - lista usług, które muszą działać, i kto je stawia.

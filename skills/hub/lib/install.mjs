@@ -18,6 +18,9 @@ export const RULES_BLOCK = [
   '- **Isolation.** A project session does not message another project session on its own',
   '  initiative; the hub is the only channel between projects. Exception: Rafal asks for it',
   '  explicitly in that session.',
+  '',
+  '- **Hub messages.** A session that acts on a message from the hub starts its reply by quoting',
+  '  that message verbatim, because the desktop app card shows the reply but not the message.',
   RULES_END,
 ].join('\n');
 

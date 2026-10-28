@@ -76,6 +76,12 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
 
 - 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi (redakcja M02L01): dziewiąty dowód, w wariancie "jeden skrypt, wiele fragmentów". Cztery skrypty tej sesji (10 podmian rozjazdów w artykule, 6 miejsc reguły w dwóch plikach, 5 miejsc przy zacieśnianiu reguły, wstawka do dziennika) budowały regex z wzorca pisanego zwykłymi spacjami i dopuszczały w nim twardą spację, a każda podmiana miała asercję "dokładnie jedno trafienie" z przerwaniem całego skryptu przy innej liczbie. Żadna nie chybiła. Przy wstawce do dziennika asercja była potrójna: nagłówek znaleziony w świeżym odczycie, brak własnego wpisu w pliku, liczba linii przed i po.
 - 2026-10-08, sesja claude.ai/code/session_01PEmJYYAK5hBJGhZ3cKxfgs: dziesiąty dowód, wariant „jedna lista operacji, dwa wyjścia". Redukcja workflowu n8n (`01_Process_meeting`, 41 operacji: 19 usunięć, 4 zmiany nazw, nowe kody, nowy węzeł, połączenia) opisana raz w skrypcie `reduce-01.js`, który z tej samej listy pisał plik eksportu do repo (na nim TDD: 23 testy RED → GREEN) i tablicę `operations` do `update_workflow` w MCP. Eksport draftu z proda porównany potem skryptem z plikiem repo węzeł po węźle — jedyną różnicą okazał się błąd narzędzia (MCP `renameNode` nie przepisał `$()` w kodzie), nie rozjazd między dwoma zapisami.
+- 2026-10-27, sesja 02151e54-95d0-46bd-89d5-2cb15d49d5f0 (id claude.ai niedostępny; lekcja agenty-ai 3.1,
+  pisownia pod lektora V4): jedenasty dowód. `v4_spelling.py` miał listę par „było → jest” z oczekiwaną
+  liczbą trafień dla każdej, liczoną tylko w liniach lektora (linie `[AKCJA: …]` pominięte), i zapisywał
+  plik dopiero po przejściu wszystkich asercji. Pierwsze uruchomienie przerwało się bez zapisu na
+  `'w "Nołszynie"'`: 6 trafień zamiast 7. Odczyt linii pokazał, że pomylił się licznik w skrypcie, nie plik;
+  po poprawce 42 zamiany w 26 liniach weszły jednym zapisem.
 
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:

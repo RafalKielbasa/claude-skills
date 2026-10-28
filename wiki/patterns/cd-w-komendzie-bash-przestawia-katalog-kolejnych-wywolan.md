@@ -174,6 +174,10 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
     razy w ostatniej części sesji.
   - Szkody nie było, bo każda komenda zaczynała się od własnego `Set-Location` ze ścieżką bezwzględną.
   - Opis narzędzia PowerShell mówi wprost: „Do NOT prefix commands with `cd` or `Set-Location`”.
+- 2026-10-27, sesja 02151e54-95d0-46bd-89d5-2cb15d49d5f0 (id claude.ai niedostępny; worktree
+  `baza-wiedzy-agenty-ai-modul-2-bilet`, lekcja agenty-ai 3.1): dwudziesty pierwszy dowód. Według
+  podsumowania sesji ścieżki względne przestały trafiać, bo katalog roboczy Basha został po wcześniejszej
+  komendzie w innym miejscu. Od tej chwili komendy szły na ścieżkach bezwzględnych i błąd się nie powtórzył.
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a

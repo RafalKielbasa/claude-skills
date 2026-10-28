@@ -1,5 +1,5 @@
 {
-  "lastUpdated": 1792797005232,
+  "lastUpdated": 1793167489417,
   "skills": [
     {
       "skillId": "docs",
@@ -55,7 +55,7 @@
       "name": "xlsx",
       "description": "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .xltx, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \"the xlsx in my downloads\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved.",
       "source": "anthropic",
-      "updatedAt": "2026-09-14T21:00:33.324012Z"
+      "updatedAt": "2026-10-27T19:00:29.248939Z"
     },
     {
       "skillId": "deep-research",
@@ -69,7 +69,7 @@
       "name": "computer-use",
       "description": "Read this skill before the first step of any request to do something in an app on the person's own computer (Notes, Finder, System Settings, any desktop app), to look at their screen, or for \"computer use\". Computer use (desktop control) lets Claude take screenshots of the person's desktop and control it with clicks, typing and scrolling through the Claude desktop app; its tools are named mcp__computer-use__* when the session runs in the desktop app and mcp__remote-devices__computer_* when a cloud session is linked to the person's computer; before computer use is turned on for a conversation there may be no such tools, only an enable__mcp__remote-devices__computer tool, which turns it on. It covers turning it on, picking the right tool, the access flow, and the safety rules for tiered apps, links and financial actions. It is not for websites, which go through Claude in Chrome or the built-in browser and their own skills.",
       "source": "anthropic-example",
-      "updatedAt": "2026-10-08T17:34:24.164396Z"
+      "updatedAt": "2026-10-28T06:00:22.561400Z"
     },
     {
       "skillId": "chrome-browser",

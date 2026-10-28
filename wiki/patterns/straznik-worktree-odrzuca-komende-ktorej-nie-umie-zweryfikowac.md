@@ -84,6 +84,22 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
     - wycinki pliku przez `Grep -A` zamiast `sed -n`;
     - PowerShell wołany bezpośrednio.
   - Każde obejście przeszło za pierwszym razem.
+- 2026-10-27, sesja 02151e54-95d0-46bd-89d5-2cb15d49d5f0 (id claude.ai niedostępny; ten sam worktree
+  `baza-wiedzy-agenty-ai-modul-2-bilet`, lekcja agenty-ai 3.1): dziesiąty dowód. Według podsumowania sesji
+  odrzucone zostały git w pętli, git ze zmienną w argumencie i łańcuch commita w jednej komendzie. Przeszły
+  osobne wywołania `git -C "<worktree>" …` z dosłowną ścieżką, każde za pierwszym razem; oba commity lekcji
+  (`f253d3c1`, `2e5983d9`) poszły tak, z pathspec.
+- 2026-10-26/27, sesja session_01WryF5VMEsMHtnHj5CCKTC4 (lokalnie 1faa07a7-ff1f-431b-bc16-b826e84f3e24), worktree `code-busters-mobile-app-migration-m2-learning` (plan M2 mobile, subagent-driven): jedenasty dowód, jedenasta sesja.
+  - Odrzucone: `cd "<ten worktree>" && git status && …`, `git -C <inny worktree tego repo> status`, `xargs -a <plik> git grep`, łańcuch z heredokiem do ledgera i `git diff`.
+  - Nowe: odrzucone także komendy bez gita, w których tekście padło „bind” albo „git”:
+    - `node <cli board-trackera> bind --ref …` („runs a string through bind”);
+    - pętla `grep` po plikach wiki z `git` w nazwie (`zlozona-komenda-git-…`).
+  - Przeszły:
+    - pojedyncze `git -C "<ten worktree>" …`;
+    - ten sam `bind` i `status` przez narzędzie PowerShell;
+    - odczyt plików wiki przez Grep/Read;
+    - `grep … $(cat <lista>)` bez gita.
+  - Scalenie `--no-ff` w kopii głównej (polecenie huba i „OK” Rafała) poszło przez PowerShell `Set-Location <kopia główna>; git merge …`, którego strażnik nie sprawdza. Wątpliwe, czy to dopuszczalna droga — do oceny Rafała; alternatywą jest komenda `!` dla użytkownika.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych

@@ -1,0 +1,25 @@
+# wspolny-plik-kontekstu-dla-serii-dispatchy
+
+- **Skill:** superpowers:subagent-driven-development
+- **Typ:** sukces
+- **Status:** otwarty
+
+## Opis
+Sukces: przy serii kilkunastu zadań tego samego kształtu (ekrany migrowane na jedną bibliotekę) kontroler zapisuje dwa wspólne pliki w workspace planu. Pierwszy, dla implementerów, opisuje, co zbudowały wcześniejsze zadania, wylicza rulingi i reguły domu. Drugi, dla recenzentów, zawiera Global Constraints dosłownie, decyzje użytkownika i rulingi. Dispatch każdego zadania podaje ścieżki do tych plików plus kilka zdań specyficznych dla zadania, zamiast powtarzać kontekst.
+
+## Przyczyna źródłowa
+Skill każe nie wklejać historii poprzednich zadań do dispatchu, a brief z planu nie zna interfejsów zbudowanych po drodze. Bez wspólnego pliku kontroler albo puchnie każdy dispatch, albo implementer odkrywa API sam i każdy ekran robi to samo inaczej. Rulingi zmieniające się w trakcie (np. etykiety wstecz) trafiają do wszystkich kolejnych zadań jedną edycją pliku.
+
+## Dowody
+- 2026-10-26/27, sesja session_01WryF5VMEsMHtnHj5CCKTC4 (lokalnie 1faa07a7-ff1f-431b-bc16-b826e84f3e24), plan 4 (M2) migracji Kodożerców, mobile, zadania 7–20.
+  - Pliki: `screen-task-context.md` (biblioteka ds, bliźniaki `components/learning`, pomocniki, rulingi R1–R22, komendy kontrolne) i `screen-review-constraints.md`.
+  - Dispatch zadania ekranowego miał ok. 25 linii i czternaście takich przeszło bez pytań NEEDS_CONTEXT.
+  - Rulingi R21/R22 (codegen ze schematu na dysku, etykiety wstecz) dopisane w trakcie trafiły do zadań 16–20 bez zmiany ich promptów.
+  - Recenzenci zadań z tym samym plikiem ograniczeń nie zgłaszali ponownie rozstrzygniętych kwestii (braki ikon, tony `Badge`).
+
+## Rozwiązanie
+Gdy po fundamentach planu zostaje seria ≥ 5 zadań tego samego kształtu, przed pierwszym z nich zapisz w workspace dwa pliki:
+- kontekst dla implementera: co zbudowano, z sygnaturami, dozwolone importy, rulingi, komendy kontrolne;
+- ograniczenia dla recenzenta: Global Constraints dosłownie, decyzje użytkownika, rulingi.
+
+Dispatch podaje ich ścieżki i tylko to, co specyficzne dla zadania. Każdy nowy ruling obowiązujący serię dopisz do obu plików w tej samej turze, w której go zapisujesz w ledgerze.

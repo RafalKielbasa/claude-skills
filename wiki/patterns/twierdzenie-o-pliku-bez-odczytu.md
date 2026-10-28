@@ -50,6 +50,7 @@ bo twierdzenie brzmi jak fakt operacyjny, nie jak hipoteza do sprawdzenia.
   "wideo"` → 6 przed i po). Twierdzenie subagenta o zawartości pliku wchodzi do
   raportu dla użytkownika tak samo jak własne, więc wymaga tego samego odczytu.
 - 2026-10-21/22, sesja f8d64eed-4822-47ab-af24-2115a5905b5f (id claude.ai niedostępny), plan 2 `kodozercy-platform-public-catalog` pisany przez Claude: plan twierdził, że hooki ekranów po zalogowaniu importują dane placeholderów roadmapy (`coursesData`, `featuresData`), więc kazał je zostawić. Recenzent całej gałęzi sprawdził obu konsumentów: używają zmiennych lokalnych. Dane usunięte w fali poprawek (M2), zgodnie ze specem 5.3, który od początku kazał je usunąć.
+- 2026-10-26/27, sesja session_01WryF5VMEsMHtnHj5CCKTC4 (lokalnie 1faa07a7-ff1f-431b-bc16-b826e84f3e24), M2 mobile, review zadania 12: recenzent (sonnet) dał Important „historia Video rzuci przy renderze”. Uzasadnienie: `.rnstorybook/preview.tsx` nie owija historii w `SnackbarProvider`. Nie sprawdził, gdzie Storybook się montuje. Grep `SnackbarProvider` i `app/_layout.tsx:136-153` pokazały, że `StorybookUIRoot` renderuje się wewnątrz providera. Uwaga poszła do rundy poprawek razem z dowodem, a implementer i re-review potwierdzili „not a defect” bez zmiany kodu. Twierdzenie recenzenta o pliku traktować jak hipotezę; jedna tania sonda kontrolera oszczędza rundę poprawek.
 
 ## Rozwiązanie
 Zanim powiesz użytkownikowi, co zawiera plik, przeczytaj ten plik. Dotyczy to

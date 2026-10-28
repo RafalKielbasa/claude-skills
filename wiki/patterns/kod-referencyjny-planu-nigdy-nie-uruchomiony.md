@@ -128,6 +128,12 @@ wierność jest tym, o co się go prosi.
 
 - 2026-10-22, sesja session_01QxjrWc65U98yvi7rPWyHoa (lokalnie bdda6800-f7c7-4172-b436-16c321621fcf), plan M1 migracji Kodożerców: czternasty dowód, tym razem złapany przed dispatchem. Task 6 kazał sprawdzić `lib/forms/form-errors.ts` przez `node --experimental-strip-types -e "import(...)"`, a w tym samym pliku umieścić `announceFormErrors` z importem `react-native`. Skan pre-flight uruchomił `node -e "import('react-native')"` → `Unexpected token 'typeof'`, więc sprawdzenie z planu nie mogło przejść; ruling R3 rozdzielił plik na czysty helper i plik z `react-native`. Odmiana: defekt w **komendzie weryfikacji** planu, wykryty jej jednym uruchomieniem w pre-flight.
 
+- 2026-10-26/27, sesja session_01WryF5VMEsMHtnHj5CCKTC4 (lokalnie 1faa07a7-ff1f-431b-bc16-b826e84f3e24), plan 4 (M2) migracji Kodożerców: piętnasty dowód, złapany przed dispatchem zadania 4.
+  - Plan kazał sprawdzić w Node „code tokens are equal in both themes” (każdy klucz `code-*` równy w obu motywach). Na tym założeniu oparł też memoizację WebView edytora.
+  - Dane przyszły z gałęzi kontraktów v1.2 dopiero po pre-flight. Jedno wywołanie `node -e` na `tokens/generated/colors.js` pokazało, że `code-bg` się różni (`#0a0f1c` / `#0f1729`), więc sprawdzenie z planu nie mogło przejść.
+  - Ruling R16: równość dla pozostałych kluczy, a `code-bg` dociera do panelu bez przeładowania.
+  - Odmiana: założenie planu o **danych**, które powstają w innym strumieniu. Sondę trzeba uruchomić w chwili, gdy dane trafiają do gałęzi, a nie tylko w pre-flight.
+
 ## Rozwiązanie
 
 Zanim plan stanie się źródłem briefów, uruchom jego kod: dla każdego bloku,

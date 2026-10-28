@@ -85,6 +85,11 @@ niepowodzenie całej operacji.
   Pythona przy montażu lekcji agenty-ai 1.3 padł na `print` polskiego tekstu (`UnicodeEncodeError`, cp1252).
   Powtórzony z `PYTHONIOENCODING=utf-8`. W tej samej sesji zabrakło modułu PIL do arkusza klatek: arkusze
   złożone przez `ffmpeg` `xstack`.
+- 2026-10-27, sesja 02151e54-95d0-46bd-89d5-2cb15d49d5f0 (id claude.ai niedostępny; Baza wiedzy, lekcja
+  agenty-ai 3.1): dziewiąty dowód, nowy wariant. Skrypt podmiany pisowni `v4_spelling.py` uruchamiany jako
+  `python -I` padł na `print` mimo `PYTHONIOENCODING=utf-8`: tryb izolowany `-I` zawiera `-E`, który
+  pomija wszystkie zmienne `PYTHON*`, więc prefiks z rozwiązania nic nie zmienił. Przeszło
+  `python -I -X utf8`, bo `-X utf8` to opcja wiersza poleceń, nie zmienna środowiska.
 
 ## Rozwiązanie
 Każde wywołanie `python`/`python -c` przez narzędzie Bash na Windowsie
@@ -97,3 +102,6 @@ operacji: sprawdź stan pliku, zanim powtórzysz skrypt, bo zapis mógł już
 przejść. Alternatywnie drukuj wyłącznie ASCII („ok", liczby, nazwy plików)
 i trzymaj treść poza wyjściem — to działa też wtedy, gdy nie kontrolujesz
 zmiennych środowiskowych wywołania.
+
+Przy `python -I` albo `-E` zmienne `PYTHON*` są pomijane i `PYTHONIOENCODING` nie działa; wtedy
+`python -I -X utf8`. `-X utf8` działa też bez `-I`, więc to pewniejszy wybór domyślny.
