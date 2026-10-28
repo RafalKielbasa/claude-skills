@@ -22,10 +22,19 @@ katalogu to dla gita osobne kroki, więc po błędzie zostaje sierota: katalog, 
   - Następnie `git worktree list` pokazał tylko główny checkout, a `Test-Path` na katalogu zwrócił `True`.
   - Katalog skasowało dopiero `cmd /c 'rd /s /q "\\?\D:\…\code-busters-mobile-app-migration-m1-shell"'`
     (kod 0, `Test-Path` → `False`), potem `git worktree prune`.
+- 2026-10-28, sesja c0757c79-09ad-4165-ad02-a020e38adc07 (id claude.ai niedostępny), po „usuń zbędne worktree”:
+  trzy z czterech worktree z `node_modules` padły tak samo — `code-busters-app-migration-w2-learning` (W2),
+  `code-busters-mobile-app-migration-m2-learning` (M2) i `code-busters-v2-public-cms` (poza `.claude\worktrees`,
+  więc długość prefiksu nie jest jedyną przyczyną). Każdy domknął `cmd /c rmdir /s /q "\\?\<ścieżka>"`
+  (`Test-Path` → `False`) i `git worktree prune`; `git worktree list` pokazał tylko główne checkouty.
+  `code-busters-app-migration-w1-shell` bez `node_modules` zszedł zwykłym `git worktree remove`. Dwa z nich
+  miały blokadę `locked claude session (pid …)` z martwym pid (`Get-Process` pusty) — najpierw `git worktree
+  unlock`. Przed każdym: `git status --short` pusty i `merge-base --is-ancestor` gałęzi z DT-37.
 
 ## Rozwiązanie
 Usuwanie worktree na Windowsie: najpierw upewnij się, że drzewo jest czyste, a gałąź scalona
-(`git merge-base --is-ancestor`). Potem `git worktree remove <ścieżka>`. Gdy padnie `Filename too long`,
+(`git merge-base --is-ancestor`); blokadę `locked claude session (pid N)` zdejmij `git worktree unlock` dopiero
+po sprawdzeniu, że proces N nie żyje. Potem `git worktree remove <ścieżka>`. Gdy padnie `Filename too long`,
 skasuj katalog przez `cmd /c 'rd /s /q "\\?\<ścieżka bezwzględna>"'`, uruchom `git worktree prune` i sprawdź
 wynik przez `Test-Path` oraz `git worktree list`. Nie zgłaszaj usunięcia na podstawie samego kodu wyjścia
 gita.

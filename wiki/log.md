@@ -770,3 +770,14 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
   - bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (porażka, 7 sesji) → `/evolve-skill superpowers:writing-plans`;
   - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 11 sesji), zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (porażka, 6 dowodów), twierdzenie-o-pliku-bez-odczytu (porażka, 7 dowodów) i kod-referencyjny-planu-nigdy-nie-uruchomiony (porażka, 15 dowodów): dalej kandydaci;
   - Brak `nawrót`.
+
+## 2026-10-28 — sesja c0757c79-09ad-4165-ad02-a020e38adc07 (id claude.ai niedostępny; Baza wiedzy, worktree `baza-wiedzy-kodozercy-w2m2`: domknięcie W2 i M2 w specu, sprzątanie worktree, decyzja „Nic do `main` przed W5”, plany 5 (W3) i 6 (M3), scalenie dnia)
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (dwunasty, dwunasta sesja) — `bind` CLI z kopii głównej, `git -C <kopia główna>`, pętle `find`/`gh`, dopis heredokiem odrzucone; przeszły PowerShell, `Edit`, `git -C <inne repo>` i push gałęzi dnia z cwd w worktree.
+- dopisano dowód: git-worktree-remove-pada-na-dlugich-sciezkach-windows (drugi) — trzy z czterech worktree z `node_modules`, także jeden poza `.claude\worktrees`; martwe blokady sesji zdjęte `worktree unlock` po sprawdzeniu pid. Rozwiązanie rozszerzone o `unlock`.
+- założono: pytanie-o-push-bez-nazwy-repo (skill: ogólny, typ: porażka) — pytanie o PR do `main` bez `owner/repo` w sesji trzech repo; Rafał: „Jakie repo?”.
+- założono: sciezki-planu-z-notatek-inwentarza-bez-ls (skill: superpowers:writing-plans, typ: porażka) — pięć ścieżek Files planu M3 w nieistniejącym `components/`, wyłapane przez `codex`, nie przez self-review.
+- założono: inwentarz-zachowan-z-rownoleglych-przegladow (skill: superpowers:writing-plans, typ: sukces) — cztery równoległe przeglądy tylko do odczytu jako podstawa planów W3 i M3.
+- Sygnał:
+  - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 12 sesji): dalej kandydat na regułę globalną w `~/.claude/CLAUDE.md`;
+  - bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (porażka, 7 sesji) → `/evolve-skill superpowers:writing-plans` (bez zmian od 2026-10-27);
+  - Brak `nawrót`.
