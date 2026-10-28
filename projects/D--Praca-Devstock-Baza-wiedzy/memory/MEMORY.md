@@ -47,3 +47,4 @@
 - [Klasyfikator a `npm run nagrywanie`](klasyfikator-npm-run-nagrywanie.md) — reguła w `.claude/settings.local.json` łapie tylko gołą komendę; `cd` osobno, bez `&&` i `; echo`.
 - [Autonomia automatu nagrywania — plany 1–4 w main i odebrane (2026-10-26)](nagrywanie-autonomy-gates-status.md) — #735: raporty odbioru i bilet 2.2 `tts_regenerations: 2` w `main` (PR #776, 26.10); #735 Done; dalej 2.2 w osobnej sesji (#721), poprawka markera `--plan-avatara` = #774.
 - [gh pr view --json files ucina listę plików](gh-pr-files-truncated.md) — duży PR (312 plików) pokazał ~60; pełna lista przez `git diff --name-only base...head` albo `gh api … --paginate`.
+- [Profil kursu: drugie konto Google](profil-kursu-drugie-konto-google.md) — lista kont przy logowaniu Google w nagraniu pokazuje konto wydarzeń live; w 2.1 rozmyte w montażu, do usunięcia z profilu.
