@@ -829,3 +829,11 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: exam-assessment-material-kept-out-of-candidate-text (sukces) — materiał obrony tylko w gitignorowanym pliku, ślad DT-56 bez oceny, issues #209/#210 bez treści egzaminu.
 - Wcześniej w tej sesji: założono rama-ticketu-z-grepa-przed-sprawdzeniem-per-element (wpis wyżej).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): taskstop-nie-zabija-procesu-potomnego-na-windows, straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, zakres-linii-wyliczony-z-nienumerowanego-zrzutu, twierdzenie-negatywne-z-czesci-przestrzeni — wszystkie ogólne, kandydaci na regułę globalną, nie na `/evolve-skill`.
+
+## 2026-10-29 — podsumowanie sesji (sesja 00434ebc-97fc-4e2a-a68d-5d8452f5084b, id claude.ai niedostępny; Baza wiedzy, worktree `baza-wiedzy-dt-12-close`, zlecenia huba: zamknięcie DT-12 #650, bramka zamknięcia DT-13 #651)
+- założono: raport-z-krokiem-na-slowo-bez-wariantow (skill: ogólny, typ: porażka) — raport kończył się ofertą „zrobię na Twoje słowo” bez ❓ i ⏸, a „ok” Rafała nie miało desygnatu.
+- założono: zamkniecie-issue-z-bramka-i-sladem-zamykajacym (skill: board-tracker, typ: sukces) — sześć zapisów zamknięcia DT-12 z jawnymi `{{…}}` i kolejnością przeszło po jednym „ok”, ślad `trail` jako komentarz zamykający.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac — piętnasta sesja; `bind`, pętla `gh --jq` i `git -C` do kopii głównej powtórzone, bo strona nie była czytana przed pierwszą komendą.
+- dopisano dowód: paczka-dt-przez-gh-create-i-ensure — przypadek przeciwny: dwa issue pytań przez `create` przypięte do sesji, która nad nimi nie pracowała.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie — potwierdzenie po zaadresowaniu (nie nawrót): wszystkie zapisy z bramki z pełną treścią, w tym Done, przeszły po „ok”.
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (ogólny, kandydat na regułę globalną, nie na `/evolve-skill`).

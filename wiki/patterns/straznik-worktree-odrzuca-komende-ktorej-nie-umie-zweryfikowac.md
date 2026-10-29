@@ -119,6 +119,22 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
   - Z gitem: łańcuch `git switch --detach …; git log; git merge-base | cut; git diff --stat $(git merge-base …)`, pętla `for f in …; do git show "origin/main:…" | sed -n; done`, `grep … <(git show …)` (podstawienie procesu) i jedna komenda składająca `gh api`, `git check-ignore` i `grep`.
   - Bez gita: `node <cli board-trackera> bind …` w Bashu („runs a string through bind”), skrypt smoke w Bashu z funkcją `tok()` i `${!who}`, `node "$CLAUDE_JOB_DIR/tmp/smoke.mjs"` („value computed at runtime (the variable CLAUDE_JOB_DIR)”) oraz pętla `for n in 209 210; do gh issue view … --jq '"#\(.number) …"'; done`.
   - Przeszły: każde z tych poleceń rozbite na proste wywołania z cwd w worktree, `bind` i `trail` w PowerShellu, skrypt smoke zapisany przez `Write` i uruchomiony `node "<dosłowna ścieżka>"`, `git -C "D:/Notatki/notatki" status/add/commit/push` (inne repo, vault), odczyty spoza worktree przez `Read`.
+- 2026-10-29, sesja 00434ebc-97fc-4e2a-a68d-5d8452f5084b (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-dt-12-close`, zlecenie huba): piętnasta sesja, cztery odmowy, wszystkie znanych rodzajów.
+  - `node <cli board-trackera> bind …` w Bashu, raz ścieżką do kopii głównej, raz do kopii CLI w worktree
+    („runs a string through bind”). PowerShella nie próbowałem, choć ta strona go wskazuje, więc sesja
+    została bez przypięcia. `pool`, `create`, `trail` i `status` w Bashu przeszły, a `trail` nie wymaga
+    przypięcia.
+  - Pętla `for n in 1653 …; do gh pr view $n --jq '"#\(.number) …"'; done` („too complex”). Obejście:
+    jedno `gh pr list --search "1653 OR 1654 …"`.
+  - `git -C "<kopia główna>" status -- <indeks>` („redirects git to the shared checkout”). Scalenia
+    commitu worktree do gałęzi dnia wyewidencjonowanej w kopii głównej nie dało się więc zrobić z sesji.
+    Rafał dostał linię `!` z warunkiem na nazwę gałęzi.
+  - Przeszły: `git -C "<code-busters-v2>" merge-base --is-ancestor` (inne repo) oraz
+    `git merge-base --is-ancestor <sha> rafal-kielbasa/29-10-2026` z cwd w worktree (refy są wspólne,
+    sprawdzenie, czy scalenie przejdzie bez konfliktu).
+  - Nowe: przed pierwszą komendą nie zajrzałem do tej strony i powtórzyłem dwie znane odmowy (`bind`, pętla
+    `gh --jq`), choć obejścia są tu zapisane od 2026-10-22.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych

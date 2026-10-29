@@ -44,6 +44,15 @@ ta sama zmiana na Done przeszła.
 - 2026-10-26, sesja 2be43b78-0126-44ba-97e1-4c5eaa736bf3 (id claude.ai niedostępny; Baza wiedzy, koordynacja `kodozercy-platform`): „OK” przyjmujące naraz osiem decyzji D1–D8, z których D8 brzmiało „#688 i #764 do Done (#688 zamykam), #765 do Done”. Trzy osobne wywołania `board-tracker status --to done` w jednej turze: #764 przeszło (`closed: true`), #688 i #765 odrzucone („[External System Writes]”). Claude nie ponawiał, podał obie komendy z prefiksem `!`. Po „ponów sam #688 i #765” oba przeszły. Nowe: przy tej samej zgodzie i tej samej postaci komendy klasyfikator przepuścił jeden zapis z trzech, więc decyzja jest niedeterministyczna nawet w obrębie jednej tury.
 - 2026-10-27, sesja session_01WryF5VMEsMHtnHj5CCKTC4 (lokalnie 1faa07a7-ff1f-431b-bc16-b826e84f3e24), M2 mobile: jeden zapis, w zatwierdzonej postaci. Pytanie miało warianty [A] „Przesuwam #767 do Done”, [B] In review, [C] w toku. Rafał odpowiedział „OK” (domyślne przyjęcie rekomendacji A). `board-tracker status --ref …#767 --to done` przez PowerShell odrzucone („[External System Writes]”). Wcześniej w tej sesji `status --to in_progress` przy przypięciu przeszło. Nie ponawiałem; podałem komendę z `!`, Rafał uruchomił ją sam (`closed: true`). Zgodne z hipotezą: samo „OK” do listy wariantów nie wystarcza klasyfikatorowi przy zapisie zamykającym.
 - 2026-10-29, sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven) (siódmy): `status --ref …#768 --to done` po „ok” Rafała na „Przesunąć do Done?” odrzucone „[External System Writes]”; Rafał uruchomił tę samą komendę z `!`. `assign` i `bind` (→ w toku) po „OK” na wariant D3 przeszły — odmowa dotknęła przejścia do Done, nie każdego zapisu na tablicy.
+- 2026-10-29, sesja 00434ebc-97fc-4e2a-a68d-5d8452f5084b (id claude.ai niedostępny; Baza wiedzy, zamknięcie
+  DT-12 #650). To potwierdzenie po zaadresowaniu, nie nawrót; nie wiem, czy sesja ruszyła przed zmianą
+  skilla tego dnia, czy po niej.
+  - Bramka zawierała dokładną treść sześciu zapisów i tabelę kolejności.
+  - Po „ok” Rafała każdy zapis poszedł osobnym wywołaniem, w zatwierdzonej postaci: dwa `create`,
+    `gh issue comment 772`, `trail` i `status --ref …#650 --to done`. Wszystkie przeszły, także Done
+    (`closed: true`).
+  - Zgodne z hipotezą: „ok” na bramce, która wymienia konkretne zapisy z treścią, wystarcza
+    klasyfikatorowi.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu
