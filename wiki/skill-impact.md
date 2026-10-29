@@ -966,3 +966,26 @@ index 8f5870c..9c8399e 100644
 +| Nowy materiał wyłożony ciągiem bez przerw | Porcja 2–4 akapity, potem jedno pytanie sprawdzające |
 +| Zakres konceptu w trybie wyjaśnij ustalony bez pytania użytkownika | 3–6 mechanizmów pokazanych do zatwierdzenia przed startem |
 ```
+
+## 2026-10-29 — board-tracker — zaakceptowana
+
+- **Wzorce:** [zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie](patterns/zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie.md) (7 dowodów, 7 sesji)
+- **Zmiana:** sekcja „Status proposals” — `status --to done` i `close` puszczane każde w osobnym wywołaniu, w zatwierdzonej postaci; po odmowie klasyfikatora bez ponawiania, przeformułowania i zmiany powłoki — od razu ta sama komenda jako linia z `!` w składni Git Bash, zbudowana z prefiksu CLI z briefu; uruchomienie przez Rafała liczy się jako zapis, potem ranking.
+- **Powód decyzji:** „OK” Rafała na propozycję `/evolve-skill board-tracker` (sesja a011691a-07ee-43f2-ad0e-bac7765e83bf, 2026-10-29). W trzech ostatnich sesjach (26, 27, 29.10) przejście do Done po „OK”/„ok” zostało odrzucone, a `bind` i `trail` przeszły; każda odmowa kosztowała turę.
+
+```diff
+--- a/skills/board-tracker/SKILL.md
++++ b/skills/board-tracker/SKILL.md
+@@ -144,5 +144,12 @@
+ When the goal in the issue's title and body is reached and verified, propose, do not set:
+ `#N: cel osiągnięty (<jedno zdanie, dowód>). Przesunąć do Done?` or `… do In review, bo <czeka PR /
+ czeka na akceptację>?`. On "tak": `status --to done` or `--to in_review`. After done, show the
+ ranking.
++
++The permission classifier often refuses `status --to done` and `close` after a short "tak" or "ok"
++(„[External System Writes]”), while `bind` and `trail` pass. Run each such write in its own call,
++in exactly the form Rafał approved. On a refusal do not retry, rephrase or switch shells: answer
++with the same command as one line he runs in this session with the `!` prefix, built from the
++brief's CLI prefix (`! node "…/cli.js" status --ref <ref> --to done`; `!` runs Git Bash, so no
++PowerShell syntax). His run counts as the write; then show the ranking.
+```

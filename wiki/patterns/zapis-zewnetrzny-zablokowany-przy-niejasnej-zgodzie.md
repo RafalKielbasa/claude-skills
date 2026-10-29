@@ -2,7 +2,7 @@
 
 - **Skill:** ogólny (dotyczy board-tracker)
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-10-29, board-tracker)
 
 ## Opis
 Zamknięcie dwóch issues w głównej sesji (jedna komenda Bash z dwoma zapisami do GitHuba) odrzucił

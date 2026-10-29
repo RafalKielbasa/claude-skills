@@ -25,7 +25,12 @@ work through his backlog.
 - Claude ranks next tasks with a reason; no board field is changed to make ranking possible.
 - A one-time inventory of open threads from 30 days, plus a review of existing open items.
 
+## Adresowane wzorce
+
+- [zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie](../../wiki/patterns/zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie.md) — 2026-10-29
+
 ## Historia ewolucji
 
 - 2026-10-09: created.
 - 2026-10-12: inventory drops the `praca-z-claude.md` source (four sources instead of five); the session journal was deleted after session summaries moved to a plugin. Logged in `~/.claude/wiki/skill-impact.md`.
+- 2026-10-29 (`evolve-skill`): "Status proposals" — a `status --to done` / `close` refused by the permission classifier is handed to Rafał at once as a `!` line in Git Bash syntax, one write per call, no retry. Addresses `zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie` (7 evidences, 7 sessions). Logged in `~/.claude/wiki/skill-impact.md`.

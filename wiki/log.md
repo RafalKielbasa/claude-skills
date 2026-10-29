@@ -811,3 +811,7 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
   - zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (porażka, ≥ 6 sesji) → `/evolve-skill board-tracker`;
   - taskstop-nie-zabija-procesu-potomnego-na-windows (porażka, ≥ 3 sesje): wzorzec ogólny, kandydat na regułę globalną;
   - Brak `nawrót`.
+
+## 2026-10-29 — evolve-skill board-tracker (sesja a011691a-07ee-43f2-ad0e-bac7765e83bf)
+- zaakceptowana („OK”): „Status proposals” — odmowa klasyfikatora przy `status --to done`/`close` od razu oddawana Rafałowi jako linia z `!` (Git Bash), jeden zapis na wywołanie, bez ponawiania.
+- zaadresowany: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (2026-10-29, board-tracker); `PURPOSE.md` skilla z sekcją „Adresowane wzorce”; wpis z pełnym diffem w `skill-impact.md`. Bez commita.

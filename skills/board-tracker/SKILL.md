@@ -146,6 +146,13 @@ When the goal in the issue's title and body is reached and verified, propose, do
 czeka na akceptację>?`. On "tak": `status --to done` or `--to in_review`. After done, show the
 ranking.
 
+The permission classifier often refuses `status --to done` and `close` after a short "tak" or "ok"
+(„[External System Writes]”), while `bind` and `trail` pass. Run each such write in its own call,
+in exactly the form Rafał approved. On a refusal do not retry, rephrase or switch shells: answer
+with the same command as one line he runs in this session with the `!` prefix, built from the
+brief's CLI prefix (`! node "…/cli.js" status --ref <ref> --to done`; `!` runs Git Bash, so no
+PowerShell syntax). His run counts as the write; then show the ranking.
+
 ## Ranking
 
 **Triggers:** the brief's daily section, after done, "co dalej?", a session that starts without a
