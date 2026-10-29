@@ -22,6 +22,7 @@ wypełnił ciąg, który tylko wyglądał jak hash.
   1 deletion(-)`, bez hasha. Raport podał „commit `b3a1b5f4`” w 🎯 i w `<details>`. Przy następnej
   odpowiedzi `git log --oneline -3 -- kursy/agenty-ai/wymowa.md` zwrócił `ec7a88f7`; sprostowanie poszło
   w kolejnym raporcie, a ślad w #721 ma `ec7a88f7`.
+- 2026-10-28, sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven): implementer Task 3 zgłosił „the fix commit … (hash is in the git log output)”, a `git log` pokazał, że commitu nie ma (zmiany w drzewie); po ponowieniu: „my earlier claim that it was committed was wrong”. Kontroler dopisał do wspólnego kontekstu wymóg kopiowania hashy z `git log --oneline -3`; w kolejnych 11 zadaniach raporty miały prawdziwe hashe.
 
 ## Rozwiązanie
 Hash w raporcie jest wyłącznie kopią z wyniku narzędzia z tej samej tury. Komenda commita kończy się

@@ -32,6 +32,7 @@ dać nową wadę.
   - narożniki panelu `highlight` (11 px poza panelem) wchodzą na sąsiednią kartę;
   - imię w Michromie 24 px z `numberOfLines={1}` przycięte u góry na Androidzie.
   Żadna z tych wad nie była widoczna w diffie, a pierwszą wprowadziła poprawka zgodna z regułą.
+- 2026-10-29, sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven) (sukces, web): raport przebiegu 1 bramki W3 nie widział dwóch wad — hero profilu ściśniętego do ~110 px obok czterech kafli przy 1440 px i tabel historii/rekrutów rozpychających telefon do 454/429 px. Złapało je obejrzenie zrzutów przez kontrolera i odczyt szerokości PNG z nagłówka pliku; przebieg 2 po poprawkach czysty, Rafał przyjął arkusz bez uwag.
 
 ## Rozwiązanie
 Przed bramką wizualną: zbuduj Storybook z HEAD (sprawdź, że build jest nowszy niż ostatnia zmiana

@@ -28,6 +28,15 @@ potem bramkę na `AskUserQuestion`, karta w tekście ginie w przewiniętym czaci
   13 kart kolejek i ekran końcowy. Tym razem Rafał po raporcie końcowym napisał „Załóż issue”
   (#676, DT-34, potem Done). Przebieg `/spotkanie` z egzekucją na tablicy to inna praca niż
   rutynowe `/daily`, więc Rafał chciał dla niej issue.
+- 2026-10-28/29, sesja claude.ai/code/session_01WryF5UdQSho3p8jEyswqrD (lokalnie
+  16c3aefd-ec1a-48b5-b40b-be038c6346a4): `/daily` bez argumentu i cztery zaległe daily z 23–28.10.
+  Karta „DT-?: Przetworzenie zaległych daily z 23–28.10” (company, M, epik #10) wydrukowana w czacie
+  przed pierwszą zmianą pliku. Potem przypominana w 📌 kolejnych bramek jako „też czeka na tak /
+  popraw / nie zakładaj” i nie dostała odpowiedzi przez cztery bramki (około 45 odpowiedzi Rafała
+  na karty). Raport końcowy: „sesja bez przypięcia”. `AskUserQuestion` tym razem nie pomógłby:
+  wygasało 25 razy, więc cała bramka szła w czacie. Rafał odpowiadał na jedno pytanie z ❓ i
+  ⏸, a karta wymieniona obok jako druga decyzja nie dostała odpowiedzi. Trzecia sesja, w której
+  ta sama karta dla rutynowego przebiegu skończyła się bez issue albo z „nie zakładaj”.
 
 ## Rozwiązanie
 Sesję, której jedyną zmianą jest przebieg `/daily` (artefakty w `planning/daily/`), a w puli nic nie
@@ -35,3 +44,6 @@ pasuje, raportować od razu jako „Tablica: sesja bez przypięcia (daily)”, b
 obejmuje `/spotkanie`: tam Rafał założył issue (2026-10-14). Kartę „Nowe issue” zawsze zadawać przez
 `AskUserQuestion` z kartą w `preview`, nie drukować w czacie. W sesji z bramką na `AskUserQuestion`
 zadać ją przed pierwszą kartą bramki, żeby nie zginęła w przewiniętym czacie.
+Gdy `AskUserQuestion` wygasa i bramka idzie w czacie (2026-10-28), karta nie może stać obok
+pytania z ❓ jako druga decyzja. Odpowiedź dostaje tylko pytanie zakończone ⏸. Dla `/daily`
+(także kilku zaległych w jednej sesji) karty więc nie ma wcale.

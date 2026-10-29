@@ -114,6 +114,7 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
   - Przeszły bez odmowy: osobne `git -C "<code-busters-v2>" …` i `git -C "<code-busters-mobile>" …` (inne repo),
     w tym `worktree unlock`, `worktree remove`, `worktree prune`, oraz `git push -u origin <gałąź dnia>` z cwd w
     worktree (push refu wyewidencjonowanego w kopii głównej).
+- 2026-10-28/29, sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven) (trzynasta sesja): odrzucone skrypty SDD w komendzie ze zmiennymi, `cd … && cat >>` do ledgera (dwa razy) i pętla `for` z nazwą wzorca zawierającą słowo „git” w ścieżce pliku; przeszły te same komendy rozbite na proste z literalnymi ścieżkami, `git -C <kopia główna> log/status` (odczyt) i `pnpm -C <kopia główna>`.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych

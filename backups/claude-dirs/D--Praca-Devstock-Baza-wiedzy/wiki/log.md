@@ -447,3 +447,16 @@ Format wpisu:
 - Gładko, bez osobnych wzorców: board-tracker (issue #795 założone dopiero po „ok”, ślad po commitach); kurs-lekcja zatrzymała się przed migracją starego układu zgodnie z sekcją „Migracja lekcji ze starego układu”; kurs-nagrywanie zatrzymało się przed warunkami bezpieczeństwa nowych usług `dysk` i `notion`.
 - Wzorce globalne dotknięte w tej sesji: dowody do 4 (python-na-windows-drukuje-w-cp1252, straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan, skrypt-z-asercja-zamiast-serii-edycji).
 - Sygnał repo: brak nowych kandydatów (oba dotknięte wzorce repo to sukcesy); bez zmian według wcześniejszych wpisów.
+
+## 2026-10-28 — sesja c0757c79-09ad-4165-ad02-a020e38adc07 (id claude.ai niedostępny; worktree `baza-wiedzy-kodozercy-w2m2`: §13.4–13.5 specu migracji Kodożerców, arkusz W2, plany 5 (W3) i 6 (M3), PR #800 i #801)
+- Bez nowych wzorców (skille repo nie były używane; pracowały globalne: board-tracker, project-index, writing-plans, podsumuj-sesja-claude).
+- Wzorce globalne dotknięte w tej sesji: dowody do 2 (straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, git-worktree-remove-pada-na-dlugich-sciezkach-windows); założone 3 (pytanie-o-push-bez-nazwy-repo, sciezki-planu-z-notatek-inwentarza-bez-ls, inwentarz-zachowan-z-rownoleglych-przegladow).
+- Sygnał repo: bez zmian według wcześniejszych wpisów.
+## 2026-10-28/29 — sesja claude.ai/code/session_01WryF5UdQSho3p8jEyswqrD (lokalnie 16c3aefd-ec1a-48b5-b40b-be038c6346a4; `/daily` dla czterech zaległych nagrań 23, 26, 27 i 28.10: 25 wpisów w bazie, DT-75…78 (#798, #802, #807, #809), 9 komentarzy, cztery publikacje na Slacku, commity `b0a10239`, `f1e252ab`, `246cb3e8`, `a11faf22`)
+- nawrót: update-z-deduplikacji-trafia-w-caly-dokument — zaadresowany 2026-10-16, wraca: oba `update` spełniały zawężoną regułę (jawna korekta faktu), a i tak poszły jako `new`, bo nadpisanie skasowałoby fakty spoza korekty. Linia „Nawrót” w `skill-impact.md` przy wpisie 2026-10-16 `daily`. Dowód słabszy: Rafał szedł za moją rekomendacją.
+- dopisano dowód: niepewny-fragment-cytowany-zamiast-przypisany (czwarty) — hipoteza mówcy na karcie przyjęta 4 razy; dwie wpadki przed bramką, w tym podpowiedź z pamięci `daily-prowadzi-rafal` wpisana do notatki jak ustalenie.
+- dopisano dowód: drobne-zadanie-jednej-osoby-odrzucane-przy-bramce (czwarty) — pierwsza sesja po zmianie z 2026-10-23, oba „Odrzuć” przyjęte, bez nawrotu.
+- dopisano dowód: flaga-niepewnosci-na-szumie-bez-tresci (trzeci) — 8 flag w 26–28.10, wszystkie z treścią, żadna usunięta.
+- założono: wykonanie-kolejek-skryptami-z-zapisem-po-operacji (skill: daily, typ: sukces) — `setfield`/`upsert-one`/`exec-tasks` ze scratchpadu dały zgodność notatki i tablicy w czterech dailych; do przeniesienia do repo.
+- Wzorce globalne dotknięte w tej sesji: dowody do timeout-pytania-podpowiada-kontynuacje (piąty) i karta-nowe-issue-dla-rutynowego-przebiegu-skilla (trzeci, trzecia sesja). Patrz log globalny.
+- Sygnał repo: update-z-deduplikacji-trafia-w-caly-dokument (nawrót) → `/evolve-skill daily`.

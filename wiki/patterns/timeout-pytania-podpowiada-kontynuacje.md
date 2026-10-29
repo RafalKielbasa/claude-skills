@@ -55,6 +55,7 @@ stalls") ciągną w tę samą stronę co podpowiedź.
   poszło już wyłącznie tekstem.
 
 - 2026-09-22, sesja session_01FoJzsTt4AksGtALq4JXv7T: piąty przypadek, trzecia sesja z rzędu. `AskUserQuestion` zwróciło „No response after 60s - the user may be away from keyboard. Proceed using your best judgment", a pytanie dotyczyło dwóch decyzji o realnej stawce (silnik avatara = z czego schodzą pieniądze; co zrobić z brakującą ściągą). Podpowiedź zignorowana zgodnie ze stroną. Nowe wobec 2026-09-18: pytanie powtórzone **tekstem odpowiedzi**, nie kolejnym wywołaniem narzędzia, więc drugi timeout się nie odpalił - odstępstwo odnotowane w tamtym dowodzie tym razem nie wystąpiło. Rafał odpowiedział po przerwie i zmienił zakres („3", potem „zrealizuj ten plan"), czyli czekanie było trafne.
+- 2026-10-28/29, sesja claude.ai/code/session_01WryF5UdQSho3p8jEyswqrD (lokalnie 16c3aefd-ec1a-48b5-b40b-be038c6346a4), `/daily` dla czterech zaległych nagrań: 25 wyników „No response after” w jednej sesji, każdy zignorowany. Po kilku timeoutach z rzędu karty bramki szły już tylko w czacie (BLUF, rekomendacja jako [A], ⏸ w ostatniej linii) i każda dostała odpowiedź („ok”, „A”, „tak”). Było ich około 45, w czterech bramkach, bez kolejnego timeoutu. Wniosek: gdy pytanie wygasa powtarzalnie, przejście na karty w czacie do końca sesji jest skuteczniejsze niż ponawianie narzędzia, także wbrew pamięci „karta w `preview` pytania”, która zakłada, że Rafał siedzi przy oknie.
 ## Rozwiązanie
 
 Wynik `AskUserQuestion` zawierający frazę „No response after" traktować jako **dane o braku
@@ -66,3 +67,5 @@ i nie dotyka plików projektu; jeśli cokolwiek zrobiłeś, nazwij to wprost raz
 ruszyłeś. Skill egzekucyjny mówiący „rulings, not stalls" tej reguły nie uchyla: jego wyjątki
 (operacja nieodwracalna, bramka zgody wpisana w sam skill) obejmują dokładnie te przypadki, które
 trafiają do `AskUserQuestion`.
+
+Uzupełnienie po 2026-10-28: po drugim timeoucie w tej samej sesji kolejne decyzje zadawać od razu jako karty w czacie z ⏸ (jedna decyzja na turę, rekomendacja jako [A]), bez `AskUserQuestion`, do końca sesji albo do powrotu Rafała do okna.

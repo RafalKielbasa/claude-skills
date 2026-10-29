@@ -35,6 +35,15 @@ wprost, wzorzec opiera się na tym, które zadania odrzucił. Obserwacja do potw
   Praca na więcej niż jeden krok, z kartą „Akceptuj (Rekomendowane)”, też przeszła bez korekty:
   mapa obszarów firmy (#750), pipeline treści w repo (#751), proces zaangażowania w social media
   (#749). Obserwacja z „Przyczyny” jest potwierdzona, a reguła działa także w `/spotkanie`.
+- 2026-10-28/29, sesja claude.ai/code/session_01WryF5UdQSho3p8jEyswqrD (lokalnie
+  16c3aefd-ec1a-48b5-b40b-be038c6346a4): pierwsza sesja po zmianie z 2026-10-23, reguła wzięta
+  już z kontraktu. „Odrzuć” jako [A] przyjęte przy obu drobnych kartach:
+  - daily 26.10 #1;
+  - daily 28.10 #1 „Egzamin Krzysztofa: przekazać termin i zakres ustnego” (Wiktor, jedna
+    wiadomość).
+
+  Zadania na więcej niż krok przeszły z „Akceptuj”, np. #809 (DT-78, proces równoległych zmian
+  web i mobile, bez wykonawcy). Nawrotu brak.
 
 ## Rozwiązanie
 Action item, który jedna osoba zadeklarowała dla siebie i który mieści się w jednym krótkim kroku

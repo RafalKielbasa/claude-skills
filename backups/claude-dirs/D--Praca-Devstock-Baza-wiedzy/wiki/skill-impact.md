@@ -1283,6 +1283,7 @@ index e8f5a225..e98cca04 100644
 - **Wzorce:** update-z-deduplikacji-trafia-w-caly-dokument
 - **Zmiana:** Deduplikacja wiedzy: trafienie w progu (0,25) daje `action: update` tylko wtedy, gdy jest wpisem spotkania (`planning/`) na ten sam temat, a kandydat jawnie koryguje w nim fakt; karta nazywa korygowany fakt. Każde inne trafienie (fragment dokumentu z `knowledge-base/*.md`, wpis o innym temacie, wpis tylko uzupełniany) daje `action: new` z `similar_to: null`, `distance` zachowanym i komentarzem `#` nad blokiem. Reguła zmieniona we wspólnym kontrakcie `docs/spotkania-kolejki.md` („Deduplication before the gate”), więc działa też w `/spotkanie`; streszczenie w `daily/SKILL.md` dopasowane. Założony `daily/PURPOSE.md`.
 - **Powód decyzji:** zaakceptowana przez Rafała („A”) — 5 dowodów z 5 sesji; w trzech ostatnich bramkach przy 19 kartach `update` ani razu „Nadpisz istniejący”. Sesja 96436fe2-135f-4db8-9a6a-e2d0011a65cc (id claude.ai niedostępny).
+- **Nawrót:** 2026-10-29, update-z-deduplikacji-trafia-w-caly-dokument (sesja session_01WryF5UdQSho3p8jEyswqrD, daily 26.10 i 27.10: oba kandydaty `update` spełniały zawężoną regułę, czyli jawna korekta faktu we wpisie spotkania na ten sam temat, a i tak skończyły jako „Akceptuj jako nowy”, bo nadpisanie skasowałoby fakty nieobjęte korektą: wtyczkę DPD; bramkę, prezent i quiz z wpisu offsite’u 13.10)
 
 ```diff
 diff --git a/.claude/skills/daily/SKILL.md b/.claude/skills/daily/SKILL.md

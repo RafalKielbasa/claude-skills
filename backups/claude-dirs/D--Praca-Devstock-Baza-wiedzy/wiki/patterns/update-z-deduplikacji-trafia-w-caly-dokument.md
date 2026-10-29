@@ -2,7 +2,7 @@
 
 - **Skill:** daily (kontrakt `docs/spotkania-kolejki.md`, wspólny ze `spotkanie`)
 - **Typ:** porażka
-- **Status:** zaadresowany (2026-10-16, daily)
+- **Status:** nawrót (2026-10-29)
 
 ## Opis
 `kb-client similar` zwraca najbliższe chunki, a kontrakt każe każdy kandydat z `distance <= 0.25`
@@ -47,6 +47,21 @@ ruszając `action` — w edytorze `update` nie wygląda na operację niszczącą
   2026-10-12 o innym temacie (0,1739). Kandydaci byli długi, 5–6 tys. znaków, i dawali odległości
   niższe niż krótkie wpisy dailych, mimo że trafienia nie były duplikatami. Rafał wybrał
   „Akceptuj jako nowy” przy wszystkich 4 kartach.
+- 2026-10-28/29, sesja claude.ai/code/session_01WryF5UdQSho3p8jEyswqrD (lokalnie
+  16c3aefd-ec1a-48b5-b40b-be038c6346a4), cztery zaległe daily z 23–28.10. Nawrót po zmianie z
+  2026-10-16, przy regule stosowanej zgodnie z literą:
+  - Zawężona reguła dała 2 kandydatów `update` na 25 wpisów. Oba to wpisy spotkania na ten sam temat
+    i oba jawnie korygują fakt:
+    - daily 26.10 #2 (sales, 0,1299) koryguje „przepięcie Rzęsowni 25.10” we wpisie z 21.10;
+    - daily 27.10 #2 (marketing, 0,1371) koryguje „live 28.10” we wpisie offsite'u 13.10
+      `planning/2026-10-13-notatka/3-live-28-10-i-bramka`.
+  - Przy obu kartach „Nadpisz istniejący” skasowałby fakty, których kandydat nie powtarza:
+    - z wpisu 21.10 wtyczkę DPD i spór o wtyczki;
+    - z wpisu 13.10 bramkę, prezent, quiz-pojedynek i zakaz sprzedaży Agentów AI na live'ie.
+  - Rekomendowałem „Akceptuj jako nowy”, Rafał przyjął obie rekomendacje. Wybór szedł za
+    rekomendacją, więc dowód jest słabszy niż przy samodzielnym wyborze Rafała z 2026-10-12.
+  - Problem przeżył zmianę: upsert pod `similar_to` zastępuje cały tekst wpisu, a wpis spotkania
+    niesie kilka faktów. Korekta jednego z nich zostawia inne bez pokrycia.
 
 ## Rozwiązanie
 `action: update` tylko wtedy, gdy `similar_to` jest wpisem spotkania (prefiks `planning/`) i to
@@ -60,3 +75,5 @@ temacie zwykle dopisuje stan, a nie poprawia poprzedni. Nawet trafienie w wpis s
 temacie domyślnie idzie jako `new` obok. `update` proponować tylko wtedy, gdy kandydat jawnie
 koryguje fakt z tamtego wpisu (inna data, cofnięta decyzja). Karta takiego kandydata ma nazwać
 korygowany fakt.
+
+Uzupełnienie po nawrocie 2026-10-29: korekta faktu też nie uzasadnia `update`, bo upsert zastępuje cały wpis, a wpis spotkania niesie kilka faktów. Dla wpisów z `planning/` korektę zapisywać jako `new` z linią w treści „Koryguje: <fakt> z <similar_to>”. Wtedy RAG widzi nowszy, datowany stan, a stary wpis nie traci pozostałych faktów. `action: update` zostaje tylko dla kandydata, który powtarza wszystkie fakty starego wpisu (pełna nowa wersja). Karta musi to wykazać, wypisując fakty starego wpisu, a brak któregoś z nich daje `new`.

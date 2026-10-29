@@ -36,6 +36,24 @@ jest błędne; cytat z ⚠ zostawia decyzję człowiekowi i nie wchodzi do kolej
   - Daily 15.10: status o wdrożeniu subskrypcji (najpewniej Wiktora) został ⚠ na wybór Rafała.
   - Reguła „nie zgadywać” chroni notatkę, ale karta bez propozycji przerzuca na Rafała wpisywanie
     odpowiedzi, którą da się przewidzieć.
+- 2026-10-28/29, sesja claude.ai/code/session_01WryF5UdQSho3p8jEyswqrD (lokalnie
+  16c3aefd-ec1a-48b5-b40b-be038c6346a4), cztery daily z 23–28.10:
+  - Karta ⚠ „kto mówi” z hipotezą i podstawą jako opcją rekomendowaną przyjęta za każdym razem:
+    - 23.10: Mówca A → Bart, Mówca D → Szymon;
+    - 26.10: Mówca A → Rafał;
+    - 28.10: Mówca A → Rafał.
+
+    Rafał nie musiał nic wpisywać, więc poprawka z 22.10 działa.
+  - 27.10: diaryzacja znów zlała Barta i Grzegorza. Przypisania szły tylko po wywołaniu po
+    imieniu, a fragmenty niejasne cytowałem z ⚠; Rafał zostawił 3 z 4 jako niepewne.
+  - Dwie wpadki, obie wyłapane przeze mnie przed bramką:
+    - 27.10: wypowiedź z etykiety B przypisana w Ustaleniach „Rafałowi i Szymonowi” bez podstawy,
+      poprawiona na cytat z etykietą;
+    - 28.10: notatka zbudowana z „Rafał” zamiast „Mówca A”, bo pamięć `daily-prowadzi-rafal`
+      („nienazwany prowadzący to zwykle Rafał”) weszła do tekstu jak ustalenie. Przed bramką
+      zamieniona na „Mówca A”, a po wyborze Rafała z powrotem na „Rafał”.
+  - Podpowiedź z pamięci ma trafiać na kartę, nie do notatki. Pokusa jest największa, gdy
+    hipoteza sprawdzała się w poprzednich dailych tej samej sesji.
 
 ## Rozwiązanie
 Utrzymać obie reguły bez złagodzeń. Niejasną nazwę własną próbować rozstrzygnąć z innego źródła w

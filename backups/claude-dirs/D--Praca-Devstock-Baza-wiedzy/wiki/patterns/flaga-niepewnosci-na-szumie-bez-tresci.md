@@ -35,6 +35,14 @@ sensowną odpowiedzią jest „Usuń z notatki”.
     rekomendacja przeszła bez korekty.
   - Rekomendacja na karcie zmniejsza koszt, ale flaga nadal powstaje przy budowie notatki, więc
     reguła z „Rozwiązania” (nie flagować szumu) wciąż nie jest stosowana.
+- 2026-10-28/29, sesja claude.ai/code/session_01WryF5UdQSho3p8jEyswqrD (lokalnie
+  16c3aefd-ec1a-48b5-b40b-be038c6346a4): w daily 26–28.10 było 8 flag ⚠, każda z konkretną treścią
+  (kto mówi, kto co powiedział, liczby coinów). Żadnej nie trzeba było usuwać:
+  - 4 rozstrzygnięte hipotezą z karty;
+  - 4 zostawione jako niepewne, m.in. „No, 300 DEF Coins w co miesiąc jest dwa razy.”.
+
+  Żadna flaga nie stała na szumie, a Rafał nie wybrał „Usuń z notatki” ani razu. Pierwszy dowód,
+  że flagowanie samej treści da się utrzymać. Skill dalej nie zawiera tej reguły.
 
 ## Rozwiązanie
 Flagę ⚠ stawiać tylko przy fragmencie, z którego da się odczytać konkretną treść (status, ustalenie,

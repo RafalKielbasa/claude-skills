@@ -21,6 +21,7 @@ VS Code na tej maszynie jest Windows PowerShell 5.1, który nie zna `&&` ani `||
   `&&` odrzucony, a Rafał wpisał samo `claude`); druga — sesję `hub-94`, której pierwszy prompt to
   dosłownie `start --name hub`. Trzecia wersja, dwie osobne linie bez `&&`, zadziałała od razu
   (sesja `hub`). Koszt: trzy rundy i w końcu zmiana całego podejścia (hub w panelu VS Code).
+- 2026-10-28, sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven) (strona odwrotna): komendę dla prefiksu `!` podałem w PowerShellu (`! Stop-Process -Id 28640,23724`), a `!` uruchamia Git Bash — `Stop-Process: command not found`. Zadziałało `! taskkill //PID … //F` (podwójne `//`, bo MSYS tłumaczy `/PID` na ścieżkę). Reguła działa w obie strony: składnię wybierać według powłoki celu.
 
 ## Rozwiązanie
 Komenda do wklejenia przez Rafała: jedna komenda na linię, bez `&&`, `||`, `$(…)` i heredoków,

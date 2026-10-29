@@ -48,6 +48,7 @@ trzy oceniają plan wobec specu, a nie wobec zastanego suite'u.
   po nazwie funkcji ani po komunikacie błędu go nie znajdzie; szukać trzeba po nazwie fixture'u.
   Naprawa wcielona do planu: przestawienie domyślnej wartości w helperze zamiast poprawiania
   wywołań po kolei.
+- 2026-10-28, sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven): Task 14 rozszerzył `runLearner` w `apps/cms/scripts/gate/seed-gate-account.js`, a brief wymieniał tylko `__tests__/utils/gate/routes.test.ts`; `apps/cms/__tests__/scripts/gateLearnerSeed.test.ts` padał 5/8 aż do weryfikacji fali poprawek po recenzji całej gałęzi (testy CMS były poza komendami planu).
 
 ## Rozwiązanie
 

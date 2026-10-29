@@ -16,6 +16,7 @@ Skill każe nie wklejać historii poprzednich zadań do dispatchu, a brief z pla
   - Dispatch zadania ekranowego miał ok. 25 linii i czternaście takich przeszło bez pytań NEEDS_CONTEXT.
   - Rulingi R21/R22 (codegen ze schematu na dysku, etykiety wstecz) dopisane w trakcie trafiły do zadań 16–20 bez zmiany ich promptów.
   - Recenzenci zadań z tym samym plikiem ograniczeń nie zgłaszali ponownie rozstrzygniętych kwestii (braki ikon, tony `Badge`).
+- 2026-10-28, sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven) (sukces, web): `implementer-context.md`, `reviewer-preamble.md`, `ledger-notes.md` i `intended-changes.md` w workspace; 13 dispatchy zadań po ~20–30 linii, zero NEEDS_CONTEXT, reguły z błędów (hash z `git log`, artefakty sitemap po BUILD) dopisywane raz w pliku dla wszystkich kolejnych.
 
 ## Rozwiązanie
 Gdy po fundamentach planu zostaje seria ≥ 5 zadań tego samego kształtu, przed pierwszym z nich zapisz w workspace dwa pliki:

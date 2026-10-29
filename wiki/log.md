@@ -781,3 +781,33 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
   - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 12 sesji): dalej kandydat na regułę globalną w `~/.claude/CLAUDE.md`;
   - bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (porażka, 7 sesji) → `/evolve-skill superpowers:writing-plans` (bez zmian od 2026-10-27);
   - Brak `nawrót`.
+## 2026-10-28/29 — sesja claude.ai/code/session_01WryF5UdQSho3p8jEyswqrD (lokalnie 16c3aefd-ec1a-48b5-b40b-be038c6346a4; Baza wiedzy: `/daily` dla czterech zaległych nagrań z 23–28.10)
+- dopisano dowód: timeout-pytania-podpowiada-kontynuacje (piąty) — 25 timeoutów w jednej sesji, wszystkie zignorowane; po przejściu na karty w czacie z ⏸ około 45 odpowiedzi bez kolejnego timeoutu. Rozwiązanie uzupełnione: po drugim timeoucie karty tylko w czacie do końca sesji.
+- dopisano dowód: karta-nowe-issue-dla-rutynowego-przebiegu-skilla (trzeci, trzecia sesja) — karta w czacie obok pytania z ❓ przeczekała bez odpowiedzi cztery bramki; sesja bez przypięcia. Rozwiązanie uzupełnione: w czacie odpowiedź dostaje tylko pytanie z ⏸.
+- Sygnał:
+  - karta-nowe-issue-dla-rutynowego-przebiegu-skilla (porażka, 3 sesje) → `/evolve-skill board-tracker`;
+  - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac i bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska bez zmian od 2026-10-28;
+  - Brak `nawrót` w wiki globalnym (nawrót w wiki repo: update-z-deduplikacji-trafia-w-caly-dokument).
+
+## 2026-10-28/29 — sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven do scalenia, #768)
+- założono: zatrzymanie-procesu-blokowane-przez-klasyfikator (skill: ogólny, porażka) — `Stop-Process` odrzucony dwa razy (proces Rafała po jego „A” i własny osierocony `next start`); działa tylko `! taskkill //PID … //F` Rafała.
+- założono: docker-compose-w-worktree-zaklada-drugi-projekt (skill: ogólny, porażka) — `pnpm --filter @devstock/cms dev` w worktree założył drugi kontener i wolumen bazy; sprzątnięte, CMS przez `cli.js dev --no-db-push`.
+- założono: obowiazki-pierwszej-odpowiedzi-zgubione-w-sesji-autonomicznej (skill: board-tracker / protokół huba, porażka) — cytat huba i linie tablicy dopiero po ~4 h, przy pierwszej bramce.
+- dopisano dowód: taskstop-nie-zabija-procesu-potomnego-na-windows — `TaskStop` na `pnpm start` zostawił `next start` na :3000.
+- dopisano dowód: hash-commita-w-raporcie-spoza-wyniku-narzedzia — implementer zgłosił commit, którego nie było; wymóg hashy z `git log` w kontekście naprawił kolejne 11 zadań.
+- dopisano dowód: implementer-pomija-obserwowany-red — Task 3 bez RED, Task 5 RED na mocku; wymóg RED w dispatchu zadziałał w Taskach 4 i 6–14.
+- dopisano dowód: ruling-z-nieweryfikowana-przeslanka — ruling na `2xl` przy repo `2xl` = 1440 px (szerokość bramki).
+- dopisano dowód: zrzuty-kontrolera-przed-bramka-wizualna (sukces) — hero ściśnięty i tabele szersze niż 390 px widoczne tylko na zrzutach / w nagłówku PNG.
+- dopisano dowód: brief-nie-wymienia-testow-ktore-zmiana-uniewaznia — zmiana seeda CMS złamała `gateLearnerSeed.test.ts` spoza briefu.
+- dopisano dowód: wspolny-plik-kontekstu-dla-serii-dispatchy (sukces) — cztery pliki workspace, 13 krótkich dispatchy bez NEEDS_CONTEXT.
+- dopisano dowód: kontrakt-danych-w-specu-niesprawdzony-wobec-konsumenta — seed „two COINS” vs filtr `getCoinProducts` modala DevCoin.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (trzynasta sesja) — także pętla z „git” w nazwie pliku wzorca.
+- dopisano dowód: komenda-do-wklejenia-zaklada-git-bash (strona odwrotna) — PowerShell podany dla `!`, który uruchamia Git Bash.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (siódmy) — `status --to done` po „ok” odrzucone, Rafał uruchomił z `!`.
+- Wiki repo code-busters-v2: nie założone — `.claude/wiki/` nie istnieje ani w worktree, ani w kopii głównej, a zapis w worktree przeznaczonym do usunięcia przepadłby; brak wzorców o skillu repo (`course-import` nieużyty).
+- Sygnał:
+  - straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (porażka, 13 sesji): dalej kandydat na regułę globalną w `~/.claude/CLAUDE.md`;
+  - ruling-z-nieweryfikowana-przeslanka (porażka, ≥ 3 sesje) → `/evolve-skill superpowers:subagent-driven-development`;
+  - zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (porażka, ≥ 6 sesji) → `/evolve-skill board-tracker`;
+  - taskstop-nie-zabija-procesu-potomnego-na-windows (porażka, ≥ 3 sesje): wzorzec ogólny, kandydat na regułę globalną;
+  - Brak `nawrót`.
