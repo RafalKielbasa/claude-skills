@@ -115,6 +115,10 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
     w tym `worktree unlock`, `worktree remove`, `worktree prune`, oraz `git push -u origin <gałąź dnia>` z cwd w
     worktree (push refu wyewidencjonowanego w kopii głównej).
 - 2026-10-28/29, sesja a011691a-07ee-43f2-ad0e-bac7765e83bf (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w3-profile`, plan 5 W3 subagent-driven) (trzynasta sesja): odrzucone skrypty SDD w komendzie ze zmiennymi, `cd … && cat >>` do ledgera (dwa razy) i pętla `for` z nazwą wzorca zawierającą słowo „git” w ścieżce pliku; przeszły te same komendy rozbite na proste z literalnymi ścieżkami, `git -C <kopia główna> log/status` (odczyt) i `pnpm -C <kopia główna>`.
+- 2026-10-29, sesja 1f1d010e-6776-42d9-8434-75b5bef761bc (id claude.ai niedostępny; saas app, worktree `edu-saas-cp-106-defence-prep`, sesja w tle z hubu): czternasta sesja, dziesięć odmów.
+  - Z gitem: łańcuch `git switch --detach …; git log; git merge-base | cut; git diff --stat $(git merge-base …)`, pętla `for f in …; do git show "origin/main:…" | sed -n; done`, `grep … <(git show …)` (podstawienie procesu) i jedna komenda składająca `gh api`, `git check-ignore` i `grep`.
+  - Bez gita: `node <cli board-trackera> bind …` w Bashu („runs a string through bind”), skrypt smoke w Bashu z funkcją `tok()` i `${!who}`, `node "$CLAUDE_JOB_DIR/tmp/smoke.mjs"` („value computed at runtime (the variable CLAUDE_JOB_DIR)”) oraz pętla `for n in 209 210; do gh issue view … --jq '"#\(.number) …"'; done`.
+  - Przeszły: każde z tych poleceń rozbite na proste wywołania z cwd w worktree, `bind` i `trail` w PowerShellu, skrypt smoke zapisany przez `Write` i uruchomiony `node "<dosłowna ścieżka>"`, `git -C "D:/Notatki/notatki" status/add/commit/push` (inne repo, vault), odczyty spoza worktree przez `Read`.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych

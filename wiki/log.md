@@ -815,3 +815,17 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 ## 2026-10-29 — evolve-skill board-tracker (sesja a011691a-07ee-43f2-ad0e-bac7765e83bf)
 - zaakceptowana („OK”): „Status proposals” — odmowa klasyfikatora przy `status --to done`/`close` od razu oddawana Rafałowi jako linia z `!` (Git Bash), jeden zapis na wywołanie, bez ponawiania.
 - zaadresowany: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (2026-10-29, board-tracker); `PURPOSE.md` skilla z sekcją „Adresowane wzorce”; wpis z pełnym diffem w `skill-impact.md`. Bez commita.
+
+## 2026-10-29 — github-tickets CP-110 i CP-111 (sesja 1f1d010e-6776-42d9-8434-75b5bef761bc)
+- założono: rama-ticketu-z-grepa-przed-sprawdzeniem-per-element (skill: github-tickets, typ: porażka) — rama CP-111 z twierdzeniami z samego `git grep` zaakceptowana na bramce 1, obalona przy pisaniu treści; wysłane po korekcie jako #210.
+- Przebieg bez uwag Rafała na obu bramkach i bez uwag `codex` (sygnał sukcesu, bez osobnej strony). Bez zmian w skillu.
+
+## 2026-10-29 — podsumowanie sesji (sesja 1f1d010e-6776-42d9-8434-75b5bef761bc, id claude.ai niedostępny; saas app, worktree `edu-saas-cp-106-defence-prep`)
+- założono: prisma-migrate-reset-wymaga-zgody-uzytkownika-dla-agenta (skill: ogólny, typ: porażka) — Prisma 7 odmawia `migrate reset` agentowi bez dosłownej zgody użytkownika w zmiennej; reset okazał się zbędny po `migrate status`.
+- dopisano dowód: taskstop-nie-zabija-procesu-potomnego-na-windows — piąta sesja; drzewa zabite `taskkill /T` na rodzicach w PowerShellu po sprawdzeniu `CommandLine`.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac — czternasta sesja, dziesięć odmów, w tym bez gita (funkcja powłoki, zmienna `CLAUDE_JOB_DIR` w argumencie `node`).
+- dopisano dowód: zakres-linii-wyliczony-z-nienumerowanego-zrzutu — `cat -n` na kilku plikach numeruje ciągle; 11 przesuniętych cytatów `plik:linia` poprawionych przed oddaniem; Rozwiązanie rozszerzone o „jeden plik na `cat -n`”.
+- dopisano dowód: twierdzenie-negatywne-z-czesci-przestrzeni — brak statusu na kanale, zgoda na privie; zakres nazwany, wniosek nie był warunkowy; indeks (1) przepięty ze skasowanego `praca-z-claude.md` na pamięć projektu.
+- dopisano dowód: exam-assessment-material-kept-out-of-candidate-text (sukces) — materiał obrony tylko w gitignorowanym pliku, ślad DT-56 bez oceny, issues #209/#210 bez treści egzaminu.
+- Wcześniej w tej sesji: założono rama-ticketu-z-grepa-przed-sprawdzeniem-per-element (wpis wyżej).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): taskstop-nie-zabija-procesu-potomnego-na-windows, straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, zakres-linii-wyliczony-z-nienumerowanego-zrzutu, twierdzenie-negatywne-z-czesci-przestrzeni — wszystkie ogólne, kandydaci na regułę globalną, nie na `/evolve-skill`.

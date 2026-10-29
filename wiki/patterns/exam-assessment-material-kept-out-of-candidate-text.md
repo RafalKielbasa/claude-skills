@@ -28,6 +28,12 @@ tracker can reach a candidate later.
 - Same session: DT-10 (devstock-org/devstock-team#646) body and trail without scores, variant or
   withheld items; `gh api repos/devstock-org/devstock-team` (`visibility=internal`) and the
   candidates' org membership (`no`) checked before writing, the content kept out regardless.
+- 2026-10-29, sesja 1f1d010e-6776-42d9-8434-75b5bef761bc (saas app, defence prep for Konrad, CP-106): the
+  questions, expected answers and proposed scores went only to a gitignored local file
+  (`.claude/review/reports/`, `git check-ignore` run before writing and again after switching to the
+  candidate's branch); the DT-56 trail said "wynik zapisany poza tablicą" with no grade; the follow-up
+  issues #209 and #210 cite "review PR #199" and the duplicated code, with no exam wording. Scores went
+  to the vault scorecard (`e780e48`) after Rafał's "OK".
 
 ## Rozwiązanie
 In any review or tracker text that a candidate may read: first read the assessment materials

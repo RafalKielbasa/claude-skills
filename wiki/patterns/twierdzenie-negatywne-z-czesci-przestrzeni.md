@@ -40,11 +40,18 @@ ale Claude nie zagląda do niego przed twierdzeniem negatywnym.
   później przy `gh search issues` po wszystkich trzech organizacjach; punkt
   poprawiony commitem `3c6eb979`. Przestrzeń tym razem: repo kodu a repo-tracker
   tego samego produktu.
+- 2026-10-29, sesja 1f1d010e-6776-42d9-8434-75b5bef761bc (id claude.ai niedostępny; saas app):
+  zakres nazwany, ale wniosek wyciągnięty i tak. Po odczycie kanału `#edu-saas` napisałem
+  „statusu z pt 23.10 nie ma na `#edu-saas` (przejrzane 26.09–29.10; priv niesprawdzony)”
+  i na tej podstawie zaproponowałem obniżkę „Statusy” 3 → 2,4. Rafał: „Konrad pytał mnie
+  o statusy, pozwoliłem go nie załączać”, czyli odpowiedź leżała na privie, którego bot nie
+  czyta. Nazwanie zakresu uratowało fakt, nie uratowało wniosku: przy brakującej części
+  przestrzeni ocena powinna iść jako warunkowa („2,4, chyba że zwolniłeś go na privie”).
 
 ## Rozwiązanie
-Przed twierdzeniem „X nie ma” sprawdź trzy indeksy: (1) `grep -n -i "<temat>"
-D:\Notatki\notatki\praca-z-claude.md` — ostatnie wpisy dziennika mówią, gdzie
-leży praca; (2) `git worktree list` i `git log --all --oneline -- <ścieżka>`;
+Przed twierdzeniem „X nie ma” sprawdź trzy indeksy: (1) pamięć projektu
+(`~/.claude/projects/<repo>/memory/MEMORY.md` i pliki obok; dawny dziennik
+`praca-z-claude.md` jest skasowany od 2026-10-12) — mówi, gdzie leży praca; (2) `git worktree list` i `git log --all --oneline -- <ścieżka>`;
 (3) `ls ~/.claude/projects/` — nazwy katalogów kodują ścieżki wszystkich repo,
 w których pracowano. W odpowiedzi nazwij przeszukany zakres („w drzewie `main`
 nie ma…”), zamiast twierdzić o całym repo czy dysku.

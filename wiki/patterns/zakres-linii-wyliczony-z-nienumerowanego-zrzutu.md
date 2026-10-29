@@ -39,11 +39,20 @@ w srodku nastepnego akapitu.
   `issue: null` — wzorzec nie dopasował, `sed` nic nie zmienił i nic nie zgłosił. Wyszło na
   kontrolnym `grep -n "status:"` po zapisie; naprawa `Edit` po treści. Numer linii jest ważny
   tylko do pierwszej zmiany pliku, także mojej.
+- 2026-10-29, sesja 1f1d010e-6776-42d9-8434-75b5bef761bc (id claude.ai niedostępny; saas app):
+  wariant „numerowany zrzut, ale z numeracją ciągłą przez kilka plików” i cytaty `plik:linia`
+  zamiast podmiany. `cat -n a.tsx b.ts c.ts` numeruje wiersze dalej przez kolejne pliki, więc
+  wszystkie cytaty z drugiego i dalszych plików były przesunięte o długość poprzednich (np.
+  `use-unread-notifications.ts:85-96` zamiast `:29-40`, `use-announcement.ts:102-103` zamiast
+  `:16-17`). Jedenaście cytatów trafiło do raportu dla Rafała; wyłapałem to przy końcowym
+  przeglądzie, poprawiłem `sed` i sprawdziłem `sed -n` na każdym poprawionym miejscu przed oddaniem.
 
 ## Rozwiazanie
 Numery linii do podmiany bierz wylacznie z wyjscia numerowanego (`cat -n`,
 `grep -n`, wlasny wydruk z indeksem) - nigdy z liczenia wierszy w zrzucie bez
-numerow. Kazda podmiana zakresu ma miec asercje na OBU granicach: pierwsza linia
+numerow. `cat -n` uruchamiaj na jednym pliku naraz albo bierz numery z `grep -n`
+lub `Read`, które podają nazwę pliku przy każdym wierszu; dotyczy to też cytatów
+`plik:linia` w raportach, nie tylko podmian. Kazda podmiana zakresu ma miec asercje na OBU granicach: pierwsza linia
 zakresu zaczyna sie tak, jak oczekujesz, i linia tuz ZA zakresem tez - to drugie
 lapie bledna dlugosc, ktorej asercja na poczatku nie widzi. Po zapisie wydrukuj
 okolice zmiany z numerami i przeczytaj ja, zamiast ufac komunikatowi "OK".

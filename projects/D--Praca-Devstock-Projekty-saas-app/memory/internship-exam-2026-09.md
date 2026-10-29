@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-29T11:11:00.996Z
+  modified: 2026-10-29T15:20:19.956Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -100,8 +100,10 @@ zwolnił Konrada ze statusu 23.10 (bez obniżki), zaakceptował wszystkie elemen
 (gitignored, zniknie razem z worktree); wstępnie 79,6/90 bez obrony. Aplikację uruchomiłem z tego worktree (`.env` na
 `course_platform_cp106_dev` i Redis db 2); `prisma migrate reset` blokuje sama Prisma bez jawnej zgody Rafała. PR #199
 zmergowany 29.10 11:07 UTC przez Konrada (merge commit `ef801bb`) po review Rafała APPROVED „Good job :)” (11:06); issue #196
-zamknięte automatycznie. f-01 (duplikat wyznaczania odbiorców w seedzie) weszła do `main` bez poprawki, podobnie odłożony
-helper `P2025` → kandydaci na osobne issues. Obrona Miłosza: pt 30.10.
+zamknięte automatycznie. f-01 (duplikat wyznaczania odbiorców w seedzie) i odłożony helper `P2025` weszły do `main` bez
+poprawki; 29.10 założone issues #209 CP-110 (wspólna reguła odbiorców) i #210 CP-111 (helper `P2025` → 404 w 5 serwisach;
+`P2025` w zaproszeniach CP-107 to inna reguła 404/409/410, poza zakresem), `content-backend`, bez epika i zależności.
+Karta Konrada w vaultcie wypełniona (`e780e48`, 89,6 → 90/100). Obrona Miłosza: pt 30.10.
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.

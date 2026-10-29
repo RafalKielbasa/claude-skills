@@ -2,3 +2,5 @@
 - [Hub: „wyślij” is not a variant](hub-wyslij-not-a-variant.md) — ask for the literal word; a lettered [A] „wyślij” gets "A" back and stalls the send
 - [Hub: session names, not ids](hub-session-names-not-ids.md) — in reports name sessions by their work ("Lekcja 1.4", "Daily"); ids only in commands and <details>
 - [Hub: busy target after „wyślij” waits](hub-busy-after-wyslij-waits.md) — check 5 after approval: wait for turn end and re-run prepare, no „czekać czy teraz” question
+- [Hub check 5 false busy for background](hub-check5-false-busy-background.md) — prepare says busy for a background session blocked at a gate (`state` vs `status`); ask once about --confirm-busy
+- [Hub: Baza wiedzy worktree name length](hub-baza-wiedzy-worktree-name-length.md) — session name over ~37 chars breaks worktree checkout (MAX_PATH); keep baza-wiedzy-<slug> ≤ 30 chars
