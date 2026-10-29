@@ -460,3 +460,7 @@ Format wpisu:
 - założono: wykonanie-kolejek-skryptami-z-zapisem-po-operacji (skill: daily, typ: sukces) — `setfield`/`upsert-one`/`exec-tasks` ze scratchpadu dały zgodność notatki i tablicy w czterech dailych; do przeniesienia do repo.
 - Wzorce globalne dotknięte w tej sesji: dowody do timeout-pytania-podpowiada-kontynuacje (piąty) i karta-nowe-issue-dla-rutynowego-przebiegu-skilla (trzeci, trzecia sesja). Patrz log globalny.
 - Sygnał repo: update-z-deduplikacji-trafia-w-caly-dokument (nawrót) → `/evolve-skill daily`.
+## 2026-10-29 — sesja 00434ebc-97fc-4e2a-a68d-5d8452f5084b (id claude.ai niedostępny; worktree `baza-wiedzy-dt-12-close`: zamknięcie DT-12 #650, issue #813 i #814, komentarz w #772, indeks `kodozercy-platform` `0f7463ce`; bramka zamknięcia DT-13 #651 bez odpowiedzi)
+- Bez nowych wzorców (skille repo nie były używane; pracowały globalne: board-tracker, project-index, podsumuj-sesja-claude).
+- Wzorce globalne dotknięte w tej sesji: założone 2 (raport-z-krokiem-na-slowo-bez-wariantow, zamkniecie-issue-z-bramka-i-sladem-zamykajacym); dowody do 3 (straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, paczka-dt-przez-gh-create-i-ensure, zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie). Patrz log globalny.
+- Sygnał repo: bez zmian według wcześniejszych wpisów.

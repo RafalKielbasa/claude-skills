@@ -135,6 +135,11 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
     sprawdzenie, czy scalenie przejdzie bez konfliktu).
   - Nowe: przed pierwszą komendą nie zajrzałem do tej strony i powtórzyłem dwie znane odmowy (`bind`, pętla
     `gh --jq`), choć obejścia są tu zapisane od 2026-10-22.
+  - Nowe, ważniejsze: strażnik obejmuje też komendy, które użytkownik uruchamia przez `!`. Rafał uruchomił
+    podaną mu linię `! cd "<kopia główna>" && [ … ] && { git merge … || git merge --abort; } && git log …`.
+    Odmowa przyszła dosłownie ta sama co dla Claude'a: „names git in a form too complex to verify that it stays
+    inside the worktree”. Linia `!` nie jest więc obejściem dla gita w kopii głównej z sesji izolowanej.
+    Kosztowało to Rafała jedną turę.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych
@@ -143,3 +148,6 @@ Logikę, której nie da się rozbić (pętla, przetwarzanie wyniku), przenieś d
 skryptu w pliku, a zmiany treści plików rób przez Write/Edit. To samo dotyczy `gh` (strażnik nie
 odróżnia go od gita wewnątrz konstrukcji) i `cd` do katalogu spoza worktree, zwłaszcza przez `~`.
 Pliki spoza worktree czytaj przez `Read`, a nie przez `cd … && …`.
+Git w kopii głównej (np. scalenie do gałęzi dnia) z sesji izolowanej: nie dawaj linii `!`, bo przechodzi przez
+tego samego strażnika. Daj komendy do wklejenia we własnym terminalu Rafała (jedna na linię, bez `&&`, ważne
+w PowerShellu 5.1 i w Git Bashu) albo zaproponuj `ExitWorktree` (keep) jako osobny wariant.

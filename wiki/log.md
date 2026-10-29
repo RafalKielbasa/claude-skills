@@ -837,3 +837,4 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: paczka-dt-przez-gh-create-i-ensure — przypadek przeciwny: dwa issue pytań przez `create` przypięte do sesji, która nad nimi nie pracowała.
 - dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie — potwierdzenie po zaadresowaniu (nie nawrót): wszystkie zapisy z bramki z pełną treścią, w tym Done, przeszły po „ok”.
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (ogólny, kandydat na regułę globalną, nie na `/evolve-skill`).
+- Po podsumowaniu, ta sama sesja: dopisano dowód: indeks-projektu-rozjechany-miedzy-galeziami-sesji (drugi, druga sesja) — `--since=2026-10-29` ukryło dzisiejsze commity sesji W3/W4, 4 konflikty indeksu rozwiązane scaleniem `8f365a41` (wariant A, „ok”); Rozwiązanie uzupełnione o „każdy zapis, bez `--since`”.
