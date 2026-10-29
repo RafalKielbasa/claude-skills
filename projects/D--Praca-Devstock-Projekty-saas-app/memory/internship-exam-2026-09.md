@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-22T17:41:40.791Z
+  modified: 2026-10-29T11:11:00.996Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -92,6 +92,16 @@ wyniki do `review-koncowe-milosz.md`; następnie przejścia po aplikacji (Konrad
 Zmiana wymagań: decyzja Rafała z 2026-10-12, wysyłka śr 14.10 (nie wt 13.10 z vaulta); wariant jeszcze
 niewybrany (rekomendacja A dla obu). Rafał potwierdził 22.10: zmiana NIE poszła do żadnego z nich (wpisane w tabeli
 „wysłane”, vault `792d863`); plan Miłosza zaakceptowany na Discordzie 26.09 (v2).
+
+Obrona Konrada 2026-10-29: **zdał, wynik bardzo dobry** (Rafał: 10 pytań z odpowiedziami zadowalającymi, przygotowany,
+wiedział, o czym mówi); punkty per kryterium obrony jeszcze niewpisane, karta w vaultcie niewypełniona. Ustalenia Rafała z 29.10:
+zwolnił Konrada ze statusu 23.10 (bez obniżki), zaakceptował wszystkie elementy planu v2 (Discord). Materiał do obrony:
+`.claude/review/reports/2026-10-29-cp-106-defence-prep.md` w worktree `.claude/worktrees/edu-saas-cp-106-defence-prep`
+(gitignored, zniknie razem z worktree); wstępnie 79,6/90 bez obrony. Aplikację uruchomiłem z tego worktree (`.env` na
+`course_platform_cp106_dev` i Redis db 2); `prisma migrate reset` blokuje sama Prisma bez jawnej zgody Rafała. PR #199
+zmergowany 29.10 11:07 UTC przez Konrada (merge commit `ef801bb`) po review Rafała APPROVED „Good job :)” (11:06); issue #196
+zamknięte automatycznie. f-01 (duplikat wyznaczania odbiorców w seedzie) weszła do `main` bez poprawki, podobnie odłożony
+helper `P2025` → kandydaci na osobne issues. Obrona Miłosza: pt 30.10.
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.
