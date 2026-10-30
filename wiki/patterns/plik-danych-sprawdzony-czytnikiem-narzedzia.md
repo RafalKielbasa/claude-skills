@@ -29,6 +29,17 @@ Edycja przez `sed` albo heredoc nie widzi składni YAML. Na przykład zwykły sk
     „39 kroków automatu … 41 kroków planu i 47 akapitów lektora pokryte”. `budzet --dry-passes 14 --retakes 3`
     dał `executions = 2 × (14 + 1 + 3) + 10 … = 46`, zgodnie z budżetem w pliku.
   - Dopiero potem commit `3674d860`.
+- 2026-10-30, sesja 8c81b3d1-cb64-4c72-97ce-98d2b72ade56 (id claude.ai niedostępny; Baza wiedzy, bilet lekcji
+  agenty-ai 3.1). Tym razem kolejność była odwrotna i kosztowała dodatkowy commit.
+  - Edycja `Edit`: `budget.tts_regenerations` 2 → 3 i notatka „(bilet produkcyjny (G1), Rafał "A, podnieś licznik
+    do 3"): tts_regenerations 2 -> 3”, z `": "` w zwykłym skalarze.
+  - Commit `308f8add` przed sprawdzeniem.
+  - Dopiero `sprawdz` wypisał „video/ticket.yaml odrzucony … Nested mappings are not allowed in compact mappings at
+    line 16”.
+  - Poprawka `) -` zamiast `):` w commicie `49aee05c`, potem ponowny `sprawdz` i `YAML.parse` z
+    `budget.tts_regenerations: 3`.
+  - Ten sam znak co 2026-10-26: reguła jest w Rozwiązaniu, ale przy szybkiej dopłacie do biletu commit poszedł
+    pierwszy.
 
 ## Rozwiązanie
 Po ręcznej zmianie pliku, który czyta narzędzie projektu (bilet, manifest, konfiguracja), wczytaj go funkcją

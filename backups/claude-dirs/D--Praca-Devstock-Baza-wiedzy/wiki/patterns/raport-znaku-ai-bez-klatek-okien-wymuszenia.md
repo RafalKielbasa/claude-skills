@@ -21,6 +21,11 @@ zdarzeniami, więc nie dostają klatek.
   okna `zostan` (środek 362,5–366,5, 575,1–592,1, 722,3–728,3, 780,1–783,1 s), dodał 8,36 s intro i wyciął klatki
   z `final.mp4`. Wynik: stopka plansz „AGENCI AI // 01/02”, przycisk Publish i logo n8n, a nie treść narracji.
   Rafał zaakceptował film na podstawie tej tabeli.
+- 2026-10-30, sesja 8c81b3d1-cb64-4c72-97ce-98d2b72ade56 (id claude.ai niedostępny): lekcja agenty-ai 3.1, lekcja
+  z biletem. `znak-ai -- kontrola` zgłosił „znak zasłania znaną treść łącznie 27.2 s, gdy nie było wolnego rogu (do
+  przejrzenia)” i „1016.5 s: budżet niewidoczności - wymuszony powrót”. Tym razem klatek z okien `zostan` nie
+  wycinałem: ostrzeżenie trafiło do bramki G5 tylko jako liczba, a Rafał zaakceptował film („ok”), nie widząc, co
+  znak zasłania.
 
 ## Rozwiązanie
 Przy ostrzeżeniu „znak zasłania znaną treść” wyciągnij z `video/znak-ai/plan.json` okna decyzji `zostan`. Wytnij

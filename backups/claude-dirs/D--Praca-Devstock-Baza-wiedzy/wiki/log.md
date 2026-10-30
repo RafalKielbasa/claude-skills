@@ -464,3 +464,14 @@ Format wpisu:
 - Bez nowych wzorców (skille repo nie były używane; pracowały globalne: board-tracker, project-index, podsumuj-sesja-claude).
 - Wzorce globalne dotknięte w tej sesji: założone 2 (raport-z-krokiem-na-slowo-bez-wariantow, zamkniecie-issue-z-bramka-i-sladem-zamykajacym); dowody do 3 (straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, paczka-dt-przez-gh-create-i-ensure, zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie). Patrz log globalny.
 - Sygnał repo: bez zmian według wcześniejszych wpisów.
+
+## 2026-10-30 — sesja 8c81b3d1-cb64-4c72-97ce-98d2b72ade56 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/30-10-2026`: lekcja agenty-ai 3.1, #795, przebiegi 7–14, nagranie finalne w 4. próbie, dopasowanie, lektor V4, montaż, final.mp4 zaakceptowany)
+- założono: blad-narzedzia-w-kroku-czatu-wyglada-jak-zmiennosc-modelu (skill: kurs-nagrywanie, typ: porażka) — limit Google Drive i zmienność modelu dały ten sam podpis INNY w kroku czatu.
+- założono: uwaga-kontroli-sprzeczna-z-przebiegiem-wskazuje-blad-narzedzia (skill: kurs-nagrywanie, typ: sukces) — porównanie z przebiegiem znalazło błąd rdzenia (`tab` kroku w nagraniu), poprawka `5855693f`.
+- założono: licznik-regeneracji-wydany-przed-nieudanym-zadaniem-tts (skill: kurs-video, typ: porażka) — `quota_exceeded` zjadło regenerację bez narracji.
+- założono: przyspieszenia-automatu-poza-zasiegiem-pauz (skill: kurs-montaz, typ: porażka) — 7 akapitów z 1–2 zdaniami na długą akcję zostało ponad 1,25× mimo pauz.
+- założono: obce-konto-google-w-oknie-wyboru-konta (skill: kurs-montaz, typ: porażka) — drugie konto w oknie wyboru konta, rozmyte w 2.1 i 3.1 (2 sesje).
+- założono: subagent-dopasowania-proponuje-redakcje-zamiast-rozjazdu (skill: kurs-nagrywanie, typ: porażka) — kroki 4 i 29 odrzucone jako niesprzeczne z klatką.
+- dopisano dowód: raport-znaku-ai-bez-klatek-okien-wymuszenia — 27,2 s zasłaniania bez klatek, film zaakceptowany bez ich obejrzenia.
+- Wzorce globalne dotknięte w tej sesji: założony 1 (odpowiedz-bez-wariantu-wykonana-czesc-wspolna); dowód do 1 (plik-danych-sprawdzony-czytnikiem-narzedzia — commit przed `sprawdz`).
+- Sygnał repo: raport-znaku-ai-bez-klatek-okien-wymuszenia — 2 sesje, próg „> 2” jeszcze nie; obce-konto-google-w-oknie-wyboru-konta — 2 sesje, też poniżej progu.

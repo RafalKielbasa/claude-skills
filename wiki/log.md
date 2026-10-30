@@ -860,3 +860,8 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: wiersz-bramki-bez-drogi-do-ekranu — wariant danych: wiersz „gość z CTA” bez użytkownika z kodem polecającym; Rozwiązanie rozszerzone o sprawdzenie danych stanu warunkowego.
 - Wiki repo code-busters-v2: nie założone (precedens a011691a) — `.claude/wiki/` nie istnieje ani w worktree, ani w kopii głównej, zapis w worktree do usunięcia by przepadł, a kopia główna jest zablokowana dla sesji izolowanej; `course-import` nieużyty.
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): implementer-pomija-obserwowany-red → `/evolve-skill superpowers:subagent-driven-development`; straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac i twierdzenie-o-pliku-bez-odczytu — ogólne, kandydaci na regułę globalną, nie na `/evolve-skill`.
+
+## 2026-10-30 — sesja 8c81b3d1-cb64-4c72-97ce-98d2b72ade56 (id claude.ai niedostępny; Baza wiedzy, lekcja agenty-ai 3.1)
+- założono: odpowiedz-bez-wariantu-wykonana-czesc-wspolna (skill: ogólny, typ: sukces) — „Dodałem kredyty” bez wariantu: część wspólna wykonana, decyzja o liczniku odłożona, Rafał dopowiedział „A”.
+- dopisano dowód: plik-danych-sprawdzony-czytnikiem-narzedzia — bilet z `): ` w notatce zacommitowany przed `sprawdz` (`308f8add`), poprawka `49aee05c`.
+- Brak `nawrót`.
