@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-29T15:20:19.956Z
+  modified: 2026-10-30T10:16:46.980Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -104,6 +104,18 @@ zamknięte automatycznie. f-01 (duplikat wyznaczania odbiorców w seedzie) i od�
 poprawki; 29.10 założone issues #209 CP-110 (wspólna reguła odbiorców) i #210 CP-111 (helper `P2025` → 404 w 5 serwisach;
 `P2025` w zaproszeniach CP-107 to inna reguła 404/409/410, poza zakresem), `content-backend`, bez epika i zależności.
 Karta Konrada w vaultcie wypełniona (`e780e48`, 89,6 → 90/100). Obrona Miłosza: pt 30.10.
+
+Obrona Miłosza, przygotowanie 2026-10-30: materiał `.claude/review/reports/2026-10-30-cp-107-defence-prep.md` w worktree
+`D:\Praca\Devstock\Projekty\cp107-review` (gitignored). Format na prośbę Rafała inny niż u Konrada: sekcja 0 (zadanie
+i zbudowana funkcja) oraz **dokładnie 10 pytań** (A 4, B 4, C 2), każde z opisem „co sprawdza” zrozumiałym bez kodu
+i odpowiedzią zadowalającą/niezadowalającą; reszta sekcji jak u Konrada. Rafał 30.10: brak zastrzeżeń do przebiegu
+egzaminu. Status 23.10 Miłosza na `#edu-saas` nie wpłynął. Wstępnie 80,6/90 (plan 18 zamiast 20 z 22.10, dla spójności
+z Konradem). PR #200 nadal draft, tip `8e6d0d5`, po merge'u #199 GitHub: `CONFLICTING`.
+
+Obrona Miłosza 2026-10-30: **zdał** (Rafał: zadał 8 z 10 pytań, wszystkie odpowiedzi poprawne; których dwóch nie zadał,
+nie podał). Propozycja karty: obrona 10/10, razem 80,6 + 10 = 90,6 → 91/100; karta w vaultcie czeka na „OK” Rafała
+(alternatywy: plan 20 zamiast 18, reakcja 3,2 zamiast 1,6). W vaultcie niezacommitowana zmiana `dziennik-review.md`
+usuwa 2 wiersze Konrada z 29.10 dodane w `e780e48` (nie moja; nie ruszałem). Na #745 punktów nie wpisujemy.
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.

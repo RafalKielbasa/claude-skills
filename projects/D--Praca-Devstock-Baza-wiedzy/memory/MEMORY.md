@@ -32,6 +32,7 @@
 - [Transkrypty przez kb-client, nie konektor Drive](drive-konektor-konto-devstock.md) — od 2026-10-14 `kb-client transcript` (webhook n8n `41_meeting_transcript`); konektor zostaje na it-chef.com i „not found” na transkryptach jest oczekiwane — nie proś o przełączenie.
 - [Subskrypcje — kto odpowiada](subskrypcje-podzial-odpowiedzialnosci.md) — SaaS (edu_saas, „SAS:”) = Rafał, CodeBusters = Wiktor; #366 zostaje Rafała.
 - [Board tracker — fałszywy błąd przy Done](board-tracker-done-false-error.md) — `status --to done` bywa `ok:false` „Could not close the issue”, a issue jest zamknięte; nie ponawiaj, sprawdź `gh issue view`.
+- [Board tracker — `bind` a strażnik worktree](board-tracker-bind-straznik-worktree.md) — w sesji z worktree `bind` odrzucany, `trail`/`assign`/`status` przechodzą; „w toku” przez `status --to in_progress`.
 - [Board tracker — stan 2026-10-09](board-tracker-status.md) — CLI + skill + hook SessionStart na `main` (PR #597); czeka akceptacja Rafała w nowych sesjach i inwentaryzacja; kalibracja progów ~23.10.
 - [n8n MCP: renameNode nie rusza kodu](n8n-mcp-rename-node-code-refs.md) — `$('Stara nazwa')` w węzłach Code zostaje; popraw sam i sprawdź eksportem; MCP nie pokazuje credentiali.
 - [Przebieg próbny automatu — stan 2026-10-10](przebieg-probny-status.md) — `przebieg` + bramka lektora gotowe (55372b65..c13988ff, #598), zadanie 10 (test na M00L01 w n8n) odłożone przez Rafała; 8 lekcji agenty-ai ma lektora bez nagrania.
@@ -48,4 +49,7 @@
 - [Autonomia automatu nagrywania — plany 1–4 w main i odebrane (2026-10-26)](nagrywanie-autonomy-gates-status.md) — #735: raporty odbioru i bilet 2.2 `tts_regenerations: 2` w `main` (PR #776, 26.10); #735 Done; dalej 2.2 w osobnej sesji (#721), poprawka markera `--plan-avatara` = #774.
 - [gh pr view --json files ucina listę plików](gh-pr-files-truncated.md) — duży PR (312 plików) pokazał ~60; pełna lista przez `git diff --name-only base...head` albo `gh api … --paginate`.
 - [Kursy tylko z gałęzi dnia](kursy-tylko-z-galezi-dnia.md) — od 2026-10-28 produkcja kursów wyłącznie w głównym folderze na gałęzi dnia, nigdy w worktree (media gitignored giną z worktree); brakujące commity: `fetch` + merge `origin/main`.
+- [3.1 agenty-ai: cofnięcie Google przed każdą próbą](agenty-ai-3-1-cofniecie-przed-proba.md) — od 2026-10-30 (wariant B) Rafał cofa ręcznie dostęp n8n.cloud przed każdym przebiegiem i nagraniem; bez tego krok 7 staje na ekranie ponownej zgody.
+- [Gałąź dnia scalona w trakcie sesji](galaz-dnia-scalona-w-trakcie-sesji.md) — inna sesja potrafi scalić PR dnia i przełączyć folder na `main` (29.10, `f01f4be4`); gałąź sprawdzaj osobną komendą przed każdym commitem.
 - [Profil kursu: drugie konto Google](profil-kursu-drugie-konto-google.md) — lista kont przy logowaniu Google w nagraniu pokazuje konto wydarzeń live; w 2.1 rozmyte w montażu, do usunięcia z profilu.
+- [n8n Cloud: limit zapytań Dysku](n8n-cloud-drive-limit-zapytan.md) — Google Drive Tool bywa „Forbidden … Quota exceeded … Requests per minute” (projekt OAuth n8n Cloud); automat widzi to jako brak wywołania w kroku czatu - sprawdź klatkę, zanim zrzucisz na model (3.1, 30.10).

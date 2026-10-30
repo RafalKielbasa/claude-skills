@@ -838,3 +838,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie — potwierdzenie po zaadresowaniu (nie nawrót): wszystkie zapisy z bramki z pełną treścią, w tym Done, przeszły po „ok”.
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (ogólny, kandydat na regułę globalną, nie na `/evolve-skill`).
 - Po podsumowaniu, ta sama sesja: dopisano dowód: indeks-projektu-rozjechany-miedzy-galeziami-sesji (drugi, druga sesja) — `--since=2026-10-29` ukryło dzisiejsze commity sesji W3/W4, 4 konflikty indeksu rozwiązane scaleniem `8f365a41` (wariant A, „ok”); Rozwiązanie uzupełnione o „każdy zapis, bez `--since`”.
+
+## 2026-10-30 — podsumowanie sesji (sesja 4f646017-851e-44d6-a6c9-cf219eac164a, id claude.ai niedostępny; Baza wiedzy, worktree `baza-wiedzy-m3m4`, zlecenie huba: domknięcie M3 i plan 8 (M4) migracji Kodożerców, PR #824)
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac — szesnasta sesja; `bind` w Bashu znów bez próby PowerShella (strona nieczytana przed pierwszą komendą, drugi raz z rzędu), obejście `status --to in_progress`; `git merge-tree $(…)` zastąpione `git diff --stat` po własnych ścieżkach.
+- dopisano dowód: sciezki-planu-z-notatek-inwentarza-bez-ls — reguła zadziałała dla ścieżek (`codex` 0 uwag), ale przeszły nazwa typu z prozy inwentarza, propsy z hooka bez lektury komponentu i placeholder komendy z planu 6; Rozwiązanie rozszerzone na identyfikatory i komendy.
+- dopisano dowód: inwentarz-zachowan-z-rownoleglych-przegladow (sukces) — dwa przeglądy M4 z faktami zmieniającymi plan; wspólną kompozycję (`FormScreen` nad paskiem zakładek) znalazł dopiero własny odczyt powłoki; Rozwiązanie uzupełnione o osobną sekcję inwentarza dla kompozycji wspólnych.
+- Pamięć projektu: `board-tracker-bind-straznik-worktree` poprawiona, by nie przeczyła tej wiki (PowerShell przepuszcza `bind`).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (ogólny, kandydat na regułę globalną, nie na `/evolve-skill`).

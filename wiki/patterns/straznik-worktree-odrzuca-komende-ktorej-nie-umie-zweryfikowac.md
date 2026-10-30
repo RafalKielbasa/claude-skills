@@ -140,6 +140,16 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
     Odmowa przyszła dosłownie ta sama co dla Claude'a: „names git in a form too complex to verify that it stays
     inside the worktree”. Linia `!` nie jest więc obejściem dla gita w kopii głównej z sesji izolowanej.
     Kosztowało to Rafała jedną turę.
+- 2026-10-29/30, sesja 4f646017-851e-44d6-a6c9-cf219eac164a (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-m3m4`, zlecenie huba „domknięcie M3 i plan M4”): szesnasta sesja, pięć odmów znanych rodzajów.
+  - `node <cli board-trackera> bind …` w Bashu, z `cd` i bez („runs a string through bind”). PowerShella znów nie
+    próbowałem, bo nie zajrzałem tu przed pierwszą komendą (drugi raz z rzędu po sesji 00434ebc). Obejście:
+    `status --to in_progress` w Bashu przesunął #771 tak, jak zrobiłby to `bind`; `assign` i `trail` w Bashu przeszły.
+  - Pętla `for d in …; do find screens/$d …; done` po repo code-busters-mobile („the variable d”). Obejście: `Glob`.
+  - `git merge-tree $(git merge-base …) origin/main <gałąź>` z podstawieniem i potokiem („too complex”). Obejście:
+    `git diff --stat 6784225b origin/main -- <moje ścieżki>` (pusty wynik = scalenie bez konfliktów w tych ścieżkach).
+  - Przeszły: osobne `git -C "<code-busters-mobile>" …` i `git -C "<code-busters-v2>" …` (inne repo), `git fetch`,
+    `git push -u origin <gałąź worktree>`, `gh issue create`, `gh pr create` i `gh pr merge` z cwd w worktree.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych
