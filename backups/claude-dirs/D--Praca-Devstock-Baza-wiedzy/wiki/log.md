@@ -464,6 +464,10 @@ Format wpisu:
 - Bez nowych wzorców (skille repo nie były używane; pracowały globalne: board-tracker, project-index, podsumuj-sesja-claude).
 - Wzorce globalne dotknięte w tej sesji: założone 2 (raport-z-krokiem-na-slowo-bez-wariantow, zamkniecie-issue-z-bramka-i-sladem-zamykajacym); dowody do 3 (straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, paczka-dt-przez-gh-create-i-ensure, zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie). Patrz log globalny.
 - Sygnał repo: bez zmian według wcześniejszych wpisów.
+## 2026-10-30 — sesja 4f646017-851e-44d6-a6c9-cf219eac164a (id claude.ai niedostępny; worktree `baza-wiedzy-m3m4`: materiał bramki M3 w `platforma/widoki/profil/zrzuty/2026-10-29-m3/`, §13.7 specu migracji Kodożerców, plan 8 (M4) z inwentarzem, decyzje M4 (wszystkie A), kodozercy/code-busters-mobile#421, PR #824 scalony jako `700e88ae`)
+- Bez nowych wzorców (skille repo nie były używane; pracowały globalne: board-tracker, project-index, writing-plans, podsumuj-sesja-claude).
+- Wzorce globalne dotknięte w tej sesji: dowody do 3 (straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, sciezki-planu-z-notatek-inwentarza-bez-ls, inwentarz-zachowan-z-rownoleglych-przegladow). Patrz log globalny.
+- Sygnał repo: bez zmian według wcześniejszych wpisów.
 
 ## 2026-10-30 — sesja 8c81b3d1-cb64-4c72-97ce-98d2b72ade56 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/30-10-2026`: lekcja agenty-ai 3.1, #795, przebiegi 7–14, nagranie finalne w 4. próbie, dopasowanie, lektor V4, montaż, final.mp4 zaakceptowany)
 - założono: blad-narzedzia-w-kroku-czatu-wyglada-jak-zmiennosc-modelu (skill: kurs-nagrywanie, typ: porażka) — limit Google Drive i zmienność modelu dały ten sam podpis INNY w kroku czatu.
