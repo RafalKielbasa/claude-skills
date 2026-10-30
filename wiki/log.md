@@ -865,3 +865,17 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - założono: odpowiedz-bez-wariantu-wykonana-czesc-wspolna (skill: ogólny, typ: sukces) — „Dodałem kredyty” bez wariantu: część wspólna wykonana, decyzja o liczniku odłożona, Rafał dopowiedział „A”.
 - dopisano dowód: plik-danych-sprawdzony-czytnikiem-narzedzia — bilet z `): ` w notatce zacommitowany przed `sprawdz` (`308f8add`), poprawka `49aee05c`.
 - Brak `nawrót`.
+
+## 2026-10-30 — sesja 71a4e9dd-49b4-401d-b0e0-5d3ec341952f (id claude.ai niedostępny; Baza wiedzy, worktree `baza-wiedzy-w5m5`: domknięcie W4 i M4, plany 9 (W5) i 10 (M5), PR #830)
+- założono: uwaga-review-planu-sprawdzona-w-planie-siostrzanym (skill: superpowers:writing-plans, typ: sukces) — uwagi `codex` do planu M5 (twardy lint, grep usuniętych nazw) wcielone też w plan W5, którego review ich nie miało.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac — `bind` czwarty raz mimo pamięci projektu, pętla `git -C` i składanie pliku heredokiem odrzucone; obejścia: `status --to in_progress`, `ls` w kopii głównej, `Write` + proste `cat`.
+- dopisano dowód: twierdzenie-o-pliku-bez-odczytu — „without its last caller” w sekcji 13.9 specu uogólnione z planu 8 bez grepa; inwentarz M5 znalazł importera, plus dwa starsze zdania specu tej rodziny.
+- dopisano dowód: sciezki-planu-z-notatek-inwentarza-bez-ls — ścieżki Files sprawdzone `ls`, ale skróty z wielokropkiem z tabel inwentarza weszły do kroków; jeden złapał mój `ls`, drugi `codex`.
+- dopisano dowód: inwentarz-zachowan-z-rownoleglych-przegladow (sukces) — cztery przeglądy podzielone po pytaniach (usuwanie / scalenie i wydanie), sekcje do plików, streszczenia ≤ 250 słów; fakty zmieniające plany (SDK 58 na gałęzi wydania, backend pojedynków poza `main`, #1713 vs mobile, CI #1652).
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie — wariant: push zawarty w zbiorczym „OK” do 27 decyzji odrzucił Rafał w oknie uprawnień i wykonał sam linią `!`; Rozwiązanie uzupełnione: push pytać osobno. Obsługa zadziałała, nie liczę jako nawrót (wpis wątpliwy: status „zaadresowany” dotyczy board-trackera).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): sciezki-planu-z-notatek-inwentarza-bez-ls (3 sesje) → `/evolve-skill superpowers:writing-plans`; straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac i twierdzenie-o-pliku-bez-odczytu — ogólne, kandydaci na regułę globalną.
+
+## 2026-10-30 — sesja ddceb20d-ddb9-4c33-a2fb-0c560fc81c28 (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/30-10-2026`: lekcja agenty-ai 3.2, #828)
+- dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan — wyjątek „osobne `cd` przed gołym `npm run nagrywanie`” nie działa w subagencie (katalog wraca między wywołaniami); subagent przeszedł na `npm run … --prefix`; Rozwiązanie uzupełnione o brief subagenta.
+- Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (nawrót generator-wypisuje-dwie-listy-zadania-rownolegle, nowy sukces szkic-nagrywanie-yaml-u-subagenta-weryfikacja-u-kontrolera).
+- Brak `nawrót` globalnego. Kandydat: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (ogólny, 22 dowody) — miejscem reguły jest `~/.claude/CLAUDE.md`, nie skill.

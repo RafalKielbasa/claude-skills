@@ -31,6 +31,18 @@ agentów i gotowe pozycje decyzji („błędy zastane”) dla użytkownika.
   luk pokrycia. Nowe: przeglądy podzielone po folderach ekranów nie zobaczyły ustalenia poza tymi folderami.
   Stopka `FormScreen` w prywatnym stosie stanęłaby nad klawiaturą o wysokość paska zakładek. Znalazłem to sam,
   czytając `app/(private)/_layout.tsx` i `tab-bar-height.tsx` z arytmetyką z sekcji 13.7 specu (M3).
+- 2026-10-30, sesja 71a4e9dd-49b4-401d-b0e0-5d3ec341952f (id claude.ai niedostępny), plany 9 (W5) i 10 (M5),
+  strumienie zamykające (usuwanie, scalenia, wydanie), nie ekranowe. Cztery agenty `general-purpose` puszczone od
+  razu po przeczytaniu specu, równolegle z kopiowaniem arkusza W4 (13–28 min, 133–197 wywołań); każdy pisał sekcję
+  do pliku w katalogu zadania i oddawał streszczenie ≤ 250 słów, więc tabele (126 folderów starej biblioteki,
+  215 plików `components/ui`) nie weszły do kontekstu kontrolera. Podział nie po folderach, tylko po pytaniach:
+  „co usunąć” i „scalenie, wdrożenie, wydanie” na platformę; agenci „wydaniowi” czytali GitHub przez `gh api`
+  zamiast `fetch` (repo kodu tylko do odczytu) i walidowali dokumenty GraphQL skryptem względem schematów z kilku
+  gałęzi. Fakty zmieniające plany, których żaden inny krok by nie dał: gałąź wydania na GitHubie 3 commity przed
+  lokalną, z Expo SDK 58; backend pojedynków tylko na web `feat/preparation-for-live`; #1713 usuwa pole, o które
+  pyta każda wersja mobile; brak podglądu DT-37 i reset bazy CMS przy każdym pushu do `main`; czerwone CI PR #1652.
+  `codex` nie zgłosił luk pokrycia, tylko luki bramek. Inwentarze złożone poleceniem `cat` z plików agentów plus
+  nagłówek; ścieżki skryptów agentów zastąpione `<sweep scratch>`.
 
 ## Rozwiązanie
 Przed planem migracji „1:1” zbierz inwentarz przez równoległe przeglądy tylko do odczytu, z podziałem na

@@ -161,6 +161,18 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
   - Przeszły: `pnpm -C "<kopia główna>" …` (codegen, `tsc`, vitest, `next build` po scaleniu), `git log` na gałęzi
     kopii głównej z cwd w worktree. Scalenie zrobił Rafał we własnym terminalu z komend podanych w raporcie —
     zgodnie z Rozwiązaniem, bez straconej tury.
+- 2026-10-30, sesja 71a4e9dd-49b4-401d-b0e0-5d3ec341952f (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-w5m5`, domknięcie W4/M4 i plany W5/M5): osiemnasta sesja, trzy odmowy znanych rodzajów.
+  - `node <cli> bind …` w Bashu („runs a string through bind”) — czwarty raz, mimo pamięci projektu
+    `board-tracker-bind-straznik-worktree`, która mówi wprost, że `bind` odpada; „w toku” dało dopiero
+    `status --to in_progress` (przeszło).
+  - Pętla `for p in …; do git -C "<code-busters-v2>" cat-file -e …; done` („too complex to verify”). Obejście:
+    `ls` plików w kopii głównej repo kodu (drzewo czyste na sprawdzanym commicie) i osobne `git -C … show`.
+  - `{ cat <<'EOF' … EOF; tail …; } > plik` przy składaniu inwentarza („too complex”). Obejście: nagłówki przez
+    `Write` do katalogu zadania, potem jedno proste `cat a b c > plik`.
+  - Przeszły: pojedyncze `git -C "<code-busters-v2|code-busters-mobile>" log/show/rev-list/merge-tree` z cwd w
+    worktree, `git fetch`, `gh pr create`, `gh pr merge` (PR #830), `codex exec` w tle. `git push` odrzucił Rafał
+    w oknie uprawnień (nie strażnik) i wykonał sam linią `!` (zob. `zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie`).
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych

@@ -59,6 +59,14 @@ ta sama zmiana na Done przeszła.
   System Writes]”). Nie ponawiałem, podałem linię `!` (Git Bash), Rafał ją uruchomił (`closed: true`). Osłabia
   hipotezę z 00434ebc: wariant nazywający operację słowami, ale bez dosłownej komendy, nie wystarczył.
   `bind` i `trail` w tej sesji przeszły.
+- 2026-10-30, sesja 71a4e9dd-49b4-401d-b0e0-5d3ec341952f (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-w5m5`) (dziesiąty; nie klasyfikator, tylko Rafał, więc wariant, nie nawrót): w tabeli 27 decyzji
+  wiersz BW-1 brzmiał „[A] push … i PR do `main`”, a pod tabelą napisałem „Push i PR (BW-1) wykonam tylko po
+  Twoim jawnym słowie”. Rafał odpisał „OK”, ja potraktowałem je jako to słowo i wysłałem `git push`; Rafał
+  odrzucił wywołanie w oknie uprawnień i napisał „kontynuuj”. Nie ponawiałem, podałem linię `!` z `git -C …
+  push`; Rafał uruchomił ją sam, a PR i scalenie zrobiłem dopiero po osobnym „OK i scal”. Wniosek: push nie
+  należy do zbiorczej tabeli decyzji — zgoda „OK na wszystkie rekomendacje” jest dla użytkownika zgodą na
+  plan, nie na wysłanie gałęzi; push pytać osobno albo od razu podać linię `!`.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu
@@ -67,3 +75,6 @@ Po blokadzie klasyfikatora nie obchodź jej, tylko podaj komendy i zapytaj. Jawn
 ponownie” od użytkownika to zgoda, po której wolno ponowić. Gdy zgoda była jawna, a klasyfikator
 i tak odmawia, zaproponuj, żeby użytkownik uruchomił komendę sam, z prefiksem `!` w tej sesji: wynik
 trafia do rozmowy, a żadna reguła uprawnień nie zostaje na stałe.
+Push i scalenie nie wchodzą do zbiorczej tabeli decyzji z domyślnym „OK”: pytaj o nie osobnym pytaniem po
+decyzjach albo od razu podaj linię `!`; nie pisz „wykonam po jawnym słowie” i nie traktuj potem zbiorczego „OK”
+jako tego słowa.

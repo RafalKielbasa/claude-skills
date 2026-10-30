@@ -178,6 +178,16 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
   `baza-wiedzy-agenty-ai-modul-2-bilet`, lekcja agenty-ai 3.1): dwudziesty pierwszy dowód. Według
   podsumowania sesji ścieżki względne przestały trafiać, bo katalog roboczy Basha został po wcześniejszej
   komendzie w innym miejscu. Od tej chwili komendy szły na ścieżkach bezwzględnych i błąd się nie powtórzył.
+- 2026-10-30, sesja ddceb20d-ddb9-4c33-a2fb-0c560fc81c28 (id claude.ai niedostępny; Baza wiedzy, lekcja
+  agenty-ai 3.2): dwudziesty drugi dowód, nowy wariant — wyjątek z sekcji Rozwiązanie nie przenosi się do
+  subagenta.
+  - Brief subagenta piszącego `nagrywanie.yaml` kazał robić „`cd` osobno, potem gołe `npm run nagrywanie`”,
+    zgodnie z wyjątkiem niżej.
+  - W subagencie katalog roboczy wraca między wywołaniami, więc osobne `cd` nie zostawało. Subagent sam
+    przeszedł na `npm run nagrywanie --prefix "<repo>/tools/nagrywanie" -- <komenda> …` i zgłosił to
+    w raporcie.
+  - Szkody nie było. W głównej sesji osobne `cd` znowu przestawiało katalog: kilkanaście „Environment
+    update” między `tools/nagrywanie`, `tools/course-pipeline`, katalogami lekcji i `.claude/wiki`.
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a
@@ -191,7 +201,9 @@ częściowy.
 Wyjątek: komenda, którą reguła allow przepuszcza tylko w gołej postaci (np.
 `npm run nagrywanie`), dostaje `cd` osobnym wywołaniem tuż przed sobą. Rób to
 za każdym razem, nie raz na sesję, bo każda inna komenda z `cd` przestawia
-katalog po drodze.
+katalog po drodze. W subagencie ten wyjątek nie działa (katalog wraca między
+wywołaniami): w briefie każ wołać skrypt przez `npm run <skrypt> --prefix
+"<katalog pakietu>" -- …`, a nie przez osobne `cd`.
 
 W narzędziu PowerShell to samo robi `Set-Location`. Zamiast niego podawaj skrypt
 ścieżką bezwzględną (`node "<pakiet>/src/cli.js" …`), a git wołaj z katalogu

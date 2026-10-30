@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-30T16:32:53.626Z
+  modified: 2026-10-30T18:13:06.815Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -126,6 +126,23 @@ nowy Blocking: fallback kafla na subdomenę (`account.tsx:72-73`) bez testu z kr
 Dziewiąty przebieg `pr`: 2026-10-30 `pr 206` (CP-109, Norbert, tip `c41b87b`, run `20261030-162743-v819`, 11 agentów,
 0 znalezisk, codex nothing-to-judge, artefakt C12p1qVRjczUsYoxA45Xw8). Worktree w `<scratchpad>/pr206/saas app` — nazwa
 katalogu „saas app” daje od razu tytuł „Review saas app”. Ręcznie: kryteria #204 spełnione, PR nie linkuje #204.
+Decyzja: APPROVE z prośbą o `Closes #204` (`pr206-approve.json`); POST znów zablokowany po „ok” → Rafał wysłał przez `!`: review 5716498071 APPROVED.
+
+Dziesiąty przebieg `pr`: 2026-10-30 `pr 208` (CP-46 #127, Norbert, tip `58f059d`, run `20261030-175205-vws4`, 11 agentów,
+osie bez `nestjs-architecture` — sam plik testu; 3 uwagi code-quality po 50 → poniżej progu, 1 odrzucona za dowód pod złymi
+liniami; artefakt Ltg7YU5zqJEooWK67ooPdM). Ręcznie 2 Blocking z kryteriów #127: test „zapis darmowy” nie może paść
+(cena 0, a serwis liczy przychód po `stripePaymentIntentId`; żaden test nie oczekuje przychodu > 0) i izolacja szkół
+tylko dla `/courses`, bez `/overview`. Wysłane przez `!` Rafała: review 5716679352 CHANGES_REQUESTED, karta #127 → To be fixed.
+Wniosek: osie nie mają pozycji „czy test może paść” — luki w testach łapie tylko ręczne czytanie kryteriów issue.
+
+Jedenasty przebieg `pr`: 2026-10-30 `pr 207` (CP-97 #176, Norbert, tip `4bc6edf`, run `20261030-180055-b5gj`, 11 agentów,
+5 uwag po progach poniżej, f-05 `staleTime: 0` fałszywy alarm — wymóg issue; duplikat `CourseAnalyticsResponse`≈`CourseKpi`
+odrzucony przez assemble za złe linie; artefakt UiCSL5XBW2xBGiq6rHPcxB). Ręcznie: Blocking `.clinerules` w `.gitignore`
+(obce zadanie), Blocking duplikat typów (`CourseKpi`, `CourseStatus` z `types/creator-courses.ts:27`); kryterium
+„testy CP-45 bez zmian” złamane typowo (`courses-table.test.tsx:3,5`) przez zawężenie `status` — konflikt z poprawką
+duplikatu; Rafał (D2 A): typowa adnotacja w teście to dopuszczalny skutek ujednolicenia typów, nie Blocking.
+Konflikt z main w `keys.ts` (klucze CP-106). Wysłane przez `!` Rafała: review 5716684204 CHANGES_REQUESTED, karta #176 → To be fixed.
+Brief (Haiku) przekłamał zmianę `.gitignore` — poprawiłem summary przed osiami; agenci często podają złe linie → assemble odrzuca.
 Obejście checkoutu: `git worktree add --detach <scratchpad>/pr-<n> <tip>` + kopia `state.json`, `crm`
 z `--repo <worktree>`; potem kopia `state.json` i raportów z powrotem, `crm artifact` daje tytuł z nazwy
 katalogu (poprawić na „Review saas app”). Klasyfikator blokuje POST review („External System Writes”)

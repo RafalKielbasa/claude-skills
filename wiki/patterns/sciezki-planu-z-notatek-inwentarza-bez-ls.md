@@ -31,6 +31,13 @@ istnienie plików w kodzie. Gdy wykonawca dostanie zadanie, błędny glob psuje 
   - docelowe propsy ekranu zmiany hasła wyprowadzone z hooka, bez propsa `onTrigger`, który woła efekt
     `useWatch` tego ekranu (`change-password-screen.tsx:47-56`; `codex` uwaga 1);
   - komenda kontroli kolorów przepisana z planu 6 z placeholderem `<those files>` (`codex` uwaga 3).
+- 2026-10-30, sesja 71a4e9dd-49b4-401d-b0e0-5d3ec341952f (id claude.ai niedostępny), plany 9 (W5) i 10 (M5).
+  Reguła zastosowana: ścieżki Files obu planów sprawdzone `ls` w kopiach głównych repo kodu (drzewa czyste na
+  `349ff20cc` i `7afa0f6`), ścieżki z #1713 przez `git show --name-only 2bffabb4f`. Nowy wariant: skróty z
+  wielokropkiem przepisane z tabel inwentarza (`features/activitiesList/…/ActivitesList.tsx`,
+  `quiz/…/question-view.tsx`, `fix(sdk58): …`). W planie 9 wyłapał je mój `ls` przed review; w planie 10 `codex`
+  zgłosił niedeterministyczną kontrolę i wielokropek w treści commita (uwagi 5 i 6), a pełna lista 11 plików
+  przyszła z `git show --name-only c56381a`. Wielokropek w ścieżce to ten sam placeholder co `<those files>`.
 
 ## Rozwiązanie
 Przed zapisaniem planu sprawdź każdą ścieżkę z sekcji **Files** w kodzie (`ls` albo `git ls-files` na

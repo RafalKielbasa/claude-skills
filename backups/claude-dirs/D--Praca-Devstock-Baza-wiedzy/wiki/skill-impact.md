@@ -110,6 +110,7 @@ index 1fcda34..4fecf0a 100644
 - **Powód decyzji:** zmiana wprowadzona wprost na zgodę Rafała („tak") po przedstawieniu projektu, poza ścieżką `evolve-skill` — wpis dopisany ręcznie w tej samej sesji, żeby rejestr był kompletny (wzorzec globalny zmiana-skilla-poza-evolve-skill-bez-sladu). Wyzwalaczem był zrzut ekranu z platformy: siedem par połączonych idealną przekątną.
 - **Zakres poza SKILL.md:** to jest najmniejsza część zmiany. Egzekwowanie leży w kodzie, nie w instrukcji — nowa komenda `npm run tasuj` (`tools/course-pipeline/src/tasuj-zadania.js`), reguła przekątnej i wymóg `cele`/`rozwiazanie` w `walidujDopasowanie`, przepisana sekcja `DragActivity` w `kursy/_wspolne/szablony/struktura-zadania.md`. Wszystko w commicie `6c7bb30`. To celowa proporcja, opisana w globalnym wzorcu defekt-generowania-naprawiany-narzedziem-nie-regula: reguła w skillu jest ostatnim, nie pierwszym elementem naprawy.
 - **Zgłoszone, nie zmienione:** krok 7 nadal każe zrobić `commit kurs(<slug>): zadania lekcji NN-y zatwierdzone`, co stoi w sprzeczności z regułą „nie commituj" z `CLAUDE.md`. Ten sam dług zgłoszono 2026-09-10 dla `kurs-lekcja` krok 8 — do zdjęcia w obu skillach jedną decyzją Rafała.
+- **Nawrót:** 2026-10-30, generator-wypisuje-dwie-listy-zadania-rownolegle
 
 ```diff
 --- a/.claude/skills/kurs-zadania/SKILL.md

@@ -475,3 +475,9 @@ Format wpisu:
 - dopisano dowód: raport-znaku-ai-bez-klatek-okien-wymuszenia — 27,2 s zasłaniania bez klatek, film zaakceptowany bez ich obejrzenia.
 - Wzorce globalne dotknięte w tej sesji: założony 1 (odpowiedz-bez-wariantu-wykonana-czesc-wspolna); dowód do 1 (plik-danych-sprawdzony-czytnikiem-narzedzia — commit przed `sprawdz`).
 - Sygnał repo: raport-znaku-ai-bez-klatek-okien-wymuszenia — 2 sesje, próg „> 2” jeszcze nie; obce-konto-google-w-oknie-wyboru-konta — 2 sesje, też poniżej progu.
+
+## 2026-10-30 — sesja ddceb20d-ddb9-4c33-a2fb-0c560fc81c28 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/30-10-2026`: lekcja agenty-ai 3.2, #828 — redakcja, zatwierdzenie treści, migracja konspektu, quiz i ćwiczenie, plansze, szkic `nagrywanie.yaml`)
+- nawrót: generator-wypisuje-dwie-listy-zadania-rownolegle — zaadresowany 2026-09-11 (kurs-zadania), wraca w CATEGORIZE: elementy blokami po kategorii, `tasuj` miesza tylko `cele`, walidator widzi tylko przekątną; złapane okiem przed bramką.
+- założono: szkic-nagrywanie-yaml-u-subagenta-weryfikacja-u-kontrolera (skill: kurs-nagrywanie, typ: sukces) — szkic konfiguracji u subagenta z twardymi granicami, liczby z raportu powtórzone przez kontrolera.
+- Wzorce globalne dotknięte w tej sesji: dowód do 1 (cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan — wyjątek „osobne `cd`” nie działa w subagencie).
+- Sygnał repo: generator-wypisuje-dwie-listy-zadania-rownolegle — nawrót → `/evolve-skill kurs-zadania` (poprawka w `tasuj` i walidatorze, nie w samej instrukcji).
