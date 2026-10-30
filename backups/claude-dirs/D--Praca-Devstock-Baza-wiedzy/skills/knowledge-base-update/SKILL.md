@@ -13,7 +13,7 @@ Tryby wywołania:
 - `/knowledge-base-update <slug>` — tylko jeden projekt zewnętrzny.
 
 Slugi projektów: `saas-app`, `codebusters-v2`, `codebusters-mobile`,
-`devstock-team-agent`, `company-agent-chat`.
+`devstock-team-agent`, `company-agent-chat`, `fit-body-business`.
 
 ## Zasady nadrzędne
 

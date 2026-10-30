@@ -53,3 +53,4 @@
 - [Gałąź dnia scalona w trakcie sesji](galaz-dnia-scalona-w-trakcie-sesji.md) — inna sesja potrafi scalić PR dnia i przełączyć folder na `main` (29.10, `f01f4be4`); gałąź sprawdzaj osobną komendą przed każdym commitem.
 - [Profil kursu: drugie konto Google](profil-kursu-drugie-konto-google.md) — lista kont przy logowaniu Google w nagraniu pokazuje konto wydarzeń live; w 2.1 rozmyte w montażu, do usunięcia z profilu.
 - [n8n Cloud: limit zapytań Dysku](n8n-cloud-drive-limit-zapytan.md) — Google Drive Tool bywa „Forbidden … Quota exceeded … Requests per minute” (projekt OAuth n8n Cloud); automat widzi to jako brak wywołania w kroku czatu - sprawdź klatkę, zanim zrzucisz na model (3.1, 30.10).
+- [ElevenLabs: kredyty a licznik regeneracji](elevenlabs-kredyty-a-licznik-regeneracji.md) — render lekcji z biletem wydaje `tts_regenerations` przed łańcuchem TTS, więc brak kredytów (401 quota_exceeded) zjada licznik bez narracji; V4 ~0,44 kredytu na znak (3.1, 30.10).
