@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: c984816c-8f95-40f7-98e1-4f43366c2557
-  modified: 2026-10-30T10:16:46.980Z
+  modified: 2026-10-30T14:51:22.248Z
 ---
 
 Egzamin z praktyk 2026-09 zaprojektowany 2026-09-20 (brainstorming, 6 sekcji zatwierdzonych).
@@ -113,9 +113,11 @@ egzaminu. Status 23.10 Miłosza na `#edu-saas` nie wpłynął. Wstępnie 80,6/90
 z Konradem). PR #200 nadal draft, tip `8e6d0d5`, po merge'u #199 GitHub: `CONFLICTING`.
 
 Obrona Miłosza 2026-10-30: **zdał** (Rafał: zadał 8 z 10 pytań, wszystkie odpowiedzi poprawne; których dwóch nie zadał,
-nie podał). Propozycja karty: obrona 10/10, razem 80,6 + 10 = 90,6 → 91/100; karta w vaultcie czeka na „OK” Rafała
-(alternatywy: plan 20 zamiast 18, reakcja 3,2 zamiast 1,6). W vaultcie niezacommitowana zmiana `dziennik-review.md`
-usuwa 2 wiersze Konrada z 29.10 dodane w `e780e48` (nie moja; nie ruszałem). Na #745 punktów nie wpisujemy.
+nie podał). Karta w vaultcie wypełniona na „OK” Rafała (vault `53a1180`, wypchnięte): obrona 10/10, razem 90,6 → 91/100
+(odrzucone alternatywy: plan 20, reakcja 3,2). W tym samym commicie wiersz obrony w `dziennik-review.md` i przywrócone
+2 wiersze Konrada z 29.10, które niezacommitowana zmiana z drzewa roboczego kasowała. Na #745 punktów nie wpisujemy.
+#745 (DT-56) → Done i zamknięte 30.10 (drugie podejście po jawnym „Przesuń do done” przeszło). Otwarte: konflikt
+PR #200 z `main` (rozwiązuje Miłosz), review i merge #200; f-02 bez issue (u Konrada analogiczne długi → CP-110/111).
 
 **Why:** stan bramek i daty nie wynikają z kodu; następna sesja może zacząć od „załóż issues" albo
 „oceń plan Konrada" bez ponownego wywiadu.

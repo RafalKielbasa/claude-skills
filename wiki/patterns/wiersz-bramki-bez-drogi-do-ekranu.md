@@ -22,9 +22,16 @@ nie sprawdza, czy z trasy da się trafić tapnięciami. W expo-router każdy pli
   - Ta sama bramka wymagała wcześniej trzech dopytań o przygotowanie: „podaj adres pliku do uruchomienia”,
     „podaj dane do logowania”, „podaj jeszcze raz krok po kolei”. Patrz
     [[bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska]].
+- 2026-10-30, sesja 188f3a4d-7157-4ac4-991a-d02805f5d47b (id claude.ai niedostępny; code-busters-v2, bramka W4), wariant
+  danych zamiast nawigacji. Wiersz „karta: gość z CTA” (poprawka W4-D1 nr 34) wymagał właściciela karty
+  z kodem polecającym. Plan, inwentarz („Gate data”), seed W4 i trasa `share-card` tego nie sprawdziły; zapytanie
+  `checkUserId { ownedReferralCodes }` do lokalnego CMS dało `null` dla każdego seedowanego użytkownika. Wyszło
+  dopiero na zrzucie przebiegu 1; naprawione trasą `share-card-cta` ze stubem `getShareData` (bez zapisu do bazy).
 
 ## Rozwiązanie
 Każdy wiersz skryptu bramki zaczyna się od drogi do ekranu: tapnięcia od ekranu startowego albo komenda deep
 linka do wklejenia. Drogę wyznacz z kodu, szukając `router.push`, `router.navigate` i `Link` do tej trasy. Trasa
 bez żadnego wejścia z aplikacji to ustalenie dla użytkownika przed bramką, z wariantem: dopisać wejście albo
-sprawdzić przez deep link. Nie odkrywaj go dopiero w trakcie bramki.
+sprawdzić przez deep link. Nie odkrywaj go dopiero w trakcie bramki. To samo dla stanu zależnego od danych
+(render warunkowy, np. CTA tylko przy kodzie polecającym): przy pisaniu trasy bramki nazwij dane, które ten stan
+wywołują, i jednym zapytaniem do lokalnego API sprawdź, że seed albo stub je dostarcza.

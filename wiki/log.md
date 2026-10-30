@@ -845,3 +845,18 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: inwentarz-zachowan-z-rownoleglych-przegladow (sukces) — dwa przeglądy M4 z faktami zmieniającymi plan; wspólną kompozycję (`FormScreen` nad paskiem zakładek) znalazł dopiero własny odczyt powłoki; Rozwiązanie uzupełnione o osobną sekcję inwentarza dla kompozycji wspólnych.
 - Pamięć projektu: `board-tracker-bind-straznik-worktree` poprawiona, by nie przeczyła tej wiki (PowerShell przepuszcza `bind`).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (ogólny, kandydat na regułę globalną, nie na `/evolve-skill`).
+
+## 2026-10-29/30 — podsumowanie sesji (sesja 188f3a4d-7157-4ac4-991a-d02805f5d47b, id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w4-content`, zlecenie huba: plan 7 W4 subagent-driven do bramki, potem scalenie `349ff20cc` do DT-37 i #769 → Done)
+- założono: zrzut-pelnej-strony-pomija-leniwe-obrazy (skill: ogólny, typ: porażka) — `fullPage` zostawił puste okładki „Zobacz także” na dole wpisu, raport bramki milczał; poprawka `loadLazyImages` w harnessie.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac — siedemnasta sesja; `bind` w Bashu trzeci raz bez zajrzenia tu, PowerShell przeszedł; scalenie przez terminal Rafała zgodnie z Rozwiązaniem.
+- dopisano dowód: zatrzymanie-procesu-blokowane-przez-klasyfikator — linie `!` z tabeli skopiowane z ramką `│` nie zadziałały; komenda z wiadomości Rafała wykonana dosłownie przeszła; Rozwiązanie: `!` jako osobny wiersz kodu.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie — Done po „OK” na wariant nazywający operację odrzucone, linia `!` zadziałała (obsługa po zaadresowaniu, nie nawrót).
+- dopisano dowód: obowiazki-pierwszej-odpowiedzi-zgubione-w-sesji-autonomicznej — poprawa częściowa: linie tablicy w porę, cytat huba skrócony zamiast dosłownego.
+- dopisano dowód: twierdzenie-o-pliku-bez-odczytu — implementer i recenzent Task 12 potwierdzili klucze w `en.json`, których nie było (`git show` pusty).
+- dopisano dowód: implementer-pomija-obserwowany-red — 2 z 14 zadań bez RED mimo reguły w pliku wspólnym; Rozwiązanie: linia RED w krótkim kontrakcie odpowiedzi.
+- dopisano dowód: wspolny-plik-kontekstu-dla-serii-dispatchy (sukces) — trzy pliki wspólne, 15 dispatchy bez NEEDS_CONTEXT, reguła o altach dopisana raz.
+- dopisano dowód: review-zadania-rownolegle-z-kolejnym-implementerem (sukces) — 7 par równoległych; FIX_BASE re-review = HEAD przed poprawką, gdy w międzyczasie weszły cudze commity.
+- dopisano dowód: zrzuty-kontrolera-przed-bramka-wizualna (sukces) — obejrzenie zrzutów przebiegu 1 znalazło dwie luki niewidoczne w raporcie; przebieg 2 czysty, 15/15 wierszy przyjęte.
+- dopisano dowód: wiersz-bramki-bez-drogi-do-ekranu — wariant danych: wiersz „gość z CTA” bez użytkownika z kodem polecającym; Rozwiązanie rozszerzone o sprawdzenie danych stanu warunkowego.
+- Wiki repo code-busters-v2: nie założone (precedens a011691a) — `.claude/wiki/` nie istnieje ani w worktree, ani w kopii głównej, zapis w worktree do usunięcia by przepadł, a kopia główna jest zablokowana dla sesji izolowanej; `course-import` nieużyty.
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje): implementer-pomija-obserwowany-red → `/evolve-skill superpowers:subagent-driven-development`; straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac i twierdzenie-o-pliku-bez-odczytu — ogólne, kandydaci na regułę globalną, nie na `/evolve-skill`.

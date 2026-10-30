@@ -53,6 +53,12 @@ ta sama zmiana na Done przeszła.
     (`closed: true`).
   - Zgodne z hipotezą: „ok” na bramce, która wymienia konkretne zapisy z treścią, wystarcza
     klasyfikatorowi.
+- 2026-10-30, sesja 188f3a4d-7157-4ac4-991a-d02805f5d47b (id claude.ai niedostępny; code-busters-v2, W4, #769)
+  (dziewiąty; obsługa po zaadresowaniu zadziałała, nie nawrót): wariant [A] brzmiał „Przesuwam #769 (DT-65) do
+  Done, co je zamyka”, Rafał odpisał „OK”. `status --ref …#769 --to done` w PowerShellu odrzucone („[External
+  System Writes]”). Nie ponawiałem, podałem linię `!` (Git Bash), Rafał ją uruchomił (`closed: true`). Osłabia
+  hipotezę z 00434ebc: wariant nazywający operację słowami, ale bez dosłownej komendy, nie wystarczył.
+  `bind` i `trail` w tej sesji przeszły.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu

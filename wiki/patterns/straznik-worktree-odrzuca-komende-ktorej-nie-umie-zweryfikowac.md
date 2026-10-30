@@ -150,6 +150,17 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
     `git diff --stat 6784225b origin/main -- <moje ścieżki>` (pusty wynik = scalenie bez konfliktów w tych ścieżkach).
   - Przeszły: osobne `git -C "<code-busters-mobile>" …` i `git -C "<code-busters-v2>" …` (inne repo), `git fetch`,
     `git push -u origin <gałąź worktree>`, `gh issue create`, `gh pr create` i `gh pr merge` z cwd w worktree.
+- 2026-10-29/30, sesja 188f3a4d-7157-4ac4-991a-d02805f5d47b (id claude.ai niedostępny; code-busters-v2, worktree
+  `code-busters-app-migration-w4-content`, plan 7 W4 subagent-driven): siedemnasta sesja, sześć odmów znanych rodzajów.
+  - `node <cli> bind … 2>&1 | head` w Bashu („runs a string through bind”) — po raz trzeci z rzędu bez zajrzenia tu
+    przed pierwszą komendą; ta sama komenda w PowerShellu przeszła od razu.
+  - `sed … > plik; cat > plik <<EOF …` (ledger SDD) i `rm <log>; pnpm …; ls …; git status` („too complex”). Obejście:
+    `Write` dla ledgera, każda komenda osobno.
+  - `git log -1 <DT-37> && git merge-base --is-ancestor …` przy weryfikacji scalenia. Obejście: samo `git log -1
+    --format="%h %p %s" <gałąź>` (rodzice w wyniku wystarczyły).
+  - Przeszły: `pnpm -C "<kopia główna>" …` (codegen, `tsc`, vitest, `next build` po scaleniu), `git log` na gałęzi
+    kopii głównej z cwd w worktree. Scalenie zrobił Rafał we własnym terminalu z komend podanych w raporcie —
+    zgodnie z Rozwiązaniem, bez straconej tury.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych
