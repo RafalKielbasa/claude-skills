@@ -884,3 +884,27 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: webfetch-odmawia-pelnego-tekstu-strony — `ctn.fi/en/ledpro-vertical/` (1,7 MB HTML) wrócił z samym tytułem przy pytaniu o fakty; `curl` + ekstrakcja `python -I` dały komplet; Rozwiązanie uzupełnione.
 - Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (nowy sukces nagranie-skierowane-poza-daily-wymaga-notatki-ze-zrodlami).
 - Brak `nawrót`.
+
+## 2026-10-31 — sesja a65d3063-3840-4e65-beaf-1f6c93f7abc0 (id claude.ai niedostępny; code-busters-v2, worktree `code-busters-app-migration-w5-closing`: plan 9 W5 subagent-driven, okno stosu, scalenie do DT-37, push)
+- założono: skan-par-zadan-wykrywa-odwrocona-kolejnosc-usuwania (skill: superpowers:subagent-driven-development, typ: sukces) — wiersz pre-flight „T5 → T6” wykrył usuwanie biblioteki przed jej martwymi importerami; ruling R1 potwierdzony w review całości.
+- założono: baza-lokalna-za-schematem-po-scaleniu-main (skill: ogólny, typ: porażka) — po scaleniu #1713 wspólna baza bez `db push`; bramka 404/0/0/0, a karta ankiety W5-D1 nigdy się nie wyrenderowała (P2022 połknięte przez `PendingSurvey`).
+- założono: harness-odmawia-subagentowi-zapisu-raportu (skill: ogólny, typ: porażka) — implementer zadania 5 nie mógł zapisać `task-5-report.md`; fallback `FULL REPORT` w kolejnych dispatchach.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac — `bind` w Bashu piąty raz bez zajrzenia na stronę; `$'\r'` w potoku z `git show` wystarcza do odmowy.
+- dopisano dowód: zatrzymanie-procesu-blokowane-przez-klasyfikator — `taskkill` na własnych wiszących procesach odrzucony; zapobieganie: serwery jako goły `node`, `TaskStop` wystarcza (Rozwiązanie uzupełnione).
+- dopisano dowód: taskstop-nie-zabija-procesu-potomnego-na-windows — dowód od drugiej strony: bez wrappera `pnpm` port zwalnia się po `TaskStop` (6 razy); Rozwiązanie uzupełnione.
+- dopisano dowód: review-zakresowe-nie-widza-defektu-poza-swoim-diffem (sukces) — seed `--paywall` bez odpowiedzi na ankiety + bramka ankiet w `AppShell`: E2E padałoby zawsze; tylko review całości.
+- dopisano dowód: hash-commita-w-raporcie-spoza-wyniku-narzedzia — wariant: hash subagenta nieaktualny po jego amendzie; pomiar na osieroconym commicie i błędna poprawka; Rozwiązanie uzupełnione („nigdy nie amenduj”, własny `git log`).
+- dopisano dowód: zrzut-pelnej-strony-pomija-leniwe-obrazy — skutek poprawki: zrzut przy `scrollY ≠ 0`, warstwy `sticky`/`fixed` przesunięte; Rozwiązanie uzupełnione.
+- dopisano dowód: twierdzenie-o-pliku-bez-odczytu — „`origin` DT-37 na `a3d37fd91`” przepisane z briefu huba bez `git log`; prawda `349ff20cc`.
+- dopisano dowód: docker-compose-w-worktree-zaklada-drugi-projekt (zadziałanie rozwiązania) — Keystone uruchomiony bezpośrednio z pamięci projektu, bez drugiego kontenera.
+- dopisano dowód: niezalezne-zadania-w-trakcie-bramki-uzytkownika (sukces) — wariant: jedno okno wspólnego stosu po całym kodzie (R4), z widocznym kosztem dwóch rund poprawek smoke w oknie.
+- Wzorce repo tej sesji: w `D:\Praca\Devstock\Projekty\code-busters-v2\.claude\worktrees\code-busters-app-migration-w5-closing\.claude\wiki\log.md` (założone w tej sesji, bez wzorców repo).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) — wszystkie ogólne, kandydaci na regułę globalną, nie na `/evolve-skill`: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, twierdzenie-o-pliku-bez-odczytu, hash-commita-w-raporcie-spoza-wyniku-narzedzia, zatrzymanie-procesu-blokowane-przez-klasyfikator, taskstop-nie-zabija-procesu-potomnego-na-windows.
+
+## 2026-10-31 — sesja def4d1f9-b042-446f-a69e-5044f811f431 (id claude.ai niedostępny; Baza wiedzy, worktree `baza-wiedzy-scal-dzien`: zlecenie huba — PR #835 z commitami wiki `955d1faf` i `286538b2`, potem porządek w worktree)
+- założono: commit-podsumowania-po-scaleniu-pr-zostaje-poza-main (skill: podsumuj-sesja-claude, typ: porażka) — oba brakujące commity wiki powstały 10–15 min po scaleniu PR swojej gałęzi (#832, #830); ta sama pułapka w podsumowaniu tej sesji, ominięta nową gałęzią od `origin/main`.
+- założono: usuniecie-worktree-poprzedzone-porownaniem-plikow-ignorowanych (skill: ogólny, typ: sukces) — hash blobów wobec `git ls-tree -r -z` i SHA-256 plików ignorowanych wobec kopii głównej przed pięcioma `git worktree remove`; 2061 mediów modułu 2 miało kopie, zero strat.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac — pętla git, `find` z tekstem `.git`, `git -C <kopia główna>` odrzucone; nowe: `git worktree remove` innego worktree tego samego repo przechodzi; strona znów nieczytana przed pierwszą komendą.
+- dopisano dowód: indeks-wiki-koliduje-przy-scalaniu-galezi-dnia — koniec `log.md` przy PR #835, rozwiązany ręcznie, wpisy w kolejności czasu.
+- Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (bez nowych wzorców, skille repo nieużywane).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (ogólny, kandydat na regułę globalną, nie na `/evolve-skill`).

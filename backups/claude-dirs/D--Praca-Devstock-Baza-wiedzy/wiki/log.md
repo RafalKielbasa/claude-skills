@@ -486,6 +486,11 @@ Format wpisu:
 - Wzorce globalne dotknięte w tej sesji: dowód do 1 (cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan — wyjątek „osobne `cd`” nie działa w subagencie).
 - Sygnał repo: generator-wypisuje-dwie-listy-zadania-rownolegle — nawrót → `/evolve-skill kurs-zadania` (poprawka w `tasuj` i walidatorze, nie w samej instrukcji).
 
+## 2026-10-30 — sesja 71a4e9dd-49b4-401d-b0e0-5d3ec341952f (id claude.ai niedostępny; worktree `baza-wiedzy-w5m5`: arkusz W4 w `platforma/widoki/tresci/zrzuty/2026-10-30-w4/`, bramka M4 w `platforma/widoki/profil/zrzuty/2026-10-30-m4/`, §13.8 i §13.9 specu, plany 9 (W5) i 10 (M5) z inwentarzami, PR #830)
+- Bez nowych wzorców (skille repo nie były używane; pracowały globalne: board-tracker, project-index, writing-plans, podsumuj-sesja-claude).
+- Wzorce globalne dotknięte w tej sesji: założony 1 (uwaga-review-planu-sprawdzona-w-planie-siostrzanym); dowody do 5 (straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, twierdzenie-o-pliku-bez-odczytu, sciezki-planu-z-notatek-inwentarza-bez-ls, inwentarz-zachowan-z-rownoleglych-przegladow, zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie). Patrz log globalny.
+- Sygnał repo: bez zmian według wcześniejszych wpisów.
+
 ## 2026-10-30 — sesja 175d9d6c-86dd-4439-baff-018e8848c10a (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/30-10-2026`: `/daily` bez argumentu, potem nagranie Fit Body 14:04 przez idea-engine, #831)
 - założono: nagranie-skierowane-poza-daily-wymaga-notatki-ze-zrodlami (skill: daily, typ: sukces) — nagranie przetworzone poza `/daily` i `/spotkanie` zamknięte notatką w `planning/robocze/` z `**Źródła:**`.
 - Wzorce globalne dotknięte w tej sesji: dowód do 1 (webfetch-odmawia-pelnego-tekstu-strony — ciężka strona z Elementora ucięta przed treścią, obejście `curl` + `python -I`).

@@ -63,6 +63,7 @@ w którym taki defekt w ogóle może się pojawić.
   - arkusz ukończenia zaczyna dla TalkBacka od angielskiego uchwytu biblioteki i nie przenosi fokusu — ten sam domyślny `BottomSheetHandle` co w dziewiątym dowodzie, tym razem w arkuszu, który zostawiono poza ds `Modal`;
   - edytory JS i CSS w WebView niewidoczne dla `KeyboardAwareScrollView` (źródło `FocusedInputObserver.kt` czyta tylko `EditText`).
   Recenzent zrobił też triaż ~80 odłożonych Minor (6 „wrong”, kilka must-fix).
+- 2026-10-30/31, sesja a65d3063-3840-4e65-beaf-1f6c93f7abc0 (id claude.ai niedostępny; code-busters-v2, plan 9 W5): jedenasty dowód. Review zadania 8 (opus) dało Important i sprawdziło dostęp, kolejność Keystone i falsyfikowalność asercji E2E paywalla; review całej gałęzi (opus) znalazło Important, którego tamto nie mogło zobaczyć: seed `--paywall` zakłada konta surową Prismą bez odpowiedzi na ankiety, więc `PendingSurvey` (backend) podaje ankietę porejestracyjną, a `PostRegistrationSurveyGate` w `AppShell` (front, kod W1) nie montuje strony — asercja `#lessons` padałaby przy każdym przebiegu na stosie. Para seed + bramka ankiet z innego strumienia, poza diffem zadania. Drugie Important: kolejność okna stosu (smoke zapisuje dane, które zmieniają wiersze bramki regresji). Oba poprawione przed oknem; testy na stosie w oknie przeszły.
 
 ## Rozwiązanie
 

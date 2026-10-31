@@ -25,6 +25,13 @@ project-index).
     3 vs 2) i blok w `log.md` (6 wpisów sesji z gałęzi dnia, 2 z `main`).
   - 22-10 z `main`: dwie linie w `index.md`.
   - Rozwiązane skryptem: przy każdej linii wzorca strona z większą liczbą dowodów, a w logu wpisy obu stron.
+- 2026-10-31, sesja def4d1f9-b042-446f-a69e-5044f811f431 (id claude.ai niedostępny; Baza wiedzy, worktree
+  `baza-wiedzy-scal-dzien`, PR #835): scalenie `worktree-baza-wiedzy-w5m5` (`286538b2`, wpis sesji 71a4e9dd) do
+  `rafal-kielbasa/30-10-2026` (`955d1faf`, wpis sesji Fit Body 175d9d6c) dało jeden konflikt: koniec `log.md`.
+  `index.md` scalił się bez konfliktu, bo `286538b2` zmieniał sam log. Rozwiązane ręcznie przez `Edit`: wpisy
+  z `main` bez zmian, potem 71a4e9dd, potem 175d9d6c (kolejność z briefu huba). Ten sam konflikt rozwiązywała
+  dzień wcześniej sesja ddceb20d przed PR #832. Oba commity wiki były poza `main` z tej samej przyczyny, zob.
+  `commit-podsumowania-po-scaleniu-pr-zostaje-poza-main`.
 
 ## Rozwiązanie
 Przy konflikcie scalania w `.claude/wiki/index.md` rozstrzygaj osobno każdą linię wzorca: weź stronę z większą
