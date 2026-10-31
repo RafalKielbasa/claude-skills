@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 317d7952-a172-4542-ada8-af793e2c9f74
-  modified: 2026-10-29T05:44:08.663Z
+  modified: 2026-10-31T10:48:05.455Z
 ---
 
 W2 needed three gate runs and W3 two; the failures were real or harness gaps, not flakes:
@@ -20,6 +20,7 @@ W2 needed three gate runs and W3 two; the failures were real or harness gaps, no
 - Check phone PNG widths (PNG header bytes 16–19) — a capture wider than 390 px means a table widens the document.
 - Look at two captures per screen type before calling a run clean: the report cannot see a dialog covering the page, a squeezed layout, or a seed artefact.
 - Local stack from a worktree: `pnpm --filter @devstock/cms dev` runs `docker compose up -d db` under the worktree's compose project and creates a second DB container/volume that fails on :3336 — start Keystone directly (`pnpm --filter @devstock/cms exec node -r ./tracer.js node_modules/@keystone-6/core/bin/cli.js dev --no-db-push`) against `code-busters-v2-db-1`.
-- Processes: the permission classifier refuses `Stop-Process` even on the session's own orphaned servers, and `TaskStop` on a background `pnpm start` leaves the `next start` node child alive on :3000. Ask Rafał to run `! taskkill //PID <pid> //F` (the `!` prefix runs Git Bash, so `Stop-Process` fails there and `/PID` needs `//`).
+- Processes: the permission classifier refuses `Stop-Process`/`taskkill` even on the session's own orphaned servers, and `TaskStop` on a background `pnpm start` leaves the `next start` node child alive on :3000. W5 (2026-10-31) fix: start servers as a direct node command in a background Bash task (`node node_modules/next/dist/bin/next start -p 3000`, `node -r ./tracer.js node_modules/@keystone-6/core/bin/cli.js dev --no-db-push`); then `TaskStop` frees the port, so CMS restarts (paywall flag via `SERVER_PAYWALL_ENABLED=true` in the process env, no `.env` edit) need no help. For orphans, ask Rafał to run `! taskkill //PID <pid> //T //F`.
+- After merging `main` changes that touch `apps/cms/schema.prisma`, the shared local DB needs `keystone prisma db push` (on Rafał's word; may need `--accept-data-loss`): otherwise Prisma P2022 and resolvers like `PendingSurvey` swallow the error and return null, so screens silently lose data and a gate still passes. Check the schema is pushed before a gate run.
 
 **Why:** each item cost a gate run or a stall in W2/W3. **How to apply:** before the W4 gate, check these first. Related: [[worktree-session-git-guard]].

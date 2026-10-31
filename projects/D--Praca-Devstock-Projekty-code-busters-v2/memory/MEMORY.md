@@ -1,2 +1,2 @@
 - [Worktree session git guard](worktree-session-git-guard.md) — isolated sessions can't run git in the main checkout (even via `!`); Rafał merges in his own terminal, verify with `pnpm -C`
-- [W2/W3 gate harness lessons](w2-gate-harness-lessons.md) — Tailwind 3.3 silent classes, `2xl`=1440, dialog root zero-size, worktree CMS start, process kills need Rafał's `! taskkill //PID`
+- [W2/W3 gate harness lessons](w2-gate-harness-lessons.md) — Tailwind 3.3 silent classes, `2xl`=1440, dialog root zero-size, worktree CMS start, direct-node servers stop with TaskStop, push the schema after merging main
