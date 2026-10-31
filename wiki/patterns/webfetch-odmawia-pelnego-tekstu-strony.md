@@ -44,6 +44,13 @@ odczytania, a nie jak strona do streszczenia.
   .infoIcon` daje opacity 1, `show-after` 300 ms, `content-class` zamiast `popper-class`. Tyle wystarczyło na
   lokatory kroku 15 lekcji 2.1. Potwierdza korektę z 2026-09-11: rozstrzyga rozmiar pliku, a przy pliku `.vue`
   ze stylami lepiej od razu pytać o konkretne reguły.
+- 2026-10-30, sesja 175d9d6c-86dd-4439-baff-018e8848c10a (id claude.ai niedostępny): **inna postać tej samej
+  przyczyny — rozmiar, bez „verbatim”**. Strona produktu `ctn.fi/en/ledpro-vertical/` (WordPress z Elementorem)
+  z promptem o konkretne fakty (długości fal, czas sesji, protokoły) wróciła jako „The page content you provided
+  is truncated” z samym tytułem. `curl` pokazał 1 740 195 bajtów HTML, z czego początek to inline CSS i skrypty,
+  więc obcięcie wypadło przed treścią. Ekstrakcja `python -I` (usunięcie `<script>`/`<style>`, potem tekst
+  bloków) dała komplet: 633–660 nm i 850–940 nm, 15 min do 3 sesji tygodniowo, 840 + 840 diod. Pięć innych stron
+  produktów z tej samej tury przeszło przez `WebFetch` bez problemu.
 
 ## Rozwiązanie
 Pytaj `WebFetch` o fakty i krótkie cytaty, nigdy o pełną treść: wymień z nazwy
@@ -65,3 +72,8 @@ z którego potrzebujesz kompletu tabel i przykładów, spróbuj raz o pełną tr
 a odpowiedź „to kłóci się z limitem cytatu" traktuj jak sygnał, żeby przejść
 na pytania szczegółowe albo pobrać plik poza `WebFetch`. Odpowiedź
 `HTTP 404 Not Found` to inna porażka - błąd ścieżki, nie limitu.
+
+**Uzupełnienie (2026-10-30).** Odpowiedź „content … is truncated” z samym tytułem przy
+pytaniu o fakty oznacza stronę, której treść leży za limitem konwersji (ciężki kreator
+stron, megabajty inline CSS). Nie ponawiaj `WebFetch` innym promptem: `curl -sL` do
+scratchpadu, potem ekstrakcja tekstu `python -I` bez `<script>`/`<style>`.

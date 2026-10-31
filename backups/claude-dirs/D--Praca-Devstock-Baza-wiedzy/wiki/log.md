@@ -485,3 +485,7 @@ Format wpisu:
 - założono: szkic-nagrywanie-yaml-u-subagenta-weryfikacja-u-kontrolera (skill: kurs-nagrywanie, typ: sukces) — szkic konfiguracji u subagenta z twardymi granicami, liczby z raportu powtórzone przez kontrolera.
 - Wzorce globalne dotknięte w tej sesji: dowód do 1 (cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan — wyjątek „osobne `cd`” nie działa w subagencie).
 - Sygnał repo: generator-wypisuje-dwie-listy-zadania-rownolegle — nawrót → `/evolve-skill kurs-zadania` (poprawka w `tasuj` i walidatorze, nie w samej instrukcji).
+
+## 2026-10-30 — sesja 175d9d6c-86dd-4439-baff-018e8848c10a (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/30-10-2026`: `/daily` bez argumentu, potem nagranie Fit Body 14:04 przez idea-engine, #831)
+- założono: nagranie-skierowane-poza-daily-wymaga-notatki-ze-zrodlami (skill: daily, typ: sukces) — nagranie przetworzone poza `/daily` i `/spotkanie` zamknięte notatką w `planning/robocze/` z `**Źródła:**`.
+- Wzorce globalne dotknięte w tej sesji: dowód do 1 (webfetch-odmawia-pelnego-tekstu-strony — ciężka strona z Elementora ucięta przed treścią, obejście `curl` + `python -I`).

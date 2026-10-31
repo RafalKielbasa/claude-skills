@@ -879,3 +879,8 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan — wyjątek „osobne `cd` przed gołym `npm run nagrywanie`” nie działa w subagencie (katalog wraca między wywołaniami); subagent przeszedł na `npm run … --prefix`; Rozwiązanie uzupełnione o brief subagenta.
 - Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (nawrót generator-wypisuje-dwie-listy-zadania-rownolegle, nowy sukces szkic-nagrywanie-yaml-u-subagenta-weryfikacja-u-kontrolera).
 - Brak `nawrót` globalnego. Kandydat: cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan (ogólny, 22 dowody) — miejscem reguły jest `~/.claude/CLAUDE.md`, nie skill.
+
+## 2026-10-30 — sesja 175d9d6c-86dd-4439-baff-018e8848c10a (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/30-10-2026`: nagranie Fit Body przez idea-engine, repo fit-body-business, formularz w Claude Docs, #831)
+- dopisano dowód: webfetch-odmawia-pelnego-tekstu-strony — `ctn.fi/en/ledpro-vertical/` (1,7 MB HTML) wrócił z samym tytułem przy pytaniu o fakty; `curl` + ekstrakcja `python -I` dały komplet; Rozwiązanie uzupełnione.
+- Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (nowy sukces nagranie-skierowane-poza-daily-wymaga-notatki-ze-zrodlami).
+- Brak `nawrót`.
