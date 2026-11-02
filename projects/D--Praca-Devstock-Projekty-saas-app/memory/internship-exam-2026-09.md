@@ -124,3 +124,5 @@ PR #200 z `main` (rozwiązuje Miłosz), review i merge #200; f-02 bez issue (u K
 **How to apply:** przed zakładaniem issues sprawdź, czy dokumenty są już w `main`; przy ocenie planów
 używaj `rubric.md`, nie własnych kryteriów. Powiązane: [[feedback-no-commits-user-only]],
 [[feedback-tickets-are-github-issues]], [[plans-dir-gitignored]].
+
+2026-11-02: PR #200 zmergowany 2026-11-01 (19:37 UTC); merge przestawił `main` i wywołał konflikty w otwartych PR-ach Norberta #202 i #207 (`apps/web/src/lib/query/keys.ts`).
