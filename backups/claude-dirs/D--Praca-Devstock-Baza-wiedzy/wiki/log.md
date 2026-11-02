@@ -494,3 +494,8 @@ Format wpisu:
 ## 2026-10-30 — sesja 175d9d6c-86dd-4439-baff-018e8848c10a (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/30-10-2026`: `/daily` bez argumentu, potem nagranie Fit Body 14:04 przez idea-engine, #831)
 - założono: nagranie-skierowane-poza-daily-wymaga-notatki-ze-zrodlami (skill: daily, typ: sukces) — nagranie przetworzone poza `/daily` i `/spotkanie` zamknięte notatką w `planning/robocze/` z `**Źródła:**`.
 - Wzorce globalne dotknięte w tej sesji: dowód do 1 (webfetch-odmawia-pelnego-tekstu-strony — ciężka strona z Elementora ucięta przed treścią, obejście `curl` + `python -I`).
+
+## 2026-10-31 — sesja def4d1f9-b042-446f-a69e-5044f811f431 (id claude.ai niedostępny; worktree `baza-wiedzy-scal-dzien`: zlecenie huba — PR #835 z wpisami wiki 30.10, potem usunięcie pięciu worktree scalonych do `main` i sześciu zdalnych gałęzi; `baza-wiedzy-w5m5` zostaje do końca W5/M5)
+- Bez nowych wzorców (skille repo nie były używane; pracowały globalne: podsumuj-sesja-claude).
+- Wzorce globalne dotknięte w tej sesji: założone 2 (commit-podsumowania-po-scaleniu-pr-zostaje-poza-main, usuniecie-worktree-poprzedzone-porownaniem-plikow-ignorowanych); dowody do 2 (straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, indeks-wiki-koliduje-przy-scalaniu-galezi-dnia). Patrz log globalny.
+- Sygnał repo: bez zmian według wcześniejszych wpisów.
