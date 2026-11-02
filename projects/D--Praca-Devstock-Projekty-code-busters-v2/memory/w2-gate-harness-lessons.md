@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 317d7952-a172-4542-ada8-af793e2c9f74
-  modified: 2026-10-31T10:48:05.455Z
+  modified: 2026-11-02T10:54:18.787Z
 ---
 
 W2 needed three gate runs and W3 two; the failures were real or harness gaps, not flakes:
@@ -22,5 +22,6 @@ W2 needed three gate runs and W3 two; the failures were real or harness gaps, no
 - Local stack from a worktree: `pnpm --filter @devstock/cms dev` runs `docker compose up -d db` under the worktree's compose project and creates a second DB container/volume that fails on :3336 — start Keystone directly (`pnpm --filter @devstock/cms exec node -r ./tracer.js node_modules/@keystone-6/core/bin/cli.js dev --no-db-push`) against `code-busters-v2-db-1`.
 - Processes: the permission classifier refuses `Stop-Process`/`taskkill` even on the session's own orphaned servers, and `TaskStop` on a background `pnpm start` leaves the `next start` node child alive on :3000. W5 (2026-10-31) fix: start servers as a direct node command in a background Bash task (`node node_modules/next/dist/bin/next start -p 3000`, `node -r ./tracer.js node_modules/@keystone-6/core/bin/cli.js dev --no-db-push`); then `TaskStop` frees the port, so CMS restarts (paywall flag via `SERVER_PAYWALL_ENABLED=true` in the process env, no `.env` edit) need no help. For orphans, ask Rafał to run `! taskkill //PID <pid> //T //F`.
 - After merging `main` changes that touch `apps/cms/schema.prisma`, the shared local DB needs `keystone prisma db push` (on Rafał's word; may need `--accept-data-loss`): otherwise Prisma P2022 and resolvers like `PendingSurvey` swallow the error and return null, so screens silently lose data and a gate still passes. Check the schema is pushed before a gate run.
+- Added 2026-11-02 (entry screens polish gate): a fresh worktree has no `apps/codebusters/__generated__/` (git-ignored) — run `pnpm --filter @devstock/codebusters codegen` before tests, or ~80 test files fail to load `@devstock/api-client`; `.env` files are not in a worktree either (copy them from an earlier stream worktree). Ports 3000/3001 may be held by another session's servers: run the worktree stack on other ports (`PORT=3011` for Keystone, `API_ROOT=http://localhost:3011 NEXTAUTH_URL=… next start -p 3010`). On `next dev` the React Query Devtools overlay intercepts clicks near the bottom — gate on a production build. Public loaders cache fetches for 300 s: to switch gate data (e.g. 0/1/3 feed posts) clear `.next/cache/fetch-cache` and restart `next start`. The first requests right after a server start can miss CMS data (feed hidden); warm the server before measuring. The light theme is reachable logged out via the `ds-theme` cookie — gate both themes.
 
 **Why:** each item cost a gate run or a stall in W2/W3. **How to apply:** before the W4 gate, check these first. Related: [[worktree-session-git-guard]].
