@@ -523,3 +523,8 @@ Format wpisu:
 - dopisano dowód: druga-kontrola-lektora-ocenia-audio-avatarow-spoza-filmu — reguła z wiki zastosowana do chunku 05 (3.2), nadal poza krokiem 4b.
 - Wzorce globalne dotknięte w tej sesji: założony 1 (prosba-o-dane-podana-jako-wariant-z-domyslnym-ok). Patrz log globalny.
 - Brak `nawrót`. Sygnał repo wśród dotkniętych: brak (druga-kontrola-lektora-ocenia-audio-avatarow-spoza-filmu — 2 sesje).
+
+## 2026-11-03 — sesja 1bb3295d-0143-449c-a32a-2455751c1556 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/03-11-2026`: DT-80 #814, model darmowych zadań rozstrzygnięty, indeks `kodozercy-platform` w `fdb3e2f6`, `cb1c79ba` i `82afc6ad`, #814 Done)
+- Bez nowych wzorców repo. Użyte skille (board-tracker, project-index) są globalne.
+- Wzorce globalne dotknięte w tej sesji: założone 2 (stan-faktyczny-zatwierdzany-na-skrocie-zachowania, pod-decyzja-odlozona-w-rozstrzygnietej-znika-z-czekajacych), dowód do 1 (brief-huba-po-decyzji-podjetej-w-sesji). Szczegóły w logu globalnym.
+- Brak `nawrót`.

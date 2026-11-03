@@ -925,3 +925,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - założono: prosba-o-dane-podana-jako-wariant-z-domyslnym-ok (skill: ogólny, typ: porażka) — dwa „ok” na prośbę o limity Haiku 5.5 podaną jako wariant z domyślnym OK, potem pytanie o adres konsoli; liczby po pięciu turach.
 - Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (założone 3, dowód do 1).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: brak.
+
+## 2026-11-03 — sesja 1bb3295d-0143-449c-a32a-2455751c1556 (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/03-11-2026`: DT-80 #814, weryfikacja modelu darmowych zadań w kodzie mobile i CMS, decyzja „Model darmowych zadań (DT-80)”, #814 Done, brief huba `hub-94`; commity `fdb3e2f6`, `cb1c79ba`, `82afc6ad`)
+- założono: stan-faktyczny-zatwierdzany-na-skrocie-zachowania (skill: ogólny, typ: porażka) — „Premium 10” w wariancie, a kod daje subskrybentowi tylko możliwość wybrania 10; pytanie Rafała padło po zamknięciu, zapis przepisany dwa razy.
+- założono: pod-decyzja-odlozona-w-rozstrzygnietej-znika-z-czekajacych (skill: project-index, typ: porażka) — automatyczne 10 zadań odłożone w środku wpisu rozstrzygniętego, poza „Decyzjami czekającymi”.
+- dopisano dowód: brief-huba-po-decyzji-podjetej-w-sesji — `hub-94` kazał zatrzymać się przed zamknięciem #814, zamkniętym ok. 25 min wcześniej na słowo Rafała w sesji; ta sama wiadomość niosła aktualną decyzję „Nie ruszamy tego”.
+- Wzorce repo tej sesji: brak (wpis w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md`).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: brak (brief-huba-po-decyzji-podjetej-w-sesji — 2 sesje).
