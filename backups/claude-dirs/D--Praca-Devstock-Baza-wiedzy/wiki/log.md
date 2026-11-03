@@ -515,3 +515,11 @@ Format wpisu:
 - dopisano dowód: wykonanie-kolejek-skryptami-z-zapisem-po-operacji — skrypty kroku 8 znów pisane od zera w scratchpadzie.
 - Wzorce globalne dotknięte w tej sesji: dowody do 2 (timeout-pytania-podpowiada-kontynuacje — 15 timeoutów, strategia „jedno ponowienie, czat z ⏸, powrót po odpowiedzi”; karta-nowe-issue-dla-rutynowego-przebiegu-skilla — czwarty `/daily` z kartą i bez issue). Patrz log globalny.
 - Brak nowego `nawrót`. Sygnał repo: update-z-deduplikacji-trafia-w-caly-dokument (nawrót) i flaga-niepewnosci-na-szumie-bez-tresci (porażka, 4 sesje) → `/evolve-skill daily`; reszta bez zmian według wcześniejszych wpisów.
+
+## 2026-11-03 — sesja e1d033e0-b255-476e-aac9-b2900ad7d9a9 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/03-11-2026`: lekcja agenty-ai 3.2 w trybie biletu od G4 do G5 — dopasowanie, lektor V4 z kontrolą, avatary MCP, montaż, etap 2, plansza `limity-zapytan` dołożona po pierwszej akceptacji, film zaakceptowany, #828 Done; commity `fbc8e673`…`da6a876a`; PR #846 dnia 02-11 i usunięta gałąź zdalna)
+- założono: plansza-czekajaca-na-dane-przechodzi-przez-bilet (skill: kurs-nagrywanie/kurs-video, typ: porażka) — plansza „po podaniu danych” z G1 wróciła przy G5 i kosztowała drugi render i drugą akceptację.
+- założono: kontrola-lektora-wycisza-poczatek-fonetycznej-nazwy (skill: kurs-video, typ: porażka) — 3 proponowane wyciszenia „EN” z „en osiem en”; wiersz kontroli w `wymowa.md`, potem 0.
+- założono: wpis-karty-o-braku-nieaktualny-po-naprawie (skill: kurs-video, typ: porażka) — wpis `miejsce` o braku planszy przeżył naprawę; `co` zmienione ręcznie.
+- dopisano dowód: druga-kontrola-lektora-ocenia-audio-avatarow-spoza-filmu — reguła z wiki zastosowana do chunku 05 (3.2), nadal poza krokiem 4b.
+- Wzorce globalne dotknięte w tej sesji: założony 1 (prosba-o-dane-podana-jako-wariant-z-domyslnym-ok). Patrz log globalny.
+- Brak `nawrót`. Sygnał repo wśród dotkniętych: brak (druga-kontrola-lektora-ocenia-audio-avatarow-spoza-filmu — 2 sesje).

@@ -187,15 +187,11 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
      `cd tools/course-pipeline && npm run video -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
    - **Silnik `mcp`:**
      a. `npm run video -- <lekcja> --plan-avatara` — wypisze JSON
-        `[{numer, hasz, audio, cel}]` (TTS chunków avatarowych już
-        wygenerowany; ten tryb generuje tylko avatary, więc pełny render po
-        nim policzy łańcuch lekcji od nowa — to zamierzone, avatary HeyGen
-        idą za `cel` i przeżywają).
-        **Lekcja z biletem:** `--plan-avatara` zapisuje znacznik krótszego łańcucha (same avatary), więc
-        następny pełny render lekcji, która ma już `video/lektor/spis.md`, widzi znacznik nieaktualny,
-        generuje narrację od nowa (płatne TTS) i wydaje jeden licznik `tts_regenerations`. Dlatego w lekcji
-        z biletem **nie uruchamiasz `--plan-avatara` między pełnymi renderami**, chyba że regeneracja narracji
-        jest zamierzona. Pierwszy etap 1 lekcji bez `spis.md` jest bezpieczny: nie ma co unieważnić.
+        `[{numer, hasz, audio, cel}]`. Gdy pełny łańcuch lekcji w `video/audio/` jest aktualny, plan bierze
+        `audio` avatarów z niego i nie płaci za TTS. W przeciwnym razie generuje TTS samych chunków avatarowych
+        do `video/audio/avatar-plan/`, z własnym znacznikiem. Plan nigdy nie unieważnia pełnego łańcucha i nie
+        wydaje `tts_regenerations`, więc wolno go uruchomić także między pełnymi renderami lekcji z biletem
+        (#774). Avatary HeyGen idą za `cel` i przeżywają regenerację narracji.
      b. Dla każdej pozycji planu, której plik `cel` **nie istnieje** (istniejący
         = cache, pomiń): przez narzędzia MCP `heygen` (nazwy odkryj w sesji —
         HeyGen może je zmieniać): wgraj `audio` jako asset → utwórz video

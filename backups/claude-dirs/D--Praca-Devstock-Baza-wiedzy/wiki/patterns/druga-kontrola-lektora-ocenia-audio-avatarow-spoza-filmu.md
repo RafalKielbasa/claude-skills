@@ -16,6 +16,10 @@ Pełny render liczy łańcuch TTS od nowa, razem z chunkami avatarów (zob. `bra
   - Pełny render nadpisał mp3 avatarów: 993 114 → 1 001 891 B, 1 072 526 → 1 098 021 B i 986 844 → 989 352 B.
   - Druga kontrola zgłosiła w `01.mp3` przy 0:57.60 „zatrudnianiem” → „zatrudnieniem”.
   - Rozstrzygnęło porównanie długości: `klipy/01.mp4` ma 61,975 s, tyle co avatar HeyGen, a nowe `01.mp3` ma 62,56 s. Uwaga nie poszła do odsłuchu.
+- 2026-11-03, sesja e1d033e0-b255-476e-aac9-b2900ad7d9a9 (id claude.ai niedostępny): lekcja agenty-ai 3.2 (tryb biletu), avatary 01 i 11, chunk zamykający 05.
+  - Reguła z tej strony zastosowana: uwagi do chunku 05 z kontroli po pełnym renderze nie poszły na kartę jako miejsca do odsłuchu.
+  - Na kartę trafił jeden wpis `miejsce` (`zrodlo: lektor`), że te uwagi dotyczą audio spoza filmu, a w audio z planu avatara kontrola wskazała tylko 0:03 „Pętlę” → „pętle” i 0:06 „operację” → „operacje”.
+  - Reguła nadal żyje tylko w wiki, nie w kroku 4b.
 
 ## Rozwiązanie
 Do kroku 4b `kurs-video`: „Na ścieżce `mcp` uwagi do chunków avatarów bierz z pierwszego przebiegu (po 4a), bo ten dźwięk gra w filmie. Drugi przebieg (po 4c) jest miarodajny tylko dla chunków slajdów i screencastów. Uwaga w chunku avatara z drugiego przebiegu dotyczy audio spoza filmu.” Docelowo `kontrola-lektora` powinna dla chunku avatara czytać audio z `video/avatar/NN-<hasz>.mp4`, jeśli plik istnieje.

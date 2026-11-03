@@ -920,3 +920,8 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: karta-nowe-issue-dla-rutynowego-przebiegu-skilla — karta po raporcie jako jedyne ⏸, „ok” na „nie zakładaj” po nocy; czwarta sesja `/daily` bez issue.
 - Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (założony 1, dowody do 5).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: karta-nowe-issue-dla-rutynowego-przebiegu-skilla (4 sesje) → `/evolve-skill board-tracker`.
+
+## 2026-11-03 — sesja e1d033e0-b255-476e-aac9-b2900ad7d9a9 (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/03-11-2026`: lekcja agenty-ai 3.2 od G4 do zaakceptowanego filmu, #828 Done)
+- założono: prosba-o-dane-podana-jako-wariant-z-domyslnym-ok (skill: ogólny, typ: porażka) — dwa „ok” na prośbę o limity Haiku 5.5 podaną jako wariant z domyślnym OK, potem pytanie o adres konsoli; liczby po pięciu turach.
+- Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (założone 3, dowód do 1).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: brak.
