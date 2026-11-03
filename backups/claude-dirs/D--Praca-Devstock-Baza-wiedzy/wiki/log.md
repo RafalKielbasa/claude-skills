@@ -528,3 +528,10 @@ Format wpisu:
 - Bez nowych wzorców repo. Użyte skille (board-tracker, project-index) są globalne.
 - Wzorce globalne dotknięte w tej sesji: założone 2 (stan-faktyczny-zatwierdzany-na-skrocie-zachowania, pod-decyzja-odlozona-w-rozstrzygnietej-znika-z-czekajacych), dowód do 1 (brief-huba-po-decyzji-podjetej-w-sesji). Szczegóły w logu globalnym.
 - Brak `nawrót`.
+
+## 2026-11-03 — sesja 8e329826-e681-498d-a1e3-e48dd7c84bc0 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/03-11-2026`: lekcja agenty-ai 3.3 od redakcji do G5: zgodność, zadania, plansze, automat z biletem (11/35 wykonań), G4 krok 30, lektor V4 (1/1 regeneracji), avatary MCP, montaż, film zaakceptowany, #847 Done; commity `af972ae1`…`2d8b37b6`)
+- założono: rozpoznanie-mowy-pisze-ok-i-liczby-inaczej-niz-scenariusz (skill: kurs-video / kurs-lekcja / kurs-montaz, typ: porażka) — 10 z 11 kandydatów do regeneracji to normalizacje STT; jedyna regeneracja z biletu zmarnowana, fraza planszy z „OK” zablokowała montaż.
+- założono: migawka-startowa-z-wynikami-modelu-zgadywana-zamiast-z-konta (skill: kurs-nagrywanie, typ: porażka) — streszczenia z 3.2 w `start_state` 3.3 napisane od nowa zamiast skopiowane z konta; poprawka `7c059a37`.
+- założono: komunikat-sesji-czatu-n8n-zasmieca-karte-lekcji (skill: kurs-nagrywanie, typ: porażka) — 32 ze 115 linii karty 3.3 to uwaga aria-live „Session: …”.
+- Wzorce globalne dotknięte w tej sesji: dowód do 1 (hash-commita-w-raporcie-spoza-wyniku-narzedzia). Patrz log globalny.
+- Brak `nawrót`. Sygnał repo wśród dotkniętych: brak (nowe wzorce mają po 1 sesji).

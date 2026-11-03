@@ -932,3 +932,8 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: brief-huba-po-decyzji-podjetej-w-sesji — `hub-94` kazał zatrzymać się przed zamknięciem #814, zamkniętym ok. 25 min wcześniej na słowo Rafała w sesji; ta sama wiadomość niosła aktualną decyzję „Nie ruszamy tego”.
 - Wzorce repo tej sesji: brak (wpis w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md`).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: brak (brief-huba-po-decyzji-podjetej-w-sesji — 2 sesje).
+
+## 2026-11-03 — sesja 8e329826-e681-498d-a1e3-e48dd7c84bc0 (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/03-11-2026`: lekcja agenty-ai 3.3 od redakcji do akceptacji filmu, #847 Done)
+- dopisano dowód: hash-commita-w-raporcie-spoza-wyniku-narzedzia — mój `44ab3169` (decyzja G4) 6 s później przepisany amendem innej sesji na `a873222d`; nieaktualny hash przez cały dzień w raportach, `recording-report.md` i śladzie #847, bo ślad był dopisywany, a nie budowany z `git log --since`.
+- Wzorce repo tej sesji: założone 3 (wpis w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md`).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: hash-commita-w-raporcie-spoza-wyniku-narzedzia (4 sesje).
