@@ -29,6 +29,15 @@ Skrypty żyją tylko w scratchpadzie sesji, więc każda nowa sesja pisze je od 
   notatki ma już numer issue (`row … already has an issue`), więc powtórne uruchomienie nie
   dubluje komentarza. Mapę wierszy (`rows-<data>.json`, id → dokładny prefiks wiersza) trzeba było
   pisać ręcznie dla każdego daily.
+- 2026-11-02, sesja 8567a0be-7558-4543-9745-ad7e88f71207 (id claude.ai niedostępny),
+  `/daily 2026-11-02 1200`. Skrypty znów pisane od zera w scratchpadzie, pod innymi nazwami:
+  - `run-similar.cjs` (deduplikacja);
+  - `run-upsert.cjs`: `spawnSync` bez powłoki i `status: indexed` zaraz po każdym upsercie;
+  - `task-bodies.cjs` (body zadań do plików dla `gh`).
+
+  Wynik: 8 wpisów, 2 issue, 2 komentarze, notatka i tablica zgodne. Issue i Backlog szły już
+  pojedynczymi komendami `gh`, a numery do notatki dopisywał `Edit`. Druga sesja, w której cała
+  mechanika kroku 8 powstała od nowa, bo poprzednie skrypty zginęły ze scratchpadem.
 
 ## Rozwiązanie
 Przenieść te trzy operacje do repo jako komendy `kb-client` albo `tools/meeting-queue/`:

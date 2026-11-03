@@ -908,3 +908,15 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: indeks-wiki-koliduje-przy-scalaniu-galezi-dnia — koniec `log.md` przy PR #835, rozwiązany ręcznie, wpisy w kolejności czasu.
 - Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (bez nowych wzorców, skille repo nieużywane).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac (ogólny, kandydat na regułę globalną, nie na `/evolve-skill`).
+
+## 2026-11-03 — sesja 5a729830-7014-4847-af44-dd79cd5db98c (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/02-11-2026`: opcja `tidy_up` automatu nagrywania n8n, commit `46cbace4`, #783)
+- założono: potok-z-tail-maskuje-ubity-proces (skill: ogólny, typ: porażka) — `timeout 590 npx vitest run 2>&1 | tail -40` dał kod 0 bez podsumowania po ucięciu; złapane po braku linii `Test Files`, nie po kodzie.
+- dopisano dowód: commit-bez-pathspec-wciaga-cudzy-indeks — rozwiązanie zadziałało przy pliku (`n8n.js`) edytowanym i commitowanym równolegle przez inną sesję; przed pathspec `git diff` pliku pokazał tylko moje 4 fragmenty.
+- Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (założony 1, dowód do 1).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: brak (commit-bez-pathspec-wciaga-cudzy-indeks — 2 sesje).
+
+## 2026-11-03 — sesja 8567a0be-7558-4543-9745-ad7e88f71207 (id claude.ai niedostępny; Baza wiedzy, gałąź `rafal-kielbasa/02-11-2026`: `/daily 2026-11-02 1200` z bramką i wykonaniem, commit `b34c534e`)
+- dopisano dowód: timeout-pytania-podpowiada-kontynuacje — 15 timeoutów bez rozstrzygnięcia za Rafała; jedno ponowienie narzędziem dało odpowiedź 3 razy na 9, karty w czacie z ⏸ 6 na 6, a powrót do narzędzia po odpowiedzi Rafała przyniósł 15 szybkich odpowiedzi.
+- dopisano dowód: karta-nowe-issue-dla-rutynowego-przebiegu-skilla — karta po raporcie jako jedyne ⏸, „ok” na „nie zakładaj” po nocy; czwarta sesja `/daily` bez issue.
+- Wzorce repo tej sesji: w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md` (założony 1, dowody do 5).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: karta-nowe-issue-dla-rutynowego-przebiegu-skilla (4 sesje) → `/evolve-skill board-tracker`.

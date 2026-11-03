@@ -37,6 +37,13 @@ potem bramkę na `AskUserQuestion`, karta w tekście ginie w przewiniętym czaci
   wygasało 25 razy, więc cała bramka szła w czacie. Rafał odpowiadał na jedno pytanie z ❓ i
   ⏸, a karta wymieniona obok jako druga decyzja nie dostała odpowiedzi. Trzecia sesja, w której
   ta sama karta dla rutynowego przebiegu skończyła się bez issue albo z „nie zakładaj”.
+- 2026-11-02/03, sesja 8567a0be-7558-4543-9745-ad7e88f71207 (id claude.ai niedostępny),
+  `/daily 2026-11-02 1200`. `pool` i `search` („daily notatka spotkania”) przed pierwszym zapisem
+  pliku nie dały trafienia. Karty nie było na starcie ani obok bramki. Poszła dopiero po raporcie
+  z wykonania jako jedyne pytanie z ⏸: „DT-?: Przetworzenie daily 2026-11-02…”, z rekomendacją
+  [A] „nie zakładaj”. Rafał odpowiedział „ok” następnego ranka, więc sesja jest bez przypięcia.
+  Karta w tym miejscu dostała odpowiedź, ale wbrew „Rozwiązaniu” w ogóle powstała. Kosztowała
+  turę, na którą sesja czekała całą noc. To czwarta sesja i czwarty wynik bez issue dla `/daily`.
 
 ## Rozwiązanie
 Sesję, której jedyną zmianą jest przebieg `/daily` (artefakty w `planning/daily/`), a w puli nic nie

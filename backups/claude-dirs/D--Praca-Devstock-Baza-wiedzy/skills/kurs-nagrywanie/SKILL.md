@@ -101,6 +101,10 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    Krok z formularzem n8n (wyzwalacz formularza z plikiem) to działanie `submit_form { plik: materialy/<plik> }` -
    okno formularza przyjmuje rdzeń (`okno: usluga`), plik bierze z katalogu lekcji; „Execute workflow” otwiera
    formularz przy każdym uruchomieniu, „Execute step” na węźle dalej w przepływie - nie (README, „Okno formularza”).
+   Nowa lekcja z n8n dostaje `service_options: { n8n: { tidy_up: true } }`: automat sam wciska Tidy up (skrót
+   `Shift+Alt+T`) po każdym nowym węźle, kiedy kanwa jest odsłonięta, więc w planie nie dopisujesz ręcznych kroków
+   `tidyUp`. Kliknięcia liczone od położenia węzła (`click_canvas: { near, dx, dy }`) ustawiasz pod układ po Tidy up.
+   Lekcje nagrane przed 2026-11-02 zostają bez opcji, chyba że Rafał powie inaczej (README, „service_options.n8n.tidy_up”).
    Tabelę `## Przygotowanie przed nagraniem` z konspektu zapisujesz też jako blok `preparation` w `nagrywanie.yaml`
    (predykaty stanu konta na usługę; tabela predykatów: README, „Przygotowanie jako predykaty”). Pozycja, która nie jest
    predykatem, a jednorazową czynnością ręczną, idzie do `account_setup` w `kurs.yaml` (G1 „bilet produkcyjny”). `przygotowanie <lekcja>`

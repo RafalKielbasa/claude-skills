@@ -43,6 +43,16 @@ sensowną odpowiedzią jest „Usuń z notatki”.
 
   Żadna flaga nie stała na szumie, a Rafał nie wybrał „Usuń z notatki” ani razu. Pierwszy dowód,
   że flagowanie samej treści da się utrzymać. Skill dalej nie zawiera tej reguły.
+- 2026-11-02, sesja 8567a0be-7558-4543-9745-ad7e88f71207 (id claude.ai niedostępny),
+  `/daily 2026-11-02 1200`: 8 flag ⚠, każda z treścią do odczytania, m.in.:
+  - spotkanie Barta z „MORT”;
+  - tożsamość Mówcy D;
+  - data i płatność Tomasza Rudnickiego;
+  - „Master TV” w projekcie z Kaśką.
+
+  Rafał zostawił wszystkie 8 jako niepewne i żadnej nie usunął. Drugi przebieg z rzędu bez flagi na
+  szumie. Koszt przeniósł się w inne miejsce: osiem pytań, na które jedyną odpowiedzią było
+  „Zostaw”, bo Rafał też nie znał rozstrzygnięcia. Reguła wciąż żyje tylko w wiki.
 
 ## Rozwiązanie
 Flagę ⚠ stawiać tylko przy fragmencie, z którego da się odczytać konkretną treść (status, ustalenie,

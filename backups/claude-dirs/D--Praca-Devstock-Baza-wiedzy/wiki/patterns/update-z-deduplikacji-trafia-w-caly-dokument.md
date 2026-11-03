@@ -62,6 +62,16 @@ ruszając `action` — w edytorze `update` nie wygląda na operację niszczącą
     rekomendacją, więc dowód jest słabszy niż przy samodzielnym wyborze Rafała z 2026-10-12.
   - Problem przeżył zmianę: upsert pod `similar_to` zastępuje cały tekst wpisu, a wpis spotkania
     niesie kilka faktów. Korekta jednego z nich zostawia inne bez pokrycia.
+- 2026-11-02, sesja 8567a0be-7558-4543-9745-ad7e88f71207 (id claude.ai niedostępny),
+  `/daily 2026-11-02 1200`. Kolejny przypadek po nawrocie, w 7. sesji z rzędu:
+  - Kontrakt (`docs/spotkania-kolejki.md:123-126`) nadal daje `update` dla korekty faktu, a
+    uzupełnienie z 2026-10-29 („Koryguje:” jako `new`) żyje tylko na tej stronie. Wpis #1 (dev,
+    0,1287) dostał więc `update` na `planning/daily/2026-10-30-0959/5-redesign-termin-release`,
+    bo przesuwał termin wdrożenia redesignu.
+  - Karta pokazała, że nadpisanie skasuje stan na 30.10 (web zrobiony, mobilka dopiero zaczęta).
+    Rekomendowałem „Akceptuj jako nowy”. Rafał przyjął to po dwóch timeoutach, wpisując „ok”.
+  - Linii „Koryguje: …” w tekście nowego wpisu nie dodałem, bo kontrakt jej nie zna. Uzupełnienie
+    z tej strony zostało zastosowane tylko w połowie: karta tak, treść wpisu nie.
 
 ## Rozwiązanie
 `action: update` tylko wtedy, gdy `similar_to` jest wpisem spotkania (prefiks `planning/`) i to

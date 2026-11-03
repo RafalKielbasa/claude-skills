@@ -20,9 +20,21 @@ Chrome), więc drugi przebieg łatwo odpalić, zanim pierwszy się skończy.
   agenty-ai 2.3). Według podsumowania sesji dwa równoległe przebiegi zawisły przy bezczynnym CPU i oba
   zatrzymałem `TaskStop`. Potem jeden przebieg z `--reporter=dot` do pliku logu: „Test Files 85 passed | 1
   skipped (86); Tests 1016 passed | 5 skipped (1021)”, 2628 s.
+- 2026-11-02, sesja 5a729830-7014-4847-af44-dd79cd5db98c (id claude.ai niedostępny; opcja lekcji `tidy_up`,
+  #783).
+  - Pierwsze uruchomienie poszło wbrew rozwiązaniu tej strony: na pierwszym planie, `timeout 590 npx vitest
+    run 2>&1 | tail -40`. Po 10 minutach dało pustą linię `RUN` bez podsumowania i kod 0 od `tail`.
+  - Drugie zgodnie z rozwiązaniem: w tle, `--reporter=dot`, do pliku w katalogu tymczasowym sesji. Wynik:
+    „Test Files 94 passed | 1 skipped (95)”, „Tests 1160 passed | 4 skipped (1164)”, 2520 s, bez zawieszenia.
+  - Wniosek: reguła stoi tylko w wiki, a w chwili odpalania testów nikt jej nie czyta. Kosztowało to
+    10 minut.
+  - Maskowanie kodu wyjścia przez `| tail` opisuje wzorzec globalny `potok-z-tail-maskuje-ubity-proces`.
 
 ## Rozwiązanie
 W `tools/nagrywanie` uruchamiaj naraz najwyżej jeden pełny `vitest run`: w tle, z `--reporter=dot`, z wyjściem do
 pliku logu w katalogu tymczasowym sesji. Przed startem sprawdź, czy nie biegnie już inny (procesy `node`
 z `vitest` w linii komend). W trakcie pracy uruchamiaj tylko pliki testów, których dotyczy zmiana. Gdy log nie
 rośnie przez kilka minut przy bezczynnym CPU, uznaj przebieg za zawieszony, zamiast czekać na limit.
+Pełny zestaw trwa 40–45 minut (2520–2628 s), więc nigdy nie uruchamiaj go na pierwszym planie: limit narzędzia
+to 600 s. Kandydat na stałe miejsce reguły: sekcja testów w `tools/nagrywanie/README.md` albo skill
+`kurs-nagrywanie` (zmiany silnika), bo wiki nie jest czytane przed komendą testów.

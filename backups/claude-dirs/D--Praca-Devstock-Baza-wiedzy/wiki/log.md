@@ -499,3 +499,19 @@ Format wpisu:
 - Bez nowych wzorców (skille repo nie były używane; pracowały globalne: podsumuj-sesja-claude).
 - Wzorce globalne dotknięte w tej sesji: założone 2 (commit-podsumowania-po-scaleniu-pr-zostaje-poza-main, usuniecie-worktree-poprzedzone-porownaniem-plikow-ignorowanych); dowody do 2 (straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, indeks-wiki-koliduje-przy-scalaniu-galezi-dnia). Patrz log globalny.
 - Sygnał repo: bez zmian według wcześniejszych wpisów.
+
+## 2026-11-03 — sesja 5a729830-7014-4847-af44-dd79cd5db98c (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/02-11-2026`: opcja lekcji `service_options.n8n.tidy_up` w automacie nagrywania, Tidy up skrótem po każdym nowym węźle, commit `46cbace4`, #783; praca 2026-11-02 wieczorem, przypięcie i ślad 2026-11-03)
+- założono: nowy-klucz-modelu-nagrania-hashowany-tylko-niepusty (skill: kurs-nagrywanie, typ: sukces) — hash policzony na starym kodzie i zablokowany literałem w teście; `service_options` w hashu tylko niepuste, nagrane lekcje bez zmiany hashu.
+- dopisano dowód: pelny-suite-nagrywanie-dwa-naraz-zawiesza-sie — pierwsze uruchomienie na pierwszym planie z `timeout 590 … | tail -40` ucięte po 10 min; drugie wg reguły strony (tło, `--reporter=dot`, log) przeszło w 2520 s; reguła żyje tylko w wiki.
+- Wzorce globalne dotknięte w tej sesji: założony 1 (potok-z-tail-maskuje-ubity-proces); dowód do 1 (commit-bez-pathspec-wciaga-cudzy-indeks — ten sam `n8n.js` commitowany równolegle przez sesję 3.2, `git diff` pliku przed commitem z pathspec). Patrz log globalny.
+- Sygnał repo: pelny-suite-nagrywanie-dwa-naraz-zawiesza-sie — 2 sesje, próg „> 2” jeszcze nie; reszta bez zmian według wcześniejszych wpisów.
+
+## 2026-11-03 — sesja 8567a0be-7558-4543-9745-ad7e88f71207 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/02-11-2026`: `/daily 2026-11-02 1200`, bramka na 8 ⚠, 8 wpisów, 7 zadań, wykonanie 2026-11-02 wieczorem: #843 (DT-96), #844 (DT-97), komentarze #662 i #736, publikacja, commit `b34c534e`; sesja bez przypięcia)
+- założono: cytat-w-karcie-przepisany-z-pamieci (skill: daily, typ: porażka) — cztery pomyłki w cytatach i kartach jednej bramki („kahuta”/„kaputa”, „chopaki”/„chłopaki”, zmyślone „Kozakiewicz”, nieuzasadnione „nie czytałem surowego”); trzy wykryte przy ponownym składaniu karty, a „Kozakiewicz” zauważony po odpowiedzi Rafała i przemilczany.
+- dopisano dowód: update-z-deduplikacji-trafia-w-caly-dokument — wpis #1 jako `update` dla korekty terminu wg kontraktu, Rafał „nowy”; uzupełnienie z 2026-10-29 („Koryguje:”) nadal tylko w wiki.
+- dopisano dowód: flaga-niepewnosci-na-szumie-bez-tresci — 8 flag z treścią, 8 × „Zostaw”, żadnej na szumie.
+- dopisano dowód: niepewny-fragment-cytowany-zamiast-przypisany — „Tak, Szymon?” odebrał Bart, Mówca D bez imienia mimo jedynego wolnego imienia.
+- dopisano dowód: drobne-zadanie-jednej-osoby-odrzucane-przy-bramce — 3 × „Odrzuć” przyjęte, bez nawrotu.
+- dopisano dowód: wykonanie-kolejek-skryptami-z-zapisem-po-operacji — skrypty kroku 8 znów pisane od zera w scratchpadzie.
+- Wzorce globalne dotknięte w tej sesji: dowody do 2 (timeout-pytania-podpowiada-kontynuacje — 15 timeoutów, strategia „jedno ponowienie, czat z ⏸, powrót po odpowiedzi”; karta-nowe-issue-dla-rutynowego-przebiegu-skilla — czwarty `/daily` z kartą i bez issue). Patrz log globalny.
+- Brak nowego `nawrót`. Sygnał repo: update-z-deduplikacji-trafia-w-caly-dokument (nawrót) i flaga-niepewnosci-na-szumie-bez-tresci (porażka, 4 sesje) → `/evolve-skill daily`; reszta bez zmian według wcześniejszych wpisów.

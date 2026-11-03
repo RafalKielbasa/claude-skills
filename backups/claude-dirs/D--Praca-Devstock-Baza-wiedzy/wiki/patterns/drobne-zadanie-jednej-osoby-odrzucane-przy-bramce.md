@@ -44,6 +44,15 @@ wprost, wzorzec opiera się na tym, które zadania odrzucił. Obserwacja do potw
 
   Zadania na więcej niż krok przeszły z „Akceptuj”, np. #809 (DT-78, proces równoległych zmian
   web i mobile, bez wykonawcy). Nawrotu brak.
+- 2026-11-02, sesja 8567a0be-7558-4543-9745-ad7e88f71207 (id claude.ai niedostępny),
+  `/daily 2026-11-02 1200`. Trzy drobne karty, każda z „Odrzuć (Rekomendowane)” jako [A], wszystkie
+  trzy przyjęte (#4 po dwóch timeoutach, wpisując „ok”):
+  - #2 „Namiar na Tomasza Rudnickiego dla Rafała”;
+  - #3 „Wyłączyć płatny Circle” (Bart, „Zaraz, od razu wyłączę”);
+  - #4 „Rozmowa z Łukaszem (FUD) o Stanisławie na pół etatu” (Bart).
+
+  Zadanie bez właściciela z decyzją do podjęcia przeszło z „Akceptuj”: #843 (DT-96, miejsce
+  Stanisława w zespole). Nawrotu brak.
 
 ## Rozwiązanie
 Action item, który jedna osoba zadeklarowała dla siebie i który mieści się w jednym krótkim kroku

@@ -31,6 +31,12 @@ już w nim jest.
   je z drzewa roboczego. Commit `055ff56f` poszedł przez `GIT_INDEX_FILE` (wersje „HEAD + moja linia” i
   „HEAD + mój wpis”), a potem `git restore --staged` dla tych ścieżek w prawdziwym indeksie. W drzewie
   zostały wyłącznie cudze zmiany.
+- 2026-11-02, sesja 5a729830-7014-4847-af44-dd79cd5db98c (id claude.ai niedostępny; Baza wiedzy, opcja
+  `tidy_up` automatu n8n, #783). Rozwiązanie zadziałało w trudniejszym wariancie: równoległa sesja lekcji 3.2
+  edytowała i commitowała ten sam `kursy/agenty-ai/_nagrywanie/uslugi/n8n.js` (ostatnie trzy commity pliku).
+  Pathspec bierze cały plik z drzewa, więc przed commitem sprawdziłem `git diff` tego pliku: były w nim tylko
+  4 moje fragmenty. Dopiero potem `46cbace4` z pathspec, bez `ticket.yaml` 3.2 i bez `planning/daily/…`
+  innej sesji.
 
 ## Rozwiązanie
 W checkoucie dzielonym z innymi sesjami commituj zawsze z pathspec: `git commit -m "…" -- <ścieżka>

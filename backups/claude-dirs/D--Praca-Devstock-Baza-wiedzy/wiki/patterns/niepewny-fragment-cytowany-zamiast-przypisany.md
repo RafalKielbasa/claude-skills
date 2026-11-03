@@ -54,6 +54,15 @@ jest błędne; cytat z ⚠ zostawia decyzję człowiekowi i nie wchodzi do kolej
       zamieniona na „Mówca A”, a po wyborze Rafała z powrotem na „Rafał”.
   - Podpowiedź z pamięci ma trafiać na kartę, nie do notatki. Pokusa jest największa, gdy
     hipoteza sprawdzała się w poprzednich dailych tej samej sesji.
+- 2026-11-02, sesja 8567a0be-7558-4543-9745-ad7e88f71207 (id claude.ai niedostępny),
+  `/daily 2026-11-02 1200`, sześć etykiet, cztery zidentyfikowane (A Rafał, B Bart, C Grzegorz,
+  F Wiktor):
+  - Pułapka: Rafał pyta „Tak, Szymon? Czy dzisiaj w końcu nie?” (l. 34), a odpowiada Speaker B,
+    czyli Bart. Wywołanie po imieniu nie identyfikuje więc D jako Szymona, mimo że lista obecnych
+    z otwarcia („Bartek, Wiktor, Grzegorz, Szymon i Rafał”) zostawia go jako jedyne wolne imię.
+    Mówca D został Mówcą D, czyli bez eliminacji.
+  - Karta ⚠ „kto mówi” nie miała hipotezy, bo jedyna dostępna byłaby eliminacją. Rafał wybrał
+    „Zostaw jako niepewne”.
 
 ## Rozwiązanie
 Utrzymać obie reguły bez złagodzeń. Niejasną nazwę własną próbować rozstrzygnąć z innego źródła w
