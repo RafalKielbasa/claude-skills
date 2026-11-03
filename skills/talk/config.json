@@ -2,7 +2,8 @@
   "allow": [
     "notatki",
     ".claude",
-    "baza-wiedzy"
+    "baza-wiedzy",
+    "fit-body-business"
   ],
   "dialogRoot": "C:/Users/rafal/hub-data",
   "agent": {
