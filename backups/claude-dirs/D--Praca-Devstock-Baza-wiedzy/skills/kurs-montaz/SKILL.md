@@ -289,6 +289,11 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
         `od`. It is written as `[tStart, 0]` and handled by the lead-in rule below. Its action is the one the
         sentence names: a `close_node`, `zoomToFit` or `logsToggle` at `od` that the sentence does not name is the
         tail of the previous step, so pin the `+` click or the opened node after it.
+      - A lead-in moves everything before its action into the previous paragraph. Before writing one over a
+        `close_node` or a click, read that paragraph's last stretch in `sync-report.md`. With `R < N` the moved
+        action plays early and its result holds under the narrator: in 3.1, 7:6 showed the empty canvas for 6.3 s under
+        a sentence about the panel. Then write no lead-in and accept the no-anchor flag; an inner pin can still place
+        the named action (5:5 in 3.1).
       - A first sentence can name an action recorded in the previous paragraph's range (a step with
         `bez_narracji: true` in `video/nagrywanie.yaml`, 9:8 "Uruchamiam jeszcze raz" in 3.2). Write `[tStart, 0]` here
         too, with `tStart` before `od`: the shared boundary moves back. If it cannot move, `sync` stops and says so.
@@ -306,7 +311,10 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
       that `K` tile shows the old value. A sentence whose start is marked `~` has no cut point: do not anchor it, anchor its neighbour.
       The rows of the sheet can be shifted against the sentences (3:6 in 3.2: the "Wybieram" row sits in a comma pause).
       The speech-to-text check of `sync` names the right silence; pin the cut point of the row standing in that silence,
-      even when that row shows another sentence.
+      even when that row shows another sentence. When no row stands in that silence (7:5 in 3.1), pin the middle of the
+      silence; the error gives only the sentence's second, so measure the silence with `wykryjCisze` (`src/montaz-zdania.js`).
+      Typing reads as a standing screen, so a `compose_prompt` can run ahead of the narrator reading it: pin each read
+      line to the moment it starts typing, because a pin splits the still range (7:3 in 3.3).
    3. Run `npm run montaz -- sync <lekcja> [--segment=N]`. It recomputes from `kotwice`, so it can run
       again after every correction, except for the boundaries a run moves: a lead-in (applied and removed from `kotwice`)
       and a hand-over under a board (step 4). Both stay moved, and a pin later corrected past the new `do` is refused as out of range.
@@ -335,7 +343,9 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    6. `npm run montaz -- sprawdz <lekcja> [--segment=N]`, then `probka`/`kontrola` as in step 5. Besides the
       A, Z and R tiles, `kontrola` adds a `K` tile after every anchor (`K1`, `K2`…) next to the sentence
       pinned there. Open every `K` tile: the action the sentence names must be on screen at that
-      moment. A lead-in that `sync` consumed has no `K` tile: its check is the paragraph's `A` tile. Fix a wrong pin in `kotwice`, run `sync` again and repeat until all `K` tiles are right,
+      moment. A lead-in that `sync` consumed has no `K` tile: its check is the paragraph's `A` tile and the previous
+      paragraph's `Z` tile, which shows what that paragraph now holds under the narrator. No `K` tile can show that,
+      because no pin is wrong. A highlight's frame can show it too. Fix a wrong pin in `kotwice`, run `sync` again and repeat until all `K` tiles are right,
       before rendering. A `K` tile's label comes from the nearest row of the sheet, so a shifted row labels it with the
       wrong sentence (3:6 in 3.2): trust the pin, not the label. `montaz render` overwrites its own
       `nagranie-z-lektorem.mp4` without a copy, so copy the old one to `video/archiwum/` first if it may be needed.
