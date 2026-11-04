@@ -22,6 +22,11 @@ step of the CLI races with it or hits an archived item.
   cleanly. `close --ref devstock-org/devstock-team#355 --reason not_planned` returned
   `"gh: The item is archived and cannot be updated"`; the issue was `CLOSED`/`NOT_PLANNED`, its card
   archived earlier that day.
+- 2026-11-04, sesja e0cd735e-fa23-4ebd-8d25-7d8684be5ab4 (id claude.ai niedostępny; Baza wiedzy): `status --ref
+  devstock-org/devstock-team#851 --to done` after Rafał's „Uważam że issue #851 jest do zamknięcia” returned
+  `"GraphQL: Could not close the issue. (closeIssue)"`, exit 1. The skill's interim rule worked: one
+  `gh issue view 851 --json state,stateReason,closedAt` showed `CLOSED`/`COMPLETED` at 10:31:08Z, no retry.
+  The later `trail` on the same issue returned `closed: true`, as expected.
 
 ## Rozwiązanie
 In the CLI: after a failing step, read the issue state and board status and return `ok: true` with a

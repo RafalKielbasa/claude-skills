@@ -27,6 +27,13 @@ nie sprawdza, czy z trasy da się trafić tapnięciami. W expo-router każdy pli
   z kodem polecającym. Plan, inwentarz („Gate data”), seed W4 i trasa `share-card` tego nie sprawdziły; zapytanie
   `checkUserId { ownedReferralCodes }` do lokalnego CMS dało `null` dla każdego seedowanego użytkownika. Wyszło
   dopiero na zrzucie przebiegu 1; naprawione trasą `share-card-cta` ze stubem `getShareData` (bez zapisu do bazy).
+- 2026-11-04, sesja e0cd735e-fa23-4ebd-8d25-7d8684be5ab4 (id claude.ai niedostępny; Baza wiedzy, plan
+  `content-deploy-vimeo-upload-plan-1`). Tu brakowało ogniwa z innej części projektu. Krok odbioru (d): „Rafał
+  odtwarza jeden film na stagingu web, w aplikacji mobilnej i w podglądzie CMS”. Po wgraniu 15 filmów wyszło, że
+  żadna lekcja na stagingu nie ma aktywności wideo (`platformIds` lekcji 2.1: tylko `article`, `quiz`,
+  ćwiczenie). Droga „ID w `lekcja.yaml` → aktywność → strona lekcji” to zakres następnej części
+  (`content-deploy-video-activity`, #852). Rafał: „publikacja będzie działać dopiero po implementacji zadania
+  w którym kurs publikuj tworzy video acticity”. Krok przeniesiony do odbioru #852, a plan 1 zamknięty bez niego.
 
 ## Rozwiązanie
 Każdy wiersz skryptu bramki zaczyna się od drogi do ekranu: tapnięcia od ekranu startowego albo komenda deep
@@ -34,4 +41,7 @@ linka do wklejenia. Drogę wyznacz z kodu, szukając `router.push`, `router.navi
 bez żadnego wejścia z aplikacji to ustalenie dla użytkownika przed bramką, z wariantem: dopisać wejście albo
 sprawdzić przez deep link. Nie odkrywaj go dopiero w trakcie bramki. To samo dla stanu zależnego od danych
 (render warunkowy, np. CTA tylko przy kodzie polecającym): przy pisaniu trasy bramki nazwij dane, które ten stan
-wywołują, i jednym zapytaniem do lokalnego API sprawdź, że seed albo stub je dostarcza.
+wywołują, i jednym zapytaniem do lokalnego API sprawdź, że seed albo stub je dostarcza. Przy kroku odbioru planu
+rozpisz drogę od wyniku zadania do miejsca, w którym użytkownik go sprawdza, ogniwo po ogniwie, i przy każdym
+ogniwie wpisz, która część projektu je dostarcza. Ogniwo z części jeszcze niezbudowanej to ustalenie przy pisaniu
+planu: krok idzie do odbioru tamtej części albo dostaje zastępczą drogę (np. ręczna aktywność w CMS).

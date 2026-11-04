@@ -42,12 +42,20 @@ odtwarzalny z `git log`. Diff jest jednak funkcja dwoch stanow plikow, nie dwoch
   w trakcie runu.
 
 - 2026-09-22, sesja session_01FoJzsTt4AksGtALq4JXv7T: ten sam plan wznowiony po sześciu dniach, ruling o migawkach **uchylony**. Globalne zasady użytkownika zmieniły się 2026-09-18 i to repo commituje bez pytania, więc paczki review poszły z prawdziwych zakresów `BASE..HEAD`, a obejście z `diff -u` na kopiach okazało się niepotrzebne. Wniosek na przyszłość: „No commits" w Global Constraints planu to zapis polityki repo **z dnia pisania planu**, nie wymaganie zadania - przy wznowieniu planu po przerwie sprawdzić tę pozycję (i zapisany baseline testów, tu 121 wobec faktycznych 128) wobec aktualnego CLAUDE.md, zanim się ją wykona.
+- 2026-11-04, sesja e0cd735e-fa23-4ebd-8d25-7d8684be5ab4 (id claude.ai niedostępny; Baza wiedzy, plan
+  `content-deploy-vimeo-upload-plan-1`, zadania 3, 3a, 6). Nowa przyczyna braku commitów, choć repo commituje
+  samo: commity czekały na decyzję o gałęzi. Gałąź dnia 03.11 była niescalona, a `CLAUDE.local.md` każe wtedy
+  zapytać. Rafał rozstrzygnął to dopiero po recenzji końcowej („D3 B”). Paczki rundy 0 dla nowych plików szły
+  z `git diff --no-index /dev/null <plik>`, poprawki z migawek. Odstępstwo od „Rozwiązania”: stanu po
+  implementacji zadania 3 nie zapisałem przed pierwszą rundą poprawek, więc migawkę rundy 0 odtworzyłem
+  `awk` z linii `+` paczki. Zadziałało, ale tylko dlatego, że plik był nowy w całości.
 ## Rozwiazanie
 W repo bez commitow per zadanie: na starcie zapisz ruling o migawkach w ledgerze, przed kazdym
 dispatchem kopiuj pliki zadania do katalogu roboczego planu, a paczke review buduj jako `diff -u`
 migawki z drzewem. Numery testow i sciezki plikow podawaj recenzentowi wprost, bo `git log` nie
 opowie historii zadania. Migawke odswiezaj po kazdej rundzie poprawek, inaczej kolejna paczka
-niesie cudze zmiany.
+niesie cudze zmiany. Runda 0 to sama implementacja: migawkę stanu po raporcie implementera zrób
+przed dispatchem recenzenta, nie dopiero przed pierwszą poprawką.
 
 Migawke rob dla KAZDEGO zadania, takze dla plikow nietknietych wczesniej — `git diff` wobec HEAD
 jest odporny na wlasne zmiany, ale nie na to, ze uzytkownik commituje w trakcie pracy subagenta,

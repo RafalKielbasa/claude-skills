@@ -33,6 +33,10 @@ relative to that directory (`../../kursy/...`). When `npm run` itself fails on W
 
 ## Pace comes first (overriding rule)
 
+(A lesson in scope of the narration sync - `kurs.yaml` `montaz.narration_sync_from` - follows "Narration
+sync" in step 4 instead of the 4 s pause limit, the 1.25× warning and the hold + pause advice below; every
+other rule of this section still applies. A lesson out of scope follows this section unchanged.)
+
 The viewer must always have enough time to understand what is on screen. The montage is calm and
 readable first, engaging second, and never chaotic or rushed. Matching every cut to the narration
 frame by frame is not the goal; understanding is.
@@ -112,6 +116,8 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    `zrodla.json` and `edl.json` already exist, with every paragraph's recording range, waits and
    skipped variants taken from the automation's step markers. Skip steps 2-4 (sources, index, ranges)
    and never move `od`/`do`, `oczekiwania` or `pomin` - they match the voice-over frame by frame.
+   The one exception is a lesson in scope of the narration sync: there `sync` (and only `sync`) moves
+   `od`/`do` and removes execution waits; do not skip the "Narration sync" subsection of step 4 there.
    **Course without kurs.yaml `oprawa`:** ask Rafał only for intro and outro and write them with the
    sources gate, passing the recordings exactly as listed in the existing `zrodla.json`, in the same
    order (EDL `zrodlo` indexes point into that list). **Course with `oprawa`** (`oprawaKursu: true` in
@@ -229,6 +235,101 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
      share ends on a held frame, which is fine.
    Check with `npm run montaz -- sprawdz <lekcja> [--segment=N]`. All errors come at once; fix
    them all before the next check.
+   **Narration sync - lessons in scope only** (spec `docs/superpowers/specs/2026-11-04-nagrywanie-narration-sync-design.md`).
+   A lesson is in scope when `kurs.yaml` has `montaz: { narration_sync_from: "M.L" }` and the lesson's
+   module and lesson number are at or after it (`agenty-ai`: from 3.1). `sync-sheet` and `sync` refuse a
+   lesson outside the key and say why; a course without the key never syncs. A lesson out of scope follows
+   every rule above and in "Pace comes first" unchanged - do not use this subsection there. Rafał explicitly
+   asking for an older lesson means lowering the key in `kurs.yaml` or passing `--poza-zakresem` to both
+   commands (the report records it). On the sync path the following replaces the "Fit" bullet, the 4 s limit
+   on `pauzy` and the "hold + pause" advice of "Pace comes first":
+   - The 4 s pause limit does not apply: a pause in a synced paragraph may be up to 10 s. The "Fit"
+     paragraph and the 1.25× warning do not apply either; the report flags tempo above 4× instead. Do not
+     buy time with a pause or a cut by hand: `sync` owns `pauzy` of a synced paragraph and overwrites them.
+   - Only `sync` moves `od`/`do` (the lead-in rule below). `oczekiwania` that overlap an execution
+     (`run_workflow`, `run_step`, `send_chat_message`) are removed by `sync`; a wait on a still screen
+     keeps shrinking to 0.5 s.
+   - The rule: a stretch runs from a sentence pinned to an action up to the next pinned sentence, or to
+     the paragraph's end. With `N` its narration time, `R` its recording time and `E = R - N`: if `R <= N`
+     the picture plays at normal speed and the last frame of the action holds until `N` ends, no break;
+     if `0 < E <= 10 s` it plays at normal speed for `N`, then a silent break of `E` seconds; if `E > 10 s`
+     it plays at normal speed for `N`, then a silent break of exactly 10 s with the excess sped up evenly
+     to fit (tempo `E / 10`). Waiting for an execution counts as action.
+   Procedure, in this order:
+   1. If the lesson has boards (`video/plansze.yaml`), run `npm run montaz -- plansze <lekcja>` first
+      (`sync` needs its speech-to-text cache; cents on the first run, cached by file hash - if it asks
+      for a paid first run on a lesson, stop and tell Rafał). Then run
+      `npm run montaz -- sync-sheet <lekcja> [--segment=N]`. It writes `video/montaz/work/sync-sheet.md`:
+      for each paragraph the sentences (start, cut point, text), the actions of its recording range
+      (step number, `akcja`, `lokator`, `tStart`, `tKoniec`), its waits with their kind (`execution` or
+      `still`) and any board covering it, in narration seconds. Actions come from `znaczniki.json` next
+      to the raw recording named in `zrodla.json`.
+   2. Write `kotwice` into `edl.json` for every synced paragraph, replacing what the paragraph had, by
+      these rules. A `kotwice` pair is `[recording second, paragraph narration second]`; the narration
+      second is the sentence's "cięcie pauzy" value from the sheet (`zdania`), because a break must sit
+      in the narrator's silence.
+      - Pin a sentence that names a visible action to that action's `tStart`.
+      - Pin a sentence about a result to the `tKoniec` of the action that produced it.
+      - Two actions in one sentence: pin the first, the second follows at normal speed.
+      - A sentence that only explains gets no anchor and stays in the current stretch.
+      - A sentence that starts under a board gets no anchor. An action there is pinned to the first
+        sentence after the board.
+      - The first sentence of a paragraph needs an anchor only when its action starts more than 1 s after
+        `od`. It is written as `[tStart, 0]` and handled by the lead-in rule below. Its action is the one the
+        sentence names: a `close_node`, `zoomToFit` or `logsToggle` at `od` that the sentence does not name is the
+        tail of the previous step, so pin the `+` click or the opened node after it.
+      - A first sentence can name an action recorded in the previous paragraph's range (a step with
+        `bez_narracji: true` in `video/nagrywanie.yaml`, 9:8 "Uruchamiam jeszcze raz" in 3.2). Write `[tStart, 0]` here
+        too, with `tStart` before `od`: the shared boundary moves back. If it cannot move, `sync` stops and says so.
+      - Both values must increase. When the narration order differs from the recording order, use a
+        `wstawka` as today.
+      Marker coverage is partial: `elementy` exist only for actions with a located element (the drag in
+      3:2, "Przeciągam do niego identyfikator", has none, so take it from the end of the previous element).
+      When a sentence has no matching row, or the source has no markers (a human retake), read the second
+      from frames (`klatka`, `indeks --od=S --do=S --co=1`) as above; for such a source decide each wait's kind
+      from frames too. The step's `dzialania` in `video/nagrywanie.yaml` list what the rows leave out (`rename_node`,
+      `pick_resource`, `set_parameter`, `switch_tab`, `compose_prompt`), which tells you what to look for. A result
+      that appears with a `switch_tab` or an `open_node` is pinned to the frame where it appears, not to the end of
+      the action before it. A sentence naming a typed value is pinned to the pointer leaving for that field: the nearest
+      row can be a `hover` of another field (2:5 "Limit dwadzieścia" in 3.2 sits after `hover returnAllField`), and
+      that `K` tile shows the old value. A sentence whose start is marked `~` has no cut point: do not anchor it, anchor its neighbour.
+      The rows of the sheet can be shifted against the sentences (3:6 in 3.2: the "Wybieram" row sits in a comma pause).
+      The speech-to-text check of `sync` names the right silence; pin the cut point of the row standing in that silence,
+      even when that row shows another sentence.
+   3. Run `npm run montaz -- sync <lekcja> [--segment=N]`. It recomputes from `kotwice`, so it can run
+      again after every correction, except for a lead-in: a run applies it and removes it, and the boundary stays moved.
+      To change a lead-in, restore `od`/`do` from `video/montaz/archiwum/edl-before-sync-<time>.json`, the copy it makes
+      before its first write, and pair again. It: applies the lead-in rule (the previous
+      paragraph's `do` and this paragraph's `od` both become `tStart`, nothing is cut; a lesson's first
+      paragraph or a change of source keeps its lead-in and goes in the report), computes each stretch,
+      replaces `pauzy`, removes `execution` waits, sets `narration_sync: true`, checks the silences and
+      the speech-to-text cut points (a mismatch above 0.3 s is an error naming the right silence;
+      without a cache the check is skipped and the report says so), and stops with all errors at once.
+      It writes `video/montaz/work/sync-report.md`: film length, per paragraph the stretches with `N`,
+      `R`, break, hold and tempo, tempo above 4×, paragraphs with two or more actions and no anchor, and
+      excluded paragraphs. Paragraphs with `pomin`, `video_inserts` or `rozmycie` stay on the old rules
+      and are listed; a `do: null` paragraph has nothing to sync. If an overlay of that kind is added
+      to an already synced paragraph, `sync` stops naming it: remove the overlay, run `sync`, add it back
+      with a rectangle and times read from the new picture.
+   4. Boards: the recording does not advance under a board. `sync` holds one frame under it and starts
+      the action at the first sentence after the board; no silent break sits under a board (any other
+      break there is an error naming the sentence). A paragraph with no sentence starting outside a
+      board hands its recording range to the next paragraph of the same source; the report lists an
+      action that stays hidden.
+   5. Re-read every highlight the report lists (`zoom`, `ramka`, `skupienie`, `strzalka`, `napis` in a
+      synced paragraph) with `npm run montaz -- klatka <lekcja> --akapit=ID --czas=S`. Highlights are
+      timed in narration seconds but the picture under them has changed, so each rectangle is read
+      again from the new frame.
+   6. `npm run montaz -- sprawdz <lekcja> [--segment=N]`, then `probka`/`kontrola` as in step 5. Besides the
+      A, Z and R tiles, `kontrola` adds a `K` tile after every anchor (`K1`, `K2`…) next to the sentence
+      pinned there. Open every `K` tile: the action the sentence names must be on screen at that
+      moment. Fix a wrong pin in `kotwice`, run `sync` again and repeat until all `K` tiles are right,
+      before rendering. A `K` tile's label comes from the nearest row of the sheet, so a shifted row labels it with the
+      wrong sentence (3:6 in 3.2): trust the pin, not the label. `montaz render` overwrites its own
+      `nagranie-z-lektorem.mp4` without a copy, so copy the old one to `video/archiwum/` first if it may be needed.
+   7. Run the final `npm run montaz -- sync <lekcja> --karta` once, after the last correction: it adds
+      the flagged places from the report to the lesson card as places to watch. Do not run it on every
+      iteration.
    **Boards (plansze) - only when `kurs.yaml` has `montaz: { plansze: true }` and the lesson has
    `video/plansze.yaml`** (spec `docs/superpowers/specs/2026-10-06-plansze-w-montazu-design.md`).
    A board is a slide in the course theme (points revealed one by one, optional pixel-art loop) or a

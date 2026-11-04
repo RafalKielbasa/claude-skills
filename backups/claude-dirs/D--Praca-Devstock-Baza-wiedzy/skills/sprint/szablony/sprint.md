@@ -38,6 +38,18 @@ PIERWSZY SPRINT: „— (pierwszy sprint)”. -->
 Na końcu „### Bez osoby” dla pozycji bez przypisania (tylko gdy jakaś jest). Po wykonaniu
 „nowe: …” zamienia się w odwołanie utworzonego issue. -->
 
+## Dostępność i obciążenie
+
+| Osoba | DT | SaaS | CB | CB-mobile | Razem |
+|---|---|---|---|---|---|
+<!-- | Grzegorz | — | — | 2,5/3 | 1/1 | 3,5/4 | -->
+
+<!-- Komórka to zaplanowane/dostępne, w dniach roboczych: zaplanowane = suma estymat zadań sprintu
+tej osoby w projekcie (zadanie kilku osób dzielone po równo), dostępne = dostępność podana na
+spotkaniu. „—”, gdy oba są 0. Jeden wiersz na osobę z listy zespołu, w jej kolejności. Na końcu
+wiersz „Bez osoby” z samymi zaplanowanymi dniami zadań bez osoby z listy zespołu (tylko gdy takie
+są), np. | Bez osoby | 1 | — | — | — | 1 |. -->
+
 ## Przeniesione i odrzucone
 
 <!-- - przeniesione: kodozercy/code-busters#1188 Ranking tygodniowy — cache zapytań

@@ -43,10 +43,20 @@ już w nim jest.
   Pathspec wziąłby cały plik. Patch z samym hunkiem `@@ -455` (`git diff -U0` przefiltrowany `awk`) wszedł do
   prawdziwego indeksu przez `git apply --cached --unidiff-zero`. `git diff --cached` pliku pokazał tylko moją
   linię, a linia 357 została w drzewie. Tańsze od `GIT_INDEX_FILE`, gdy w indeksie nie ma cudzych wpisów.
+- 2026-11-04, sesja e0cd735e-fa23-4ebd-8d25-7d8684be5ab4 (id claude.ai niedostępny; Baza wiedzy), ten sam krok
+  co dowód z 2026-10-22: commit wiki skilla `podsumuj-sesja-claude`. Commit `4bd8ada4`
+  (`git commit -- .claude/wiki/log.md`) miał `29 insertions`, a mój wpis to 5 linii. Wziął też niezacommitowane
+  wpisy logu sesji 5a729830, 8567a0be i e1d033e0 z 03.11. Strony ich wzorców i `index.md` zostały
+  niezacommitowane, więc w historii log wskazuje strony, których w niej nie ma. Przyczyna: przed commitem nie
+  uruchomiłem `git diff --stat -- <ścieżka>`, choć ten sam plik i ten sam krok są opisane wyżej. Wyszło dopiero
+  z liczby linii w wyniku commita. Historia zostaje (bez `revert` bez prośby Rafała).
 
 ## Rozwiązanie
 W checkoucie dzielonym z innymi sesjami commituj zawsze z pathspec: `git commit -m "…" -- <ścieżka>
 <ścieżka>`. Nowy plik najpierw `git add -N <ścieżka>`. Commit ze ścieżkami bierze te pliki z drzewa
 roboczego i nie rusza reszty indeksu, więc cudzy stage zostaje nietknięty. Przed commitem przeczytaj
 `git diff --cached --stat`; jeśli są tam cudze wpisy, wymień je w raporcie. Częściowa wersja pliku (tylko
-mój blok) idzie przez tymczasowy indeks `GIT_INDEX_FILE`.
+mój blok) idzie przez tymczasowy indeks `GIT_INDEX_FILE`. Pliki, do których dopisuje kilka sesji (logi i indeksy
+wiki, `log.md`, `index.md`), traktuj zawsze jak wspólne. Przed commitem `git diff --stat -- <ścieżka>`; liczba
+linii większa niż mój dopisek oznacza cudze hunki, więc commit idzie przez `GIT_INDEX_FILE` z wersją
+„HEAD + mój wpis”.

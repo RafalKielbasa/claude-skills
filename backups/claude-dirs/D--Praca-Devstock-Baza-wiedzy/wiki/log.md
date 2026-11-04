@@ -535,3 +535,9 @@ Format wpisu:
 - założono: komunikat-sesji-czatu-n8n-zasmieca-karte-lekcji (skill: kurs-nagrywanie, typ: porażka) — 32 ze 115 linii karty 3.3 to uwaga aria-live „Session: …”.
 - Wzorce globalne dotknięte w tej sesji: dowód do 1 (hash-commita-w-raporcie-spoza-wyniku-narzedzia). Patrz log globalny.
 - Brak `nawrót`. Sygnał repo wśród dotkniętych: brak (nowe wzorce mają po 1 sesji).
+
+## 2026-11-03/04 — sesja e0cd735e-fa23-4ebd-8d25-7d8684be5ab4 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/03-11-2026`: DT-100 #851, plan `content-deploy-vimeo-upload-plan-1` — sondy Vimeo, moduł `src/vimeo/`, krok 6 `/kurs-video` i sekcja zaległych, wgranie 15 lekcji `agenty-ai`, #851 Done; commity `94ae555a` … `02a0ecba`)
+- Bez nowych wzorców repo. `/kurs-video` i `/kurs-publikuj` tylko edytowane w zadaniu 7, nieużyte w biegu; nowy krok 6 sprawdzi się przy następnej akceptacji filmu.
+- Wzorce globalne dotknięte w tej sesji: założone 2 (task-brief-wciaga-zadanie-z-sufiksem-litery, sondy-api-jako-pierwsze-zadanie-planu), dowód do 4 (wiersz-bramki-bez-drogi-do-ekranu, board-tracker-cli-fails-whole-op-on-board-step, sdd-bez-commitow-paczki-review-z-migawek, commit-bez-pathspec-wciaga-cudzy-indeks). Patrz log globalny.
+- Uwaga do historii: commit `4bd8ada4` tego logu wziął też niezacommitowane wpisy sesji 5a729830, 8567a0be i e1d033e0 (03.11). Ich strony wzorców i `index.md` zostały w drzewie niezacommitowane.
+- Brak `nawrót`.

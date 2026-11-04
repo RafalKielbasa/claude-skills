@@ -318,6 +318,9 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    `npm run kontrola-lektora -- <lekcja> --zastosuj` w `tools/course-pipeline` (czyta zapisane decyzje, bez
    rozpoznawania mowy i bez kosztu): `edl` układa EDL od nowa bez wyciszeń z kontroli lektora, więc bez tego kroku
    wyciszenia znikałyby po cichu. Dalej `/kurs-montaz` (zoomy, ramki, plansze), potem `/kurs-video` etap 2.
+   Każdy `edl` (także `--nadpisz`) czyści też parowanie lektora z ekranem (`kotwice`, `narration_sync`), więc w lekcji
+   w zakresie (`kurs.yaml` `montaz.narration_sync_from`) `/kurs-montaz` robi synchronizację narracji od nowa
+   (`sync-sheet`, kotwice, `sync`); lekcja poza zakresem zostaje na dotychczasowych regułach.
    W lekcji z biletem `edl` biegnie w etapie 8 pętli produkcji, po etapie 1 `/kurs-video` na dopasowanym scenariuszu,
    z runu finalnych nagrań. Nagranie wiąże ze scenariuszem szkielet planu, nie jego tekst (spec sekcja 20.4): `edl`
    przyjmuje nagranie po dopasowaniu narracji, a po zmianie tekstu do wpisania, kroków albo działań odmawia
@@ -349,7 +352,7 @@ zmian (przebieg z raportem i bramką, lektor, nagranie). Lekcja z biletem, któr
 | 5 | od razu po przebiegu, który przeszedł ujęcie N: `nagraj <lekcja> --ujecie N --run <nazwa> --przebieg <katalog tego przebiegu>` i werdykt kontroli (punkt „Nagranie i kontrola”); poprawne - finalne nagranie ujęcia N, następne ujęcie od etapu 4; niepoprawne - poprawka `automat` i kolejna próba ujęcia N, zawsze nagranie | trzymane |
 | 6 | po finalnym nagraniu ostatniego ujęcia: sprawdzenie haszy (punkt „Koniec nagrań”), `station-release <lekcja>` | oddane |
 | 7 | dopasowanie scenariusza do nagrań i raport `video/recording-report.md` (punkt „Dopasowanie do nagrania”) | bez konta |
-| 8 | `/kurs-video` etap 1 (lektor, kontrola lektora) na dopasowanym scenariuszu, avatary, `edl` z finalnych nagrań (krok 6), `/kurs-montaz`, etap 2, film z kartą lekcji (G5) | bez konta |
+| 8 | `/kurs-video` etap 1 (lektor, kontrola lektora) na dopasowanym scenariuszu, avatary, `edl` z finalnych nagrań (krok 6), `/kurs-montaz` (w lekcji w zakresie z synchronizacją narracji od nowa po każdym `edl`), etap 2, film z kartą lekcji (G5) | bez konta |
 
 - Ujęcie z samymi dogrywkami (bez kroków automatu) pomija etapy 4 i 5.
 - Po pierwszym przebiegu, który przeszedł ujęcie, każda dalsza próba tego ujęcia jest nagraniem, nigdy kolejnym
