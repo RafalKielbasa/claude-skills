@@ -298,7 +298,7 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
       3:2, "Przeciągam do niego identyfikator", has none, so take it from the end of the previous element).
       When a sentence has no matching row, or the source has no markers (a human retake), read the second
       from frames (`klatka`, `indeks --od=S --do=S --co=1`) as above; for such a source decide each wait's kind
-      from frames too. The step's `dzialania` in `video/nagrywanie.yaml` list what the rows leave out (`rename_node`,
+      from frames too: `waitKind` says `still` for every wait there, so `sync` keeps them all and you remove a wait that is an execution. The step's `dzialania` in `video/nagrywanie.yaml` list what the rows leave out (`rename_node`,
       `pick_resource`, `set_parameter`, `switch_tab`, `compose_prompt`), which tells you what to look for. A result
       that appears with a `switch_tab` or an `open_node` is pinned to the frame where it appears, not to the end of
       the action before it. A sentence naming a typed value is pinned to the pointer leaving for that field: the nearest
@@ -308,8 +308,9 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
       The speech-to-text check of `sync` names the right silence; pin the cut point of the row standing in that silence,
       even when that row shows another sentence.
    3. Run `npm run montaz -- sync <lekcja> [--segment=N]`. It recomputes from `kotwice`, so it can run
-      again after every correction, except for a lead-in: a run applies it and removes it, and the boundary stays moved.
-      To change a lead-in, restore `od`/`do` from `video/montaz/archiwum/edl-before-sync-<time>.json`, the copy it makes
+      again after every correction, except for the boundaries a run moves: a lead-in (applied and removed from `kotwice`)
+      and a hand-over under a board (step 4). Both stay moved, and a pin later corrected past the new `do` is refused as out of range.
+      To change one, restore `od`/`do` from `video/montaz/archiwum/edl-before-sync-<time>.json`, the copy it makes
       before its first write, and pair again. It: applies the lead-in rule (the previous
       paragraph's `do` and this paragraph's `od` both become `tStart`, nothing is cut; a lesson's first
       paragraph or a change of source keeps its lead-in and goes in the report), writes `still_ranges`, computes each
@@ -317,8 +318,8 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
       the speech-to-text cut points (a mismatch above 0.3 s is an error naming the right silence;
       without a cache the check is skipped and the report says so), and stops with all errors at once.
       It writes `video/montaz/work/sync-report.md`: film length, per paragraph the stretches with `N`,
-      `R`, break, hold and tempo, tempo above 4×, paragraphs with two or more actions and no anchor, and
-      excluded paragraphs. Paragraphs with `pomin`, `video_inserts` or `rozmycie` stay on the old rules
+      `R`, break, hold and tempo, tempo above 4×, paragraphs with two or more actions and no anchor, a lead-in undone
+      by a hand-over (only on the run that makes the hand-over), and excluded paragraphs. Paragraphs with `pomin`, `video_inserts` or `rozmycie` stay on the old rules
       and are listed; a `do: null` paragraph has nothing to sync. If an overlay of that kind is added
       to an already synced paragraph, `sync` stops naming it: remove the overlay, run `sync`, add it back
       with a rectangle and times read from the new picture.
@@ -334,13 +335,13 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    6. `npm run montaz -- sprawdz <lekcja> [--segment=N]`, then `probka`/`kontrola` as in step 5. Besides the
       A, Z and R tiles, `kontrola` adds a `K` tile after every anchor (`K1`, `K2`…) next to the sentence
       pinned there. Open every `K` tile: the action the sentence names must be on screen at that
-      moment. Fix a wrong pin in `kotwice`, run `sync` again and repeat until all `K` tiles are right,
+      moment. A lead-in that `sync` consumed has no `K` tile: its check is the paragraph's `A` tile. Fix a wrong pin in `kotwice`, run `sync` again and repeat until all `K` tiles are right,
       before rendering. A `K` tile's label comes from the nearest row of the sheet, so a shifted row labels it with the
       wrong sentence (3:6 in 3.2): trust the pin, not the label. `montaz render` overwrites its own
       `nagranie-z-lektorem.mp4` without a copy, so copy the old one to `video/archiwum/` first if it may be needed.
    7. Run the final `npm run montaz -- sync <lekcja> --karta` once, after the last correction: it adds
       the flagged places from the report to the lesson card as places to watch. Do not run it on every
-      iteration.
+      iteration. `--karta` only appends, so before a second re-cut's `--karta`, remove the stale `synchronizacja` entries by hand.
    **Boards (plansze) - only when `kurs.yaml` has `montaz: { plansze: true }` and the lesson has
    `video/plansze.yaml`** (spec `docs/superpowers/specs/2026-10-06-plansze-w-montazu-design.md`).
    A board is a slide in the course theme (points revealed one by one, optional pixel-art loop) or a
