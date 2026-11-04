@@ -8,7 +8,8 @@ description: >-
   publishes to Slack. Triggers: "przetwórz daily", "notatka z daily", `/daily [date] [time]`. Not
   for whole-day offsites or short working sessions (PLANNING) — those go through `/spotkanie`.
   Not for the weekly project or trends reports — those stay in n8n (`29_weekly_project_report`,
-  `31_daily_trends_digest`).
+  `31_daily_trends_digest`, written to Drive). Not for Monday sprint planning — the Monday daily
+  closes and opens the sprint through `/sprint`.
 ---
 
 # /daily — standup processing
