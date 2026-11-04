@@ -140,6 +140,11 @@ kodem i nie powinna przechodzić przez składnię języka.
   prawdziwe znaki CR. Złapane kontrolą `tr -cd '\r' | wc -c` (wynik 2) i naprawione skryptem bez ukośników
   (`chr(92) + 'r'`).
 - 2026-10-22, sesja f8d64eed-4822-47ab-af24-2115a5905b5f (id claude.ai niedostępny), dane testowe bramki przez Prisma: jednolinijkowiec `node -e "…prisma.$disconnect()…"` w narzędziu PowerShell rozpadł się, bo PowerShell w cudzysłowie podwójnym rozwija `$disconnect` jako własną zmienną (pusty ciąg). Naprawa zgodna z tą stroną: skrypty `.cjs` w katalogu zadania z bezwzględną ścieżką do klienta Prisma w `require`, uruchamiane `node plik.cjs`.
+- 2026-11-03, sesja 9b10f517-b92d-49ad-8df9-1d567ac06e20 (id claude.ai niedostępny; code-busters-v2, codemod
+  toastów). Poprawka skryptu JS szła przez heredoc Pythona (`s.replace("""…""", """…""")`), a w treści był
+  `raw.replace(/\r\n/g, '\n')`. Python rozwinął sekwencje w literale, więc do pliku `.js` trafiły prawdziwe
+  znaki CR i LF w środku regexu. Naprawione przez `Edit` na wersję bez ukośników:
+  `raw.split(String.fromCharCode(13, 10)).join(String.fromCharCode(10))`.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją

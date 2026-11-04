@@ -37,6 +37,12 @@ już w nim jest.
   Pathspec bierze cały plik z drzewa, więc przed commitem sprawdziłem `git diff` tego pliku: były w nim tylko
   4 moje fragmenty. Dopiero potem `46cbace4` z pathspec, bez `ticket.yaml` 3.2 i bez `planning/daily/…`
   innej sesji.
+- 2026-11-03, sesja 9b10f517-b92d-49ad-8df9-1d567ac06e20 (id claude.ai niedostępny; code-busters-v2, commit
+  `003905430`, toasty na `ds`). Wariant z cudzą zmianą w tym samym pliku przy czystym indeksie:
+  `HomeworkPanel.test.tsx` miał niezacommitowaną linię Rafała sprzed sesji (357, `as const`) i mój hunk (455).
+  Pathspec wziąłby cały plik. Patch z samym hunkiem `@@ -455` (`git diff -U0` przefiltrowany `awk`) wszedł do
+  prawdziwego indeksu przez `git apply --cached --unidiff-zero`. `git diff --cached` pliku pokazał tylko moją
+  linię, a linia 357 została w drzewie. Tańsze od `GIT_INDEX_FILE`, gdy w indeksie nie ma cudzych wpisów.
 
 ## Rozwiązanie
 W checkoucie dzielonym z innymi sesjami commituj zawsze z pathspec: `git commit -m "…" -- <ścieżka>

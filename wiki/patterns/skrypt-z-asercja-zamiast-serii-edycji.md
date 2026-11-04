@@ -82,6 +82,11 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
   plik dopiero po przejściu wszystkich asercji. Pierwsze uruchomienie przerwało się bez zapisu na
   `'w "Nołszynie"'`: 6 trafień zamiast 7. Odczyt linii pokazał, że pomylił się licznik w skrypcie, nie plik;
   po poprawce 42 zamiany w 26 liniach weszły jednym zapisem.
+- 2026-11-03, sesja 9b10f517-b92d-49ad-8df9-1d567ac06e20 (id claude.ai niedostępny; code-busters-v2, codemod
+  toastów w 35 plikach). Dry run porównany `comm -23` z niezależną inwentaryzacją (skrypt Node z innym
+  regexem) pokazał 5 plików pominiętych przez CRLF ([[kotwica-konca-linii-gubi-pliki-crlf]]). Codemod
+  rzucał wyjątek przy każdym nieobsłużonym propsie (`variant`, `description`, `image`, `closeSnackbar` po
+  zamianie) i przy elemencie z dziećmi. Jeden przebieg przepiął 35 plików, a diff objął tylko toasty.
 
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:

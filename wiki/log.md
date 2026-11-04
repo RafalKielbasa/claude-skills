@@ -937,3 +937,14 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: hash-commita-w-raporcie-spoza-wyniku-narzedzia — mój `44ab3169` (decyzja G4) 6 s później przepisany amendem innej sesji na `a873222d`; nieaktualny hash przez cały dzień w raportach, `recording-report.md` i śladzie #847, bo ślad był dopisywany, a nie budowany z `git log --since`.
 - Wzorce repo tej sesji: założone 3 (wpis w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md`).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: hash-commita-w-raporcie-spoza-wyniku-narzedzia (4 sesje).
+
+## 2026-11-03/04 — sesja 9b10f517-b92d-49ad-8df9-1d567ac06e20 (id claude.ai niedostępny; code-busters-v2, gałąź `feat/rafal-kielbasa/dt-37-design-system-tokens`: merge `main`, widoki z maina na `ds`, licznik w `Navigation`, przegląd w przeglądarce, poprawki e2e, toasty na `ds` `Alert`; commity `0a98fa704` … `003905430`, mobile `0ddd689`, #741)
+- założono: kotwica-konca-linii-gubi-pliki-crlf (skill: ogólny, typ: porażka) — `git grep` z `$` dał 31 zamiast 36 importerów, codemod pominąłby 5 plików z CRLF w drzewie; złapane `comm` z niezależną inwentaryzacją.
+- założono: test-e2e-zapisuje-do-prawdziwego-zasobu (skill: ogólny, typ: porażka) — przebieg 13 e2e z wariantu „Poprawki e2e (D4)” wgrał PDF do S3 `ds-cbv2/development/`, czego wariant nie nazywał; wykryte po przebiegu.
+- założono: migracja-ui-zielona-w-jsdom-pada-w-e2e (skill: ogólny, typ: porażka) — radio `sr-only` z `4bfa9ff14` i selektor `label[for="terms"]` ze scalonego `main` przeszły vitest i zrzuty, padły w Playwrighcie.
+- dopisano dowód: baza-lokalna-za-schematem-po-scaleniu-main — rozwiązanie zadziałało przed przeglądem (`prisma migrate diff`, zgoda jako D1); nowe: `db push --accept-data-loss` odrzucony przez klasyfikator po „ok”, przeszedł jako linia `!`.
+- dopisano dowód: commit-bez-pathspec-wciaga-cudzy-indeks — cudza linia w tym samym pliku przy czystym indeksie: sam mój hunk przez `git apply --cached --unidiff-zero` w `003905430`.
+- dopisano dowód: windows-path-w-literale-skryptu — heredoc Pythona rozwinął `\r\n` w poprawianym regexie JS na prawdziwe znaki CR i LF.
+- dopisano dowód: skrypt-z-asercja-zamiast-serii-edycji (sukces) — dry run codemodu porównany z niezależną inwentaryzacją, asercje nieobsłużonych propsów, 35 plików jednym przebiegiem.
+- Wzorce repo tej sesji: w `D:\Praca\Devstock\Projekty\code-busters-v2\.claude\wiki\log.md` (wiki repo założone w tej sesji, bez wzorców repo; skill `course-import` nieużywany).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych — ogólne, kandydaci na regułę globalną, nie na `/evolve-skill`: windows-path-w-literale-skryptu, commit-bez-pathspec-wciaga-cudzy-indeks.

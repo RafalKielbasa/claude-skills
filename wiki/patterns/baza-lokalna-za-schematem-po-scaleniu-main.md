@@ -24,10 +24,18 @@ błędy konsoli i nieudane żądania — błąd GraphQL w odpowiedzi 200 nie jes
   funnel smoke, któremu implementer dodał jawny warunek wstępny („The CMS cannot read the Survey list (Prisma
   error: … does not exist in the current database) … run db:push”). Po zgodzie Rafała `keystone prisma db push
   --accept-data-loss` (usunięta kolumna z 2 wartościami), potem smoke 3/3 i ponowna bramka W3.
+- 2026-11-03, sesja 9b10f517-b92d-49ad-8df9-1d567ac06e20 (id claude.ai niedostępny; code-busters-v2, przegląd
+  w przeglądarce po scaleniu `main` do DT-37, #741). Rozwiązanie zadziałało przed przeglądem: `prisma migrate diff`
+  (odczyt) porównał bazę z `apps/cms/schema.prisma` i pokazał rozjazd z utratą danych w `DailyTaskSet`,
+  `FlashcardSet` i `User.dailyTaskStreak`. Prośba o zgodę poszła jako D1, przed pierwszym zrzutem. Nowe: po „ok”
+  Rafała `keystone prisma db push --accept-data-loss` odrzucony przez klasyfikator („judged this action dangerous
+  (it gave no explanation)”). Linia `! cd …/apps/cms && npx keystone prisma db push --accept-data-loss`, Rafał
+  uruchomił, przeszła.
 
 ## Rozwiązanie
 Przed pierwszym przebiegiem na lokalnym stosie po scaleniu `main` (albo innej gałęzi zmieniającej model)
 porównaj schemat z bazą: `prisma db push` w trybie podglądu / `migrate diff` albo jedno zapytanie GraphQL
 o nowe pole. Rozjazd = prośba o zgodę na `db push` (z wymienionymi kolumnami usuwanymi i skutkiem dla innych
 sesji na tej bazie) przed bramką, nie po niej. W testach E2E dodaj warunek wstępny, który czyta nowe pole i pada
-głośno z nazwą komendy naprawczej, zamiast pozwolić ekranowi pokazać pustkę.
+głośno z nazwą komendy naprawczej, zamiast pozwolić ekranowi pokazać pustkę. Sam `db push` z utratą danych podaj od razu jako linię `!` do uruchomienia przez Rafała: klasyfikator
+odrzuca go mimo zgody wyrażonej w rozmowie.
