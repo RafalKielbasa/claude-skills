@@ -122,8 +122,9 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    sources gate, passing the recordings exactly as listed in the existing `zrodla.json`, in the same
    order (EDL `zrodlo` indexes point into that list). **Course with `oprawa`** (`oprawaKursu: true` in
    the list): ask nothing - intro and outro come from the course, and `zrodla.json` written by the
-   automation already has them as `null`. Then add highlights, pauses and boards (step 4 effects part)
-   and go on with the sample gate (a lesson without a ticket).
+   automation already has them as `null`. Then add highlights, pauses and boards (step 4 effects part; in a lesson
+   in scope of the narration sync `sync` writes the pauses, so add only highlights and boards) and go on with the
+   sample gate (a lesson without a ticket).
    **Lesson with a production ticket** (`video/ticket.yaml`, gate "bilet produkcyjny (G1)" of
    `/kurs-nagrywanie`; spec `docs/superpowers/specs/2026-10-21-nagrywanie-autonomy-gates-design.md`,
    sections 9, 11 and 12): the montage runs without a gate. The state above is the same, but the sample
@@ -243,18 +244,28 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    asking for an older lesson means lowering the key in `kurs.yaml` or passing `--poza-zakresem` to both
    commands (the report records it). On the sync path the following replaces the "Fit" bullet, the 4 s limit
    on `pauzy` and the "hold + pause" advice of "Pace comes first":
-   - The 4 s pause limit does not apply: a pause in a synced paragraph may be up to 10 s. The "Fit"
+   - The 4 s pause limit does not apply: a pause in a synced paragraph may be up to 6 s. The "Fit"
      paragraph and the 1.25× warning do not apply either; the report flags tempo above 4× instead. Do not
-     buy time with a pause or a cut by hand: `sync` owns `pauzy` of a synced paragraph and overwrites them.
+     buy time by hand: `sync` owns `pauzy` of a synced paragraph and overwrites them, and nothing is cut for pace.
+     `wyciecia` stay for mistakes and foreign screens.
    - Only `sync` moves `od`/`do` (the lead-in rule below). `oczekiwania` that overlap an execution
-     (`run_workflow`, `run_step`, `send_chat_message`) are removed by `sync`; a wait on a still screen
-     keeps shrinking to 0.5 s.
-   - The rule: a stretch runs from a sentence pinned to an action up to the next pinned sentence, or to
-     the paragraph's end. With `N` its narration time, `R` its recording time and `E = R - N`: if `R <= N`
-     the picture plays at normal speed and the last frame of the action holds until `N` ends, no break;
-     if `0 < E <= 10 s` it plays at normal speed for `N`, then a silent break of `E` seconds; if `E > 10 s`
-     it plays at normal speed for `N`, then a silent break of exactly 10 s with the excess sped up evenly
-     to fit (tempo `E / 10`). Waiting for an execution counts as action.
+     (`run_workflow`, `run_step`, `send_chat_message`) are removed by `sync`.
+   - A standing screen keeps 1 s: a declared still wait, and the still ranges `sync` finds with `freezedetect`
+     (`n=0.0008`, at least 1.5 s) on each recording with markers, cached in `work/stills/`. It takes out what runs an
+     execution, a cut or a declared wait, splits the rest at every anchor, drops what is shorter than 1.5 s, and
+     writes `still_ranges` on every run, so do not edit that field. A source without markers gets none and the report
+     names it. A moving pointer counts as motion; a small canvas change can read as still, so check the `K` tiles.
+   - The rule: a stretch runs from a sentence pinned to an action up to the next pinned sentence, or to the paragraph's
+     end. `N` is its narration time, `R` its recording time with standing screens at 1 s, `E = R - N`, and `L` the break
+     limit: 5 s for a stretch with at least 3 s of an execution action in its recording, 6 s for any other stretch.
+     Waiting for an execution counts as action.
+
+     | Case | While the narrator talks | After the narration |
+     | --- | --- | --- |
+     | `R <= N` | normal speed, then the last frame of the action holds until `N` ends | no break |
+     | `0 < E <= L` | normal speed for `N` | silent break of `E` seconds, normal speed |
+     | `E > L` | normal speed for `N` | silent break of exactly `L`, the excess sped up evenly to fit (tempo `E / L`) |
+
    Procedure, in this order:
    1. If the lesson has boards (`video/plansze.yaml`), run `npm run montaz -- plansze <lekcja>` first
       (`sync` needs its speech-to-text cache; cents on the first run, cached by file hash - if it asks
@@ -301,8 +312,8 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
       To change a lead-in, restore `od`/`do` from `video/montaz/archiwum/edl-before-sync-<time>.json`, the copy it makes
       before its first write, and pair again. It: applies the lead-in rule (the previous
       paragraph's `do` and this paragraph's `od` both become `tStart`, nothing is cut; a lesson's first
-      paragraph or a change of source keeps its lead-in and goes in the report), computes each stretch,
-      replaces `pauzy`, removes `execution` waits, sets `narration_sync: true`, checks the silences and
+      paragraph or a change of source keeps its lead-in and goes in the report), writes `still_ranges`, computes each
+      stretch, replaces `pauzy`, removes `execution` waits, sets `narration_sync: true`, checks the silences and
       the speech-to-text cut points (a mismatch above 0.3 s is an error naming the right silence;
       without a cache the check is skipped and the report says so), and stops with all errors at once.
       It writes `video/montaz/work/sync-report.md`: film length, per paragraph the stretches with `N`,

@@ -37,6 +37,8 @@ widać z repo, więc nie wychodzi ani w self-review, ani w review planu, ani w b
   - Rafał: „Podaj mi adresy do uruchomienia CMS oraz mobilki do testów”. Odpowiedziałem URL-ami (`localhost:3001`, LAN IP, `adb reverse`). Rafał: „chodziło mi o adresy na dysku”.
   - Nowe: dla Rafała „adres” w kontekście uruchamiania to ścieżka katalogu, tak samo jak w szóstym dowodzie („adres pliku do uruchomienia”).
 
+- 2026-11-04, sesja session_01WryF5UuECUFMWTUWLoBKsJ (lokalnie 78e3ca27-9604-4e3b-ad0b-1d0f66a80e7a), bramka planu `kodozercy-platform-mobile-release-screens`: ósmy dowód, ósma sesja. Arkusz akceptacji miał wiersz „dev client przebudowany po `df1ab70`”, ale nikt nie sprawdził, czy da się go zbudować: (1) klient na telefonie padał przy starcie (`undefined is not a function` w `NativeWorklets.native.ts:459`, natywny `react-native-worklets` starszy niż JS 0.13.0); (2) brak Android SDK i `adb` na komputerze — moja rada `adb reverse` była niewykonalna, sprawdzone dopiero po fakcie; (3) `eas build` odrzucony, bo konto Rafała nie należało do organizacji Expo `devstock`; (4) `.env` z `localhost` zamiast adresu LAN. Każdy punkt kosztował osobną turę Rafała przy telefonie.
+
 ## Rozwiązanie
 Gdy spec albo plan zawiera krok, który wykonuje użytkownik na swoim sprzęcie lub koncie (urządzenie,
 zainstalowana aplikacja, konto w usłudze zewnętrznej), w brainstormingu zadaj jedno pytanie, czy to

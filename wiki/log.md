@@ -958,3 +958,15 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: commit-bez-pathspec-wciaga-cudzy-indeks — w tym samym kroku tego skilla: `4bd8ada4` (log wiki repo) wziął niezacommitowane wpisy sesji 5a729830, 8567a0be i e1d033e0, bo przed pathspec nie sprawdziłem `git diff --stat`.
 - Wzorce repo tej sesji: brak (wpis w `D:\Praca\Devstock\Baza wiedzy\.claude\wiki\log.md`).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: wiersz-bramki-bez-drogi-do-ekranu (3 sesje) — `/evolve-skill superpowers:writing-plans` (wzorzec ogólny, skill pluginu; raczej reguła globalna); commit-bez-pathspec-wciaga-cudzy-indeks (4 sesje) — ogólny, kandydat na regułę globalną albo na krok commita w `/evolve-skill podsumuj-sesja-claude`.
+
+## 2026-11-04 — sesja session_01WryF5UuECUFMWTUWLoBKsJ (lokalnie 78e3ca27-9604-4e3b-ad0b-1d0f66a80e7a; Baza wiedzy i code-busters-mobile: ekrany wydania mobile na ds — makiety v1, plan 1 z review `codex`, SDD zadania 1–12, przegląd całej gałęzi Opus + `codex` `gpt-5.6-sol`, przebieg na telefonie, scalenie `d22df77` do DT-37 i push; #834)
+- założono: bramka-lintu-nie-obejmuje-zmienionych-plikow (skill: ogólny, typ: porażka) — `expo lint` pomija `screens/`, dwa zadania zamknięte z fałszywie zielonym lintem; złapane przez recenzenta Opus.
+- założono: wynik-komendy-uzytkownika-w-tle-niewidoczny (skill: ogólny, typ: porażka) — kod QR z `! eas build` przeniesionego do tła nie dotarł do Rafała.
+- założono: paczka-review-z-wygenerowanym-plikiem-zalewa-recenzenta (skill: superpowers:subagent-driven-development, typ: sukces) — paczka bez 153 KB base64 przez pathspec.
+- dopisano dowód: taskstop-nie-zabija-procesu-potomnego-na-windows — Metro przez `pnpm dev` przeżył `TaskStop`, nowy wstał na 8082.
+- dopisano dowód: skan-par-zadan-wykrywa-odwrocona-kolejnosc-usuwania (sukces) — zadanie 9 kasowało pliki, których potrzebowało zadanie 10; ruling przed startem.
+- dopisano dowód: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska — stary dev client (worklets), brak Android SDK/`adb`, brak dostępu do organizacji Expo, `localhost` w `.env`.
+- dopisano dowód: odpowiedz-bez-wariantu-wykonana-czesc-wspolna (sukces) — „Akceptuje makiety” zapisane jako D1, D2–D5 zadane ponownie.
+- dopisano dowód: review-zakresowe-nie-widza-defektu-poza-swoim-diffem (sukces) — dwaj recenzenci całości (Opus, `codex`) złapali różne defekty po 12 czystych review zadaniowych.
+- Wzorce repo tej sesji: brak (code-busters-mobile nie ma `.claude/skills/`, więc nie ma wiki repo).
+- Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (8 sesji) — `/evolve-skill superpowers:writing-plans`; taskstop-nie-zabija-procesu-potomnego-na-windows (7 dowodów, ogólny) — kandydat na regułę globalną, nie na `/evolve-skill`.

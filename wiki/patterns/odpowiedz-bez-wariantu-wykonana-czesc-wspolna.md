@@ -21,6 +21,8 @@ is the same in every variant.
     decision would come back only before a regeneration.
   - Rafał answered by himself: "A, podnieś licznik do 3". No extra card, and no variant chosen for him.
 
+- 2026-11-04, sesja session_01WryF5UuECUFMWTUWLoBKsJ (lokalnie 78e3ca27-9604-4e3b-ad0b-1d0f66a80e7a): drugi dowód. Na kartę D1 (akceptacja makiet) plus D2–D5 (cztery uwagi z makiet) przyszło „Akceptuje makiety”. Zapisana tylko D1 (spec, indeks, commit), D2–D5 zadane ponownie z tym samym [A]; Rafał odpowiedział „ok”. Plan nie ruszył przed odpowiedzią.
+
 ## Rozwiązanie
 When a reply confirms the precondition of a card but does not settle a variant: do only the part shared by all the
 variants, say in one sentence which decision is still open and when it will be needed, and do not do anything that

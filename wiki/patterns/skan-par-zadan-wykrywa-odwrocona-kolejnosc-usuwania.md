@@ -24,6 +24,8 @@ zadania z wejściem drugiego, a nie gdy czyta zadania po kolei.
   Zadanie 6 (opus) wypisało 34 foldery, które straciły ostatniego importera; zadanie 5 usunęło 104 ze 126
   folderów jednym przejściem z pełnym strażnikiem, CLEANGEN/TSC/BUILD/CMSBUILD zielone od pierwszego razu.
 
+- 2026-11-04, sesja session_01WryF5UuECUFMWTUWLoBKsJ (lokalnie 78e3ca27-9604-4e3b-ad0b-1d0f66a80e7a) (code-busters-mobile, plan 1 `kodozercy-platform-mobile-release-screens`): drugi dowód. Wiersz skanu pre-flight dla pary zadań 9↔10: zadanie 9 (pojedynki 1v1) kasowało `shared/{duel-progress-steps,duel-timer-badge}.tsx`, a ekrany grupy z zadania 10 je importowały (potwierdzone `rg` na `df1ab70`). Ruling w ledgerze przed zadaniem 1: zadanie 9 zostawia pliki, zadanie 10 usuwa je po ostatnim imporcie; każde zadanie zostało zielone. Ten sam skan znalazł niekompletne Files zadania 8 (stories grupy).
+
 ## Rozwiązanie
 W skanie pre-flight planu usuwającego kod: dla każdej pary zadań, z których jedno usuwa A, a drugie B
 importujące A, sprawdź kolejność — usuwający importery idzie pierwszy. Klasy inwentarza typu „martwe przez
