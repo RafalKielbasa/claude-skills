@@ -1,6 +1,6 @@
 ---
 name: kurs-publikuj
-description: Publikacja zatwierdzonych treści lekcji (artykuł, quiz, ćwiczenia) oraz aktywności wideo z ID Vimeo na platformę CodeBusters przez tools/course-pipeline publish — staging domyślnie, prod tylko na jawne "na prod". Używaj, gdy Rafał chce wdrożyć/opublikować kurs, moduł albo lekcję na CodeBusters ("opublikuj moduł 0", "wdróż lekcję na staging", "wyślij na CodeBusters"). NIE dla wgrywania plików na Vimeo i NIE dla tworzenia kursu w CMS.
+description: Publikacja zatwierdzonych treści lekcji (artykuł, quiz, ćwiczenia) oraz aktywności wideo z ID Vimeo na platformę CodeBusters przez tools/course-pipeline publish — staging domyślnie, prod tylko na jawne "na prod". Używaj, gdy Rafał chce wdrożyć/opublikować kurs, moduł albo lekcję na CodeBusters ("opublikuj moduł 0", "wdróż lekcję na staging", "wyślij na CodeBusters"). NIE dla wgrywania plików na Vimeo (to robi /kurs-video po akceptacji filmu) i NIE dla tworzenia kursu w CMS.
 ---
 
 # /kurs-publikuj — publish approved lesson content to CodeBusters
@@ -54,8 +54,9 @@ Input: a course, module or lesson path (`kursy/<slug>`, `kursy/<slug>/modul-NN-x
   it, and remind that a preview deploy reseeds the database, so ids stored under
   `platformIds.preview` become stale after every deploy.
 - No file ever goes to Vimeo from here, no `Course` creation, no deletions — the endpoint cannot
-  delete, and the skill does not ask it to. Rafał uploads the recording to Vimeo himself and
-  writes its id into `lekcja.yaml`.
+  delete, and the skill does not ask it to. The recording reaches Vimeo through `/kurs-video`
+  (step 6, `npm run vimeo`) in a course with `vimeo.automat: true`, which also writes its id into
+  `lekcja.yaml`; in other courses Rafał uploads it himself and writes the id by hand.
 - **The video activity has no status gate**: `publish` sends it whenever `lekcja.yaml` carries
   `vimeo: "<numeric id>"`, at position `N*10` — before the article. `status.video` stays a
   production note. So the moment Rafał lets you run the command IS the decision to publish the

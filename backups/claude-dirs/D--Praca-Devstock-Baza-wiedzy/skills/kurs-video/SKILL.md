@@ -1,6 +1,6 @@
 ---
 name: kurs-video
-description: Rendering video lekcji obu torów — tor A (typ_video prezentacja: slajdy Marp + TTS + avatar) i tor B (typ_video demo: dwuetapowy montaż ręczny — system generuje paczkę lektora TTS i avatary, Rafał nakłada lektora na nagranie w edytorze, system spina całość). Montaż ffmpeg. Używaj, gdy Rafał chce wygenerować lub poprawić final.mp4 dla zatwierdzonej lekcji.
+description: Rendering video lekcji obu torów — tor A (typ_video prezentacja: slajdy Marp + TTS + avatar) i tor B (typ_video demo: dwuetapowy montaż ręczny — system generuje paczkę lektora TTS i avatary, Rafał nakłada lektora na nagranie w edytorze, system spina całość). Montaż ffmpeg. Po akceptacji filmu w kursie z `vimeo.automat` wgrywa go na Vimeo. Używaj, gdy Rafał chce wygenerować lub poprawić final.mp4 dla zatwierdzonej lekcji, a także gdy mówi „wrzuć zaległe filmy na Vimeo” albo „zaktualizuj domeny filmów na Vimeo”.
 ---
 
 # /kurs-video — rendering video (tor A i tor B)
@@ -321,6 +321,34 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
    niezacommitowanymi `video/karta.json` i `video/lesson-card.md`, według reguł z początku pliku
    (`git commit -m … -- <ścieżki>`, `git add --` tylko dla ścieżki nieśledzonej, ścieżki z cudzymi zmianami
    pominięte i nazwane w turze, bez pusha).
+   **Wgranie na Vimeo (ta sama tura).** Jeśli `kurs.yaml` kursu ma `vimeo.automat: true`, zaraz po ustawieniu
+   statusu uruchom w tle (wgranie trwa minuty) `cd tools/course-pipeline && npm run vimeo -- <ścieżka lekcji>`.
+   - Sukces: w turze podaj linię `OK: …` (ID wideo), link `https://vimeo.com/manage/videos/<id>`, stan
+     transkodowania i każdą linię `OSTRZEŻENIE:` dosłownie. Do reguły commitu z tego kroku dochodzą
+     `lekcja.yaml` (klucz `vimeo`), nowy `video/vimeo.json` i — przy pierwszym wgraniu kursu, gdy pipeline
+     założył folder — `kurs.yaml` (`vimeo.folder`): lekcja z biletem w commicie sesji, lekcja bez biletu
+     zostaje dla Rafała.
+   - Błąd: akceptacja zostaje (`status.video: zaakceptowane` się nie cofa). Zacytuj linię `BŁĄD:` dosłownie
+     i podaj komendę do ponowienia. Ponowienie jest bezpieczne: `video/vimeo.json` prowadzi do tego samego
+     wideo, nigdy do drugiego.
+   - Kurs bez `vimeo.automat: true`: jedna linia „kurs bez automatu Vimeo” i nic więcej.
+
+## Zaległe filmy na Vimeo
+
+Lekcje zaakceptowane, zanim kurs dostał `vimeo.automat: true`, albo takie, którym wgranie w kroku 6 padło.
+
+1. Lista bez zapisu: `cd tools/course-pipeline && npm run vimeo -- zalegle ../../kursy/<slug>` (albo
+   `../../kursy` dla wszystkich kursów z włączonym automatem). Pokaż tabelę Rafałowi: lekcja, plik i rozmiar,
+   znak AI, `wznowienie <id>` (lekcja z przerwanym wgraniem) i ID filmów o tym samym tytule już na koncie,
+   suma rozmiarów wobec wolnego miejsca.
+2. Wgranie dopiero na „OK” Rafała: ta sama komenda z `--wykonaj`. Lekcja z filmem o tym samym tytule na koncie
+   jest pomijana, chyba że Rafał wskaże ją wprost — wtedy `--mimo-tytulu=<ścieżka lekcji>` (flaga powtarzalna).
+3. Po przebiegu: tabela wgranych, pominiętych i nieudanych; commit `lekcja.yaml` i `video/vimeo.json` wgranych
+   lekcji (i `kurs.yaml`, jeśli pipeline założył folder) wg reguł repozytorium.
+
+**Domeny osadzania.** Po zmianie `VIMEO_EMBED_DOMAINS` w `tools/course-pipeline/.env`:
+`npm run vimeo -- domeny ../../kursy/<slug>` pokazuje rozjazd (brakujące i nadmiarowe hosty) dla lekcji z
+`video/vimeo.json` w stanie `done`; z `--wykonaj` dopiero na „OK” Rafała. Filmów wgranych ręcznie nie rusza.
 
 ## Zasady
 
@@ -347,8 +375,8 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
   (lekcje `demo` nie mają `slajdy.md`) — przerwij i zgłoś.
 - Media generowane (`video/audio/`, `video/avatar/`, `video/slajdy/`,
   `video/klipy/`, `video/lektor/`, `video/final.mp4`) są w `.gitignore` —
-  odtwarzalne ponownym uruchomieniem `npm run video`, docelowo trafiają na
-  Vimeo przez `/kurs-publikuj`. NIE dodawaj ich ręcznie do git.
+  odtwarzalne ponownym uruchomieniem `npm run video`; `final.mp4` trafia na
+  Vimeo w kroku 6 (kurs z `vimeo.automat`). NIE dodawaj ich ręcznie do git.
   `video/nagranie.mp4` i `video/nagranie-z-lektorem.mp4` też są w
   `.gitignore`, ale **nie są odtwarzalne** — to prawdziwy materiał źródłowy,
   backup to odpowiedzialność Rafała.
@@ -374,4 +402,5 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
   segmentów, jak dotąd. Intro i outro są wspólne dla wszystkich kursów:
   `kursy/_wspolne/oprawa/intro.mp4` i `outro.mp4` — bramka `/kurs-montaz`
   proponuje je jako pierwsze.
-- NIE publikuje do CMS/Vimeo — to `/kurs-publikuj` (kolejny etap).
+- NIE publikuje do CMS — to `/kurs-publikuj` (kolejny etap). Na Vimeo wgrywa wyłącznie przez
+  `npm run vimeo` (krok 6 i „Zaległe filmy na Vimeo”); nigdy niczego na Vimeo nie usuwa.
