@@ -27,6 +27,9 @@ nie zawęża protokołu do tego trybu. Kształt tury zależy przez to od interpr
   każda tura w pełnym BLUF z ⏸ po pytaniu („⏸ Czeka na decyzję: twoja odpowiedź na pytanie
   2/3 sprawdzianu kroku 1”). Rafał odpowiadał krótko na każde pytanie i formatu nie
   komentował, więc tarcia nie widać. Pytanie o hub (quiz wygląda jak bramka) dalej otwarte.
+- 2026-11-04, sesja e1ab7466-0cf9-4fe2-a13b-36465045bb16 (id claude.ai niedostępny): ponowny
+  sprawdzian kroku 2, każde pytanie w pełnym BLUF z ⏸ („⏸ Czeka na decyzję: Twoja odpowiedź na
+  pytanie 1 z 3 sprawdzianu kroku 2”). Rafał spierał się o treść oceny, formatu nie komentował.
 
 ## Rozwiązanie
 Hipoteza, do decyzji Rafała, bo dotyczy jego globalnego protokołu. W `nauka-z-claude` określić

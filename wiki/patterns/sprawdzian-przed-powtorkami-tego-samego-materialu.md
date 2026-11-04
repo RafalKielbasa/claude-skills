@@ -22,6 +22,10 @@ zakazem sprawdzianu w sesji materiału.
   z kroku 1 i porcji 1 kroku 2, oraz ponowny sprawdzian kroku 1. Warianty [A] sprawdzian →
   materiał → propozycja powtórek na koniec, [B] powtórki → sprawdzian, [C] tylko powtórki.
   Rafał: „A”. Sprawdzian 3/3 bez naprowadzenia, krok 1 odhaczony.
+- 2026-11-04, sesja e1ab7466-0cf9-4fe2-a13b-36465045bb16 (id claude.ai niedostępny), ten sam
+  temat: 12 zaległych pozycji i niezaliczony sprawdzian kroku 2. Warianty [A] sprawdzian → praktyka,
+  [B] powtórki, [C] bez sprawdzianu. Rafał: „A”. Rekomendacja przyjęta, ale sprawdzian niezaliczony,
+  więc ten przebieg potwierdza kolejność, nie wynik.
 
 ## Rozwiązanie
 Do sekcji „Wznowienie” albo „Powtórki”: gdy zaległe pozycje i zaległy sprawdzian kroku

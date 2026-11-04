@@ -22,6 +22,7 @@ a static label, and the card does not deduplicate advisories by kind.
   doradcza: komunikat - komunikat aria-live=polite „Session: 25ce5...”"). The G5 turn had to add that these do
   not need watching. Cards of the same module show it too: 3.1 has 49 such lines, 3.2 has 8 (count by
   `grep -c "Session:"`).
+- 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): recenzent zadania 8 zgłosił to samo na kartach 3.1 i 3.3: powtarzane wiersze aria-live rozmywają to, co Rafał ma ocenić.
 
 ## Rozwiązanie
 In the n8n service (`kursy/agenty-ai/_nagrywanie/uslugi/n8n.js` or its config), declare the chat session label as a

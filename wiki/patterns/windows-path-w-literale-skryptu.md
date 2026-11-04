@@ -145,6 +145,7 @@ kodem i nie powinna przechodzić przez składnię języka.
   `raw.replace(/\r\n/g, '\n')`. Python rozwinął sekwencje w literale, więc do pliku `.js` trafiły prawdziwe
   znaki CR i LF w środku regexu. Naprawione przez `Edit` na wersję bez ukośników:
   `raw.split(String.fromCharCode(13, 10)).join(String.fromCharCode(10))`.
+- 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): skrypt `hung2.cjs` napisany heredokiem zgubił ukośnik w klasie cyfr wyrażenia regularnego i bez błędu wypisał `silence ranges 0` przy logu z 51 zakresami; ten sam skrypt przez Write policzył poprawnie. Wcześniej heredoc z apostrofami skończył się `unexpected EOF`.
 
 ## Rozwiązanie
 Treść przeznaczoną do wstawienia do pliku trzymaj w osobnym pliku i wczytuj ją

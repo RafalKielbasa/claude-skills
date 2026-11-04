@@ -23,6 +23,9 @@ przy wyjściu z tematu.
   „w trakcie" i notatką: „porcja 1 została pokazana 2026-09-02, ale pytanie
   sprawdzające zostało bez odpowiedzi — sesja przerwana na prośbę użytkownika.
   Zacznij od ponownego zadania tego pytania, bez powtarzania porcji."
+- 2026-11-04, sesja e1ab7466-0cf9-4fe2-a13b-36465045bb16 (id claude.ai niedostępny): „kończymy na
+  dziś” na pytaniu 2 z 3 sprawdzianu kroku 2 „Agent notatek”. Linia `Stan:` była zapisana już po
+  pytaniu 1, a przy wyjściu „Następny krok” dostał datę, pytanie bez odpowiedzi i liczbę zaległych.
 
 ## Rozwiązanie
 Utrzymać kolejność: sekcja tematu zapisywana zaraz po zatwierdzeniu roadmapy,

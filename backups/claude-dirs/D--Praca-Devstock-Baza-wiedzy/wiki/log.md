@@ -541,3 +541,12 @@ Format wpisu:
 - Wzorce globalne dotknięte w tej sesji: założone 2 (task-brief-wciaga-zadanie-z-sufiksem-litery, sondy-api-jako-pierwsze-zadanie-planu), dowód do 4 (wiersz-bramki-bez-drogi-do-ekranu, board-tracker-cli-fails-whole-op-on-board-step, sdd-bez-commitow-paczki-review-z-migawek, commit-bez-pathspec-wciaga-cudzy-indeks). Patrz log globalny.
 - Uwaga do historii: commit `4bd8ada4` tego logu wziął też niezacommitowane wpisy sesji 5a729830, 8567a0be i e1d033e0 (03.11). Ich strony wzorców i `index.md` zostały w drzewie niezacommitowane.
 - Brak `nawrót`.
+
+## 2026-11-04 — sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c, kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036 (id claude.ai niedostępny; główny folder, gałęzie `rafal-kielbasa/03-11-2026` i `04-11-2026`: `nagrywanie-narration-sync` #860, filmy 3.1, 3.2, 3.3)
+- założono: regula-filmu-oceniana-probka-i-symulacja-calosci (skill: kurs-montaz, typ: porażka) — próbka nie pokazała 536,6 s ciszy, a limity z liczb dały skakanie obrazu.
+- założono: wstep-przenosi-zamkniecie-panelu-pod-lektora-poprzedniego-akapitu (skill: kurs-montaz, typ: porażka) — 6 akapitów 3.1 i 3.3, zaadresowany w skillu (`2ca3469c`).
+- założono: scal-dzien-konczy-sie-na-pr-choc-slowo-znaczy-merge (skill: ogólny, typ: porażka) — wpis wątpliwy, koszt jednej tury.
+- dopisano dowód: pelny-suite-course-pipeline-pada-na-timeoutach-pod-obciazeniem, obce-konto-google-w-oknie-wyboru-konta, trafienie-cache-lektora-sprawdzone-przed-etapem-2, komunikat-sesji-czatu-n8n-zasmieca-karte-lekcji.
+- dopisano dowód i zaadresowano przez `montaz sync`: pauza-przed-zdaniem-akcji-puszcza-obraz-przed-narracje, przyspieszenia-automatu-poza-zasiegiem-pauz.
+- Wzorce globalne dotknięte w tej sesji: założony swiezy-implementer-na-samym-skillu-testuje-skill, dowód do 9, w tym nawrót zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie. Patrz log globalny.
+- Nawrót w wiki globalnym: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie. Kandydaci repo wśród dotkniętych: pelny-suite-course-pipeline-pada-na-timeoutach-pod-obciazeniem (ogólny), obce-konto-google-w-oknie-wyboru-konta (`/evolve-skill kurs-montaz`).

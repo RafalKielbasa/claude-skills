@@ -2,7 +2,7 @@
 
 - **Skill:** ogólny (dotyczy board-tracker)
 - **Typ:** porażka
-- **Status:** zaadresowany (2026-10-29, board-tracker)
+- **Status:** nawrót (2026-11-04)
 
 ## Opis
 Zamknięcie dwóch issues w głównej sesji (jedna komenda Bash z dwoma zapisami do GitHuba) odrzucił
@@ -67,6 +67,7 @@ ta sama zmiana na Done przeszła.
   push`; Rafał uruchomił ją sam, a PR i scalenie zrobiłem dopiero po osobnym „OK i scal”. Wniosek: push nie
   należy do zbiorczej tabeli decyzji — zgoda „OK na wszystkie rekomendacje” jest dla użytkownika zgodą na
   plan, nie na wysłanie gałęzi; push pytać osobno albo od razu podać linię `!`.
+- 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): NAWRÓT: `create` po „ok” na kartę nowego issue odrzucone „[External System Writes]”. Obsługa ze skilla zadziałała: bez ponawiania, linia `!`, którą Rafał uruchomił (#860). Skill wymienia jednak tylko `status --to done` i `close`, a dotyczy to też `create`. `status --to done` po „Przesuń” przeszło we własnym wywołaniu.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu

@@ -972,6 +972,7 @@ index 8f5870c..9c8399e 100644
 - **Wzorce:** [zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie](patterns/zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie.md) (7 dowodów, 7 sesji)
 - **Zmiana:** sekcja „Status proposals” — `status --to done` i `close` puszczane każde w osobnym wywołaniu, w zatwierdzonej postaci; po odmowie klasyfikatora bez ponawiania, przeformułowania i zmiany powłoki — od razu ta sama komenda jako linia z `!` w składni Git Bash, zbudowana z prefiksu CLI z briefu; uruchomienie przez Rafała liczy się jako zapis, potem ranking.
 - **Powód decyzji:** „OK” Rafała na propozycję `/evolve-skill board-tracker` (sesja a011691a-07ee-43f2-ad0e-bac7765e83bf, 2026-10-29). W trzech ostatnich sesjach (26, 27, 29.10) przejście do Done po „OK”/„ok” zostało odrzucone, a `bind` i `trail` przeszły; każda odmowa kosztowała turę.
+- **Nawrót:** 2026-11-04, zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (`create`, którego skill nie wymienia; obsługa linią `!` zadziałała)
 
 ```diff
 --- a/skills/board-tracker/SKILL.md

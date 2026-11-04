@@ -56,3 +56,8 @@ Format wpisu:
 - Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmienił się tylko `nauka-z-claude.md` przez globalny skill `nauka-z-claude`)
 - Wzorce globalne dotknięte w tej sesji: sprawdzian-przed-powtorkami-tego-samego-materialu (założony), sprawdzian-kroku-z-wgladem-w-kod-bez-reguly (założony), bash-przekracza-120-s-takze-na-trywialnej-komendzie (założony), protokol-bluf-opakowuje-tury-nauki (dopisany dowód), dlugi-lancuch-narzedzi-bez-linii-statusu (dopisany dowód)
 - Sygnał: brak (wzorce repo); globalne — patrz log globalny
+
+## 2026-11-04 — sesja e1ab7466-0cf9-4fe2-a13b-36465045bb16 (id claude.ai niedostępny)
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmienił się tylko `nauka-z-claude.md` przez globalny skill `nauka-z-claude`)
+- Wzorce globalne dotknięte w tej sesji: historia-luki-podstawia-ocene-odpowiedzi (założony), sprawdzian-przed-powtorkami-tego-samego-materialu (dopisany dowód), nauka-przerwana-zostawia-punkt-wznowienia (dopisany dowód), protokol-bluf-opakowuje-tury-nauki (dopisany dowód)
+- Sygnał: brak (wzorce repo); globalne — patrz log globalny

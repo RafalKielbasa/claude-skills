@@ -22,6 +22,7 @@ bramki, więc wiadomo, co można uruchomić bez zgadywania.
   poprawek) i 4 zamknięte z czystym review, zadanie 3 nietknięte do wyniku sond. Każda tura kończyła
   się markerem „⏸ Czeka na decyzję: wyniki sond z telefonu”.
 - 2026-10-30/31, sesja a65d3063-3840-4e65-beaf-1f6c93f7abc0 (id claude.ai niedostępny; code-busters-v2, plan 9 W5), wariant: bramka na wspólnym zasobie zamiast na wyniku. Każde uruchomienie lokalnego stosu (wspólnego z sesją M5) wymagało słowa Rafała. Ruling R4: wszystkie przebiegi na stosie (seed `--paywall`, E2E z flagą wł./wył., smoke, bramka regresji) zebrane w jedno okno po zadaniach 1–10, weryfikacji i review całej gałęzi; kod E2E i smoke recenzowany przed przebiegiem. Jedna prośba zamiast czterech, praca bez postoju ~20 godzin zegarowych. Koszt widoczny: dwie rundy poprawek smoke dopiero w oknie (wzorzec wiersza sylabusa, tytuł ankiety w bazie inny niż w seedzie) i brak `db:push` po scaleniu #1713 wykryty dopiero tam — przeszły recenzję zawężoną, nie review całości.
+- 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): film 3.2 poszedł do Rafała, gdy trwała poprawka z przeglądu końcowego, bo poprawka nie mogła zmienić tego filmu. Warunek sprawdzony: `edl.json` przed i po `sync` z tą samą sumą sha256. Rafał zaakceptował film bez czekania na kod.
 
 ## Rozwiązanie
 Przy bramce użytkownika w środku planu: z tabeli pre-flight wypisz zadania niezależne od wyniku

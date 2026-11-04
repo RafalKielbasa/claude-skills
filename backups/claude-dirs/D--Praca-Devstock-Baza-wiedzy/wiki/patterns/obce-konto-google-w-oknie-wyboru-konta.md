@@ -23,6 +23,7 @@ the list.
   - The R1 tile of control sheet 02 showed "Bartolomeo Elstyropiano, devstock.live.events@…".
   - Blur `x16 y330 w290 h60` from 12.35 to 14.35 s of paragraph 3:4, checked on tiles every 0.1 s.
   - A `miejsce` entry with `zrodlo: montaz`.
+- 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): ponowny montaż 3.1: akapit 3:4 wyłączony z synchronizacji i identyczny z EDL sprzed parowania, rozmycie sprawdzone co 0,1 s, a niezależnie przez recenzenta co 0,25 s. Rafał: adres konta kursu (około 2,4 s) zostaje; rozmywamy tylko drugie konto.
 
 ## Rozwiązanie
 - In `/kurs-montaz`, for every `video_inserts` entry of the OAuth window: extract the frame of the account list

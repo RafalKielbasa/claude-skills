@@ -21,6 +21,7 @@ to „normalnie trafienie cache”, i nie daje komendy, która to sprawdza. To s
   (`opcjeChunkowLekcji`, `obrobkaLektora`, `resolveTtsProfile` z `kurs.yaml`) i zwrócił
   `{"marker":"69fb6b9e5ace66f7","klucz":"69fb6b9e5ace66f7","trafienie":true,"chunki":4,"model":"eleven_v4"}`.
   Render: „OK: video wyrenderowane”, audio z 2026-10-20 nietknięte.
+- 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): znacznik łańcucha sprawdzony przed etapem 2 w 3.1, 3.2 i 3.3; `audio`, `avatar`, `lektor` i `ticket.yaml` bez zmian po renderze, a `tts_regenerations` nie urósł.
 
 ## Rozwiązanie
 Przed etapem 2 i przed każdym ponownym renderem lekcji z gotowym audio porównaj bez API marker

@@ -2,7 +2,7 @@
 
 - **Skill:** kurs-montaz
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-11-04, kurs-montaz)
 
 ## Opis
 Pauza wstawiona w narrację, żeby zgasić ostrzeżenie o przyspieszeniu, stoi przed zdaniem wprowadzającym akcję.
@@ -32,6 +32,7 @@ tylko na zdania zakotwiczone.
   - W 6:7 błąd pojawia się ok. 1 s po „Klikam Execute step”, a lektor komentuje go dopiero w 6:8. Zostawione bez
     zmian jako skutek kliknięcia, a nie akcja wyprzedzająca zdanie.
   - Rafał zaakceptował montaż i `final.mp4` bez uwag o synchronizacji.
+- 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): mechanizm `montaz sync` (kotwice zdań, przerwa po narracji, nigdy przed zdaniem akcji) działa od lekcji 3.1 kursu `agenty-ai`. Filmy 3.1, 3.2 i 3.3 zaakceptowane. Lekcje 0.x–2.x zostają po staremu.
 
 ## Rozwiązanie
 1. Zanim dodasz pauzę przeciw przyspieszeniu, zakotwicz początek akcji na zdaniu, które ją wprowadza:

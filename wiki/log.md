@@ -970,3 +970,18 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: review-zakresowe-nie-widza-defektu-poza-swoim-diffem (sukces) — dwaj recenzenci całości (Opus, `codex`) złapali różne defekty po 12 czystych review zadaniowych.
 - Wzorce repo tej sesji: brak (code-busters-mobile nie ma `.claude/skills/`, więc nie ma wiki repo).
 - Brak `nawrót`. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: bramka-na-urzadzeniu-bez-sprawdzenia-srodowiska (8 sesji) — `/evolve-skill superpowers:writing-plans`; taskstop-nie-zabija-procesu-potomnego-na-windows (7 dowodów, ogólny) — kandydat na regułę globalną, nie na `/evolve-skill`.
+
+## 2026-11-04 — sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c, kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036 (id claude.ai niedostępny; Baza wiedzy, plan narration sync subagent-driven, #860)
+- założono: swiezy-implementer-na-samym-skillu-testuje-skill (skill: superpowers:subagent-driven-development, typ: sukces) — świeży agent na samym tekście skilla znalazł lukę dającą zły film.
+- nawrót: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie — zaadresowany 2026-10-29, wraca na `create`; obsługa linią `!` zadziałała.
+- dopisano dowód: windows-path-w-literale-skryptu, ruling-z-nieweryfikowana-przeslanka, review-zakresowe-nie-widza-defektu-poza-swoim-diffem, paczka-review-wciaga-cudze-commity-galezi-dnia, niezalezne-zadania-w-trakcie-bramki-uzytkownika, sprawdzenie-galezi-bez-kryterium-zatrzymania, subagent-staguje-wildcardem-w-dzielonym-drzewie, branch-finish-zaklada-oddzielna-galaz-feature.
+- Wzorce repo tej sesji: 3 założone, dowód do 6. Patrz log repo Baza wiedzy.
+- Kandydaci wśród dotkniętych: nawrót zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (`/evolve-skill board-tracker`); ruling-z-nieweryfikowana-przeslanka i subagent-staguje-wildcardem-w-dzielonym-drzewie (`/evolve-skill superpowers:subagent-driven-development`); branch-finish-zaklada-oddzielna-galaz-feature (`/evolve-skill superpowers:finishing-a-development-branch`); windows-path-w-literale-skryptu i sprawdzenie-galezi-bez-kryterium-zatrzymania (ogólne).
+
+## 2026-11-04 — sesja e1ab7466-0cf9-4fe2-a13b-36465045bb16 (id claude.ai niedostępny; vault Notatki, `nauka-z-claude`, temat „Agent notatek”)
+- założono: historia-luki-podstawia-ocene-odpowiedzi (skill: nauka-z-claude, typ: porażka) — „narzędzia wywołuje model” ocenione jako odwrócenie ról przez zapis luki w pliku postępu; reset cofnięty po sprzeciwie Rafała.
+- dopisano dowód: sprawdzian-przed-powtorkami-tego-samego-materialu (sukces) — rekomendacja przyjęta jednym „A”, ale sprawdzian niezaliczony.
+- dopisano dowód: nauka-przerwana-zostawia-punkt-wznowienia (sukces) — „kończymy na dziś” na pytaniu 2 z 3, punkt wznowienia zapisany.
+- dopisano dowód: protokol-bluf-opakowuje-tury-nauki — kolejne tury sprawdzianu w pełnym BLUF z ⏸, formatu Rafał nie komentował.
+- Wzorce repo tej sesji: brak (patrz log repo vaulta).
+- Brak `nawrót` wśród dotkniętych. Kandydat (porażka, otwarty, > 2 sesje) wśród dotkniętych: protokol-bluf-opakowuje-tury-nauki (3 sesje, wątpliwy) — `/evolve-skill nauka-z-claude`.
