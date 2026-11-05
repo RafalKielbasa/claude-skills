@@ -188,6 +188,7 @@ dopiero, gdy następna komenda dostanie ścieżkę względną.
     w raporcie.
   - Szkody nie było. W głównej sesji osobne `cd` znowu przestawiało katalog: kilkanaście „Environment
     update” między `tools/nagrywanie`, `tools/course-pipeline`, katalogami lekcji i `.claude/wiki`.
+- 2026-11-05, sesja e70485da-f464-4147-b956-8e00c7c5e2e2 (id claude.ai niedostępny): `cd` do `tool-results` w komendzie przeszukującej zapisaną dokumentację przestawiło katalog główny sesji (komunikat „Primary working directory … was …”). To samo zrobiło `cd` do `wiki` w kroku analizy tego podsumowania.
 
 ## Rozwiązanie
 W komendach narzędzia Bash nie używaj `cd`. Ścieżki podawaj bezwzględnie, a

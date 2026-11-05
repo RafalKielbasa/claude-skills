@@ -985,3 +985,11 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: protokol-bluf-opakowuje-tury-nauki — kolejne tury sprawdzianu w pełnym BLUF z ⏸, formatu Rafał nie komentował.
 - Wzorce repo tej sesji: brak (patrz log repo vaulta).
 - Brak `nawrót` wśród dotkniętych. Kandydat (porażka, otwarty, > 2 sesje) wśród dotkniętych: protokol-bluf-opakowuje-tury-nauki (3 sesje, wątpliwy) — `/evolve-skill nauka-z-claude`.
+
+## 2026-11-05 — sesja e70485da-f464-4147-b956-8e00c7c5e2e2 (id claude.ai niedostępny; repo `.claude`, status line z gitem)
+- założono: pipe-powershella-dokleja-bom-do-stdin (skill: ogólny, typ: porażka) — BOM z pipe'a PowerShella wywrócił `JSON.parse`, a ścieżka awaryjna pokazała stan innego repo.
+- założono: mutacja-lapie-test-zalezny-od-srodowiska (skill: superpowers:test-driven-development, typ: sukces) — mutacja, która przeżyła, ujawniła test zależny od powłoki.
+- założono: dowod-wywolania-przez-harness-tymczasowym-tee (skill: ogólny, typ: sukces) — tymczasowy `tee` dał dowód bez restartu, ale objął też cudze sesje.
+- dopisano dowód: windows-path-w-literale-skryptu, dlugi-lancuch-narzedzi-bez-linii-statusu, cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan, powershell-semantyka-wymaga-sondy-nie-czytania, zakres-linii-wyliczony-z-nienumerowanego-zrzutu, zielony-suite-z-mockami-nie-widzi-binarki-ani-poswiadczen.
+- Wzorce repo tej sesji: brak (repo `.claude` nie ma `.claude/skills/`, więc nie ma wiki repo).
+- Brak `nawrót` wśród dotkniętych.

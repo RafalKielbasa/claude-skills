@@ -26,6 +26,7 @@ uruchomieniu użytkownikowi, bo ścieżka mutuje jego bazę i bucket.
   API: PDF 50 619 B, `200 application/pdf`, anonimowy GET na obiekt `403`.
   Żadnej z tych trzech rzeczy 479 testów nie mogło pokazać, a dopiero ostatnia
   jest właściwą odpowiedzią na pytanie użytkownika „czy ADC wystarczy".
+- 2026-11-05, sesja e70485da-f464-4147-b956-8e00c7c5e2e2 (id claude.ai niedostępny): raport status line wymienił jako niezweryfikowane porównanie z niezależnym liczeniem na 4 repozytoriach (wywołanie odrzucone przez Rafała), wywołanie przez Claude Code widziane tylko w wersji z `tee` oraz sam wiersz w terminalu, mimo kompletu zielonych testów.
 
 ## Rozwiązanie
 W sekcji „Weryfikacja" wymień z nazwy każdą zależność runtime, którą testy

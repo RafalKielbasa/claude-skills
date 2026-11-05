@@ -52,6 +52,7 @@ mechanizmy pojedynczo, nie ich skład.
   podglądu.
 
 
+- 2026-11-05, sesja e70485da-f464-4147-b956-8e00c7c5e2e2 (id claude.ai niedostępny): przypadki testu zwracały stan repo `.claude` zamiast piaskownicy; krótka sonda drukująca bajty stdin w hex pokazała `efbbbf` przed JSON-em, choć `$OutputEncoding.GetPreamble().Length` zwracało 0. Ustalenie: pipe-powershella-dokleja-bom-do-stdin.
 ## Rozwiązanie
 Gdy zachowanie PowerShell 5.1 jest niepewne albo zaskakujące (a zwłaszcza gdy dotyczy
 `$PSScriptRoot`, `ConvertFrom-Json`, `$ErrorActionPreference` z komendami natywnymi, albo

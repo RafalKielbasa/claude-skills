@@ -66,6 +66,7 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   - Drugie po zapisie biletu, `sprawdz`, edycjach indeksu projektu i commicie.
   - Trzecie w tym kroku wiki, po czterech odczytach indeksów i stron wzorców.
   - Linia statusu za każdym razem pojawiła się dopiero po przypomnieniu.
+- 2026-11-05, sesja e70485da-f464-4147-b956-8e00c7c5e2e2 (id claude.ai niedostępny): cztery przypomnienia „The user hasn't heard from you in a while” przy jednym zadaniu (status line) i jego podsumowaniu: po odczycie dokumentacji, przy szukaniu BOM, przy pełnym przebiegu testów i po zapisie do wiki. Linia statusu pojawiła się dopiero po każdym z nich.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

@@ -46,6 +46,7 @@ w srodku nastepnego akapitu.
   `use-unread-notifications.ts:85-96` zamiast `:29-40`, `use-announcement.ts:102-103` zamiast
   `:16-17`). Jedenaście cytatów trafiło do raportu dla Rafała; wyłapałem to przy końcowym
   przeglądzie, poprawiłem `sed` i sprawdziłem `sed -n` na każdym poprawionym miejscu przed oddaniem.
+- 2026-11-05, sesja e70485da-f464-4147-b956-8e00c7c5e2e2 (id claude.ai niedostępny): raport podał `hooks/statusline-git.mjs:65` dla `formatLine`, policzone w pamięci z treści przekazanej do `Write`; `grep -n` w późniejszej turze pokazał linię 63 i sprostowałem to w odpowiedzi.
 
 ## Rozwiazanie
 Numery linii do podmiany bierz wylacznie z wyjscia numerowanego (`cat -n`,
