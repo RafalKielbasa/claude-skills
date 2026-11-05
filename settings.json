@@ -118,6 +118,11 @@
   "askUserQuestionTimeout": "60s",
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
+  "statusLine": {
+    "type": "command",
+    "command": "node \"C:/Users/rafal/.claude/hooks/statusline-git.mjs\"",
+    "refreshInterval": 5
+  },
   "voice": {
     "enabled": true,
     "mode": "hold"

@@ -1,11 +1,11 @@
 ---
 name: dt37-galaz-biblioteki
-description: Kodożercy redesign lives on feat/rafal-kielbasa/dt-37-design-system-tokens in web and mobile; a task closes when its scope is ready on DT-37, the merge to main closes only the epic; nothing goes to main before W5/M5 (not even PR #1669)
+description: Kodożercy redesign was built on feat/rafal-kielbasa/dt-37-design-system-tokens in web and mobile and merged to main on 2026-11-04 (web #1730, mobile #403); new work starts from main, the epic #741 stays open for the store release and unconfirmed production steps
 metadata:
   node_type: memory
   type: project
   originSessionId: 7875e423-9ae8-4e55-a56b-31766c608f4e
-  modified: 2026-10-28T11:21:33.418Z
+  modified: 2026-11-05T07:22:42.868Z
 ---
 
 Since 2026-10-16 (Rafał): the component library (#665, direction 8 „Pikselowe pola”, dark + light theme) and the related screen work go on the existing branch `feat/rafal-kielbasa/dt-37-design-system-tokens` in both code repos (web `code-busters-v2`, mobile `code-busters-mobile`). PRs #1652 (web) and #403 (mobile) go to `main` once, for the whole redesign.
@@ -14,6 +14,8 @@ Since 2026-10-26 (Rafał): the merge of DT-37 to `main` is the closing stage of 
 
 Since 2026-10-28 (Rafał: „Do main nie wdrażamy, wszystko ląduje na feature branchach”): nothing reaches `main` before W5/M5, not even the separate CMS PR code-busters#1669 (its branch is already in DT-37). A push to web `main` also auto-deploys the staging CMS (`deploy-main-cms.yml`, without `db:push`).
 
-**Why:** Rafał prepares the whole redesign first and deploys it in one go; tasks that are finished but waiting for the merge should not hang open.
+**Since 2026-11-04 the merge is done, so the "nothing to main" rule is over:** web PR code-busters#1730 (replaced #1652; `c195d145b`, no recorded review) and mobile PR #403 (`269393b2b`) are in `main`, web is on production from release `2026-11-04v1`. Checked 2026-11-05 on GitHub and EAS. Both look squashed: `main...DT-37` still shows ~285 commits ahead, so that comparison says nothing about whether work is merged. New work starts from `main` (DT-94 already does).
 
-**How to apply:** when assessing whether a redesign task can close, check its scope on DT-37 (commits, gates), not on `main`; list the merge to `main` only under the epic. Start new library/screen streams from DT-37 (sub-branches or worktrees merged back into it), never from `main`. Note: #665 and #741 are both children of #78, so #665 is not formally under the epic. Related: [[tryb-commitow-per-repo]].
+**Why:** Rafał prepared the whole redesign first and deployed it in one go; tasks that were finished but waiting for the merge should not hang open.
+
+**How to apply:** do not start new streams from DT-37 any more; the epic #741 stays open only for the mobile store release and the unconfirmed production steps of W5. For the pre-merge history of a task, look at DT-37 commits, not `main`. Note: #665 and #741 are both children of #78, so #665 is not formally under the epic. Related: [[tryb-commitow-per-repo]].
