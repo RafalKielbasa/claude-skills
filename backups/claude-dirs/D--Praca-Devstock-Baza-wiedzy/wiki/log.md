@@ -550,3 +550,7 @@ Format wpisu:
 - dopisano dowód i zaadresowano przez `montaz sync`: pauza-przed-zdaniem-akcji-puszcza-obraz-przed-narracje, przyspieszenia-automatu-poza-zasiegiem-pauz.
 - Wzorce globalne dotknięte w tej sesji: założony swiezy-implementer-na-samym-skillu-testuje-skill, dowód do 9, w tym nawrót zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie. Patrz log globalny.
 - Nawrót w wiki globalnym: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie. Kandydaci repo wśród dotkniętych: pelny-suite-course-pipeline-pada-na-timeoutach-pod-obciazeniem (ogólny), obce-konto-google-w-oknie-wyboru-konta (`/evolve-skill kurs-montaz`).
+
+## 2026-11-05 — sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/05-11-2026`, stan i zamknięcie epiku DT-52 #741)
+- Bez nowych wzorców repo: sesja używała tylko skilli globalnych (`board-tracker`, `project-index`).
+- Wzorce globalne dotknięte w tej sesji: założone zamkniecie-na-slowo-mimo-sprzecznego-dowodu i stan-projektu-sprawdzony-u-zrodla-nie-w-indeksie; dowód do siedmiu, w tym zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (`nawrót` od 2026-11-04) i ranking-from-session-start-snapshot. Patrz log globalny.

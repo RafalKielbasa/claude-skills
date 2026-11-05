@@ -106,7 +106,9 @@ Data spotkania: z argumentu; brak argumentu → dziś.
       `## Action items` (tabela), `## Zaparkowane`, `## Nieomówione`
       (punkty agendy bez wpisów).
    c. Zmień `**Status:** szkic` → `**Status:** finalna`, pokaż całą
-      notatkę Rafałowi.
+      notatkę Rafałowi: otwórz ją w edytorze, a w podglądzie pytania daj
+      streszczenie (akapit o całej notatce w „The gate" w
+      `docs/spotkania-kolejki.md`).
    d. BRAMKA: akceptacja Rafała. Notatka zostaje niezacommitowana —
       commit robi Rafał.
    e. Po akceptacji przejdź do indeksowania notatki do bazy wiedzy
@@ -238,8 +240,9 @@ transcript` (krok 2).
    fragmencie, karta i przyciski, rozstrzygnięcie zapisane w notatce od razu. Fragment, który po
    rozstrzygnięciu jest ustaleniem, decyzją albo action itemem, przenieś do właściwej sekcji
    notatki — kandydatów jeszcze nie budujesz, powstaną z zaakceptowanej notatki w sekcji
-   „Indeksowanie". Potem pokaż całą notatkę. Rafał poprawia, dopisuje lub kwestionuje
-   dopasowania — nanieś poprawki.
+   „Indeksowanie". Potem pokaż całą notatkę: otwórz ją w edytorze, a w podglądzie pytania daj
+   streszczenie (akapit o całej notatce w „The gate"; pełna treść w podglądzie się nie wyświetli).
+   Rafał poprawia, dopisuje lub kwestionuje dopasowania — nanieś poprawki.
 7. **BRAMKA: Rafał zatwierdza notatkę.** Dopiero wtedy: zmień
    `**Status:** szkic` → `**Status:** finalna`, zapisz plik i USUŃ
    wszystkie pliki (poza `.gitkeep`) z `planning/transkrypty/` — surowy
