@@ -87,7 +87,7 @@ tips are pixels of the recording, read from `klatka --akapit=ID --czas=S` (step 
 | effect | EDL | use it when |
 | --- | --- | --- |
 | hold + pause | `pauzy: [{ po, czas }]` | an action or result needs a moment before the narrator moves on |
-| zoom | `zoom` + rectangle | text is unreadable at 1080p, or the narrator dwells on one detail ("powiększ kadr") |
+| zoom | `zoom` + rectangle, at most 2x (`MONTAZ_MAKS_ZOOM`: a smaller rectangle does not zoom further) | text is unreadable at 1080p, or the narrator dwells on one detail ("powiększ kadr") |
 | camera move | `zoom` + `cel` rectangle | the eye should travel from one place to another (field → its result, a list top → bottom) |
 | frame | `ramka` | the narrator names one field while it is being set; the rest dims |
 | focus | `skupienie` | one element among many similar ones (a log entry, one rule in a long text); the rest blurs |

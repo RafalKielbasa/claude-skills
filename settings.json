@@ -115,7 +115,7 @@
       "effortLevel": "xhigh"
     }
   },
-  "askUserQuestionTimeout": "60s",
+  "askUserQuestionTimeout": "10m",
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
   "statusLine": {
