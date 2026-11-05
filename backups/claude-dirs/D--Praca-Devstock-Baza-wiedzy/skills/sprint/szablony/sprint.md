@@ -6,7 +6,7 @@
 
 ## Cele
 
-<!-- 1. Webhook płatności w SaaS przestaje gubić płatności po błędzie 500.
+<!-- 1. Webhook płatności przestaje gubić płatności po błędzie 500.
 2. Ekran pojedynku w aplikacji mobilnej trafia na TestFlight. -->
 
 ## Przegląd poprzedniego sprintu
@@ -14,7 +14,9 @@
 | Cel | Wynik | Zrobione | Niezrobione |
 |---|---|---|---|
 <!-- | Kampania mailowa październik | osiągnięty | devstock-org/devstock-team#760 | — | -->
-<!-- | Ranking tygodniowy | częściowo | kodozercy/code-busters#1180 | kodozercy/code-busters#1188 | -->
+<!-- | Ranking tygodniowy | częściowo | devstock-org/devstock-team#781 | devstock-org/devstock-team#788 | -->
+
+<!-- - Praktykanci: jan-kowalski: zrobione kodozercy/code-busters#1700; w toku kodozercy/code-busters#1702 -->
 
 <!-- PIERWSZY SPRINT: zamiast tabeli punkty z raportów 29 i 31, każdy z odwołaniem owner/repo#n:
 - zrobione (29): kodozercy/edu_saas#449 SAS: Poprawka daty w fakturze
@@ -23,14 +25,14 @@
 
 ## Zrobione poza planem
 
-<!-- - kodozercy/edu_saas#449 SAS: Poprawka daty w fakturze
+<!-- - devstock-org/devstock-team#795 Poprawka daty w fakturze
 PIERWSZY SPRINT: „— (pierwszy sprint)”. -->
 
 ## Skład sprintu
 
 ### {{OSOBA}}
 
-<!-- - kodozercy/edu_saas#455 SAS: Webhook płatności — ponowienie po 500 — cel 1
+<!-- - devstock-org/devstock-team#812 Webhook płatności — ponowienie po 500 — cel 1
 - devstock-org/devstock-team#810 DT-80: Szablon notatki sprintu w Slacku — poza celami
 - nowe: Mobile: checklista wydania na TestFlight — cel 2 -->
 
@@ -40,26 +42,26 @@ Na końcu „### Bez osoby” dla pozycji bez przypisania (tylko gdy jakaś jest
 
 ## Dostępność i obciążenie
 
-| Osoba | DT | SaaS | CB | CB-mobile | Razem |
-|---|---|---|---|---|---|
-<!-- | Grzegorz | — | — | 2,5/3 | 1/1 | 3,5/4 | -->
+| Osoba | Zaplanowane/dostępne |
+|---|---|
+<!-- | Grzegorz | 3,5/4 | -->
 
 <!-- Komórka to zaplanowane/dostępne, w dniach roboczych: zaplanowane = suma estymat zadań sprintu
-tej osoby w projekcie (zadanie kilku osób dzielone po równo), dostępne = dostępność podana na
-spotkaniu. „—”, gdy oba są 0. Jeden wiersz na osobę z listy zespołu, w jej kolejności. Na końcu
-wiersz „Bez osoby” z samymi zaplanowanymi dniami zadań bez osoby z listy zespołu (tylko gdy takie
-są), np. | Bez osoby | 1 | — | — | — | 1 |. -->
+tej osoby (zadanie kilku osób dzielone po równo), dostępne = dostępność podana na spotkaniu. „—”,
+gdy oba są 0. Jeden wiersz na osobę z listy zespołu, w jej kolejności. Na końcu wiersz „Bez osoby”
+z samymi zaplanowanymi dniami zadań bez osoby z listy zespołu (tylko gdy takie są), np.
+| Bez osoby | 1 |. -->
 
 ## Przeniesione i odrzucone
 
-<!-- - przeniesione: kodozercy/code-busters#1188 Ranking tygodniowy — cache zapytań
-- odrzucone: kodozercy/code-busters#845 Powiadomienia e-mail o nowych misjach (status bez zmian)
-- odrzucone i do Backlogu: kodozercy/edu_saas#430 SAS: Raport MRR -->
+<!-- - przeniesione: devstock-org/devstock-team#788 Ranking tygodniowy — cache zapytań
+- odrzucone: devstock-org/devstock-team#745 Powiadomienia e-mail o nowych misjach (status bez zmian)
+- odrzucone i do Backlogu: devstock-org/devstock-team#730 Raport MRR -->
 
 ## Porządki
 
 <!-- - devstock-org/devstock-team#512 DT-12: Opisać proces onboardingu stażysty (132 dni) — zamknij
-- kodozercy/edu_saas#301 SAS: Eksport faktur do CSV (189 dni) — zostaje
+- devstock-org/devstock-team#301 Eksport faktur do CSV (189 dni) — zostaje
 Karta pominięta: „Pominięte w tym tygodniu.” -->
 
 ## Archiwizacja

@@ -18,4 +18,4 @@ Sprawdzone 2026-11-05 w `claude.exe` 2.1.318 (bramka notatki `/spotkanie`, sesja
 
 **Jak stosować:** całej notatki nie wkładaj do podglądu, tylko otwórz ją w edytorze i daj streszczenie (`docs/spotkania-kolejki.md`, „The gate”). Mod nie powiększy okna (`ui.render` na `AskUserQuestion`: do 12 wierszy nad pytaniem, bez Markdown w terminalu), ale może pokazać kartę w panelu.
 
-Prototyp panelu: mod `gate-card` w `~/.claude/dev-mods/05cd1083-1752-4e44-808a-51df4eaeaca2/gate-card/`, działa tylko w tej sesji, dopóki nie zostanie zainstalowany jako wtyczka. Zob. [[karta-bramki-w-pytaniu]].
+Prototyp panelu `gate-card` Rafał anulował 2026-11-05 jako stratę czasu; nie proponuj moda ani panelu bez jego prośby. Zob. [[karta-bramki-w-pytaniu]].

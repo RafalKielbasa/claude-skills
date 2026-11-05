@@ -59,3 +59,4 @@
 - [Fit Body — idea-engine, czeka na formularz](fit-body-idea-engine-status.md) — 2026-10-30: nagranie 14:04 przez idea-engine (`E:\Praca\agent-biznes`, pomysł `fit-body`, wizja 11 klocków `pomysł`), repo `fit-body-business@2ab884b`, formularz Claude Docs dla Bartka i Pauliny; po wypełnieniu decyzja o klockach (rek. market, offer, regulation), #831.
 - [Tablica 3 sama dodaje issue](tablica-3-auto-dodawanie-issue.md) — `gh project item-add` po `gh issue create` pada „Content already exists”; znajdź kartę przez GraphQL i ustaw Status jawnie (2026-11-04).
 - [Adres konta kursu w filmie](adres-konta-kursu-w-filmie.md) — zostaje widoczny przez chwilę na słowo Rafała (3.1, 2026-11-04); rozmywamy drugie konto; na kartę bez samego adresu.
+- [Przyciski z osobami na kartach zadań](bramka-assignee-przyciski.md) — karta zadania bez deklaracji przypisania ma „Akceptuj, <osoba>”, bo Rafał rozdziela zadania w bramce i inaczej wypada z okna pytania (2026-11-05).
