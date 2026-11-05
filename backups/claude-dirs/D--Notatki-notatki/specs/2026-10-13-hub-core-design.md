@@ -589,7 +589,9 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
   agrees. Per `claude --help`, the command "continues that session in the background under the
   same ID, or starts a copy and says so when the session is already running". If the CLI reports
   a copy, the hub quotes it and sends nothing until Rafal decides.
-- **New session:** started from the project map (§4.2).
+- **New session:** started from the project map (§4.2). A session Rafal will work with in the
+  desktop app starts from the desktop app instead, because a session launched here with
+  `claude --bg` may not show in its sidebar (U3, §13.6).
   1. Rafal names the project and the work, for example "odpal sesję w bazie wiedzy: <zadanie>".
      The session runs in a worktree by default; "bez worktree" turns that off (P9).
   2. The hub matches the project against `HUB projects` (key, `name`, `description`) and asks
@@ -1053,3 +1055,34 @@ in this spec and listed here.
 | # | Change | From | Sections |
 |---|---|---|---|
 | U1 | One "wyślij" is enough for a session that waits for a decision or for permission: check 6 no longer blocks `prepare` and no longer asks for a second confirmation. `prepare` reports the wait with the gate text in a `warnings` list, on success and next to any failures, and the hub quotes it; `--confirm-waiting` is accepted and has no effect, so older callers keep working. Decision 3 keeps permission prompts in the session and lets an approved hub message answer a decision gate, as the questionnaire path always did (§6.4). Reason: nearly every draft answers the gate its target stands on (record `r20261021135346-79cc` of 2026-10-21 needed two "wyślij"), so the second confirmation only repeated the first | Rafal's request through the hub on 2026-10-21; variant A chosen on 2026-10-23 in session `notatki-hub-single-wyslij` | §3 (decision 3), §5.2, §6.2, §9.1, §13.1 item 9 |
+
+### 13.6 Desktop app trial (2026-10-27)
+
+Outcome of the `hub-panel` trial ([probe report](2026-10-18-hub-panel-probes.md), „Trial
+outcome”) and of the decision „Rozszerzenie mety o panel i karty zatwierdzeń”, variant B: no panel
+is built and `hub-approvals` joins the finish line. U3 is applied in place; U2 is recorded here
+only, and the VS Code wording of §1 and §12 describes the setup before the trial.
+
+| # | Change | From | Sections |
+|---|---|---|---|
+| U2 | Project sessions start in the Code tab of the Claude Code desktop app; VS Code stays for code and diffs. The trial verified that the hub works with such sessions: registry hooks, naming in `claude agents`, the gate marker, sends through `SendMessage` and dialog forks (probes D2, D3, D4, D7, D8). Where this spec says a session runs in a VS Code panel, a desktop app session behaves the same for the hub; the hub itself stays a Claude session (decision 10) | `hub-panel` probes D1–D11 | — |
+| U3 | A session for work in the desktop app starts from the desktop app; the hub's `claude --bg` launch stays for dialog forks and probes. Reason: 2 of 3 sessions the hub launched showed in the desktop sidebar, although all three were launched the same way (probe D9) | `hub-panel` probe D9 | §6.6 |
+
+**Open:** a session that acts on a hub message quotes the message verbatim at the top of its
+reply, because the desktop card shows the answer but not the hub's prompt (probe D7); the rule
+belongs in `RULES_BLOCK` of `lib/install.mjs`, which the installer writes into
+`~/.claude/CLAUDE.md`, and needs its own probe. Stale states seen in the trial join I-4 of the
+Plan 2 acceptance report: a turn interrupted by Deny ends without `Stop` and stays „waiting for
+permission”; a session stayed „working” after a turn whose `Stop` is in the registry, so a send
+needed `--confirm-busy`.
+
+### 13.7 Work stays in the terminal (2026-11-05)
+
+Decision „Kierunek huba po próbie z aplikacją desktop”, variant A: Rafal is content working in the
+terminal, so the `hub-panel` part is postponed. Approving changes from the hub (`hub-approvals`,
+§11) and a voice alert naming the session that needs Rafal (`hub-voice-alerts`) are the priorities;
+each gets its own spec. Status in the [index](../projects/hub.md).
+
+| # | Change | From | Sections |
+|---|---|---|---|
+| U4 | U2 is withdrawn: project sessions stay in the terminal and do not move to the desktop app. U3 applies only to a session Rafal chooses to work with in the desktop app. The probe of the quoting rule (the open item of §13.6) is dropped; the rule itself stays in `RULES_BLOCK` | Rafal's request on 2026-11-05 | §13.6 |

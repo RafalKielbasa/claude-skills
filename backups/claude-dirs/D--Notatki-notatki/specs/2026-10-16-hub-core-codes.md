@@ -92,6 +92,9 @@ reports (`M1` of the Plan 3 final review is not `M1` of the Plan 4 final review;
 | C3 | The closing time of a panel hub is not recorded | `specs/2026-10-16-hub-core-plan-4-acceptance.md`, Findings |
 | C4 | The Plan 4 acceptance draft was left unsent | `specs/2026-10-16-hub-core-plan-4-acceptance.md`, Findings |
 | U1 | Change from use: one "wyślij" for a waiting session; check 6 is a notice in the `prepare` output, `--confirm-waiting` has no effect | `specs/2026-10-13-hub-core-design.md` §13.5 |
+| U2 | Desktop app trial: project sessions start in the Code tab of the desktop app (withdrawn by U4) | `specs/2026-10-13-hub-core-design.md` §13.6 |
+| U3 | Desktop app trial: a session for work in the desktop app starts from the desktop app | `specs/2026-10-13-hub-core-design.md` §13.6, §6.6 |
+| U4 | Work stays in the terminal: U2 withdrawn, the probe of the quoting rule dropped | `specs/2026-10-13-hub-core-design.md` §13.7 |
 | T4 | Plan 3 ruling: unknown outcome of a new-session launch (group of P11) | `specs/2026-10-13-hub-core-design.md` §13.4, P11 |
 | T6 | Plan 3 ruling: no fallback command for a fork with an unknown outcome (group of P11) | `specs/2026-10-13-hub-core-design.md` §13.4, P11 |
 | I1 | Plan 3 final review: fork a given live id directly, list twins. Plan 4 final review: `HUB confirm` accepts the hub's sender names from the polls (fixed, part of P10) | `specs/2026-10-14-hub-core-plan-3-acceptance.md`, Open decisions (P12); `specs/2026-10-16-hub-core-plan-4-acceptance.md`, Deviations from the plan; hub spec §13.4, P10 |
