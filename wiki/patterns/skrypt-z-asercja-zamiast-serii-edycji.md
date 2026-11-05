@@ -87,6 +87,7 @@ przeczytać przed wykonaniem, a wynik porównać z oczekiwaniem mechanicznie.
   regexem) pokazał 5 plików pominiętych przez CRLF ([[kotwica-konca-linii-gubi-pliki-crlf]]). Codemod
   rzucał wyjątek przy każdym nieobsłużonym propsie (`variant`, `description`, `image`, `closeSnackbar` po
   zamianie) i przy elemencie z dziećmi. Jeden przebieg przepiął 35 plików, a diff objął tylko toasty.
+- 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, indeks `kodozercy-platform`): trzy skrypty Node ze scratchpadu zmieniły wiersze indeksu po kilka tysięcy znaków. Każda zmiana miała asercję „dokładnie jeden wiersz o tym prefiksie”, a przywrócona decyzja szła z `git show fa711a33~1`, nie z przepisywania. Wszystkie przeszły za pierwszym razem, `git diff --stat` po każdym: 33, 17 i 8 zmienionych linii.
 
 ## Rozwiązanie
 Przy więcej niż kilkunastu zmianach w jednym pliku pisz skrypt, nie serię edycji:

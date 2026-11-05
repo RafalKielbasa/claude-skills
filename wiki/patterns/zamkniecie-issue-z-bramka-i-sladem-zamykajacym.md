@@ -28,6 +28,7 @@ Zapisy, które w bramce mają pełną treść, przechodzą przez klasyfikator po
 
   Rafał odpowiedział „ok”, bez uwag do treści. W tej samej sesji tak samo zbudowana bramka DT-13 #651
   (trzy issue, siedem kroków) czekała na odpowiedź.
+- 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, DT-52 #741) (dowód ograniczający): kolejność ślad, `status`, commit indeksu zadziałała dla #741, a wcześniejsze `fa711a33` przed `status` dla #773 zostawiło w indeksie zamknięcie, które nie zaszło (odmowa klasyfikatora, potem zmiana zakresu). Patrz [[zamkniecie-na-slowo-mimo-sprzecznego-dowodu]].
 
 ## Rozwiązanie
 Przy zamykaniu issue z resztką:

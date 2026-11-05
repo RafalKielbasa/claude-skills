@@ -28,6 +28,7 @@ never reads.
   session-start brief; `gh issue view 96` checked only when Rafał asked for a new issue showed
   `CLOSED`. In the same session the fix worked for the ranking: `candidates` was run right before the
   ranking shown after #646 went to Done.
+- 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, po zamknięciu #741): the ranking shown after `status --to done` came from the session-start brief; only `mine` was re-run. `candidates` run afterwards, for this wiki entry, returned the same top items, so no harm this time, but nothing in the answer proved that.
 
 ## Rozwiązanie
 Run `candidates` immediately before every ranking you show, including after `status --to done`; never

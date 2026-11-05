@@ -68,6 +68,7 @@ ta sama zmiana na Done przeszła.
   należy do zbiorczej tabeli decyzji — zgoda „OK na wszystkie rekomendacje” jest dla użytkownika zgodą na
   plan, nie na wysłanie gałęzi; push pytać osobno albo od razu podać linię `!`.
 - 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): NAWRÓT: `create` po „ok” na kartę nowego issue odrzucone „[External System Writes]”. Obsługa ze skilla zadziałała: bez ponawiania, linia `!`, którą Rafał uruchomił (#860). Skill wymienia jednak tylko `status --to done` i `close`, a dotyczy to też `create`. `status --to done` po „Przesuń” przeszło we własnym wywołaniu.
+- 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, porządki po DT-52 #741) (obsługa ze skilla zadziałała, status bez zmian): po „zrób porządek na tablicy” dwa osobne wywołania `status --to done` w jednej turze: #772 przeszło (`closed: true`), #773 odrzucone („[External System Writes]”). Po „D1 A” na wariant „Odpinam #773 od #741 i zamykam epik” `status --ref …#741 --to done` przeszło, choć wariant nazywał operację słowami, bez komendy. `removeSubIssue` (dwa razy), `gh issue edit --add-assignee Szymon0C` i `status --to in_progress` przeszły. Bez ponawiania, linia `!` podana, a potem wycofana, bo Rafał zmienił zakres. Ta sama komenda przy tej samej zgodzie daje różny wynik, więc hipoteza o treści zgody nadal niczego nie przesądza.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu

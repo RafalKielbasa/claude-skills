@@ -993,3 +993,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: windows-path-w-literale-skryptu, dlugi-lancuch-narzedzi-bez-linii-statusu, cd-w-komendzie-bash-przestawia-katalog-kolejnych-wywolan, powershell-semantyka-wymaga-sondy-nie-czytania, zakres-linii-wyliczony-z-nienumerowanego-zrzutu, zielony-suite-z-mockami-nie-widzi-binarki-ani-poswiadczen.
 - Wzorce repo tej sesji: brak (repo `.claude` nie ma `.claude/skills/`, więc nie ma wiki repo).
 - Brak `nawrót` wśród dotkniętych.
+
+## 2026-11-05 — sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, stan i zamknięcie epiku DT-52 #741)
+- założono: zamkniecie-na-slowo-mimo-sprzecznego-dowodu (skill: board-tracker, typ: porażka) — `status --to done` wysłane mimo własnego odczytu sprzecznego z przesłanką, indeks wyprzedził stan.
+- założono: stan-projektu-sprawdzony-u-zrodla-nie-w-indeksie (skill: project-index, typ: sukces) — odpowiedź ze źródeł, bo indeks podawał stan sprzed scalenia.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie, zamkniecie-issue-z-bramka-i-sladem-zamykajacym, ranking-from-session-start-snapshot, dlugi-lancuch-narzedzi-bez-linii-statusu, skrypt-z-asercja-zamiast-serii-edycji, kod-decyzji-numerowany-od-nowa-koliduje-w-sesji, nowe-polecenie-przy-otwartej-bramce-nie-jest-zgoda.
+- Brak nowych przejść `zaadresowany` → `nawrót`; zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie ma `nawrót` od 2026-11-04 i dostał dowód bez zmiany statusu.
+- Wzorce repo tej sesji: brak.
