@@ -72,6 +72,8 @@ So the hub gains three things:
 | Leaving the computer | A mechanism to suspend alerts; on return, a walk through the waiting items, which can itself be paused and resumed |
 | Scope of the walk | Everything still waiting from the last 24 hours, also from before the pause. Older waits stay in the overview only |
 | Voice | Local `Microsoft Paulina Desktop` (System.Speech), chosen by ear, so alerts use no ElevenLabs minutes |
+| Which sessions the hook waits on | Those whose `CLAUDE_CODE_ENTRYPOINT` is `cli` or `claude-vscode`, read in the hook itself (§6.1). The poll cannot tell `claude -p` from a window (probe report) |
+| A command that arrives as text | A pasted `! ok a3` approves nothing, and the hub says how to type it. After a `!` command the hub model adds one line at most (§4.1, §4.4) |
 
 **The author's calls.** Rafal saw some of these as guesses and did not object; the rest appear here
 for the first time. All are open to correction when he reads this document.
@@ -95,7 +97,7 @@ for the first time. All are open to correction when he reads this document.
 | The send without „wyślij” covers only a conversation started with „dawaj”. A conversation Rafal starts the old way („porozmawiajmy głosem o X”) keeps „wyślij” | He decided this for the path after an alert; nothing says it should reach further |
 | The hook waits only on sessions known to be able to show or later attach a prompt, and when unsure it does not wait (§6.1) | A stalled session is an anti-goal; a missing hub answer only costs him the session's own prompt |
 | A wait the hub cannot answer still speaks, and the hub tab says „odpowiedz w sesji” (§4.5) | A silent stall is worse than an alert he must answer elsewhere |
-| Approving from the hub needs a hub in a terminal, the VS Code integrated terminal included | `!` is the only input path, and he works in terminals. A panel hub keeps everything except `! ok`, if §8 shows `!` is missing there |
+| Approving from the hub needs a hub in a terminal, the VS Code integrated terminal included | `!` is the only input path, and he works in terminals. A panel hub keeps everything except `! ok`, because `!` is missing there (probe report) |
 | „A model cannot approve” means: a model cannot approve by running the command or writing the decision file. A model deliberately forging a record in the hub's transcript is out of reach, because hub, models and files share one OS user (§5) | No design on one OS user can promise more, and he should know where the guarantee ends |
 
 ## 4. How it behaves
@@ -121,6 +123,7 @@ What Rafal types in the hub tab:
 | `dawaj`, `dawaj a3` | The voice conversation about the item announced last, or about the named one (§4.3) |
 | `dalej`, `dalej a3` | Skips the item announced last, or the named one |
 | `! ok a3`, `! nie a3` | Answers permission item `a3` (§4.4) |
+| One of these commands as text: a pasted `! ok a3`, or `ok a3` without the `!` | Changes nothing, and the hub says that `!` must be pressed by hand. In the probe a line pasted together with its `!` reached the model as plain text, and in a panel every such line does |
 | Anything else | An ordinary conversation with the hub, which forwards nothing to a session |
 
 Normal listening, a walk and a pause are the same queue in different modes:
@@ -189,6 +192,10 @@ the measured period 75% of permission prompts were answered within a minute, bef
 Text cannot answer a permission item: `a3 tak` sends nothing, and the hub prints which command to
 type.
 
+Claude Code starts a model turn after every `!` command (probe report), so each `! ok` costs one turn
+of the hub model. That model adds one line at most, and it never says something was approved unless the
+command's own output says so: in the probe a model reported a decision as saved when nothing had run.
+
 ### 4.5 A wait the hub cannot answer
 
 A `permission_prompt` notification sets „waiting for permission” with no tool name and independently
@@ -209,10 +216,11 @@ conversation started the old way stays available. When the hook saw that the too
   stale code cannot hit a newer prompt or gate.
 - **No model in the path:** a model must not be able to approve. The hook, not the command, therefore
   checks that Rafal typed the approval: a `!` command leaves a `<bash-input>` record in the hub
-  session's transcript before it takes effect (two samples, 0.4–0.5 s earlier), while a model's call
-  is a `tool_use` record. A decision without that record is ignored, so writing the decision file
-  directly does not work either. This must be probed first (§8). If it turns out unreliable, this is a
-  decision for Rafal, not for the builder.
+  session's transcript before it takes effect (seven samples, 0.1–0.8 s earlier by timestamp; the hook
+  retries its search for 3 s, because a timestamp is not the moment of the disk write), while a model's
+  call is a `tool_use` record. A decision without that record is ignored, so writing the decision file
+  directly does not work either. §8 checked this. If it turns out unreliable later, this is a decision
+  for Rafal, not for the builder.
 - **Where this ends:** a model that deliberately forges a record in the hub's transcript could pass the
   check, because all of this runs as one OS user. Decision 8 of the hub spec keeps `deny` rules out,
   and this design does not add any. Each approval is logged and printed in the hub tab, so an approval
@@ -234,16 +242,20 @@ A new global, blocking command hook with a long `timeout`, separate from the exi
 It **returns at once with no decision**, leaving Claude Code's normal flow, when:
 
 - the hub is not running (the watcher has not written its state recently);
-- the session is the hub itself or a dialog fork;
-- the session is not known to be able to show a prompt. The hook is an allow-list over the last poll
-  of `claude agents --json`, read from `polls.jsonl`, never by running the CLI, which can take 30 s
-  (`lib/polls.mjs:8`): `interactive` sessions, and hub-launched project sessions (`background`), whose
-  prompt is otherwise reachable only through `claude attach`. Anything else, such as `claude -p` or a
-  voice fork, passes through, because a hook that waited there would stall a call that is denied at
-  once today (probe „No decision”). A session too new for the last poll passes through too, and its
-  item has no hook behind it (§4.5). §8 checks the signal;
+- the session is the hub itself or a dialog fork. A typed dialog fork is a `claude --bg` session, so
+  its entrypoint is `cli`; the hook recognises it by a name starting `dlg-`, from
+  `<CLAUDE_JOB_DIR>/state.json` or from the hub's list of launched sessions;
 - the tool is `AskUserQuestion` or `ExitPlanMode`: the hook records that and returns, so a code can
-  never answer them.
+  never answer them;
+- the session is not known to be able to show a prompt. The hook reads `CLAUDE_CODE_ENTRYPOINT` from
+  its own environment and waits only for `cli` (terminal windows and `claude --bg`) and `claude-vscode`
+  (panels). Anything else, above all `sdk-cli` from `claude -p`, passes through, because a hook that
+  waited there would stall a call that is denied at once today (probe „No decision”). A voice fork runs
+  `claude -p` (`~/.claude/skills/talk/lib/fork.mjs:15`). The poll cannot do this: it lists `claude -p`
+  as `interactive` (probe report). The hook reads no poll, so a new session is covered from its first
+  prompt. These values are observed, and whether they are documented was not checked. An unknown value
+  passes through, which costs Rafal the hub's answer (§4.5) and stalls nothing; §11 item 10 checks the
+  dangerous direction, `claude -p` reporting a value the hook waits on.
 
 Otherwise it writes a pending record holding the session, prompt id, tool, input and its own pid,
 then polls for a decision bound to that record. The item's code points to the record.
@@ -299,7 +311,8 @@ late answer”). This part does not fix the underlying gap.
   literally; one skips an item; one sends a typed answer from Rafal's whole prompt. The overview lists
   waiting items with their codes. The answer path composes a new path without the five template
   sections, keeps the origin header line, runs the existing pre-send checks, and fails when the wait
-  behind the code has ended.
+  behind the code has ended. The same command recognises Rafal's commands that arrive as text (§4.1)
+  and refuses them with how to type them.
 - `SKILL.md`: „A watcher event”, „Sending”, „Voice conversation about a session” and „Boundaries”.
 
 ### 6.6 Earlier documents this overrides
@@ -326,13 +339,17 @@ Add these to the hub spec as §13.8, and link this document.
 | Hub closed | The hook returns at once, there is no voice, and sessions work as today |
 | Speech fails | One line in the hub tab; the queue and answers keep working |
 | Hook crashes or hangs | The prompt in the session stays usable while the hook waits (probed) |
-| Hook limit reached | `! ok` prints „odpowiedz w sesji”. Whether the prompt then still accepts an answer is being re-tested (§8) |
+| Hook limit reached | `! ok` prints „odpowiedz w sesji”, and the prompt in the session still accepts an answer (probe report) |
+| `! ok` pasted whole, or typed in a panel | It reaches the model as text: nothing is approved, and the hub says how to type it |
 | Send check fails | The literal failure is shown and nothing is retried, as in Sending today |
 | Code unknown, or its wait has ended | Nothing is sent, and the hub shows the session's state |
 | Answer typed without a code | It stays in the hub as ordinary conversation, and no session gets it |
 | Voice conversation ends without a confirmed order | Nothing is sent, and the item stays in the queue |
 
 ## 8. Probes the plan runs first
+
+Run on 2026-11-06, results in the probe report. Item 4 failed, because the poll lists `claude -p` as
+`interactive`, and Rafal chose the environment signal now in §6.1. Item 7: `!` is missing in a panel.
 
 1. **Prompt after the hook limit:** the one inconclusive result in the probe report. Must pass before
    the limit in step 2 is chosen.
@@ -412,3 +429,5 @@ it talks too much.
     pause in the middle resumes what is left. A new wait joins the end.
 12. Local speech stays silent during a voice conversation.
 13. After `! ok`, the same command prompts again next time: no standing rule was added.
+14. `! ok a3` pasted as a whole line, and `ok a3` without the `!`, approve nothing: the prompt still
+    waits, the hub says how to type it, and no model reports an approval.
