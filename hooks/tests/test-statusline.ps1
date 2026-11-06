@@ -20,6 +20,35 @@ function Invoke-StatusLine {
     return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = ($out -join "`n") }
 }
 
+function Invoke-StatusLineWithContext {
+    # Goes through ProcessStartInfo: the bar's block characters are UTF-8 on stdout, while a PowerShell
+    # pipe decodes with the console code page, which depends on the machine.
+    param([Parameter(Mandatory)][string]$Dir, [Parameter(Mandatory)][hashtable]$Context)
+    $json = @{ workspace = @{ current_dir = $Dir }; context_window = $Context } | ConvertTo-Json -Compress
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $startInfo.FileName = 'node'
+    $startInfo.Arguments = '"' + $scriptPath + '"'
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardInput = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+    $process = [System.Diagnostics.Process]::Start($startInfo)
+    $process.StandardInput.BaseStream.Write($bytes, 0, $bytes.Length)
+    $process.StandardInput.Close()
+    $output = $process.StandardOutput.ReadToEnd().Trim()
+    $process.WaitForExit()
+    return $output
+}
+
+function Get-ExpectedContext {
+    # Code points, not literals: Windows PowerShell reads a .ps1 without a BOM in the ANSI code page.
+    param([Parameter(Mandatory)][int]$Filled, [Parameter(Mandatory)][string]$Color, [Parameter(Mandatory)][string]$Label)
+    $esc = [char]27
+    $block = [string][char]0x2586
+    return "$esc[$($Color)mcontext [" + ($block * $Filled) + "$esc[38;5;240m" + ($block * (10 - $Filled)) + "$esc[$($Color)m] $Label$esc[0m"
+}
+
 function New-Repo {
     param([Parameter(Mandatory)][string]$Name, [string]$Branch = 'main')
     $dir = Join-Path $sandbox $Name
@@ -173,6 +202,50 @@ try {
     $output = $process.StandardOutput.ReadToEnd().Trim()
     $process.WaitForExit()
     Assert-Equal -Expected "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo" -Actual $output -Because 'a BOM before the JSON does not lose the session directory'
+
+    # --- JSON that parses but holds no object falls back like malformed input ---
+    Push-Location $repo
+    try {
+        $out = 'null' | & node $scriptPath
+        $code = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+    Assert-Equal -Expected 0 -Actual $code -Because 'a JSON null on stdin exits 0'
+    Assert-Equal -Expected "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo" -Actual ($out -join "`n") -Because 'a JSON null on stdin uses the working directory'
+
+    # --- the context gauge: filled blocks are what is still available, and the color follows them ---
+    $repo = New-Repo -Name 'context'
+    Add-BaseCommit -Repo $repo -Files @('a')
+    $git = "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo"
+    $contextCases = @(
+        @{ Remaining = 100; Filled = 10; Color = '38;5;28'; Percent = '100%'; Because = 'an untouched window is a full green bar' }
+        @{ Remaining = 51; Filled = 5; Color = '38;5;28'; Percent = '51%'; Because = 'just above half stays green' }
+        @{ Remaining = 50; Filled = 5; Color = '33'; Percent = '50%'; Because = 'half turns yellow' }
+        @{ Remaining = 21; Filled = 2; Color = '33'; Percent = '21%'; Because = 'just above a fifth stays yellow' }
+        @{ Remaining = 20; Filled = 2; Color = '31'; Percent = '20%'; Because = 'a fifth turns red' }
+        @{ Remaining = 0; Filled = 0; Color = '31'; Percent = '0%'; Because = 'a used-up window is an empty red bar' }
+        @{ Remaining = 90.4; Filled = 9; Color = '38;5;28'; Percent = '90%'; Because = 'a fractional percentage is rounded' }
+        @{ Remaining = 150; Filled = 10; Color = '38;5;28'; Percent = '100%'; Because = 'a percentage above the range is clamped, so the bar width holds' }
+        @{ Remaining = -3; Filled = 0; Color = '31'; Percent = '0%'; Because = 'a percentage below the range is clamped, so the bar width holds' }
+    )
+    foreach ($case in $contextCases) {
+        $expected = (Get-ExpectedContext -Filled $case.Filled -Color $case.Color -Label "$($case.Percent) left of 1M") + "`n$git"
+        Assert-Equal -Expected $expected -Actual (Invoke-StatusLineWithContext -Dir $repo -Context @{ remaining_percentage = $case.Remaining; context_window_size = 1000000 }) -Because $case.Because
+    }
+
+    $expected = (Get-ExpectedContext -Filled 9 -Color '38;5;28' -Label '90% left of 200k') + "`n$git"
+    Assert-Equal -Expected $expected -Actual (Invoke-StatusLineWithContext -Dir $repo -Context @{ remaining_percentage = 90; context_window_size = 200000 }) -Because 'a window below a million shows in thousands'
+
+    $expected = (Get-ExpectedContext -Filled 9 -Color '38;5;28' -Label '90% left') + "`n$git"
+    Assert-Equal -Expected $expected -Actual (Invoke-StatusLineWithContext -Dir $repo -Context @{ remaining_percentage = 90 }) -Because 'an unknown window size leaves only the percentage'
+
+    Assert-Equal -Expected $git -Actual (Invoke-StatusLineWithContext -Dir $repo -Context @{ remaining_percentage = $null; context_window_size = 1000000 }) -Because 'a null percentage early in a session shows no gauge rather than a false full bar'
+
+    $plain = Join-Path $sandbox 'plain-context'
+    New-Item -ItemType Directory -Path $plain -Force | Out-Null
+    $expected = (Get-ExpectedContext -Filled 9 -Color '38;5;28' -Label '90% left of 1M') + "`n$plain"
+    Assert-Equal -Expected $expected -Actual (Invoke-StatusLineWithContext -Dir $plain -Context @{ remaining_percentage = 90; context_window_size = 1000000 }) -Because 'the gauge also shows outside a repository'
 
     # --- the script runs every few seconds next to commits made by other tools ---
     $repo = New-Repo -Name 'index'
