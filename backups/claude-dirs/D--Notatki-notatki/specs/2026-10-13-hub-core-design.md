@@ -66,7 +66,7 @@ Out of scope for sub-project 1:
 |---|---|---|
 | 1 | What the orchestrator is | A Claude Code session acting as the hub. It sends with `SendMessage` and reads statuses from `claude agents --json` |
 | 2 | Where project sessions come from | Both: the hub adopts sessions Rafal starts himself, and it can start new ones in the background with `claude --bg` |
-| 3 | How decisions reach a project session | The hub sends only prompts Rafal approved. Permission prompts are answered in the session itself; a decision gate is answered in the session or by an approved hub message (U1, §13.5); the hub says which session waits and for what |
+| 3 | How decisions reach a project session | The hub sends only prompts Rafal approved. Permission prompts are answered in the session itself or by Rafal's own command in the hub tab (U5, §13.8); a decision gate is answered in the session or by an approved hub message (U1, §13.5), or by an answer Rafal types with the item's code (U5, §13.8); the hub says which session waits and for what |
 | 4 | How the hub knows the state | Global hooks write a registry. A gate turn ends with a marker line. Waking moved from `notify_when_idle` to a watcher under `Monitor` when design part 2 was accepted (§5.5) |
 | 5 | Who runs the analytical dialog | A fork of the project session (`--resume <id> --fork-session`) that reads the repository and writes only its dialog directory. Only decisions and the prompt draft go back to the hub |
 | 6 | Visibility in v1 | Text in the hub. `PostToolUse` collects "what it is doing" from day one, so the panel (1a) needs no new data |
@@ -886,9 +886,8 @@ back to Rafal and into this spec before the dependent plan is written.
 - **Panel on `localhost` (1a):** continuous view from the same registry, including the stream of
   `lastAction`.
 - **Approval cards in the hub:** a `PermissionRequest` hook waits for a decision that Rafal enters
-  himself with a `!` command in the hub tab, so the decision is never relayed by a model. The
-  hook docs give `decision.behavior` allow/deny and a default `command` hook timeout of 600 s.
-  This changes decision 3 and needs its own probe.
+  himself with a `!` command in the hub tab, so the decision is never relayed by a model. Designed
+  and probed as `hub-approvals` (§13.8).
 - **Codex session statuses:** `~/.codex/hooks.json` already has `SessionStart` and `SessionEnd`, so
   the registry could show Codex sessions. Sending to them is not possible with `SendMessage`.
 - **Codex participation policy:** when Codex joins without an explicit command; to be refined
@@ -1086,3 +1085,14 @@ each gets its own spec. Status in the [index](../projects/hub.md).
 | # | Change | From | Sections |
 |---|---|---|---|
 | U4 | U2 is withdrawn: project sessions stay in the terminal and do not move to the desktop app. U3 applies only to a session Rafal chooses to work with in the desktop app. The probe of the quoting rule (the open item of §13.6) is dropped; the rule itself stays in `RULES_BLOCK` | Rafal's request on 2026-11-05 | §13.6 |
+
+### 13.8 Approvals and voice alerts (2026-11-06)
+
+Decision „Przyjęcie specu zatwierdzeń i powiadomień”, variant A. The design is
+[2026-11-05-hub-approvals-voice-alerts-design.md](2026-11-05-hub-approvals-voice-alerts-design.md).
+These changes take effect when its plan is installed; status in the
+[index](../projects/hub.md).
+
+| # | Change | From | Sections |
+|---|---|---|---|
+| U5 | Rafal can answer a permission prompt from the hub tab with his own command (`! ok a3`, `! nie a3`), and a decision gate by typing the answer with the item's code (`a3 B`). A typed answer and a voice order read back and confirmed in a conversation started with „dawaj” go to the session without „wyślij”. The model still never answers on its own | Rafal, conversation 2026-11-05 to 2026-11-06 | decision 3, §11, design §3, §4, §6.6 |

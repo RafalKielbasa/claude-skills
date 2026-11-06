@@ -18,9 +18,10 @@
 
 <!-- - Praktykanci: jan-kowalski: zrobione kodozercy/code-busters#1700; w toku kodozercy/code-busters#1702 -->
 
-<!-- PIERWSZY SPRINT: zamiast tabeli punkty z raportów 29 i 31, każdy z odwołaniem owner/repo#n:
-- zrobione (29): kodozercy/edu_saas#449 SAS: Poprawka daty w fakturze
-- utknęło (29): devstock-org/devstock-team#790 DT-70: Kampania mailowa listopad — 15 dni bez zmian
+<!-- PIERWSZY SPRINT: zamiast tabeli po jednej linii na listę z raportu 29 (etykieta, liczba, najwyżej 3 odwołania owner/repo#n, potem +N) i po jednej linii na osobę z blokerem z raportu 31:
+- zrobione (29): 88 — kodozercy/edu_saas#449, kodozercy/edu_saas#450, devstock-org/devstock-team#760 +85
+- utknęło (29): 12 — devstock-org/devstock-team#790 (15 dni), devstock-org/devstock-team#512 (132 dni) +10
+- czeka na review (29): 3 — kodozercy/code-busters#1700, kodozercy/code-busters#1702 +1
 - blokery (31): Szymon — czeka na dostęp do konta Apple -->
 
 ## Zrobione poza planem

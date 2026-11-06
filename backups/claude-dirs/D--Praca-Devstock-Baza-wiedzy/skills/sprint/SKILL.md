@@ -253,10 +253,10 @@ Claude's proposal:
   `Bez celu` for `planned` refs absent from the previous `sprint.json` (only if any), and always
   the row `Zrobione poza planem` with the `unplanned` refs (`—` when empty). Cells hold refs only;
   more than 5 → the first 5 and `+N`.
-- **First run.** No goal rows: the card shows only what the loaded reports say — `29`: number of
-  done issues and the issues, stale items with days, waiting PRs; `31`: each person's blockers, one
-  line each. Every one of these lists shows at most 3 entries, then `+N`. Nothing else from the
-  boards; the one exception is `Praktykanci`, from `done-count.json`. No report loaded and no
+- **First run.** No goal rows: the card shows only what the loaded reports say. Each `29` list
+  (done, stale with days, waiting PRs) is exactly one line: its label, the count when the report
+  gives one, at most 3 refs (a stale ref with its days), then `+N`. `31`: blockers, one line per
+  person who has a blocker. Nothing else from the boards; the one exception is `Praktykanci`, from `done-count.json`. No report loaded and no
   `interns` → skip the card with one line and go to Step 2c (Step 2b is skipped on a first run).
 - **`Praktykanci`, previous sprint and first run alike.** After the table or the report lines, a
   heading `Praktykanci`, then one line per login in `interns` (`review.json`, on a first run

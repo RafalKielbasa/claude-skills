@@ -60,3 +60,4 @@
 - [Tablica 3 sama dodaje issue](tablica-3-auto-dodawanie-issue.md) — `gh project item-add` po `gh issue create` pada „Content already exists”; znajdź kartę przez GraphQL i ustaw Status jawnie (2026-11-04).
 - [Adres konta kursu w filmie](adres-konta-kursu-w-filmie.md) — zostaje widoczny przez chwilę na słowo Rafała (3.1, 2026-11-04); rozmywamy drugie konto; na kartę bez samego adresu.
 - [Przyciski z osobami na kartach zadań](bramka-assignee-przyciski.md) — karta zadania bez deklaracji przypisania ma „Akceptuj, <osoba>”, bo Rafał rozdziela zadania w bramce i inaczej wypada z okna pytania (2026-11-05).
+- [n8n: fetch bez browser-id wylogowuje](n8n-fetch-bez-browser-id-wylogowuje.md) — własny fetch do `/rest` bez nagłówka `browser-id` to 401 i koniec sesji profilu kursu (2026-11-05); używaj helpera `api` z `uslugi/n8n.js`; powrót: ręczny `login` Rafała.

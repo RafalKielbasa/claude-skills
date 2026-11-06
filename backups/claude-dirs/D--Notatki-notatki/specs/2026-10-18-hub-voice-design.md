@@ -617,14 +617,19 @@ Rafal neither confirmed nor rejected that guess.
    - If `prompt.md` was written, the hub composes it as a dialog message to X:
      `HUB compose --path dialog --session <id> --origin voice/<dialog dir name> --body-file "<dialog dir>/prompt.md"`.
      It then follows steps 2–6 of the hub skill's Sending: the full draft, then Rafal's „wyślij”
-     in text.
+     in text. A conversation started with „dawaj” is the exception: the confirmed `prompt.md` is sent
+     when the conversation ends, without „wyślij”, and the hub shows its full text
+     ([hub approvals and voice alerts design §4.3](2026-11-05-hub-approvals-voice-alerts-design.md),
+     in effect when its plan is installed).
    - Without `prompt.md` nothing is sent.
 6. The bridge does not wake X, and X never reads the dialog. X learns the result only from the
    hub's message.
 
 ### 19.3 Boundaries
 
-- A voice decision is never „wyślij” (§2, anti-goals; the hub's hard rules are unchanged).
+- A voice decision is never „wyślij” (§2, anti-goals; the hub's hard rules are unchanged), except
+  in a conversation started with „dawaj” (§19.2 step 5). §2 and §5.5 still hold there: the order was
+  read back and confirmed, and outward actions wait for his word in text.
 - The hub writes only into `~/.claude/hub/` through the hub CLI, with one exception: the directory
   of a voice dialog, which the talk CLI writes into its own dialog root (§4). The hub's role text
   and its skill say so.
