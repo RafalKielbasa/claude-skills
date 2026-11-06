@@ -2,7 +2,10 @@
 name: cp-intro-tomasz-pr212
 description: "Onboarding CP-INTRO: dokument jest ticketem (bez issue na GitHubie); PR #212 Tomasza oceniany wg wersji z main, nie odświeżonej; review 5774860207"
 metadata:
+  node_type: memory
   type: project
+  originSessionId: 697b7bfb-0bd6-46b7-a761-81427aabcf6e
+  modified: 2026-11-06T09:34:27.193Z
 ---
 
 2026-11-04: zadanie onboardingowe `CP-INTRO` nie ma issue i nie wymaga jego założenia. Sam
@@ -24,3 +27,5 @@ błędami autora.
 - POST review przez `!` Rafała: [[code-review-master-config-2026-09-07]].
 
 **Aktualizacja 2026-11-04:** odświeżony CP-INTRO zmergowany w #214 (`773d4bf`). Kolejne osoby oceniam wg tej wersji, a #212 nadal wg wersji z własnej gałęzi Tomasza.
+
+**Aktualizacja 2026-11-06:** PR nietknięty ok. 37,5 h po review: head nadal `4fd9184`, 0 komentarzy `tomrud88`, 7/7 wątków otwartych, opis bez edycji; `recheck` nie ruszony. Status na Discordzie: [[intern-hours-in-discord-status]].
