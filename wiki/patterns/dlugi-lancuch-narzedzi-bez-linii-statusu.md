@@ -68,6 +68,9 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   - Linia statusu za każdym razem pojawiła się dopiero po przypomnieniu.
 - 2026-11-05, sesja e70485da-f464-4147-b956-8e00c7c5e2e2 (id claude.ai niedostępny): cztery przypomnienia „The user hasn't heard from you in a while” przy jednym zadaniu (status line) i jego podsumowaniu: po odczycie dokumentacji, przy szukaniu BOM, przy pełnym przebiegu testów i po zapisie do wiki. Linia statusu pojawiła się dopiero po każdym z nich.
 - 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, stan i zamknięcie DT-52): dwa wtrącenia harnessu: po czterech paczkach odczytów (GitHub, EAS, plany, transkrypt) przed pierwszą odpowiedzią i przy zapisie indeksu po zamknięciach. Trzecie przy czytaniu wiki w tym podsumowaniu.
+- 2026-11-06, sesja 2e20e7fb-3051-4c0d-899a-41666a866e98 (id claude.ai niedostępny; repo `.claude`, status line): trzy wtrącenia
+  harnessu: na początku pierwszego zadania, w pętli edycja hooka i testy oraz przy analizie transkryptu
+  do podsumowania. Przy trzecim linia statusu pojawiła się dopiero po wtrąceniu.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

@@ -23,6 +23,10 @@ rekomendowany” nie ma czego przyjąć.
   (wariant bez pusha). Strażnik worktree nie pozwala na git w kopii głównej, więc podałem linię `!`,
   i dopiero przy niej dałem warianty i marker, o jedną turę za późno. Następna wiadomość była nowym
   zleceniem z huba, a linia `!` do końca sesji nie została uruchomiona.
+- 2026-11-06, sesja 2e20e7fb-3051-4c0d-899a-41666a866e98 (id claude.ai niedostępny; repo `.claude`, status line): raport
+  kończył się propozycją commita w `<details>` ze zdaniem „czekam na Twoje słowo”, bez ❓ i bez ⏸, więc
+  hub nie widział bramki. Następna wiadomość to `/podsumuj-sesja-claude`, a commit nie powstał. Decyzja
+  wróciła w raporcie z podsumowania jako ❓ z wariantami i markerem.
 
 ## Rozwiązanie
 Następny krok, który wymaga słowa Rafała, nie stoi w SEDNO jako zdanie. Idzie do ❓ z [A] (rekomendowane,

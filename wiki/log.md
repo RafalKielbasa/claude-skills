@@ -1000,3 +1000,11 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie, zamkniecie-issue-z-bramka-i-sladem-zamykajacym, ranking-from-session-start-snapshot, dlugi-lancuch-narzedzi-bez-linii-statusu, skrypt-z-asercja-zamiast-serii-edycji, kod-decyzji-numerowany-od-nowa-koliduje-w-sesji, nowe-polecenie-przy-otwartej-bramce-nie-jest-zgoda.
 - Brak nowych przejść `zaadresowany` → `nawrót`; zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie ma `nawrót` od 2026-11-04 i dostał dowód bez zmiany statusu.
 - Wzorce repo tej sesji: brak.
+
+## 2026-11-06 — sesja 2e20e7fb-3051-4c0d-899a-41666a866e98 (id claude.ai niedostępny; repo `.claude`, status line: pasek kontekstu i git dla kilku katalogów)
+- założono: pole-o-pasujacej-nazwie-wziete-za-wymaganie (skill: ogólny, typ: porażka) — `workspace.current_dir` wzięte za „katalog, w którym pracuje sesja”; poprawił to Rafał.
+- założono: repo-claude-commituje-backup-nie-sesja (skill: ogólny, typ: porażka) — `e6a141c` bez `Test-SecretContent` (skan po fakcie czysty), a „czekam na słowo” nie zatrzymuje backupu z `SessionEnd`.
+- dopisano dowód: dowod-wywolania-przez-harness-tymczasowym-tee, raport-z-krokiem-na-slowo-bez-wariantow, dlugi-lancuch-narzedzi-bez-linii-statusu, nowe-polecenie-przy-otwartej-bramce-nie-jest-zgoda.
+- Pierwsze wywołanie skilla (09:30 UTC) przerwała nowa prośba Rafała, bez zapisu; ten wpis pochodzi z drugiego wywołania.
+- Wzorce repo tej sesji: brak.
+- Brak nowych przejść na `nawrót`. Kandydat wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji).
