@@ -24,7 +24,7 @@
 - No new dependency. Pure functions under `lib/`, thin `bin/`, every test against a temporary `HUB_DATA`. Every function takes `root`; no test touches `~/.claude/hub`.
 - The hook never stalls a session: every failure ends with exit 0 and no output; `onFailure` stays unset; `deny` never carries `interrupt`.
 - A session title or a quoted message never goes on a command line.
-- Each task commits in `DEV/`. `~/.claude` gets no manual commit. Vault files go under the vault's rule: by path, then push.
+- Each task commits in `DEV/`, a local repository with no remote that exists only so each task can be reviewed as a diff; nothing is pushed from it. `~/.claude` gets no manual commit. Vault files go under the vault's rule (`.claude/CLAUDE.md`): by path, then push.
 - Every step for Rafal names the window it happens in. A step that needs him stops and waits; silence is not an answer.
 
 **Values**
@@ -92,7 +92,7 @@
 | `lib/transcript.mjs` (new) | the typed-command search | 6 |
 | `lib/permission.mjs` (new) | hook logic: pass-through reasons, later event, output | 6 |
 | `bin/hub-permission.mjs` (new) | the `PermissionRequest` hook | 6 |
-| `lib/polls.mjs`, `lib/events.mjs` | `lastOkPollTail`; export `toolTarget` | 6 |
+| `lib/polls.mjs`, `lib/events.mjs` | `lastOkPollTail`; export `toolTarget`; `inputHash` on `PostToolUse` events | 6 |
 | `bin/hub-cmd.mjs` (new) | `ok`, `nie`, `pauza`, `wracam` | 7 |
 | `lib/speech.mjs`, `bin/speak.ps1`, `fakes/speak.mjs` (new) | the sentence and the speech process | 8 |
 | `lib/alerts.mjs`, `lib/voicelive.mjs` (new) | what is due; whether a voice conversation runs | 8 |
@@ -116,8 +116,8 @@ QueueState = { version: 1, mode: 'listening'|'paused'|'walking', pausedAt, seede
 Item       = { key, sessionId, kind: 'decision'|'permission', since, pendingId, answerable, askTool, name, project,
                code, codeAt, announcedAt, silent, heldAt, answeredAt, answerRecordId, skippedAt, dawajAt }
 Wait       = { key, sessionId, kind, since, pendingId, answerable, askTool, name, project, shortId, detail }
-Pending    = { id, sessionId, promptId, tool, target, input, pid, startedAt }
-Decision   = { verb: 'ok'|'nie', code, at }      Outcome = { accepted, verb, reason, at }
+Pending    = { id, sessionId, promptId, tool, target, inputHash, input, pid, startedAt }
+Decision   = { verb: 'ok'|'nie', code, attempt, at }      Outcome = { accepted, verb, attempt, reason, at }
 ```
 
 Keys: decision `<sessionId>|<since>`; permission with a pending record `<sessionId>|p:<pendingId>`; permission without one `<sessionId>|<since>`.
@@ -243,10 +243,10 @@ Send Rafal one step at a time as a table with columns „Gdzie” and „Co wpis
 **Files:** Create `lib/pending.mjs`, `lib/transcript.mjs`, `lib/permission.mjs`, `bin/hub-permission.mjs`, `test/permission.test.mjs`, `test/transcript.test.mjs`; modify `lib/polls.mjs`, `lib/events.mjs`.
 
 **Interfaces — Consumes:** `readHubSessions`, `readEvents`, `deriveSession`, `isAlive`, `readQueue`. **Produces:**
-- `pending.mjs`: `writePending(root, record)`, `readPending(root, id)`, `listOpenPendings(root, { alive = isAlive }): Pending[]` (a record whose pid is gone is deleted and left out), `closePending(root, id)`, `writeDecision(root, id, decision)`, `readDecision(root, id)`, `removeDecision(root, id)`, `writeOutcome(root, id, outcome)`, `readOutcome(root, id)`, `appendAsk(root, { sessionId, tool, at })`, `readAsks(root)`.
+- `pending.mjs`: `writePending(root, record)`, `readPending(root, id)`, `listOpenPendings(root, { alive = isAlive }): Pending[]` (a record whose pid is gone is deleted and left out), `closePending(root, id)`, `writeDecision(root, id, decision)`, `readDecision(root, id)`, `removeDecision(root, id)`, `writeOutcome(root, id, outcome)`, `readOutcome(root, id, attempt)` (null unless the file holds that attempt), `removeOutcome(root, id)`, `appendAsk(root, { sessionId, tool, at })`, `readAsks(root)`.
 - `transcript.mjs`: `typedCommandAt(path, verb, code, sinceIso): string|null`, `hubTranscriptPaths(root): string[]`.
 - `permission.mjs`: `passThroughReason({ input, hubRunning, hubSessions, entry }): string|null`; `laterEvent(events, record): Event|null`; `hookOutput(verb): object`; `verifyDecision({ root, record, decision, now }): { accepted, reason }`.
-- `polls.mjs`: `lastOkPollTail(root, bytes = 512 * 1024)`. `events.mjs`: `export function toolTarget`.
+- `polls.mjs`: `lastOkPollTail(root, bytes = 512 * 1024)`. `events.mjs`: `export function toolTarget`, `export function inputHash(toolInput)` = `sha256(JSON.stringify(toolInput ?? {}))`, and `PostToolUse` events gain `inputHash`. Only the hash enters the registry, which keeps no full commands (`lib/events.mjs:1-2`).
 
 - [ ] **Step 1: Write the failing transcript tests** in `test/transcript.test.mjs`. `typedCommandAt` returns the record's timestamp for `{"type":"user","isSidechain":false,"message":{"content":"<bash-input> ok a3</bash-input>"},"timestamp":…}` and null for:
   - a `tool_use` holding `ok a3`;
@@ -266,9 +266,10 @@ Send Rafal one step at a time as a table with columns „Gdzie” and „Co wpis
   - `malformed stdin`: exit 0, empty stdout.
   - `typed ok`: while the hook waits, a queue item with `pendingId` and code `a3`, the typed record in the hub transcript and a decision `ok`: stdout parses to `{ hookSpecificOutput: { hookEventName: 'PermissionRequest', decision: { behavior: 'allow' } } }`; the pending file is gone; an outcome `{ accepted: true }` exists; `approvals.jsonl` has one line.
   - `typed nie`: `decision` equals `{ behavior: 'deny', message: 'Rafał odmówił tego wywołania z huba. Nie obchodź tej odmowy: zakończ turę i napisz, czego potrzebowałeś.' }`, with no `interrupt` key.
-  - `decision without a typed record`: outcome `{ accepted: false }` within 4 s, the decision file removed, the hook still running; a typed record and a second decision then give `allow`.
+  - `decision without a typed record`: outcome `{ accepted: false, attempt }` with the decision's attempt within 4 s, the decision file removed, the hook still running; a typed record and a second decision with a new attempt then give `allow`.
   - `typed record for another code`: not accepted.
-  - `later event`: a registry `PostToolUse` with the same tool and target after `startedAt` ends the hook with empty stdout; `UserPromptSubmit`, `Stop`, `StopFailure`, `SessionEnd` likewise; a `PostToolUse` of another target does not.
+  - `later event`: a registry `PostToolUse` with the same tool and `inputHash` after `startedAt` ends the hook with empty stdout; `UserPromptSubmit`, `Stop`, `StopFailure`, `SessionEnd` likewise. A `PostToolUse` of another Bash command does not, also when both have the same description or none.
+  - In `test/hook.test.mjs`, adjust any expectation of the exact `PostToolUse` event to the new `inputHash`; it holds no command text.
   - `heartbeat goes stale while waiting`: the hook ends with empty stdout, and the pending file is gone.
   - `pending record of a killed hook`: `listOpenPendings` deletes it and returns none.
 
@@ -292,6 +293,7 @@ Send Rafal one step at a time as a table with columns „Gdzie” and „Co wpis
 - [ ] **Step 1: Write the failing tests** in `test/cmd.test.mjs`, running a real hook process and a real command against one temporary root, comparing stdout with the exact texts of Global Constraints:
   - `ok a3` with the typed record: `a3: zatwierdzone · <name> · <tool> <target>`, and the hook printed `allow`. `nie a3`: `a3: odrzucone · …`.
   - `ok a3` without the typed record, as a model's tool call would be: `a3: nic nie zatwierdzono, bo tej komendy nie wpisano w zakładce huba`, exit 3; the hook keeps waiting.
+  - A model's refused call followed by Rafal's typed `ok a3`: the second run waits for its own attempt, is not misled by the first outcome, and prints `a3: zatwierdzone · …`.
   - **Review Focus 5:** the typed record only in a project session's transcript: the same refusal.
   - Writing the decision file directly, without the command and without the typed record: the hook does not allow.
   - `ok a9`: `a9: nie ma takiej pozycji`. A closed `a3`: `a3: ta pozycja już nie czeka`. `ok` on a decision item: `a3 to decyzja: odpowiedz „a3 <tekst>”`. An item with no live pending record: `a3: odpowiedz w sesji <name>`.
@@ -301,7 +303,7 @@ Send Rafal one step at a time as a table with columns „Gdzie” and „Co wpis
 
 - [ ] **Step 2: Run them.** Expected: FAIL.
 
-- [ ] **Step 3: Implement** `bin/hub-cmd.mjs`. `ok` and `nie` write the decision and poll for the outcome for 10 s; no outcome prints the literal timeout and changes nothing.
+- [ ] **Step 3: Implement** `bin/hub-cmd.mjs`. `ok` and `nie` take a random `attempt`, write the decision, and poll `readOutcome(root, id, attempt)` for 10 s, then `removeOutcome`; no outcome prints the literal timeout and changes nothing.
 
 - [ ] **Step 4: Run them.** Expected: PASS.
 
@@ -377,7 +379,7 @@ Send Rafal one step at a time as a table with columns „Gdzie” and „Co wpis
 
 - [ ] **Step 2: Run them.** Expected: FAIL.
 
-- [ ] **Step 3: Implement.**
+- [ ] **Step 3: Implement** `lib/item.mjs`. In `case 'overview'`: `buildOverview`, then one `withQueue` that runs `collectWaits`, `reconcile` and `giveCode` for open items without a code, then print `renderOverview` and `renderQueue`. `renderOverview` itself does not change. The watcher keeps calling `buildOverview` without any of this.
 
 - [ ] **Step 4: Run them.** Expected: PASS.
 
@@ -400,7 +402,7 @@ A helper in `bin/hub.mjs`, `prepareRecord(root, found, options)`, takes over the
   - `parseTyped`: `a3 B` → answer `a3`, body `B`; `A3 tak\ndrugie` → answer `a3`, body with the newline kept; `a3` → show; `dawaj`, `Dawaj A3`, `dalej`, `dalej a3`; `B`, `tak`, `wyślij`, `a co z tym?`, `a3b coś` → other.
   - `a3 B` at a waiting gate: `action: 'send'`; `message` is `[hub · gate-answer · <project> · <id8> · <date> <time> · a3]\n\nB\n`; a journal record in `pending`; `answeredAt` set; `sha256(message)` equals the record's `textHash`, so `HUB confirm` can confirm it.
   - Text altered by the model (`a3 C` while Rafal's hash is for `a3 B`): `refused` with `Tekst nie zgadza się z tym, co wpisałeś. Nic nie wysłano.`, no record.
-  - Replay of the same prompt event: `refused`.
+  - Replay of the same prompt event: `refused`. Two `HUB typed` processes started together on one prompt: exactly one prints `send`.
   - `B`: `action: 'none'`, no record.
   - **Review Focus 2:** gate `a3` answered in the session: `a3: ta pozycja już nie czeka`. The same session with a newer gate: `a3 B` still refused, no record, and the newer gate keeps waiting.
   - Permission item: `` a3 to uprawnienia: wpisz `! ok a3` albo `! nie a3` ``. An `answerable: false` item: `a3: odpowiedz w sesji <name>`.
@@ -414,7 +416,12 @@ A helper in `bin/hub.mjs`, `prepareRecord(root, found, options)`, takes over the
 
 - [ ] **Step 2: Run them.** Expected: FAIL.
 
-- [ ] **Step 3: Implement.**
+- [ ] **Step 3: Implement,** in this order for `HUB typed`:
+  1. `parseTyped`; `other` prints `none` and ends.
+  2. `verifyPrompt`, read only; a mismatch prints the refusal.
+  3. One `withQueue` call: refuse if the event is in `usedPromptEvents`, else add it; find the item; check that the wait is still the same (`deriveSession(...).waiting` has the item's kind and `since`); for an answer, set `answeredAt` as the claim; for `dawaj`, set `dawajAt`; for `dalej`, set `skippedAt`.
+  4. For an answer, outside the lock: compose with `origin` = the code, add the journal record as `approve` does, run `prepareRecord`. Failures clear `answeredAt` under the lock and print the literal message; the prompt event stays used, so a retry needs Rafal to type it again. On success store `answerRecordId`.
+  `HUB voice send` runs steps 3–4 without the prompt event, with `dawajAt` as the precondition.
 
 - [ ] **Step 4: Run them.** Expected: PASS. Then `node --test`.
 
@@ -430,7 +437,7 @@ A helper in `bin/hub.mjs`, `prepareRecord(root, found, options)`, takes over the
   - `mergePermissionHook` adds `{ hooks: [{ type: 'command', command, timeout: 28800 }] }` without `async`, keeps other `PermissionRequest` entries, a second run reports `changed: false`, and a different timeout updates the entry in place.
   - `install.mjs --claude-dir <tmp> --bin-dir <tmp2>`: writes eight shims; `--dry-run` writes none; a rerun is idempotent; a foreign file named `ok` in the bin dir is left alone and reported; a bin dir absent from `PATH` is reported.
   - A shim ends up running `hub-cmd.mjs` under the installed skill dir, with forward slashes in the `sh` one.
-  - `skill.test.mjs`: `SKILL.md` has the section `## Rafal's typed text` with `HUB typed --prompt-file -`; handles `announce:`; `HUB voice send`; `A voice decision is never „wyślij”, except`; says never to run `ok` or `nie`. `role.md` holds the two exceptions and still `Never answer a permission prompt or a gate`.
+  - `skill.test.mjs`: `SKILL.md` has the section `## Rafal's typed text` with `HUB typed --prompt-file -`; handles `announce:`; `HUB voice send`; `A voice decision is never „wyślij”, except`; `` No `PushNotification` while the overview shows `pauza od` ``; says never to run `ok` or `nie`. `role.md` holds the two exceptions and still `Never answer a permission prompt or a gate`.
 
 - [ ] **Step 2: Run them.** Expected: FAIL.
 
@@ -507,7 +514,7 @@ It backs up `settings.json` and copies the skill. To undo: restore the newest `~
 | 8 | hub tab, okno sondy | ask the hub model, then the test session's model, to run `ok a6` and to write the decision file | Nothing approved in either |
 | 9 | okno sondy | answer in the prompt while the hook waits | Works; no hook process left within seconds |
 | 10 | hub closed | a push in okno sondy; `claude -p` with a push | The prompt appears at once, no hook process; `-p` is denied at once, not after 8 h. A voice fork leaves `pending/` empty |
-| 11 | hub tab | `! pauza`, a gate, a push, `! wracam`, `dalej`, `! pauza`, `! wracam`, a new gate mid-walk | Silent; oldest first over 24 h; skip works; resumes what is left; the new one comes last |
+| 11 | hub tab | `! pauza`, a gate, a push, `! wracam`, `dalej`, `! pauza`, `! wracam`, a new gate mid-walk | Silent, and no `PushNotification`, also for a `turn ended` during the pause; oldest first over 24 h; skip works; resumes what is left; the new one comes last |
 | 12 | browser | a gate during a voice conversation | Silent; spoken after it ends |
 | 13 | okno sondy | a second push after `! ok` | It prompts again; no standing rule in `settings.json` |
 

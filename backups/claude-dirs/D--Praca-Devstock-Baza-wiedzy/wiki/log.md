@@ -554,3 +554,7 @@ Format wpisu:
 ## 2026-11-05 — sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; główny folder, gałąź `rafal-kielbasa/05-11-2026`, stan i zamknięcie epiku DT-52 #741)
 - Bez nowych wzorców repo: sesja używała tylko skilli globalnych (`board-tracker`, `project-index`).
 - Wzorce globalne dotknięte w tej sesji: założone zamkniecie-na-slowo-mimo-sprzecznego-dowodu i stan-projektu-sprawdzony-u-zrodla-nie-w-indeksie; dowód do siedmiu, w tym zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (`nawrót` od 2026-11-04) i ranking-from-session-start-snapshot. Patrz log globalny.
+
+## 2026-11-06 — sesja 2e20e7fb-3051-4c0d-899a-41666a866e98 (id claude.ai niedostępny; główny folder na gałęzi `rafal-kielbasa/05-11-2026`, praca wyłącznie w repo `.claude`, status line)
+- Bez nowych wzorców repo: sesja nie użyła skilli tego repo.
+- Wzorce globalne dotknięte w tej sesji: założone pole-o-pasujacej-nazwie-wziete-za-wymaganie i repo-claude-commituje-backup-nie-sesja; dowód do czterech. Patrz log globalny.
