@@ -1,9 +1,23 @@
 #!/usr/bin/env node
 // Claude Code status line, read from the session JSON on stdin. First line: a gauge of the context
-// window still available. Second line: the current git branch, the number of staged, unstaged and
-// untracked files, the remote repository and the working directory; outside a git repository only
-// the directory. Configured under `statusLine` in ~/.claude/settings.json.
+// window still available. Below it, the git parameters: the current branch, the number of staged,
+// unstaged and untracked files, the remote repository and the working directory; outside a git
+// repository only the directory. They take one green line for the directory Claude Code was launched
+// in, plus up to three yellow lines for other working trees: the one the session's current directory
+// is in, then the ones it edited files in, the most recent first. Configured under `statusLine` in
+// ~/.claude/settings.json.
+//
+// Run with --record-edit, as a PostToolUse hook configured in the same file, the script records the
+// working tree of an edited file instead. A session edits by absolute path, and
+// workspace.current_dir does not follow those edits, so the status line has no other way to know.
 import { spawnSync } from 'node:child_process';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+
+const STATE_DIR = process.env.STATUSLINE_STATE_DIR ?? join(homedir(), '.claude', 'cache', 'statusline-dirs');
+const STATE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+const MAX_YELLOW_LINES = 3;
 
 const GAUGE_WIDTH = 10;
 // A terminal cell has a fixed height, so a lower bar has to come from a partial block: U+2586 fills
@@ -101,11 +115,110 @@ function formatLine(dir) {
   return [formatStatus(porcelain), url === null ? 'no remote' : repoName(url), dir].join(' | ');
 }
 
+// Windows compares paths case-insensitively, and VS Code reports d:\ where a terminal reports D:\.
+function normalizeDir(dir) {
+  const full = resolve(dir);
+  return process.platform === 'win32' ? full.toLowerCase() : full;
+}
+
+const workingTrees = new Map();
+
+// The root of the working tree that holds `dir`, or `dir` itself outside a repository. A subdirectory
+// shares its tree's git parameters, while a linked worktree has its own toplevel, branch and counters.
+function workingTree(dir) {
+  const key = normalizeDir(dir);
+  if (!workingTrees.has(key)) {
+    const top = git(dir, ['rev-parse', '--show-toplevel']);
+    workingTrees.set(key, top === null ? key : normalizeDir(top.trim()));
+  }
+  return workingTrees.get(key);
+}
+
+function formatGitLines(terminalDir, sessionDir, editedTrees) {
+  const terminalTree = workingTree(terminalDir);
+  const greenDir = workingTree(sessionDir) === terminalTree ? sessionDir : terminalDir;
+  const lines = [`${GREEN}${formatLine(greenDir)}${RESET}`];
+  const shown = new Set([terminalTree]);
+  for (const dir of [sessionDir, ...editedTrees]) {
+    if (lines.length > MAX_YELLOW_LINES) break;
+    const tree = workingTree(dir);
+    if (shown.has(tree)) continue;
+    shown.add(tree);
+    lines.push(`${YELLOW}${formatLine(dir)}${RESET}`);
+  }
+  return lines;
+}
+
+// session_id comes from outside the script and names a file, so anything but a plain id is refused.
+function stateFile(sessionId) {
+  return typeof sessionId === 'string' && /^[\w-]+$/.test(sessionId) ? join(STATE_DIR, `${sessionId}.txt`) : null;
+}
+
+function readStateLines(file) {
+  return existsSync(file) ? readFileSync(file, 'utf8').split('\n').filter(Boolean) : [];
+}
+
+// The most recent first. A failed read only costs the yellow lines, never the rest of the status.
+function readEditedTrees(sessionId) {
+  const file = stateFile(sessionId);
+  if (file === null) return [];
+  try {
+    return readStateLines(file)
+      .reverse()
+      .filter((dir) => existsSync(dir));
+  } catch {
+    return [];
+  }
+}
+
+function editedTree(event) {
+  const changedFiles = event.tool_response?.bashEditDiff?.changedFiles;
+  const paths = [
+    event.tool_input?.file_path,
+    event.tool_input?.notebook_path,
+    ...(Array.isArray(changedFiles) ? changedFiles : []),
+  ];
+  for (const path of paths) {
+    if (typeof path !== 'string') continue;
+    const top = git(dirname(resolve(path)), ['rev-parse', '--show-toplevel']);
+    if (top !== null) return top.trim();
+  }
+  return null;
+}
+
+function removeOldState() {
+  const cutoff = Date.now() - STATE_RETENTION_MS;
+  for (const name of readdirSync(STATE_DIR)) {
+    const path = join(STATE_DIR, name);
+    if (statSync(path).mtimeMs < cutoff) rmSync(path, { force: true });
+  }
+}
+
+function recordEdit(event) {
+  const file = stateFile(event.session_id);
+  if (file === null) return;
+  const tree = editedTree(event);
+  if (tree === null) return;
+  mkdirSync(STATE_DIR, { recursive: true });
+  if (!existsSync(file)) removeOldState();
+  // Appending keeps parallel edits from overwriting each other; skipping a repeat keeps the file small.
+  if (readStateLines(file).at(-1) !== tree) appendFileSync(file, `${tree}\n`);
+}
+
 let raw = '';
 process.stdin.setEncoding('utf8');
 for await (const chunk of process.stdin) raw += chunk;
 
 const session = parseSession(raw);
-const context = formatContext(session.context_window);
-const line = formatLine(session.workspace?.current_dir ?? process.cwd());
-console.log(context === null ? line : `${context}\n${line}`);
+if (process.argv.includes('--record-edit')) {
+  // A failure here only costs a status line hint, so it must never surface in the session as a hook error.
+  try {
+    recordEdit(session);
+  } catch {}
+} else {
+  const sessionDir = session.workspace?.current_dir ?? process.cwd();
+  const terminalDir = session.workspace?.project_dir ?? sessionDir;
+  const context = formatContext(session.context_window);
+  const gitLines = formatGitLines(terminalDir, sessionDir, readEditedTrees(session.session_id));
+  console.log([...(context === null ? [] : [context]), ...gitLines].join('\n'));
+}

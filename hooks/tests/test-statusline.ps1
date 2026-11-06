@@ -11,24 +11,60 @@ Write-Host 'test-statusline' -ForegroundColor Cyan
 $scriptPath = Join-Path (Split-Path -Parent $PSScriptRoot) 'statusline-git.mjs'
 # The space mirrors real repositories such as "D:\Praca\Devstock\Baza wiedzy".
 $sandbox = Join-Path $env:TEMP ('claude statusline ' + [guid]::NewGuid().ToString('N'))
+# Keeps the test away from the directories recorded by real sessions.
+$env:STATUSLINE_STATE_DIR = Join-Path $sandbox 'state'
+
+function Remove-Ansi {
+    # Most assertions are about what a line says; the colors have cases of their own.
+    param([string]$Text)
+    return $Text -replace "$([char]27)\[[0-9;]*m", ''
+}
+
+function Format-Colored {
+    param([Parameter(Mandatory)][string]$Color, [Parameter(Mandatory)][string]$Text)
+    return "$([char]27)[$($Color)m$Text$([char]27)[0m"
+}
 
 function Invoke-StatusLine {
-    # Runs the script the way Claude Code does: session JSON on stdin, one line on stdout.
+    # Runs the script the way Claude Code does: session JSON on stdin, the status on stdout.
     param([Parameter(Mandatory)][string]$Dir)
     $json = @{ cwd = $Dir; workspace = @{ current_dir = $Dir; project_dir = $Dir } } | ConvertTo-Json -Compress
     $out = $json | & node $scriptPath
-    return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = ($out -join "`n") }
+    return [pscustomobject]@{ ExitCode = $LASTEXITCODE; Output = (Remove-Ansi ($out -join "`n")) }
 }
 
 function Invoke-StatusLineWithContext {
+    param([Parameter(Mandatory)][string]$Dir, [Parameter(Mandatory)][hashtable]$Context)
+    return Invoke-StatusLineJson -Json (@{ workspace = @{ current_dir = $Dir }; context_window = $Context } | ConvertTo-Json -Compress)
+}
+
+function Invoke-StatusLineInDirs {
+    param([Parameter(Mandatory)][string]$Terminal, [Parameter(Mandatory)][string]$Session, [string]$SessionId = 'no-edits')
+    return Invoke-StatusLineJson -Json (@{ session_id = $SessionId; workspace = @{ current_dir = $Session; project_dir = $Terminal } } | ConvertTo-Json -Compress)
+}
+
+function Invoke-RecordEdit {
+    # Runs the script the way the PostToolUse hook does.
+    param([Parameter(Mandatory)][string]$SessionId, [Parameter(Mandatory)][hashtable]$ToolInput, [hashtable]$ToolResponse = @{})
+    $json = @{ session_id = $SessionId; hook_event_name = 'PostToolUse'; tool_input = $ToolInput; tool_response = $ToolResponse } | ConvertTo-Json -Compress -Depth 4
+    Invoke-StatusLineJson -Json $json -Arguments '--record-edit' | Out-Null
+}
+
+function Get-EditedLine {
+    # The hook stores the path git prints, with forward slashes.
+    param([Parameter(Mandatory)][string]$Repo)
+    $top = git -C $Repo rev-parse --show-toplevel
+    return Format-Colored -Color '33' -Text "main | staged 0 | unstaged 0 | untracked 0 | no remote | $top"
+}
+
+function Invoke-StatusLineJson {
     # Goes through ProcessStartInfo: the bar's block characters are UTF-8 on stdout, while a PowerShell
     # pipe decodes with the console code page, which depends on the machine.
-    param([Parameter(Mandatory)][string]$Dir, [Parameter(Mandatory)][hashtable]$Context)
-    $json = @{ workspace = @{ current_dir = $Dir }; context_window = $Context } | ConvertTo-Json -Compress
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+    param([Parameter(Mandatory)][string]$Json, [string]$Arguments = '')
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($Json)
     $startInfo = New-Object System.Diagnostics.ProcessStartInfo
     $startInfo.FileName = 'node'
-    $startInfo.Arguments = '"' + $scriptPath + '"'
+    $startInfo.Arguments = '"' + $scriptPath + '" ' + $Arguments
     $startInfo.UseShellExecute = $false
     $startInfo.RedirectStandardInput = $true
     $startInfo.RedirectStandardOutput = $true
@@ -38,6 +74,7 @@ function Invoke-StatusLineWithContext {
     $process.StandardInput.Close()
     $output = $process.StandardOutput.ReadToEnd().Trim()
     $process.WaitForExit()
+    $script:LastNodeExit = $process.ExitCode
     return $output
 }
 
@@ -183,7 +220,7 @@ try {
         Pop-Location
     }
     Assert-Equal -Expected 0 -Actual $code -Because 'malformed stdin exits 0'
-    Assert-Equal -Expected "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo" -Actual ($out -join "`n") -Because 'malformed stdin uses the working directory'
+    Assert-Equal -Expected "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo" -Actual (Remove-Ansi ($out -join "`n")) -Because 'malformed stdin uses the working directory'
 
     # --- a BOM before the JSON: a PowerShell pipe adds one only under a UTF-8 console, so the bytes are explicit ---
     $repo = New-Repo -Name 'bom'
@@ -201,7 +238,7 @@ try {
     $process.StandardInput.Close()
     $output = $process.StandardOutput.ReadToEnd().Trim()
     $process.WaitForExit()
-    Assert-Equal -Expected "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo" -Actual $output -Because 'a BOM before the JSON does not lose the session directory'
+    Assert-Equal -Expected "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo" -Actual (Remove-Ansi $output) -Because 'a BOM before the JSON does not lose the session directory'
 
     # --- JSON that parses but holds no object falls back like malformed input ---
     Push-Location $repo
@@ -212,12 +249,12 @@ try {
         Pop-Location
     }
     Assert-Equal -Expected 0 -Actual $code -Because 'a JSON null on stdin exits 0'
-    Assert-Equal -Expected "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo" -Actual ($out -join "`n") -Because 'a JSON null on stdin uses the working directory'
+    Assert-Equal -Expected "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo" -Actual (Remove-Ansi ($out -join "`n")) -Because 'a JSON null on stdin uses the working directory'
 
     # --- the context gauge: filled blocks are what is still available, and the color follows them ---
     $repo = New-Repo -Name 'context'
     Add-BaseCommit -Repo $repo -Files @('a')
-    $git = "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo"
+    $git = Format-Colored -Color '38;5;28' -Text "main | staged 0 | unstaged 0 | untracked 0 | no remote | $repo"
     $contextCases = @(
         @{ Remaining = 100; Filled = 10; Color = '38;5;28'; Percent = '100%'; Because = 'an untouched window is a full green bar' }
         @{ Remaining = 51; Filled = 5; Color = '38;5;28'; Percent = '51%'; Because = 'just above half stays green' }
@@ -244,8 +281,122 @@ try {
 
     $plain = Join-Path $sandbox 'plain-context'
     New-Item -ItemType Directory -Path $plain -Force | Out-Null
-    $expected = (Get-ExpectedContext -Filled 9 -Color '38;5;28' -Label '90% left of 1M') + "`n$plain"
+    $expected = (Get-ExpectedContext -Filled 9 -Color '38;5;28' -Label '90% left of 1M') + "`n" + (Format-Colored -Color '38;5;28' -Text $plain)
     Assert-Equal -Expected $expected -Actual (Invoke-StatusLineWithContext -Dir $plain -Context @{ remaining_percentage = 90; context_window_size = 1000000 }) -Because 'the gauge also shows outside a repository'
+
+    # --- a session away from the terminal: green for the terminal's working tree, yellow for the session's ---
+    $terminalRepo = New-Repo -Name 'terminal'
+    Add-BaseCommit -Repo $terminalRepo -Files @('a')
+    Write-RepoFile -Repo $terminalRepo -Path 'new'
+    $sessionRepo = New-Repo -Name 'session'
+    Add-BaseCommit -Repo $sessionRepo -Files @('a')
+    git -C $sessionRepo checkout -q -b feature
+    Write-RepoFile -Repo $sessionRepo -Path 'a' -Text 'changed'
+    git -C $sessionRepo add a
+    $terminalLine = Format-Colored -Color '38;5;28' -Text "main | staged 0 | unstaged 0 | untracked 1 | no remote | $terminalRepo"
+    $sessionLine = Format-Colored -Color '33' -Text "feature | staged 1 | unstaged 0 | untracked 0 | no remote | $sessionRepo"
+
+    Assert-Equal -Expected $terminalLine -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo) -Because 'a session in the terminal directory is one green line'
+
+    Assert-Equal -Expected "$terminalLine`n$sessionLine" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $sessionRepo) -Because 'a session in another repository adds a yellow line below the green one'
+
+    $worktree = Join-Path $sandbox 'linked worktree'
+    git -C $terminalRepo worktree add -q -b linked $worktree
+    $worktreeLine = Format-Colored -Color '33' -Text "linked | staged 0 | unstaged 0 | untracked 0 | no remote | $worktree"
+    Assert-Equal -Expected "$terminalLine`n$worktreeLine" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $worktree) -Because 'a linked worktree of the same repository is another working tree'
+
+    # An empty directory: git does not see it, so the counters stay those of the repository.
+    $subdir = Join-Path $terminalRepo 'tools'
+    New-Item -ItemType Directory -Path $subdir -Force | Out-Null
+    $subdirLine = Format-Colored -Color '38;5;28' -Text "main | staged 0 | unstaged 0 | untracked 1 | no remote | $subdir"
+    Assert-Equal -Expected $subdirLine -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $subdir) -Because 'a subdirectory of the terminal repository has the same parameters, so it stays one green line'
+
+    $otherDriveCase = $terminalRepo.Substring(0, 1).ToLower() + $terminalRepo.Substring(1)
+    Assert-Equal -Expected $terminalLine -Actual (Invoke-StatusLineInDirs -Terminal $otherDriveCase -Session $terminalRepo) -Because 'a drive letter in the other case is the same directory'
+
+    $plainTerminal = Join-Path $sandbox 'plain-terminal'
+    New-Item -ItemType Directory -Path $plainTerminal -Force | Out-Null
+    $expected = (Format-Colored -Color '38;5;28' -Text $plainTerminal) + "`n$sessionLine"
+    Assert-Equal -Expected $expected -Actual (Invoke-StatusLineInDirs -Terminal $plainTerminal -Session $sessionRepo) -Because 'a terminal outside any repository shows its directory above the session line'
+
+    $json = @{ workspace = @{ current_dir = $sessionRepo; project_dir = $terminalRepo }; context_window = @{ remaining_percentage = 90; context_window_size = 1000000 } } | ConvertTo-Json -Compress
+    $expected = (Get-ExpectedContext -Filled 9 -Color '38;5;28' -Label '90% left of 1M') + "`n$terminalLine`n$sessionLine"
+    Assert-Equal -Expected $expected -Actual (Invoke-StatusLineJson -Json $json) -Because 'the gauge stays on top of both git lines'
+
+    # --- files the session edited by absolute path: workspace.current_dir does not follow them ---
+    $editedA = New-Repo -Name 'edited-a'
+    Add-BaseCommit -Repo $editedA -Files @('a')
+    $editedB = New-Repo -Name 'edited-b'
+    Add-BaseCommit -Repo $editedB -Files @('a')
+    $editedC = New-Repo -Name 'edited-c'
+    Add-BaseCommit -Repo $editedC -Files @('a')
+    $editedD = New-Repo -Name 'edited-d'
+    Add-BaseCommit -Repo $editedD -Files @('a')
+    $lineA = Get-EditedLine -Repo $editedA
+    $lineB = Get-EditedLine -Repo $editedB
+    $lineC = Get-EditedLine -Repo $editedC
+    $lineD = Get-EditedLine -Repo $editedD
+
+    Invoke-RecordEdit -SessionId 'one' -ToolInput @{ file_path = (Join-Path $editedA 'a') }
+    Assert-Equal -Expected "$terminalLine`n$lineA" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'one') -Because 'an edited file in another repository adds a yellow line'
+    Assert-Equal -Expected $terminalLine -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'other') -Because 'another session does not see the edits of this one'
+
+    $nested = Join-Path $editedA 'nested\deep'
+    New-Item -ItemType Directory -Path $nested -Force | Out-Null
+    Invoke-RecordEdit -SessionId 'one' -ToolInput @{ file_path = (Join-Path $nested 'new.txt') }
+    Assert-Equal -Expected "$terminalLine`n$lineA" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'one') -Because 'an edit in a subdirectory of the same repository adds no second line'
+    Assert-Equal -Expected 1 -Actual @(Get-Content -LiteralPath (Join-Path $env:STATUSLINE_STATE_DIR 'one.txt')).Count -Because 'repeated edits of one repository do not grow the record'
+
+    Invoke-RecordEdit -SessionId 'one' -ToolInput @{ file_path = (Join-Path $editedB 'a') }
+    Assert-Equal -Expected "$terminalLine`n$lineB`n$lineA" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'one') -Because 'the most recently edited repository comes first'
+    Invoke-RecordEdit -SessionId 'one' -ToolInput @{ file_path = (Join-Path $editedA 'a') }
+    Assert-Equal -Expected "$terminalLine`n$lineA`n$lineB" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'one') -Because 'a new edit moves its repository back to the top'
+
+    Invoke-RecordEdit -SessionId 'home' -ToolInput @{ file_path = (Join-Path $terminalRepo 'a') }
+    Assert-Equal -Expected $terminalLine -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'home') -Because 'an edit inside the terminal repository adds no line'
+
+    Invoke-RecordEdit -SessionId 'away' -ToolInput @{ file_path = (Join-Path $editedB 'a') }
+    $expected = $terminalLine + "`n" + (Format-Colored -Color '33' -Text "main | staged 0 | unstaged 0 | untracked 0 | no remote | $editedB")
+    Assert-Equal -Expected $expected -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $editedB -SessionId 'away') -Because 'an edited repository the session already works in is not shown twice'
+
+    Invoke-RecordEdit -SessionId 'notebook' -ToolInput @{ notebook_path = (Join-Path $editedC 'n.ipynb') }
+    Assert-Equal -Expected "$terminalLine`n$lineC" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'notebook') -Because 'a notebook edit counts like a file edit'
+
+    Invoke-RecordEdit -SessionId 'bash' -ToolInput @{ command = 'sed -i s/a/b/ a' } -ToolResponse @{ bashEditDiff = @{ changedFiles = @((Join-Path $editedC 'a')) } }
+    Assert-Equal -Expected "$terminalLine`n$lineC" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'bash') -Because 'files a Bash command changed count like a file edit'
+
+    Invoke-RecordEdit -SessionId 'read-only' -ToolInput @{ command = 'ls' }
+    Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $env:STATUSLINE_STATE_DIR 'read-only.txt'))) -Because 'a Bash command without changed files records nothing'
+
+    Invoke-RecordEdit -SessionId 'no-repo' -ToolInput @{ file_path = (Join-Path $plainTerminal 'file.txt') }
+    Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path $env:STATUSLINE_STATE_DIR 'no-repo.txt'))) -Because 'an edit outside any repository records nothing'
+
+    foreach ($repoToEdit in @($editedA, $editedB, $editedC, $editedD)) {
+        Invoke-RecordEdit -SessionId 'many' -ToolInput @{ file_path = (Join-Path $repoToEdit 'a') }
+    }
+    Assert-Equal -Expected "$terminalLine`n$lineD`n$lineC`n$lineB" -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'many') -Because 'at most three yellow lines, the most recent ones'
+
+    $gone = New-Repo -Name 'gone'
+    Add-BaseCommit -Repo $gone -Files @('a')
+    Invoke-RecordEdit -SessionId 'removed' -ToolInput @{ file_path = (Join-Path $gone 'a') }
+    Remove-Item -LiteralPath $gone -Recurse -Force
+    Assert-Equal -Expected $terminalLine -Actual (Invoke-StatusLineInDirs -Terminal $terminalRepo -Session $terminalRepo -SessionId 'removed') -Because 'a repository removed after the edit is not shown'
+
+    Invoke-RecordEdit -SessionId '..\..\escape' -ToolInput @{ file_path = (Join-Path $editedA 'a') }
+    Assert-True -Condition (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $sandbox) 'escape.txt'))) -Because 'a session id with a path in it writes nothing outside the state directory'
+
+    $oldState = Join-Path $env:STATUSLINE_STATE_DIR 'old-session.txt'
+    $recentState = Join-Path $env:STATUSLINE_STATE_DIR 'recent-session.txt'
+    Set-Content -LiteralPath $oldState -Value $editedA -Encoding ASCII
+    Set-Content -LiteralPath $recentState -Value $editedA -Encoding ASCII
+    (Get-Item -LiteralPath $oldState).LastWriteTime = (Get-Date).AddDays(-31)
+    (Get-Item -LiteralPath $recentState).LastWriteTime = (Get-Date).AddDays(-29)
+    Invoke-RecordEdit -SessionId 'fresh' -ToolInput @{ file_path = (Join-Path $editedA 'a') }
+    Assert-True -Condition (-not (Test-Path -LiteralPath $oldState)) -Because 'the first record of a session removes state older than 30 days'
+    Assert-True -Condition (Test-Path -LiteralPath $recentState) -Because 'the first record of a session keeps newer state'
+
+    Invoke-StatusLineJson -Json 'not json' -Arguments '--record-edit' | Out-Null
+    Assert-Equal -Expected 0 -Actual $script:LastNodeExit -Because 'malformed hook input still exits 0, so the session never sees a hook error'
 
     # --- the script runs every few seconds next to commits made by other tools ---
     $repo = New-Repo -Name 'index'
