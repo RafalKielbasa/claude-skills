@@ -208,6 +208,7 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
      rectangles and arrow tips in **pixels of the recording**. A highlight starts when the
      narrator names the thing it points at, never earlier, and lasts only while it is the
      subject. Most paragraphs need none.
+     Rectangles are in source pixels: on a 3840x2160 source (a 4K take) they are twice as large as on a 1920x1080 one, so always read them from `montaz klatka`. The still reaches you scaled down, so do not read pixels off the view: count the grid cells and multiply (one cell is 1/16 of the width, 240 source px on a 4K take and 120 on a 1080p one; the command prints it as `siatka co N px`).
    - `dzwieki`, `przejscie`: optional (see the palette and "Pace comes first").
    - `wstawki`: `[{ z, od, do }]` — from `od` to `do` (narration seconds, at least 1 s) the
      picture is a still of second `z` of the recording, cross-faded in and out; highlights in

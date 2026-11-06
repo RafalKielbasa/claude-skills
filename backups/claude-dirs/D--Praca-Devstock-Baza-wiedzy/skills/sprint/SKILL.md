@@ -13,8 +13,9 @@ One run plans one weekly sprint (Monday–Sunday) for the whole team on the main
 `devstock-org#3`; archiving Done still runs on all four boards of
 `tools/board-tracker/trackers.json`. The skill reads, proposes and records decisions; every GitHub
 write is done by the board-tracker CLI, and only after Rafał answers **Akceptuj i wykonaj**.
-Design: `docs/superpowers/specs/2026-11-03-weekly-sprints-planning-loop-design.md`; its "Amendment
-2026-11-05: one main board" wins over the sections before it.
+Design: `docs/superpowers/specs/2026-11-03-weekly-sprints-planning-loop-design.md`; its amendments
+"2026-11-05: one main board" and "2026-11-06: fixes after the rehearsal" win over the sections
+before them.
 
 The walk is meant for about 15 minutes of a daily. A card that does not fit one screen, or a
 proposal that names themes instead of issues, makes the team plan from scratch anyway — that is
@@ -160,10 +161,16 @@ Every card follows "The gate" in `docs/spotkania-kolejki.md`:
 - **No answer is not approval.** When `AskUserQuestion` returns without an answer (a timeout, or a
   hint to proceed on your own judgment), say plainly that you are waiting and ask the same
   question again. Never pick an option for Rafał.
-- Polish, one screen: at most about 20 lines; an issue is `owner/repo#n — title` (title cut to 60
+- Polish, one screen: at most about 20 lines; an issue is `<ref> — title` (title cut to 60
   characters), never a theme. One exception: the final screen (Step 8) may run longer and uses a
   compact form — per person one line of refs with their estimates, titles only for new issues:
-  `Grzegorz: devstock-org/devstock-team#790 (2), devstock-org/devstock-team#810 (0,5)`.
+  `Grzegorz: #790 (2), #810 (0,5)`.
+- **Short refs.** On cards and on the final screen a main-board issue is written `#n`, which always
+  means `devstock-org/devstock-team#n`; past 2000 characters Claude Code hides a whole preview, and
+  the full prefix repeated on every item is what pushes the final screen there. A ref from another
+  repository keeps `owner/repo#n`: `Bez karty` lines, `Praktykanci` lines and the `29` report lines
+  of Step 2. A correction may use either form, and `#n` resolves to the main board. `sprint.json`,
+  `sprint.md` and `## Zadania w projektach` always hold the full ref.
 - Every answer is written before the next question: to `sprint.md`, and from Step 2b on to
   `sprint.json` (Steps 2b and 2c write only `sprint.json`). "przerwij" in "Other" stops the walk;
   what is written stays.
@@ -234,7 +241,7 @@ Claude's proposal:
 - capacity(person) = `capacity[].days × factor` from `sprint.json`, rounded to the nearest 0.5.
 - Card line: `<imię> <load>/<capacity> d`, with `⚠` appended when load > capacity, e.g.
   `Grzegorz 4/2,5 d ⚠`; `Bez osoby <load> d`, e.g. `Bez osoby 1 d`. `⚠` is a warning: it never
-  blocks a card or changes its options.
+  blocks a card, and the only option it adds is **Tylko bez ⚠** on a person card (Step 5).
 - An item whose share (`estimate ÷ owners`) alone exceeds an owner's capacity, when that capacity
   is above 0, gets „większe niż tydzień tej osoby, podzielić?” after its estimate (`⚠` already
   flags a capacity of 0).
@@ -333,11 +340,15 @@ The card, question „Dostępność”:
   estymaty: bez zmian”; `ratio` null, „Moje estymaty: brak danych”.
 - "Other": `<imię> <dni>`, `<imię> urlop` or `<imię> 0` (absent the whole week),
   `<imię> jak tydzień temu` (that person's `days` from the previous sprint's `capacity`; none →
-  say so, change nothing); several separated by `;`. `<imię>` resolves through `team.json` as in
-  Step 4. A correction on the card changes only the people it names.
-- Options: **Zatwierdź dostępność** · **Popraw**. Every cell empty (a first run without text) →
-  the preview says „Brak dostępności — wpisz ją, np. »Grzegorz 3; Szymon urlop«.” and
-  **Popraw** comes first.
+  say so, change nothing), `reszta <dni>` (every team member the same text does not name, whatever
+  the card showed for them); several separated by `;` or `,`, and `reszta` needs no separator:
+  „Bart 1, Mateusz 2 reszta 5”. `<imię>` resolves through `team.json` as in Step 4. A correction
+  on the card changes only the people it names, or with `reszta` everyone.
+- Options: **Zatwierdź dostępność** · **Popraw**.
+- **Every cell empty** (a first run without text) → no card yet, because a card cannot take typed
+  numbers on sight. Ask in chat, one line: „Napisz dostępność w czacie, np. »Bart 1, Mateusz 2
+  reszta 5«.” End the turn and wait; no reply is not approval. Read the reply with the vocabulary
+  above, then show the card with those numbers to approve.
 - Write on **Zatwierdź dostępność**: `capacity` into `sprint.json` — one entry per team member,
   `board: "devstock-org#3"`, `days` as settled (empty → 0), `factor` from `calibration.json` (1
   when the command failed). Nothing goes to `sprint.md`.
@@ -424,8 +435,10 @@ The card, question „Dostępność”:
 - At most 15 item lines per card. More → consecutive cards „<imię> (1/2)”, „<imię> (2/2)”, each
   asked and written in turn; the options of each act on that card's items only.
 - Options: **Potwierdź** (all listed items enter the sprint without a goal) · **Nic więcej** (none
-  of them enter). An empty list still asks — preview „Brak zadań In progress i Ready poza celami.”
-  — so the member can add work by ref in "Other".
+  of them enter). When some item lines have `⚠` and some do not, **Tylko bez ⚠** comes first: only
+  the lines without `⚠` enter, which keeps the member within capacity. With `⚠` on every item line
+  it would equal **Nic więcej**, so it is not offered. An empty list still asks — preview „Brak
+  zadań In progress i Ready poza celami.” — so the member can add work by ref in "Other".
 - "Other" uses Step 4's correction vocabulary and lookup. A ref added on this card goes to this
   member: `assignee` = the member's login from `team.json`, unless the member is already among
   its assignees (then `null`). `nowe issue: <title>`, with `<ref>` when it is the card for a
@@ -433,9 +446,9 @@ The card, question „Dostępność”:
   celami” in place of the goal), `assignee` = the member's login unless `dla <imię>` names someone
   else, and after its own card comes this person card again.
 - Write: `items` with `goal: null`, `estimate` and `proposed` (pre-filled items: `assignee: null`,
-  the member is already assigned), and the new issues accepted on the card, whichever option is
-  chosen; `- <ref> <title> — poza celami` under the person, a new issue as
-  `- nowe: <title> — poza celami`.
+  the member is already assigned; **Tylko bez ⚠** writes only the lines without `⚠`), and the new
+  issues accepted on the card, whichever option is chosen; `- <ref> <title> — poza celami` under
+  the person, a new issue as `- nowe: <title> — poza celami`.
 
 ## Step 6. Leftovers card
 
@@ -454,16 +467,17 @@ The card, question „Dostępność”:
 
 ## Step 7. Cleanup card (skippable)
 
-- Source: the cleanup list of the `devstock-org/devstock-team` section of the `29` file; the other
-  sections' lists are not read. Keep an entry only when its ref is in `candidates.json` `items` (an
-  open issue on the main board — this also drops PRs, which `sprint-apply` cannot close), its
-  labels lack `zostaje`, and it is in neither `items` nor `drop` of `sprint.json`. Sort by age
-  (`createdAt`, oldest first; ties by ref) and keep **exactly the 5 oldest**. `board` =
-  `devstock-org#3`.
-- No `29` file, or nothing left → skip with one line.
-- Each line: `<k>. <ref> — <title> (<N> dni) — zamknij|zostaje`, numbered `1.`–`5.` in that
-  order, `<N>` = the age the `29` file gives. Proposal: `zostaje` when the `31` statuses mention
-  the issue, `zamknij` otherwise.
+- Source: `candidates.json` `items` (open main-board issues, no epics, no PRs) at least 30 days old
+  on `<date>`, age from `createdAt`. The `29` file's cleanup list is not read: its oldest entries
+  are epics and issues on no board, which never leave its head, so filtering it left an empty card
+  every week. Keep an entry only when its state is not `in_progress` (age here is time since
+  creation, not idle time, and person cards already show work in progress), its labels lack
+  `zostaje`, and it is in neither `items` nor `drop` of `sprint.json`. Sort by age (oldest first;
+  ties by ref) and keep **the 5 oldest**, or all of them when fewer. `board` = `devstock-org#3`.
+- Nothing left → skip with one line.
+- Each line: `<k>. <ref> — <title> (<N> dni) — zamknij|zostaje`, numbered from `1.` in that order,
+  `<N>` = whole days from `createdAt` to `<date>`. Proposal: `zostaje` when the `31` statuses
+  mention the issue, `zamknij` otherwise.
 - Options: **Przyjmij propozycję** · **Wszystkie zostają** · **Pomiń w tym tygodniu** (nothing).
   "Other" changes single items by their number, e.g. „2 zostaje”.
 - Write: `cleanup` entries (`zamknij` → `close`, `zostaje` → `keep`; **Pomiń** → `[]`);
@@ -571,8 +585,10 @@ Only after **Akceptuj i wykonaj**, or on re-entry with approval (start at 9.3).
 | Keeping four goals, or dropping one yourself | Ask which to drop |
 | Padding a goal with loosely related issues | Flag `BRAK ISSUE`, offer **Utwórz issue teraz** |
 | Writing `DT-<n>:` into a `newIssues` title | `sprint-apply` numbers it |
-| Cleanup from other boards (Part B handles them), or more than 5 entries | Only `devstock-org/devstock-team` entries of the `29` file, its 5 oldest |
+| Cleanup from the `29` file or other boards (Part B handled them), or more than 5 entries | Only `candidates.json` `items` at least 30 days old and not in progress, the 5 oldest |
 | A `kodozercy/*` or other project ref in `items` | Only main-board cards; project work without a card is a `Bez karty` line |
+| `devstock-org/devstock-team#n` on a card or the final screen, or `#n` in `sprint.json` or `sprint.md` | `#n` on cards and the final screen; the full ref in the files, and on `Bez karty` and `Praktykanci` lines |
+| A card asking for availability while every cell is empty | Ask in chat first; the card only approves the numbers |
 | Retrying after `ok: false` on your own | Show `failed`/`error` and ask the Step 9.4 recovery card; a rerun resumes |
 | Editing `results` other than through **Issue już istnieje — podam ref** (Step 9.4) | `results` is written by `sprint-apply`; that option is the one allowed edit |
 | Computing factors or ratios yourself | Take them from `calibration.json` (`BT sprint-capacity`) |

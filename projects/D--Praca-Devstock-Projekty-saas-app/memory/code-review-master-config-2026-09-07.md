@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 695c3ff7-9802-495a-a154-8ff68fa1932f
-  modified: 2026-10-30T18:13:06.815Z
+  modified: 2026-11-06T12:42:24.539Z
 ---
 
 2026-09-07: `/code-review-master init` wykonany w `saas app`. `.claude/review/config.md`
@@ -153,3 +153,5 @@ mimo „OK” na bramce; przeszło dopiero po jawnym „wysyłaj”.
 
 2026-11-04 (16.–19. przebieg, „review zadań w second review”): karty #184/#176/#127/#182 = PR #202/#207/#208/#213. `recheck 202` (tip `113e7e7`): range-diff bez zmian po merge'u main, klucze w `keys.ts` zostały → gotowe do merge'u, nowe review zbędne. `recheck 207` (tip `b50999c`): `.clinerules` zniknęło w merge'u, ale `.gitignore` nadal w diffie (2 puste linie), `@platform/types/src` ×3 po raz trzeci. `recheck 208` (tip `0903575`): 3/3 naniesione. `pr 213` (CP-102, run `20261104-135146-xcs6`, 11 agentów, 7 po progach, f-07 fałszywy alarm, codex 6/7, artefakt 1gb5d4WnzGy3QXpNgkP35R): ręcznie z kryteriów 5 Blocking (kategorie spoza `categoriesMock` blokują zapis, zmieniony sposób dodawania sekcji/lekcji, utracona zmiana nazwy lekcji, duplikat formularzy, usunięcie miniatury nie zapisuje się). Osie złapały z tego tylko duplikat, znów decyduje ręczne czytanie issue. Drafty payloadów w scratchpadzie sesji; stan wysyłki sprawdź na PR-ach (`gh pr view <n> --json reviews`). Figma MCP: `get_screenshot` potrafi zerwać transport, ponowienie pomogło.
 Wysłane 2026-11-04 przez `!` Rafała (POST i merge zablokowane po „ok”: `[External System Writes]`, `[Unrequested Commit in a Connected App]`): #208 APPROVE 5770425408 i merge `08a7f1d`, #202 merge `f8247b4`, #207 CHANGES_REQUESTED 5770428065, #213 CHANGES_REQUESTED 5770428642 (16 uwag); karty #176/#182 → To be fixed przez `gh project item-edit` (przeszło z sesji). Pojedyncza linia `!` z `&&` obsługuje całą wysyłkę naraz.
+
+2026-11-06 `recheck 207` (baza `b50999c`, tip `febde57`, CI zielone): `.gitignore` poza diffem, `@platform/types/src` poprawione tylko w `courses-table.tsx:4`, czyli w jedynej linii z komentarzem inline; zostały `analytics.tsx:3` i `courses-table.test.tsx:2`. Wysłane przez `!` Rafała: review 5800209879 CHANGES_REQUESTED, po jednym komentarzu na każdą linię; karta #176 Second review → To be fixed. Lekcja: uwaga dotycząca kilku plików idzie jako osobne komentarze inline, bo pliki wymienione tylko w treści komentarza autor pominął (wniosek, nie potwierdzone przez autora).

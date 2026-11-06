@@ -64,13 +64,12 @@
   jest włączony: commituję sam w tej samej konwencji i podaję w raporcie hash
   oraz gałąź.
 
+<!-- board-tracker:start -->
 ## Tablica (board-tracker)
 
-- W repo z rejestru `tools/board-tracker/trackers.json` („Baza wiedzy", edu_saas, code-busters,
-  code-busters-mobile) każda sesja, która coś zmienia, jest przypięta do issue przez skill
-  `board-tracker`. Brief z hooka `SessionStart` mówi, co mam w toku i w gotowych.
-- Praca rusza od razu. Na moje „tak” czeka tylko założenie issue, dopisanie mnie jako assignee,
-  zamknięcie i każda zmiana statusu poza przejściem do „w toku” przy przypięciu.
+- W repo z rejestru `tools/board-tracker/trackers.json` każda sesja, która coś zmienia, jest przypięta do issue przez skill `board-tracker`. Brief z hooka `SessionStart` mówi, co mam w toku i w gotowych.
+- Praca rusza od razu. Na moje „tak” czeka tylko założenie issue, dopisanie mnie jako assignee, zamknięcie i każda zmiana statusu poza przejściem do „w toku” przy przypięciu.
+<!-- board-tracker:end -->
 
 ## GCP i infrastruktura chmurowa
 

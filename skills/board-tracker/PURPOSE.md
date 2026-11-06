@@ -6,8 +6,8 @@ The rest of the file is English, like the skill.
 ## Pochodzenie
 
 Created 2026-10-09 from a design approved section by section in one session:
-`docs/superpowers/specs/2026-10-09-board-tracker-design.md` in `D:\Praca\Devstock\Baza wiedzy`
-(repo `devstock-org/devstock-team`), with the plan
+`docs/superpowers/specs/2026-10-09-board-tracker-design.md` in the `devstock-team` repository
+(`devstock-org/devstock-team`), with the plan
 `docs/superpowers/plans/2026-10-09-board-tracker.md`.
 
 **What it was built to fix.** On 2026-10-09 Rafał's board showed three items in progress, untouched
@@ -34,3 +34,4 @@ work through his backlog.
 - 2026-10-09: created.
 - 2026-10-12: inventory drops the `praca-z-claude.md` source (four sources instead of five); the session journal was deleted after session summaries moved to a plugin. Logged in `~/.claude/wiki/skill-impact.md`.
 - 2026-10-29 (`evolve-skill`): "Status proposals" — a `status --to done` / `close` refused by the permission classifier is handed to Rafał at once as a `!` line in Git Bash syntax, one write per call, no retry. Addresses `zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie` (7 evidences, 7 sessions). Logged in `~/.claude/wiki/skill-impact.md`.
+- 2026-11-05: the skill's source moved to `tools/board-tracker/skill/` and was generalised from Rafał to "the user" for the core team; new commands `link` and `create-task`, and the project-repository form of the card "Nowe issue" (spec `2026-11-03-weekly-sprints-planning-loop-design.md`, amendment 2026-11-05 "one main board", Part D).

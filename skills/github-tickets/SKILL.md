@@ -144,6 +144,14 @@ BLOCKER_ID=$(gh api repos/<owner>/<repo>/issues/<blocker_number> --jq '.id')
 gh api repos/<owner>/<repo>/issues/<blocked_number>/dependencies/blocked_by -X POST -F issue_id=$BLOCKER_ID
 ```
 
+When the tickets come from the scope of a card on `devstock-org/devstock-team` and the
+`board-tracker` skill is installed, add each created ticket to that card's body. The tickets go on
+the project's board as the project's conventions say; the card keeps the links.
+
+```bash
+node "<board-tracker CLI path from the skill>" link --card <card ref> --task <ticket ref>
+```
+
 Set no assignees. That is the repository owner's decision.
 
 ## Step 8: trace and verify
