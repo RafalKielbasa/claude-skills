@@ -4,7 +4,7 @@
 one queue)
 **Index:** [hub.md](../projects/hub.md)
 **Probes:** [2026-11-05-hub-approvals-probes.md](2026-11-05-hub-approvals-probes.md)
-**Date:** 2026-11-05 to 2026-11-06, conversation in session `3089ecd1`
+**Date:** 2026-11-05 to 2026-11-07, conversation in session `3089ecd1`
 
 ## 1. Intent
 
@@ -57,7 +57,7 @@ So the hub gains three things:
 
 ## 3. What was decided, and by whom
 
-**Rafal's decisions** (conversation 2026-11-05 and 2026-11-06):
+**Rafal's decisions** (conversation 2026-11-05 to 2026-11-07):
 
 | Topic | Decision |
 |---|---|
@@ -74,6 +74,7 @@ So the hub gains three things:
 | Voice | Local `Microsoft Paulina Desktop` (System.Speech), chosen by ear, so alerts use no ElevenLabs minutes |
 | Which sessions the hook waits on | Those whose `CLAUDE_CODE_ENTRYPOINT` is `cli` or `claude-vscode`, read in the hook itself (§6.1). The poll cannot tell `claude -p` from a window (probe report) |
 | A command that arrives as text | A pasted `! ok a3` approves nothing, and the hub says how to type it. After a `!` command the hub model adds one line at most (§4.1, §4.4) |
+| How the outcome of `! ok` reaches the hub tab | `ok` and `nie` write the decision and end at once. In the model turn that follows every `!`, the hub model runs a read-only CLI command and quotes what it prints; the hook decides, not the model (§4.4, §6.2). The final review found that a command waiting for the hook cannot work, see §5 |
 
 **The author's calls.** Rafal saw some of these as guesses and did not object; the rest appear here
 for the first time. All are open to correction when he reads this document.
@@ -97,7 +98,11 @@ for the first time. All are open to correction when he reads this document.
 | The send without „wyślij” covers only a conversation started with „dawaj”. A conversation Rafal starts the old way („porozmawiajmy głosem o X”) keeps „wyślij” | He decided this for the path after an alert; nothing says it should reach further |
 | The hook waits only on sessions known to be able to show or later attach a prompt, and when unsure it does not wait (§6.1) | A stalled session is an anti-goal; a missing hub answer only costs him the session's own prompt |
 | A wait the hub cannot answer still speaks, and the hub tab says „odpowiedz w sesji” (§4.5) | A silent stall is worse than an alert he must answer elsewhere |
+| The hook reads its own session's transcript to notice an answer, and closes the wait in the registry (§6.1, §6.4) | „No” leaves no registry event, so otherwise the hub would speak about a refused prompt and `! ok` would print „zatwierdzone” for it |
 | Approving from the hub needs a hub in a terminal, the VS Code integrated terminal included | `!` is the only input path, and he works in terminals. A panel hub keeps everything except `! ok`, because `!` is missing there (probe report) |
+| A text answer holding a later line that starts with a code is refused (§4.1) | Two answers typed while the hub model works may arrive as one prompt (not measured), and the second would then go to the first one's session. It costs a retype when a line really starts that way |
+| The overview names a walk's current item, and a watcher starting on a walk announces it again; a walk has no time limit (§4.1, §6.3) | One item left open holds the walk, as §4.1 says. He needs to see why the hub is quiet, and a limit would start talking to an empty room |
+| An `announce:` line also brings `PushNotification` when he is away, unless paused | Before the alerts every wait could notify him, and §3 suspends notifications only for a pause |
 | „A model cannot approve” means: a model cannot approve by running the command or writing the decision file. A model deliberately forging a record in the hub's transcript is out of reach, because hub, models and files share one OS user (§5) | No design on one OS user can promise more, and he should know where the guarantee ends |
 
 ## 4. How it behaves
@@ -123,6 +128,7 @@ What Rafal types in the hub tab:
 | `dawaj`, `dawaj a3` | The voice conversation about the item announced last, or about the named one (§4.3) |
 | `dalej`, `dalej a3` | Skips the item announced last, or the named one |
 | `! ok a3`, `! nie a3` | Answers permission item `a3` (§4.4) |
+| `a3 <text>` with a later line starting with a code | Sends nothing, and the hub says that two answers may have merged and to type each one separately |
 | One of these commands as text: a pasted `! ok a3`, or `ok a3` without the `!` | Changes nothing, and the hub says that `!` must be pressed by hand. In the probe a line pasted together with its `!` reached the model as plain text, and in a panel every such line does |
 | Anything else | An ordinary conversation with the hub, which forwards nothing to a session |
 
@@ -132,7 +138,7 @@ Normal listening, a walk and a pause are the same queue in different modes:
 |---|---|---|
 | Listening | Each wait speaks once, 60 s after it began, if still unanswered | Shows each item as it speaks |
 | Paused (`! pauza`) | Silent, and no `PushNotification` | The overview shows „pauza od <time>”. The queue keeps collecting, and items that have a code can still be answered |
-| Walking (`! wracam`) | Speaks one item at a time, oldest first; the next follows when the previous one leaves the queue. New waits speak only when their turn comes | Shows each item as it speaks. The walk ends when the queue is empty, and the mode returns to listening |
+| Walking (`! wracam`) | Speaks one item at a time, oldest first; the next follows when the previous one leaves the queue. New waits speak only when their turn comes | Shows each item as it speaks. The overview names the current item, because it holds the walk until it leaves the queue. The walk ends when the queue is empty, and the mode returns to listening |
 
 `! pauza` during a walk stops it, and `! wracam` continues with what is left. Command names are
 working names (§9).
@@ -183,8 +189,10 @@ voice spec §5.5).
 2. The hub tab shows the tool, the literal command or file, and the ready answers: `! ok a3`,
    `! nie a3`. A long input is cut with a statement of how much is hidden and where the full text
    is.
-3. Rafal types one of them in the hub tab. The hook answers and the session goes on. The command
-   prints what was decided, so he sees it in the tab.
+3. Rafal types one of them in the hub tab. The command prints that it took the answer and ends:
+   `a3: przyjęte, sprawdzam`. The hook finds his typed record, answers, and the session goes on. In the
+   model turn that Claude Code starts after the `!`, the hub model runs a read-only CLI command and
+   quotes what was decided, so he sees it in the tab.
 
 The session's own prompt stays visible and usable the whole time, so he can still answer there. In
 the measured period 75% of permission prompts were answered within a minute, before any alert.
@@ -193,8 +201,10 @@ Text cannot answer a permission item: `a3 tak` sends nothing, and the hub prints
 type.
 
 Claude Code starts a model turn after every `!` command (probe report), so each `! ok` costs one turn
-of the hub model. That model adds one line at most, and it never says something was approved unless the
-command's own output says so: in the probe a model reported a decision as saved when nothing had run.
+of the hub model, and that turn carries the outcome. The model adds nothing else, and it never says
+something was approved unless the read-only command's output says so: in the probe a model reported a
+decision as saved when nothing had run. A turn that does not run costs the printed outcome alone, because
+the hook does not depend on it.
 
 ### 4.5 A wait the hub cannot answer
 
@@ -216,13 +226,17 @@ conversation started the old way stays available. When the hook saw that the too
   stale code cannot hit a newer prompt or gate.
 - **No model in the path:** a model must not be able to approve. The hook, not the command, therefore
   checks that Rafal typed the approval: a `!` command leaves a `<bash-input>` record in the hub
-  session's transcript before it takes effect (seven samples, 0.1–0.8 s earlier by timestamp; the hook
-  retries its search for 3 s, because a timestamp is not the moment of the disk write), while a model's
-  call is a `tool_use` record. A decision without that record is ignored, so writing the decision file
-  directly does not work either. §8 checked this. If it turns out unreliable later, this is a decision
+  session's transcript, while a model's call is a `tool_use` record. The record's timestamp is taken
+  before the command runs (seven samples, 0.1–0.8 s earlier), but Claude Code writes it to the file only
+  after the command has ended (probe report, „Correction of 2026-11-07”). So `ok` cannot wait for the
+  hook: it writes the decision and ends, and the hook searches for the record for 8 s. A record counts
+  only when its timestamp lies within the 15 s before the decision, and each record counts once, so one
+  typing opens one decision and nothing later. A decision without such a record is ignored, so writing
+  the decision file directly does not work either. If this turns out unreliable later, it is a decision
   for Rafal, not for the builder.
 - **Where this ends:** a model that deliberately forges a record in the hub's transcript could pass the
-  check, because all of this runs as one OS user. Decision 8 of the hub spec keeps `deny` rules out,
+  check, because all of this runs as one OS user. A typed record no decision has used yet also stays
+  usable for those 15 s, by a model running the same command in that time. Decision 8 of the hub spec keeps `deny` rules out,
   and this design does not add any. Each approval is logged and printed in the hub tab, so an approval
   he did not type is visible afterwards.
 - **The hub model** only shows the prompt and the ready commands. The rule „never answer a permission
@@ -262,10 +276,18 @@ then polls for a decision bound to that record. The item's code points to the re
 
 It **ends with no decision** when:
 
-- the prompt was answered in the session: a later event of that session in the registry (`PostToolUse`
-  with the same tool and target, `UserPromptSubmit`, `Stop`, `StopFailure`, `SessionEnd`). The probe
-  showed Claude Code does not stop the hook by itself;
-- the hub has stopped running.
+- the prompt was answered in the session. There are two signals. One is a later event of that session
+  in the registry (`PostToolUse` with the same tool and target, `UserPromptSubmit`, `Stop`, `StopFailure`,
+  `SessionEnd`). The other is the session's own transcript: a `tool_result` of this call, or
+  `[Request interrupted by user`, dated after the hook started. The registry alone is not enough, because
+  „No” in the prompt leaves no event there (probe report), and a failing tool is not recorded either. On
+  the transcript signal the hook adds an event to the registry that closes the wait. The probe showed
+  Claude Code does not stop the hook by itself;
+- the hub has stopped running. After a jump in the hook's own clock, which means the computer slept, that
+  round's check is skipped, and the hub counts as stopped only when its heartbeat stays stale through a
+  minute of the hook's waking time: `! pauza` is for leaving the computer, and a prompt must survive it;
+- the session's process, `CLAUDE_PID`, is gone, because Claude Code enforces `timeout` only while it
+  lives.
 
 Any failure ends with exit 0 and no output, never with a blocked session. `onFailure` stays unset.
 
@@ -277,9 +299,13 @@ up, so a record whose pid is gone counts as closed.
 
 `ok <code>`, `nie <code>`, `pauza`, `wracam`: short names on `PATH` that work from `!` in the hub tab.
 The `!` shell must be checked, and both PowerShell and Git Bash need to resolve them. `ok` and `nie`
-write the decision, wait for the hook to accept or ignore it (§5), and print the outcome. An unknown
-or closed code prints why, including „odpowiedz w sesji” when the hook has ended. The code of a
-decision item prints how to answer it.
+write the decision, print that they took it, and end, because Rafal's typed record reaches the
+transcript only after they end (§5). An unknown or closed code prints why at once, including „odpowiedz
+w sesji” when the hook has ended. The code of a decision item prints how to answer it.
+
+A separate read-only CLI command waits up to 10 s for the hook's verdict on the last decision of a code
+and prints it. The hub model runs it in its turn after the `!` and quotes it literally. It changes
+nothing, so a model running it on its own approves nothing.
 
 ### 6.3 The watcher
 
@@ -296,14 +322,23 @@ speak. Requirements:
 - the watcher prints a line when an item is announced, which is what wakes the hub model to show it.
   For `waiting for decision` and `waiting for permission` this replaces today's line at the start of
   the wait, so a gate answered within a minute takes no model turn. In a walk, a line follows
-  `! wracam` and each item that leaves the queue.
+  `! wracam` and each item that leaves the queue; a watcher that starts on a walk announces the current
+  item again, so a restarted hub tab does not stay silent.
 
 ### 6.4 Known stale state
 
-A turn interrupted by Deny in the session's prompt leaves no event, so the overview keeps showing
-„waiting for permission” (`hub-panel` probes, „Hub findings”). Such an item stays in the queue until
-the session's next event. Rafal skips it with `dalej a3`. A late `! ok` on it has no effect (probe „A
-late answer”). This part does not fix the underlying gap.
+A turn interrupted by Deny in the session's prompt leaves no registry event, so the overview kept
+showing „waiting for permission” (`hub-panel` probes, „Hub findings”). Confirmed on 2026-11-06: after
+„No” the next event of that session came with its next prompt, 2 h 45 min later. While a hook waits, it
+sees the refusal in the session's transcript and closes the wait (§6.1), so no alert speaks for it.
+With no hook behind the prompt (hub closed, passed through, limit passed) the gap stays: the item
+remains until the session's next event, and Rafal skips it with `dalej a3`.
+
+A prompt approved in the session whose tool runs long gives no signal until the tool ends, so that wait
+still looks open: an alert can speak at 60 s, and the outcome of `! ok` says approved, with no effect on the
+tool already running (probe „A late answer”). This part accepts that. How often it happens is not
+measured: 25% of permission prompts have no next event within a minute (§10), and some of those really
+wait.
 
 ### 6.5 The hub skill and CLI
 
@@ -312,7 +347,7 @@ late answer”). This part does not fix the underlying gap.
   waiting items with their codes. The answer path composes a new path without the five template
   sections, keeps the origin header line, runs the existing pre-send checks, and fails when the wait
   behind the code has ended. The same command recognises Rafal's commands that arrive as text (§4.1)
-  and refuses them with how to type them.
+  and refuses them with how to type them. One more prints the outcome of `ok` or `nie` (§6.2).
 - `SKILL.md`: „A watcher event”, „Sending”, „Voice conversation about a session” and „Boundaries”.
 
 ### 6.6 Earlier documents this overrides
@@ -341,6 +376,8 @@ Add these to the hub spec as §13.8, and link this document.
 | Hook crashes or hangs | The prompt in the session stays usable while the hook waits (probed) |
 | Hook limit reached | `! ok` prints „odpowiedz w sesji”, and the prompt in the session still accepts an answer (probe report) |
 | `! ok` pasted whole, or typed in a panel | It reaches the model as text: nothing is approved, and the hub says how to type it |
+| The hub model's turn after `! ok` does not run | The hook still decides and the session goes on; only the printed outcome is missing |
+| The computer slept while a hook waited | The hook keeps waiting, and the item can still be answered on return (§6.1) |
 | Send check fails | The literal failure is shown and nothing is retried, as in Sending today |
 | Code unknown, or its wait has ended | Nothing is sent, and the hub shows the session's state |
 | Answer typed without a code | It stays in the hub as ordinary conversation, and no session gets it |
@@ -350,13 +387,16 @@ Add these to the hub spec as §13.8, and link this document.
 
 Run on 2026-11-06, results in the probe report. Item 4 failed, because the poll lists `claude -p` as
 `interactive`, and Rafal chose the environment signal now in §6.1. Item 7: `!` is missing in a panel.
+Item 3 compared timestamps and did not time the write to the file; the final review of 2026-11-07 found
+the record is written after the command ends, and Rafal chose the path now in §5 and §6.2.
 
 1. **Prompt after the hook limit:** the one inconclusive result in the probe report. Must pass before
    the limit in step 2 is chosen.
 2. **A long hook limit.** The probes used 45 s. The author's starting point is 8 hours, so a prompt
    survives a pause; check that a long `timeout` is honoured.
-3. **Typed-by-Rafal check:** that the `<bash-input>` record reliably precedes the command's effect, and
-   that a model running the same command through its tool is refused. If it fails, stop and ask Rafal.
+3. **Typed-by-Rafal check:** that a `!` command leaves a `<bash-input>` record whose timestamp precedes
+   the command's effect, and that a model running the same command through its tool is refused. If it
+   fails, stop and ask Rafal.
 4. **The allow-list of §6.1:** that `claude -p` runs and voice forks are absent from the poll or listed
    under another `kind`, and that the `kind` of a terminal session, a `claude --bg` session and a VS
    Code panel session is what §6.1 expects. If no reliable signal exists, stop and ask Rafal: without
@@ -410,7 +450,8 @@ it talks too much.
 2. Two alerts due together play one after another.
 3. Text typed with the code of a waiting gate reaches that session verbatim, without the code and
    without „wyślij”, also when another item was announced later. Text altered by the model is refused.
-   A bare „B” without a code reaches no session.
+   A bare „B” without a code reaches no session. Two answers typed while the hub model works go each to
+   its own session or are refused; neither lands in the other's session.
 4. An answer with the code of a wait that has ended is not sent, also when the same session already has
    a newer gate.
 5. „dawaj” opens the conversation about the item announced last, `dawaj a3` about the named one, and a
@@ -418,11 +459,14 @@ it talks too much.
    without „wyślij” and the hub shows it. The session stops at its first outward action until it has
    his word in text.
 6. A conversation without a confirmed order sends nothing.
-7. `! ok` runs a blocked call and `! nie` refuses it. With two prompts waiting, each code reaches its own.
-   A wrong or closed code changes nothing and says why.
+7. `! ok` runs a blocked call and `! nie` refuses it, at the first typing, and the hub tab then shows the
+   outcome. With two prompts waiting, each code reaches its own. A wrong or closed code changes nothing
+   and says why.
 8. A model running the approval command through its tool, or writing the decision file, gets nothing
-   approved, in the hub and in a project session.
-9. An answer in the session's own prompt works while the hook waits, and the hook then ends by itself.
+   approved, in the hub and in a project session, also after a typed attempt on the same code that was
+   refused.
+9. An answer in the session's own prompt works while the hook waits, and the hook then ends by itself,
+   also after „No” and after a tool that failed. No alert follows a refusal given within the 60 s.
 10. With the hub closed, a prompt appears at once and no hook process stays behind. A `claude -p` run is
     not slowed down.
 11. `! pauza` silences alerts, and `! wracam` walks oldest first over the last 24 hours. „dalej” skips. A

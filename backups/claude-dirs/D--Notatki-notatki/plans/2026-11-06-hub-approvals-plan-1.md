@@ -5,7 +5,7 @@
 **Goal:** Rafal hears which session needs him and whether it is a decision or a permission, answers both from the hub tab, and can suspend alerts and walk through what waits when he returns.
 
 **Architecture:**
-- **Permission path.** A blocking `PermissionRequest` hook writes a pending record and waits. Rafal types `! ok a3`; the command writes a decision, and the hook accepts it only after finding that exact command as a typed `<bash-input>` record in a hub session's transcript.
+- **Permission path.** A blocking `PermissionRequest` hook writes a pending record and waits. Rafal types `! ok a3`; the command writes a decision and ends, and the hook accepts it only after finding that exact command as a typed `<bash-input>` record in a hub session's transcript, which Claude Code writes when the command has ended. The hub model then runs `HUB outcome a3` and quotes the verdict.
 - **Queue.** `queue.json` holds one item per wait, reconciled from the overview rows and the pending records under a file lock. Modes: listening, paused, walking.
 - **Alerts.** The watcher announces an item: it gives the code, starts a separate speech process, and prints an `announce:` line, which wakes the hub model to show the item. No model is involved in speaking.
 - **Typed text.** Every prompt that starts with a code, is `dawaj` or `dalej`, or is one of Rafal's commands arriving as text goes through `HUB typed`, which compares it with the hash of what Rafal typed and returns what to do. The hub model only carries that out.
@@ -38,8 +38,13 @@
 | Code | `a<n>`, the lowest number not given in the last 24 h; matched ignoring case |
 | Hub counts as closed | heartbeat file older than 5 min |
 | Hook `timeout` | 28800 s (probed to 670 s) |
-| Typed-record search | retried for 3 s, last 512 KB of each transcript, newest 5 hub sessions |
-| `ok`/`nie` wait for the hook's outcome | 10 s |
+| Typed-record search | retried for 8 s after the decision, last 512 KB of each transcript, newest 5 hub sessions |
+| A typed record counts | timestamp in `[max(item.codeAt, decision.at − 15 s), decision.at]`, each record `uuid` once |
+| A decision counts | `at` is a number, not in the future and at most 15 s old on the hook's clock |
+| `HUB outcome` waits for the hook's verdict | 10 s |
+| Hook's hub check | a gap over 30 s between rounds skips that round; the hub counts as stopped after the heartbeat stayed stale through 60 s of rounds |
+| Pending record | counts as closed at `startedAt` + 8 h, also with a live pid |
+| Watcher debounce | 500 ms, at most 5 s from the first change |
 | Speech process limit | 30 s |
 | Lock | `queue.lock`, created exclusively, stolen when older than 5 s |
 | `CLAUDE_CODE_ENTRYPOINT` values the hook waits on | `cli`, `claude-vscode`; any other value or none passes through |
@@ -54,9 +59,13 @@
 | Item, decision, last line | `` `dawaj` omawia głosem, `a3 <tekst>` idzie do sesji, `dalej` pomija `` |
 | Item, permission, last line | `` `! ok a3` zatwierdza, `! nie a3` odmawia, `dalej` pomija `` |
 | Item, no hook behind it | `` Odpowiedz w sesji <name>. `dalej` pomija. `` |
-| `ok` accepted | `a3: zatwierdzone · <name> · <tool> <target>` |
-| `nie` accepted | `a3: odrzucone · <name> · <tool> <target>` |
-| Not typed in the hub | `a3: nic nie zatwierdzono, bo tej komendy nie wpisano w zakładce huba` |
+| `ok`/`nie` took the decision | `a3: przyjęte, sprawdzam` |
+| `HUB outcome`, `ok` accepted | `a3: zatwierdzone · <name> · <tool> <target>` |
+| `HUB outcome`, `nie` accepted | `a3: odrzucone · <name> · <tool> <target>` |
+| `HUB outcome`, not typed in the hub | `a3: nic nie zatwierdzono, bo tej komendy nie wpisano w zakładce huba` |
+| `HUB outcome`, another reason | `a3: nic nie zatwierdzono (<reason>)` |
+| `HUB outcome`, no verdict | `a3: brak odpowiedzi hooka po 10 s. Zobacz, czy prompt w sesji <name> nadal czeka.` |
+| `HUB outcome`, no decision | `a3: nie ma decyzji do sprawdzenia` |
 | A command arriving as text | `` Komenda się nie wykonała, nic nie zatwierdzono ani nie zmieniono: `!` trzeba wcisnąć ręcznie, potem wkleić resztę. W panelu VS Code `!` nie działa. `` |
 | Unknown code | `a9: nie ma takiej pozycji` |
 | Closed code | `a3: ta pozycja już nie czeka` |
@@ -65,11 +74,18 @@
 | No hook behind the item | `a3: odpowiedz w sesji <name>` |
 | Hash mismatch | `Tekst nie zgadza się z tym, co wpisałeś. Nic nie wysłano.` |
 | Item announced last is gone | `Ostatnio ogłoszona pozycja (a3) już nie czeka. Nic nie zrobiłem.` |
+| Bare `dalej`/`dawaj` typed before a newer announcement | `Od Twojej komendy ogłoszono nową pozycję (a4). Nic nie zrobiłem. Podaj kod pozycji.` |
+| Text typed before the item got its code | `a3: w chwili wpisania ten kod należał do innej pozycji. Nic nie wysłano.` |
+| A later line starting with a code or command | `Kolejna linia zaczyna się od kodu albo komendy, więc odpowiedzi mogły się zlać. Nic nie wysłano. Wpisz każdą osobno.` |
 | Nothing announced yet | `Nic jeszcze nie ogłoszono. Podaj kod, np. „dawaj a3”.` |
 | Skipped | `a3 pominięte: <name>. Zostaje w przeglądzie.` |
+| `voice send`, no `dawaj` | `a3: rozmowy o tej pozycji nie zaczęto przez „dawaj”. Nic nie wysłano.` |
+| `voice send`, not a `prompt.md` of a voice conversation | `To nie jest prompt.md rozmowy głosowej: <file>. Nic nie wysłano.` |
+| `voice send`, another conversation's `prompt.md` | `a3: ten prompt.md nie pochodzi z tej rozmowy. Nic nie wysłano.` |
+| An item's claim cannot be released after a failed send | `a3: nie udało się zwolnić pozycji (<error>), więc nie wróci do kolejki. Odpowiedz w sesji <name>.` |
 | `pauza` | `Pauza od <HH:MM>. Alerty wstrzymane, kolejka zbiera dalej.` |
 | `wracam` | `Wracamy: czeka <n>. Najstarsza idzie pierwsza.` / `Nic nie czeka.` |
-| Overview | `pauza od <HH:MM>` |
+| Overview | `pauza od <HH:MM>`; in a walk `przegląd: bieżąca a3` |
 | `deny` message to the session | `Rafał odmówił tego wywołania z huba. Nie obchodź tej odmowy: zakończ turę i napisz, czego potrzebowałeś.` |
 
 ## Review Focus
@@ -117,7 +133,7 @@ QueueState = { version: 1, mode: 'listening'|'paused'|'walking', pausedAt, seede
 Item       = { key, sessionId, kind: 'decision'|'permission', since, pendingId, answerable, askTool, name, project,
                code, codeAt, announcedAt, silent, heldAt, answeredAt, answerRecordId, skippedAt, dawajAt }
 Wait       = { key, sessionId, kind, since, pendingId, answerable, askTool, name, project, shortId, detail }
-Pending    = { id, sessionId, promptId, tool, target, inputHash, input, pid, startedAt }
+Pending    = { id, sessionId, promptId, tool, target, inputHash, input, pid, startedAt, transcriptPath }
 Decision   = { verb: 'ok'|'nie', code, attempt, at }      Outcome = { accepted, verb, attempt, reason, at }
 ```
 
@@ -243,11 +259,14 @@ Send Rafal one step at a time as a table with columns „Gdzie” and „Co wpis
 
 ### Task 6: The `PermissionRequest` hook
 
-**Files:** Create `lib/pending.mjs`, `lib/transcript.mjs`, `lib/permission.mjs`, `bin/hub-permission.mjs`, `test/permission.test.mjs`, `test/transcript.test.mjs`; modify `lib/events.mjs`.
+> Changed by Task 12b: the typed search is bound to one decision and one record, and lasts 8 s.
+
+**Files:** Create `lib/pending.mjs`, `lib/transcript.mjs`, `lib/permission.mjs`, `bin/hub-permission.mjs`, `test/permission.test.mjs`, `test/transcript.test.mjs`; modify `lib/events.mjs`, `lib/derive.mjs`, `lib/registry.mjs`.
 
 **Interfaces — Consumes:** `readHubSessions`, `readEvents`, `deriveSession`, `isAlive`, `readQueue`. **Produces:**
 - `pending.mjs`: `writePending(root, record)`, `readPending(root, id)`, `listOpenPendings(root, { alive = isAlive }): Pending[]` (a record whose pid is gone is deleted and left out), `closePending(root, id)`, `writeDecision(root, id, decision)`, `readDecision(root, id)`, `removeDecision(root, id)`, `writeOutcome(root, id, outcome)`, `readOutcome(root, id, attempt)` (null unless the file holds that attempt), `removeOutcome(root, id)`, `appendAsk(root, { sessionId, tool, at })`, `readAsks(root)`.
-- `transcript.mjs`: `typedCommandAt(path, verb, code, sinceIso): string|null`, `hubTranscriptPaths(root): string[]`.
+- `transcript.mjs`: `typedCommandAt(path, verb, code, sinceIso): string|null`, `hubTranscriptPaths(root): string[]`, `answeredInSession(path, record): 'tool-result'|'interrupted'|null`.
+- `registry.mjs`: `recordPermissionClosed(root, record, outcome, { id, at })`, which appends the event `PermissionClosed` with `outcome`. `derive.mjs` clears a permission `waiting` on it, when `at` ≥ the wait's `since`, and changes nothing else: a phase `turn-ended` would wake the hub model to judge an older message about a refusal Rafal gave himself, so an interrupted turn stays `working` until its next event, a known open point of the hub spec.
 - `permission.mjs`: `passThroughReason({ input, hubRunning, hubSessions, entrypoint, jobName }): string|null`; `readJobName(jobDir): string|null` (`name` from `<jobDir>/state.json`, null on any failure); `laterEvent(events, record): Event|null`; `hookOutput(verb): object`; `verifyDecision({ root, record, decision, now }): { accepted, reason }`.
 - `events.mjs`: `export function toolTarget`, `export function inputHash(toolInput)` = `sha256(JSON.stringify(toolInput ?? {}))`, and `PostToolUse` events gain `inputHash`. Only the hash enters the registry, which keeps no full commands (`lib/events.mjs:1-2`).
 
@@ -276,13 +295,19 @@ Send Rafal one step at a time as a table with columns „Gdzie” and „Co wpis
   - `later event`: a registry `PostToolUse` with the same tool and `inputHash` after `startedAt` ends the hook with empty stdout; `UserPromptSubmit`, `Stop`, `StopFailure`, `SessionEnd` likewise. A `PostToolUse` of another Bash command does not, also when both have the same description or none.
   - In `test/hook.test.mjs`, adjust any expectation of the exact `PostToolUse` event to the new `inputHash`; it holds no command text.
   - `heartbeat goes stale while waiting`: the hook ends with empty stdout, and the pending file is gone.
+  - `answered in the session, transcript`: the session's transcript gains an assistant `tool_use` with the same tool and `inputHash`, and a `tool_result` of its id dated after `startedAt`: the hook ends with empty stdout, the pending file is gone, and the registry holds `PermissionClosed` with `outcome: 'tool-result'`. The same with an `is_error` result, for a tool that failed.
+  - `„No” in the prompt`: a user record whose text starts `[Request interrupted by user`, dated after `startedAt`: same, `outcome: 'interrupted'`; `deriveSession` then has `waiting: null` and the phase it had before.
+  - `older identical call`: the same `tool_use` with a `tool_result` dated before `startedAt` does not end the hook. A `tool_result` of a call with another input, dated after, does not either. An interrupted record dated before `startedAt` does not either.
+  - `transcript missing or unreadable`: the hook keeps waiting.
+  - `session process gone`: `CLAUDE_PID` of a dead process ends the hook with empty stdout, the pending file gone; `CLAUDE_PID` unset is no such signal.
+  - `answeredInSession` reads only the tail of a 3 MB transcript.
   - `pending record of a killed hook`: `listOpenPendings` deletes it and returns none.
 
 - [ ] **Step 3: Run them.** Expected: FAIL.
 
 - [ ] **Step 4: Implement.**
   - `passThroughReason` in the order of spec §6.1, returning `hub-closed`, `hub-session`, `dialog-fork`, `ask-tool` or `entrypoint`. `dialog-fork` means `jobName` starts with `dlg-`, or a `launched` item with this session's id has a name starting `dlg-`. The hook reads no poll. `bin/hub-permission.mjs` passes `process.env.CLAUDE_CODE_ENTRYPOINT` and `readJobName(process.env.CLAUDE_JOB_DIR)`.
-  - `bin/hub-permission.mjs`: the whole body in one `try`, with exit 0 and no output on any failure. Loop every 500 ms: decision present → `verifyDecision` (retrying the typed search for 3 s), write the outcome, append to `approvals.jsonl` `{ at, code, sessionId, tool, target, verb, accepted, typedAt }`; accepted → close the pending record, write the output and let the process end on its own so stdout flushes. Every 2 s: `laterEvent` and the heartbeat.
+  - `bin/hub-permission.mjs`: the whole body in one `try`, with exit 0 and no output on any failure. Loop every 500 ms: decision present → `verifyDecision` (retrying the typed search for 3 s), write the outcome, append to `approvals.jsonl` `{ at, code, sessionId, tool, target, verb, accepted, typedAt }`; accepted → close the pending record, write the output and let the process end on its own so stdout flushes. Every 2 s: `laterEvent`, the heartbeat, `answeredInSession` on `record.transcriptPath` (on an answer, `recordPermissionClosed` and end), and `isAlive(CLAUDE_PID)`.
   - `verifyDecision` requires the queue item with `pendingId === record.id` and `code === decision.code`, then `typedCommandAt` on `hubTranscriptPaths(root)` with `sinceIso = item.codeAt`.
 
 - [ ] **Step 5: Run them.** Expected: PASS. Then `node --test`.
@@ -290,6 +315,8 @@ Send Rafal one step at a time as a table with columns „Gdzie” and „Co wpis
 - [ ] **Step 6: Commit** `feat: PermissionRequest hook with typed-command check`.
 
 ### Task 7: Commands typed by Rafal
+
+> Changed by Task 12b: `ok` and `nie` no longer wait, and `HUB outcome` prints the verdict. The tests below were written in the wrong order of the typed record; Task 12b replaces them.
 
 **Files:** Create `bin/hub-cmd.mjs`, `test/cmd.test.mjs`.
 
@@ -485,6 +512,48 @@ A helper in `bin/hub.mjs`, `prepareRecord(root, found, options)`, takes over the
 
 - [ ] **Step 5: Commit** `feat: alert numbers and cleanup`.
 
+### Task 12b: Fixes from the final review
+
+Rafal chose variant A on 2026-11-07 (spec §3, §5, §6.2). One fix dispatch, then one scoped re-review. The review's text is in the plan's workspace, `review-final-report.md`, with its repros.
+
+**Files:** modify `bin/hub-cmd.mjs`, `bin/hub-permission.mjs`, `bin/hub.mjs`, `bin/hub-watch.mjs`, `lib/permission.mjs`, `lib/transcript.mjs`, `lib/pending.mjs`, `lib/queue.mjs`, `lib/alerts.mjs`, `lib/item.mjs`, `lib/typed.mjs`, `SKILL.md`, and their tests.
+
+**Interfaces — Produces:**
+- `transcript.mjs`: `typedCommands(path, verb, code, { fromMs, toMs }): { timestamp, uuid }[]`, newest first, replacing `typedCommandAt`. A record with no `uuid` is left out. Real records have one: 10 of 10 checked on 2026-11-07.
+- `permission.mjs`: `verifyDecision` as below; `nextHubWatch(prev, { now, running, graceMs }): { wasAt, staleMs, gone }`; `shownCall(record): string`, moved from `hub-cmd.mjs`.
+- `queue.mjs`: `usedTypedRecords: []` in `emptyQueue`, capped like `usedPromptEvents`; a code entry may hold `decision: { pendingId, attempt }`.
+- `pending.mjs`: `listOpenPendings(root, { alive, now })` also closes a record past `startedAt` + 8 h.
+- `HUB outcome <code> [--wait-ms <n>]`: read-only, exit 0 when accepted, 3 otherwise.
+
+- [ ] **Step 1: The outcome path, from the failure that was found (fails until step 2).** Every test here appends the typed record only **after** `ok` has exited, as Claude Code does (probe report, „Correction of 2026-11-07”). Replace the helper that wrote it before the command, in `test/cmd.test.mjs`, so no test keeps the wrong order.
+  - `ok a3`: exits 0 within 2 s, printing `a3: przyjęte, sprawdzam`, with the hook still waiting and no typed record yet. After the record is appended: the hook prints `allow`, `item.answeredAt` is set with no `HUB outcome` run, and `HUB outcome a3` prints `a3: zatwierdzone · <name> · <tool> <target>`, exit 0. Also when the item has left the queue by then: the code entry carries it.
+  - `nie a3`: the same with `a3: odrzucone · …` and the `deny` output.
+  - The record appended 5 s after the exit: accepted.
+  - No record: `ok` exits 0; `HUB outcome a3` prints `a3: nic nie zatwierdzono, bo tej komendy nie wpisano w zakładce huba`, exit 3, within 10 s; the decision file is gone and the hook keeps waiting.
+  - A model's refused call, then a typed one: `HUB outcome` reports the second attempt, not the first outcome. Run twice, it prints the same.
+  - `HUB outcome a9`: `a9: nie ma decyzji do sprawdzenia`, exit 3. A hook gone with no verdict, with `--wait-ms 200`: `a3: brak odpowiedzi hooka po 10 s. Zobacz, czy prompt w sesji <name> nadal czeka.`, exit 3. Another refusal reason (`no-item`): `a3: nic nie zatwierdzono (no-item)`.
+  - Review Focus 5 and two hooks with their own codes still hold.
+- [ ] **Step 2: Implement it.**
+  - `hub-cmd.mjs`, `ok` and `nie`: after `lookup`, under `withQueue` store `entry.decision = { pendingId, attempt }` on the code entry, then `writeDecision` with `at: Date.now()`, print and exit. The polling and `removeOutcome` go. `lookup` drops `item.skippedAt` (I3) and tests `!item.answerable` before `item.kind` (I5), so an ask-tool item prints `a3: odpowiedz w sesji <name>`.
+  - The hook, on acceptance, in this order: `writeOutcome`, with `call: <tool> <shownCall>` added; `answeredAt` on the item found by code, best effort in its own `try`; the output. This also settles the review's Minor 2. The search lasts 8 s on the clock, not a count. A verdict other than `not-typed` ends the search at once.
+  - `HUB outcome` reads `codeEntry(readQueue(root), code)`, polls `readOutcome(root, decision.pendingId, decision.attempt)` every 100 ms and leaves the outcome file for `cleanup`. The name comes from the code entry.
+- [ ] **Step 3: One decision, one typing (C2), test first.** `verifyDecision` refuses, without a search, a decision with `at` not a number, in the future, or over 15 s old on the hook's clock: `stale-decision`. Otherwise it takes `typedCommands` with `fromMs = max(item.codeAt, decision.at − 15000)` and `toMs = decision.at`, and the first `uuid` not in `state.usedTypedRecords`, adding it there under `withQueue` in the same step. A busy lock counts as not found, so the search goes on. Tests: a record dated 16 s before the decision, one dated after it, one with no `uuid`, one whose `uuid` was used: all refused. The review's repro: after a refused `ok a3` whose record lands late, a second `ok a3` over 15 s later with no new record is refused and the hook does not print `allow`. A decision file written directly with an old `at` is refused at once. `approvals.jsonl` gains `decidedAt`, so acceptance can read the time from typing to the verdict.
+- [ ] **Step 4: A walk (I1, I2).** `walk()` in `hub-cmd.mjs` sets `walkCurrent = null`, so `! wracam` after a pause announces the current item. `renderQueue` prints `przegląd: bieżąca a3` when walking with an open coded `walkCurrent`. `announce` stores `state.walkOwner`, the watcher's owner pid; a long-running watcher that starts on a walk with another non-null owner sets `walkCurrent = null`, so the current item speaks once in a new hub tab. The Monitor re-arm of the same tab, every 30 min, has the same owner and stays silent. No time limit on a walk (spec §3). Tests for each.
+- [ ] **Step 5: Waking the computer (I4).** The hook's 2 s round goes through `nextHubWatch`: a gap over 30 s since the last round resets `staleMs` and skips that round's hub check; a live heartbeat resets it; a stale one adds the gap, and `gone` at `staleMs` ≥ `graceMs`, 60000 by default, `HUB_STALE_GRACE_MS` for tests. Unit tests with a fake clock: a jump of 10 min with a stale heartbeat is not gone, and neither is 59 s of waking staleness; 60 s is. The existing `heartbeat goes stale` test sets a short grace.
+- [ ] **Step 6: An ask-tool item (I5).** `renderItem` prints no quote when `item.askTool` is set: the title line and `Odpowiedz w sesji <name>. \`dalej\` pomija.`. Test it.
+- [ ] **Step 7: The smaller ones.**
+  - Bare `dalej`/`dawaj` (review's Minor 3): in `takeTyped`, when the parsed form has no code and the prompt event's `at` is before `item.announcedAt`: refused with `Od Twojej komendy ogłoszono nową pozycję (a4). Nic nie zrobiłem. Podaj kod pozycji.`. `at < item.codeAt` is refused with `a3: w chwili wpisania ten kod należał do innej pozycji. Nic nie wysłano.` instead of the hash text.
+  - Merged answers (Minor 4): a prompt with the code form whose any line after the first starts with a code, or is exactly `dawaj`, `dalej` or either with a code, is refused with `Kolejna linia zaczyna się od kodu albo komendy, więc odpowiedzi mogły się zlać. Nic nie wysłano. Wpisz każdą osobno.`. `A3 tak\ndrugie` still sends, and `a3 a4 B` on one line stays in the body as pinned in Task 10, because a merge does not make that shape.
+  - `SKILL.md`, `Rafal's typed text`: after `After a ! command, reply with one line at most`, add `When its stdout says <code>: przyjęte, sprawdzam, run HUB outcome <code> and quote its output literally: that is your one line.` Replace the approval sentence with `Never say an approval happened unless the output of HUB outcome says so`. Update `test/skill.test.mjs`.
+  - `SKILL.md`, `A watcher event` (ruling on Minor 5): `announce:` also uses `PushNotification` when he is away, with the item's first line. A pause brings no `announce:`.
+  - `SKILL.md` drift (Minor 6): „Czekać” at lines 117-120 names `turn ended` or an `announce:` line, and says none comes in a pause; lines 124 and 173 add that a prompt can also be answered with `! ok <code>`; line 82 says the break row of spec §10 is not computed.
+  - `bin/hub-watch.mjs` debounce (Minor 7): 500 ms, at most 5 s from the first change, in a small tested helper in `lib/watch.mjs`.
+  - `listOpenPendings` limit (Minor 9), with a test: a live pid past 8 h is closed.
+- [ ] **Step 8: Run everything.** `node --test`. Expected: all pass. Nothing under `~/.claude` or `~/.local/bin` is touched.
+- [ ] **Step 9: Commit** in `DEV/`, one commit per step or a few, messages in the style of the branch.
+
+Not in this task: the review's Minors 8, 10, 11, 12 and the parked items. None must be fixed before install.
+
 ---
 
 ## Part C: with Rafal
@@ -502,7 +571,7 @@ node C:/Users/rafal/hub-dev/hub-approvals/bin/install.mjs --dry-run
 node C:/Users/rafal/hub-dev/hub-approvals/bin/install.mjs
 ```
 
-It backs up `settings.json` and copies the skill. To undo: restore the newest `~/.claude/settings.json.bak-hub-*`, and the hook is gone. A session may read its hooks only when it starts, so Rafal then restarts the hub tab, and the acceptance runs in sessions started after the install.
+It backs up `settings.json` and copies the skill. To undo: restore the newest `~/.claude/settings.json.bak-hub-*`, and the hook is gone. That restores `settings.json` only: the skill copy has no backup, and its baseline is `git archive 6296a57` in `DEV/`. A session may read its hooks only when it starts, so Rafal then restarts the hub tab, and the acceptance runs in sessions started after the install.
 
 - [ ] **Step 3: Run the acceptance** with Rafal, one row at a time, in a project with no real work: `PROBE/repo` is on no project map, which is fine for permissions; a decision gate needs one session in `notatki` asked to end its turn with the gate marker.
 
@@ -511,16 +580,23 @@ It backs up `settings.json` and copies the skill. To undo: restore the newest `~
 | 1 | test session; ear | end a turn with the gate marker; wait 60 s. Repeat and answer within 30 s | Name and kind heard once; the answered one stays silent |
 | 2 | two test sessions | both gates within seconds | One sentence after the other |
 | 3 | hub tab | `a3 B` | „B” reaches the session verbatim, no „wyślij”, also with a later item announced. Bare `B`: no session gets it |
+| 3 | hub tab | `a3` with a multi-line answer, and one pasted with Polish letters; the session at the gate is `idle` in a real poll | Both reach the session verbatim: the real prompt hash matches what the hub model passes, and pre-send check 5 passes |
+| 3 | hub tab, while the hub model is working | type `a3 B`, then `a4 A`, one after the other | Each reaches its own session, or both are refused as merged; neither lands in the other's session. Record which: this measures whether queued prompts merge |
 | 3 | hub tab, with the model told to change the text | ask the hub model to run `HUB typed` with altered text | Refused |
 | 4 | hub tab | answer in the session, then `a3 B` | Not sent, also with a newer gate there |
 | 5 | hub tab, browser | `dawaj`, one follow-up by voice, a confirmed order, end | The order arrives with no „wyślij” and its text is shown. An order with a push: the session stops at the push until a word in text |
 | 5 | hub tab | `dawaj` on a session in a project off the talk allowlist | The allowlist sentence is quoted, and the item stays |
 | 6 | browser | a conversation with no confirmed order | Nothing is sent, and the item stays |
-| 7 | okno sondy, hub tab | a push; `! ok a4`. Another; `! nie a5`. Two at once with their own codes. A wrong code | Runs; refused and the session ends its turn; each its own; nothing changes and it says why |
-| 8 | hub tab, okno sondy | ask the hub model, then the test session's model, to run `ok a6` and to write the decision file | Nothing approved in either |
-| 9 | okno sondy | answer in the prompt while the hook waits | Works; no hook process left within seconds |
-| 10 | hub closed | a push in okno sondy; `claude -p` with a push | The prompt appears at once, no hook process; `-p` is denied at once, not after 8 h. A voice fork leaves `pending/` empty |
-| 11 | hub tab | `! pauza`, a gate, a push, `! wracam`, `dalej`, `! pauza`, `! wracam`, a new gate mid-walk | Silent, and no `PushNotification`, also for a `turn ended` during the pause; oldest first over 24 h; skip works; resumes what is left; the new one comes last |
+| 7 | okno sondy, hub tab | a push; `! ok a4`, typed once. Another; `! nie a5`. Two at once with their own codes. A wrong code | The first typing works, with no retype: `a4: przyjęte, sprawdzam`, then the hub quotes `a4: zatwierdzone · …`; record the time from `typedAt` to `at` in `approvals.jsonl`, which measures the write of the record. Refused and the session ends its turn; each its own; nothing changes and it says why |
+| 7 | hub tab, okno sondy | a push; `! ok a9` typed while the hub model is in the middle of a turn | Record what it prints: Claude Code may hold the `!` until the turn ends, and a record older than 15 s is refused; typing it again then works |
+| 8 | hub tab, okno sondy | ask the hub model, then the test session's model, to run `ok a6` and to write the decision file | Nothing approved in either; `HUB outcome` prints the refusal, and no model reports an approval |
+| 9 | okno sondy | answer „Yes” in the prompt while the hook waits. Then „No” within 60 s. Then „Yes” on a push to an absent remote, so the tool fails. Then two pushes at once, „Yes” on the first in the prompt | Each works; no hook process left within seconds of the tool's result; no alert after the refusal; the second prompt of the pair appears without waiting for anything else |
+| 9 | okno sondy | answer „Yes” in the prompt of a file edit (not Bash), and of a push made by a subagent | The hook ends within seconds of the tool's result, or at the latest at `Stop`; record which, since this measures whether `tool_input` equals `PostToolUse` and the transcript for other tools, and which `transcript_path` a subagent's call gets |
+| 7 | hub tab | `/clear` in the hub tab, then `! ok a8` with no prompt since | Record what it prints: such a tab is not yet in the typed search, so it may say the command was not typed in the hub tab; any prompt typed first fixes it. When it was refused, wait 20 s and ask the hub model to run `ok a8`: spec §11 item 8, a refused typed attempt opens nothing |
+| 10 | hub closed for over 5 min, because the heartbeat stays behind | a push in okno sondy; `claude -p` with a push | The prompt appears at once, no hook process; `-p` is denied at once, not after 8 h. A voice fork leaves `pending/` empty |
+| 11 | hub tab | `! pauza`, a gate, a push, `! wracam`, `dalej`, `! pauza`, `! wracam`, a new gate mid-walk | Silent, and no `PushNotification`, also for a `turn ended` during the pause; oldest first over 24 h; skip works; resumes what is left; the new one comes last. While it waits, the overview says `przegląd: bieżąca a<n>` |
+| 11 | hub tab, okno sondy | in a walk, restart the hub tab. Then `! ok` on an item skipped with `dalej` | The current item speaks once again in the new tab, not on each re-arm; the skipped item is approved |
+| 11 | hub tab, okno sondy, sleep | a push, `! pauza`, put the computer to sleep for over 6 min, wake it, `! wracam`, `! ok` | The hook survived: the item offers `! ok` and it works, not „odpowiedz w sesji” |
 | 12 | browser | a gate during a voice conversation | Silent; spoken after it ends |
 | 13 | okno sondy | a second push after `! ok` | It prompts again; no standing rule in `settings.json` |
 | 14 | hub tab, okno sondy | a push; paste `! ok a7` as a whole line, then type `ok a7` without the `!` | Both approve nothing; the prompt still waits; the hub prints how to type it, and no model reports an approval |

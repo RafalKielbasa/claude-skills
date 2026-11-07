@@ -46,7 +46,7 @@ Times are UTC.
 | Answer from another session | `s4`: hook started 20:03:08.924, `Notification` at 20:03:14.821, decision written 20:03:33.778, hook answered `allow` at 20:03:33.842, tool result 20:03:34.455, branch `s4` in the remote. Rafal: „prompt zniknął sam” | pass |
 | Hook limit reached | The first `s1` hook started 19:50:50.878, last tick 19:51:35.611, so it ended at its 45 s limit. No effect on the prompt was seen until the answer below | see the next row |
 | Answer in the prompt after the limit | **Inconclusive.** First `s1`, answered about 3 min after the limit: the transcript says "The user doesn't want to proceed" at 19:54:47.170 and "[Request interrupted by user for tool use]", yet the branch reached the remote at 19:54:47.316, so the push did run. `s2`, answered 4.5 min after the limit: the same transcript text at 20:02:59.253 and no branch. Which keys Rafal pressed is not recorded | to repeat with one key press |
-| Typed command in the transcript | A `!` command leaves a `type: "user"` record with `<bash-input>` in the transcript of the session it was typed in, before its effect: 19:57:52.605 against the file written at 19:57:53.131, and 20:03:33.384 against 20:03:33.778 | finding: two samples; a tool call by a model is a `tool_use` record instead |
+| Typed command in the transcript | A `!` command leaves a `type: "user"` record with `<bash-input>` in the transcript of the session it was typed in, with a timestamp before its effect: 19:57:52.605 against the file written at 19:57:53.131, and 20:03:33.384 against 20:03:33.778 | finding: two samples; a tool call by a model is a `tool_use` record instead. These are timestamps, not the time of the write: see „Correction of 2026-11-07” |
 | Local voices | Three voices rendered and played the sentence „Baza wiedzy. Decyzja do podjęcia.”: `Microsoft Paulina Desktop` (System.Speech), and through WinRT `Microsoft Paulina` and `Microsoft Adam` (OneCore). Rendering with `Microsoft Paulina Desktop` took 258 ms inside a running PowerShell | Rafal chose `Microsoft Paulina Desktop` |
 
 ## Results of plan 1 (2026-11-06, Tasks 1 and 2)
@@ -60,7 +60,7 @@ Claude Code 2.1.319 in terminals, VS Code extension 2.1.318 in the panel, same h
 | 1, prompt after the limit, „Yes” | `s5`, session `5a9651ac`: hook started 09:55:41, last tick at 44 s, killed at its 45 s limit; `1` pressed at 09:56:44, 63 s in; normal tool result `Everything up-to-date` (the branch came from an earlier run of `9e0cbd87`, answered at 3 s) | pass |
 | 1, prompt after the limit, „No” | `s6`: last tick at 44 s; „No” at 09:58:11; tool result `The user doesn't want to proceed with this tool use`; no branch. The options were yes and no | pass |
 | 2, long limit | `timeout: 28800`, `claude -p`: hook started 09:20:25, alive at 670 s, `allow` at 09:31:46, branch `long1` in the remote | pass up to 670 s; the full 8 hours was not waited out |
-| 3, typed check, typed half | Session `04f29863`, five `!` commands: 5 `<bash-input>` records, 0 `tool_use`; each record's timestamp earlier than the run time by 780, 117, 160, 148, 118 ms. A timestamp is not the moment of the disk write, which is why the hook retries its search for 3 s | pass |
+| 3, typed check, typed half | Session `04f29863`, five `!` commands: 5 `<bash-input>` records, 0 `tool_use`; each record's timestamp earlier than the run time by 780, 117, 160, 148, 118 ms. A timestamp is not the moment of the disk write, and the 3 s retry concluded from this was wrong: see „Correction of 2026-11-07” | pass on the timestamps only |
 | 3, typed check, model half | `claude -p` running the same command through its tool: typed 0, toolUses 1 | pass |
 | 3, `!` shell | `SHELL` is Git Bash, parent process `bash.exe` | recorded |
 | 4, allow-list, `claude -p` | Listed in the poll as `kind: interactive`, name `repo-81` | **fail**: the poll's `kind` cannot separate `-p` from a window, see below |
@@ -99,6 +99,28 @@ variables are documented was not checked.
   samples. Each `! ok` in the hub tab therefore costs one model turn.
 - **Claude Code does not stop the hook after an answer in the prompt,** seen again: `s5` answered at 3 s,
   the hook ticked on to 42 s.
+
+### Correction of 2026-11-07: when the typed record reaches the file
+
+The final review of the build found what the probes missed. They compared timestamps only, and the
+probe's `decide.mjs` returned at once, so nothing ever waited for the record while the command ran.
+
+Over 30 days of transcripts, 82 `<bash-input>` records:
+
+- `<bash-stdout>` is the very next record in 80 of them by my count and in 82 by the reviewer's; the two
+  scripts were not compared;
+- 15 have records with a later timestamp standing before them in the file. Session `04f29863`: an
+  `api-request` dated 19:40:40.703 stands before a `<bash-input>` dated 19:40:40.166, whose stdout is dated
+  .679. Session `78e3ca27`, a command that ran 120 s: records dated 11:53:17 and 11:54:03 stand before its
+  `<bash-input>`.
+
+So Claude Code writes the record only after the command has ended. This comes from the file order; the
+write was not timed directly, and spec §11 item 7 measures it in real use.
+
+Consequence: a command that waits for a hook which needs this record cannot work. The reviewer reproduced
+it with the real hook and command and the record appended after the command's exit: 3,621 ms, exit 3, a
+false refusal. Rafal chose on 2026-11-07 that `ok` ends at once and a read-only command reports the outcome
+(spec §5, §6.2).
 
 ## Not tried
 
