@@ -61,3 +61,8 @@ Format wpisu:
 - Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmienił się tylko `nauka-z-claude.md` przez globalny skill `nauka-z-claude`)
 - Wzorce globalne dotknięte w tej sesji: historia-luki-podstawia-ocene-odpowiedzi (założony), sprawdzian-przed-powtorkami-tego-samego-materialu (dopisany dowód), nauka-przerwana-zostawia-punkt-wznowienia (dopisany dowód), protokol-bluf-opakowuje-tury-nauki (dopisany dowód)
 - Sygnał: brak (wzorce repo); globalne — patrz log globalny
+
+## 2026-11-09 — sesja session_01WryF5WMM6e7iBT7efWZwJS (lokalnie 3089ecd1-38b8-4995-a6db-28273c325475)
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmieniły się spec, raport sond, plan 1 i indeks `.claude/projects/hub.md` projektu `hub`, poza vaultem używane były globalne skille `superpowers:subagent-driven-development`, `project-index` i zainstalowany `hub`)
+- Wzorce globalne dotknięte w tej sesji: wartosc-do-wpisania-opisana-zamiast-odczytana (założony), zrobione-sprawdzone-w-logach-przed-zaliczeniem (założony), restart-zakladki-huba-bez-pierwszego-promptu (założony), dluga-akceptacja-bez-mapy-postepu (założony), dlugi-lancuch-narzedzi-bez-linii-statusu (dopisany dowód)
+- Sygnał: brak (wzorce repo); globalne — patrz log globalny
