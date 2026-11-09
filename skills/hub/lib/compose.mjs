@@ -2,9 +2,10 @@
 // and the prompt template check. User-facing text stays in Polish.
 import { canonical, localTime } from './text.mjs';
 
-export const PATHS = ['direct', 'questionnaire-request', 'questionnaire-answers', 'dialog', 'new-session'];
-// Every composed message carries the five sections (spec §6.1); questionnaire answers also carry
-// the block with the questions and Rafal's answers (§6.1, §6.4 step 5).
+export const PATHS = ['direct', 'questionnaire-request', 'questionnaire-answers', 'dialog', 'new-session', 'gate-answer'];
+// Every composed message carries the five sections (spec §6.1), except a gate answer, which is Rafal's
+// own text under the header line; questionnaire answers also carry the block with the questions and
+// Rafal's answers (§6.1, §6.4 step 5).
 export const SECTIONS = ['Cel', 'Kontekst', 'Decyzje z uzasadnieniem', 'Ograniczenia', 'Oczekiwany rezultat'];
 export const ANSWERS_SECTION = 'Pytania i odpowiedzi';
 const HEADER_PREFIX = '[hub · ';
@@ -62,6 +63,7 @@ export function templateProblems(text, path) {
   const lines = canonical(text).split('\n');
   const problems = [];
   if (!lines[0]?.startsWith(HEADER_PREFIX)) problems.push('missing header line');
+  if (path === 'gate-answer') return problems;
   const headings = new Set(lines.map(normalizeHeading));
   const required = path === 'questionnaire-answers' ? [...SECTIONS, ANSWERS_SECTION] : SECTIONS;
   for (const section of required) if (!headings.has(section.toLowerCase())) problems.push(`missing section ${section}`);

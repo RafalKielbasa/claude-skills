@@ -40,7 +40,7 @@
 | Hook `timeout` | 28800 s (probed to 670 s) |
 | Typed-record search | retried for 8 s after the decision, last 512 KB of each transcript, newest 5 hub sessions |
 | A typed record counts | timestamp in `[max(item.codeAt, decision.at − 15 s), decision.at]`, each record `uuid` once |
-| A decision counts | `at` is a number, not in the future and at most 15 s old on the hook's clock |
+| A decision counts | `at` is a number, at most 100 ms ahead of the hook's clock (`Date.now()` differs between Node processes on Windows) and at most 15 s old on it |
 | `HUB outcome` waits for the hook's verdict | 10 s |
 | Hook's hub check | a gap over 30 s between rounds skips that round; the hub counts as stopped after the heartbeat stayed stale through 60 s of rounds |
 | Pending record | counts as closed at `startedAt` + 8 h, also with a live pid |
@@ -596,7 +596,7 @@ It backs up `settings.json` and copies the skill. To undo: restore the newest `~
 | 10 | hub closed for over 5 min, because the heartbeat stays behind | a push in okno sondy; `claude -p` with a push | The prompt appears at once, no hook process; `-p` is denied at once, not after 8 h. A voice fork leaves `pending/` empty |
 | 11 | hub tab | `! pauza`, a gate, a push, `! wracam`, `dalej`, `! pauza`, `! wracam`, a new gate mid-walk | Silent, and no `PushNotification`, also for a `turn ended` during the pause; oldest first over 24 h; skip works; resumes what is left; the new one comes last. While it waits, the overview says `przegląd: bieżąca a<n>` |
 | 11 | hub tab, okno sondy | in a walk, restart the hub tab. Then `! ok` on an item skipped with `dalej` | The current item speaks once again in the new tab, not on each re-arm; the skipped item is approved |
-| 11 | hub tab, okno sondy, sleep | a push, `! pauza`, put the computer to sleep for over 6 min, wake it, `! wracam`, `! ok` | The hook survived: the item offers `! ok` and it works, not „odpowiedz w sesji” |
+| 11 | hub tab, okno sondy, sleep | a push, `! pauza`, put the computer to sleep for over 30 min, so that the watcher's `Monitor` limit passes too, wake it, `! wracam`, `! ok` | The hook survived: the item offers `! ok` and it works, not „odpowiedz w sesji”. If it says „odpowiedz w sesji”, record how long the hub tab took to arm its watcher again: past 60 s of waking time the hook ends, which is safe but costs the hub's answer |
 | 12 | browser | a gate during a voice conversation | Silent; spoken after it ends |
 | 13 | okno sondy | a second push after `! ok` | It prompts again; no standing rule in `settings.json` |
 | 14 | hub tab, okno sondy | a push; paste `! ok a7` as a whole line, then type `ok a7` without the `!` | Both approve nothing; the prompt still waits; the hub prints how to type it, and no model reports an approval |

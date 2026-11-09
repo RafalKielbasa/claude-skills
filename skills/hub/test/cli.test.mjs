@@ -273,3 +273,29 @@ test('confirm flags a hub message whose text differs from the approved one', () 
   // Already flagged: a second confirm does not report it again.
   assert.deepEqual(JSON.parse(hub('confirm').stdout).mismatched, []);
 });
+
+test('alerts prints the numbers next to the baseline, leaving out hub sessions', () => {
+  const { root, hub } = setup();
+  const at = new Date(2026, 10, 3, 10, 0, 0).getTime();
+  const lines = [
+    { type: 'alert', at, code: 'a1', key: 's1|1', sessionId: 's1', project: 'App', name: 'probe-a', kind: 'decision', mode: 'listening' },
+    { type: 'alert', at: at + 1000, code: 'a2', key: 'h|1', sessionId: 'hubsession', project: 'App', name: 'hub', kind: 'decision', mode: 'listening' },
+    { type: 'walk', at, waiting: 3 },
+  ];
+  writeFileSync(join(root, 'alerts.jsonl'), `${lines.map((l) => JSON.stringify(l)).join('\n')}\nnot json\n`);
+  writeFileSync(join(root, 'hub-sessions.json'), JSON.stringify({ hub: ['hubsession'], launched: [] }));
+  const result = hub('alerts', '--since', '2026-11-01');
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Alerty łącznie \| 1, ok\. 1 na dzień/);
+  assert.match(result.stdout, /Baseline: spec §10/);
+  assert.equal(hub('alerts', '--since', 'yesterday').status, 2);
+});
+
+test('alerts without --since prints the whole log', () => {
+  const { root, hub } = setup();
+  writeFileSync(join(root, 'alerts.jsonl'), `${JSON.stringify({ type: 'alert', at: Date.now(), code: 'a1', key: 's1|1', sessionId: 's1', project: 'App', name: 'probe-a', kind: 'decision', mode: 'listening' })}\n`);
+  const result = hub('alerts');
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Alerty łącznie \| 1, ok\. 1 na dzień/);
+  assert.match(result.stdout, /\(całość\)/);
+});

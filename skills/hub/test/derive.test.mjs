@@ -68,6 +68,37 @@ test('StopFailure sets a problem and SessionEnd ends the session', () => {
   assert.equal(ended.endedAt, '2026-10-14T10:05:00Z');
 });
 
+const permissionClosed = (at, outcome, fields = {}) => ev('PermissionClosed', at, { promptId: 'p1', cwd: null, outcome, ...fields });
+
+test('PermissionClosed clears a permission wait from the time of that wait on and changes nothing else, whatever its outcome', () => {
+  const base = [
+    ev('UserPromptSubmit', '2026-10-14T10:00:00Z', { promptId: 'p1' }),
+    ev('Notification', '2026-10-14T10:00:10Z', { promptId: 'p1', kind: 'permission_prompt' }),
+  ];
+  const before = deriveSession(base);
+  assert.equal(before.waiting.kind, 'permission');
+  assert.equal(before.phase, 'working');
+  for (const outcome of ['tool-result', 'interrupted']) {
+    assert.deepEqual(deriveSession([...base, permissionClosed('2026-10-14T10:00:20Z', outcome)]), { ...before, waiting: null }, outcome);
+    assert.deepEqual(deriveSession([...base, permissionClosed('2026-10-14T10:00:10Z', outcome)]), { ...before, waiting: null }, outcome);
+    assert.deepEqual(deriveSession([...base, permissionClosed('2026-10-14T10:00:05Z', outcome)]), before, outcome);
+  }
+});
+
+test('PermissionClosed leaves any other state as it was', () => {
+  const decision = [ev('Stop', '2026-10-14T10:00:00Z', { marker: 'A czy B' })];
+  assert.deepEqual(deriveSession([...decision, permissionClosed('2026-10-14T10:00:20Z', 'interrupted')]), deriveSession(decision));
+
+  const ended = [ev('UserPromptSubmit', '2026-10-14T10:00:00Z'), ev('Stop', '2026-10-14T10:00:05Z', { marker: null })];
+  assert.deepEqual(deriveSession([...ended, permissionClosed('2026-10-14T10:00:20Z', 'tool-result')]), deriveSession(ended));
+
+  // Its prompt id does not make a later prompt look queued.
+  const later = deriveSession([permissionClosed('2026-10-14T10:00:00Z', 'tool-result', { promptId: 'p9' }), ev('UserPromptSubmit', '2026-10-14T10:00:10Z', { promptId: 'p9' })]);
+  assert.equal(later.queuedPromptId, null);
+  assert.equal(later.firstAt, '2026-10-14T10:00:10Z');
+  assert.equal(later.activity, 1);
+});
+
 test('a SessionEnd-only log is tolerated and counts no activity', () => {
   const state = deriveSession([ev('SessionEnd', '2026-10-14T10:05:00Z', { reason: 'other' })]);
   assert.equal(state.phase, 'ended');

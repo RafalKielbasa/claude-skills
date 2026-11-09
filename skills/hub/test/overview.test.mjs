@@ -8,6 +8,8 @@ import { displayState, linkContinuations } from '../lib/display.mjs';
 import { isWithin, projectFor, projectOf, mapErrors, loadProjectMap, renderProjects } from '../lib/projects.mjs';
 import { buildOverview, renderOverview, localTime } from '../lib/overview.mjs';
 import { readHubSessions } from '../lib/hubsessions.mjs';
+import { recordPermissionClosed } from '../lib/registry.mjs';
+import { snapshot, transitions } from '../lib/watch.mjs';
 import { tempRoot, ev } from './helpers.mjs';
 
 const NOW = Date.parse('2026-10-14T12:00:00Z');
@@ -19,6 +21,27 @@ function writeLog(root, sessionId, events) {
 
 const poll = (at, sessions) => ({ at, ok: true, sessions });
 const agent = (sessionId, status = 'idle', extra = {}) => ({ sessionId, id: sessionId.slice(0, 8), name: null, kind: 'interactive', status, state: null, cwd: null, ...extra });
+
+test('PermissionClosed reaches the overview and the watcher: the wait is gone, the row reads working and nothing wakes the hub', () => {
+  const rows = (root) => buildOverview(root, { now: NOW, commonDirOf: () => null }).rows;
+  for (const outcome of ['tool-result', 'interrupted']) {
+    const root = tempRoot();
+    writeLog(root, 's1', [
+      ev('UserPromptSubmit', '2026-10-14T10:00:00.000Z'),
+      ev('Notification', '2026-10-14T10:00:10.000Z', { kind: 'permission_prompt' }),
+    ]);
+    const before = snapshot(rows(root));
+    assert.equal(before.s1.label, 'waiting for permission');
+    recordPermissionClosed(root, { sessionId: 's1', promptId: 'p1' }, outcome, { id: 'c1', at: '2026-10-14T10:00:20.000Z' });
+    const [row] = rows(root);
+    assert.equal(row.state, 'working', outcome);
+    assert.equal(row.since, '2026-10-14T10:00:00.000Z', outcome);
+    assert.equal(row.waitingFor, '', outcome);
+    assert.equal(row.judge, false, outcome);
+    assert.ok(renderOverview({ rows: [row], pollError: null, configErrors: [] }).includes('working'), outcome);
+    assert.deepEqual(transitions(before, snapshot(rows(root))), [], outcome);
+  }
+});
 
 test('runPoll records success, a non-zero exit and unparsable output', () => {
   const ok = runPoll({ run: () => ({ status: 0, stdout: JSON.stringify([{ sessionId: 's1', status: 'busy', state: 'blocked' }]) }), at: 't' });

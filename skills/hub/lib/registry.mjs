@@ -20,6 +20,15 @@ export function recordHook(root, input, { id, at }) {
   return event;
 }
 
+// What the PermissionRequest hook read in the session's transcript (spec §6.1): „No” in a prompt and a
+// failing tool fire no hook event, so this one closes the wait. `outcome` is 'tool-result' or 'interrupted'.
+export function recordPermissionClosed(root, record, outcome, { id, at }) {
+  const event = { id, at, event: 'PermissionClosed', sessionId: record.sessionId, cwd: null, promptId: record.promptId ?? null, outcome };
+  mkdirSync(registryDir(root), { recursive: true });
+  appendFileSync(eventLogPath(root, event.sessionId), `${JSON.stringify(event)}\n`, 'utf8');
+  return event;
+}
+
 // Events of one session with their line index; a broken line is counted, never fatal.
 export function readEvents(root, sessionId) {
   const path = eventLogPath(root, sessionId);

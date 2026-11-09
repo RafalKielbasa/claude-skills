@@ -104,6 +104,17 @@
           }
         ]
       }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/rafal/.claude/skills/hub/bin/hub-permission.mjs\"",
+            "timeout": 28800
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

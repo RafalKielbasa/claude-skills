@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Hub CLI (spec §4, §5.6, §6). The hub session calls it; every command prints plain text or JSON.
 //   overview [--no-poll] [--agents-json <file>]
+//   item [<code>]
 //   last <sessionId>
 //   judge <sessionId> --verdict question|other
 //   compose --path <path> --session <sessionId> (--body-file <file|-> | --topic <text> --max <n>) [--project <p>] [--origin <dialog dir>]
@@ -12,6 +13,11 @@
 //   dialog start --session <sessionId> --slug <slug> [--agents-json <file>]
 //   dialog refresh --dir <dialog dir>
 //   voice resolve --session <sessionId> [--agents-json <file>]
+//   voice send <code> --prompt-file <dialog dir>/prompt.md [--agents-json <file>]
+//   typed --prompt-file <file|-> [--agents-json <file>]
+//     (Rafal's whole prompt; prints one JSON object whose `action` says what the hub does next)
+//   outcome <code> [--wait-ms <n>]
+//     (read-only: the hook's verdict on the last `ok` or `nie` of a code; exit 0 when accepted, 3 otherwise)
 //   codex ask (--session <sessionId> | --cwd <dir>) --slug <slug> (--file <path> | --diff <range> | --last <sessionId>) --question-file <file|-> [--project <p>]
 //   codex follow --thread <thread dir> --question-file <file|->
 //   codex note --thread <thread dir> --text-file <file|->
@@ -24,20 +30,29 @@
 //   journal --project <p>
 //   projects
 //   cleanup
+//   alerts [--since YYYY-MM-DD]
 // Every <sessionId> also takes a unique prefix, such as the 8 characters the overview shows.
+// compose and approve refuse the path gate-answer: only `typed` makes such a record.
 // --agents-json reads a saved `claude agents --json` output instead of running the CLI. The
 // --confirm-* flags are passed only after Rafal answered the hub's question (spec §6.2).
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, copyFileSync, existsSync, realpathSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir, codexDir, ownedDir } from '../lib/paths.mjs';
+import { hubRoot, draftsDir, sentDir, registryDir, dialogsDir, codexDir, ownedDir, alertsLogPath } from '../lib/paths.mjs';
 import { readEvents, resolveSessionId, listSessionIds } from '../lib/registry.mjs';
 import { deriveSession } from '../lib/derive.mjs';
 import { runPoll, appendPoll, readPolls, pollEntry } from '../lib/polls.mjs';
 import { buildOverview, renderOverview, deriveAll } from '../lib/overview.mjs';
+import { readQueue, withQueue, giveCode, reconcile, openItems } from '../lib/queue.mjs';
+import { collectWaits } from '../lib/waits.mjs';
+import { listOpenPendings, readAsks } from '../lib/pending.mjs';
+import { decisionOutcome } from '../lib/permission.mjs';
+import { renderQueue, renderItem, findItem, loadItemContext } from '../lib/item.mjs';
 import { loadProjectMap, projectFor, projectOf, renderProjects, isWithin, samePath } from '../lib/projects.mjs';
 import { registerLaunched, readHubSessions, hubSenderNames } from '../lib/hubsessions.mjs';
+import { COMMAND_AS_TEXT, HASH_MISMATCH, MERGED_ANSWERS, parseTyped, verifyPrompt, takeTyped, claimVoice, voiceOrder, releaseClaim, releaseRecord, storeAnswerRecord, refused } from '../lib/typed.mjs';
+import { dialogRootOf } from '../lib/voicelive.mjs';
 import { composeMessage, questionnaireRequest, withProjectContext } from '../lib/compose.mjs';
 import { newRecordId, loadRecords, saveRecords, findRecord, findRecordByMsgId, listProjects, renderJournal } from '../lib/journal.mjs';
 import { gitInfo, runChecks, waitingNotice } from '../lib/checks.mjs';
@@ -47,8 +62,24 @@ import { takeSnapshot, forkSettings, forkArgs, forkStartPrompt, fallbackCommand 
 import { resolveSource, findTranscript } from '../lib/resolve.mjs';
 import { describeElement, firstPrompt, askArgs, followArgs, isolationArgs, runCodex, threadEntry } from '../lib/codex.mjs';
 import { cleanup } from '../lib/retention.mjs';
+import { alertStats, renderStats } from '../lib/stats.mjs';
+import { isDialogName } from '../lib/waits.mjs';
 import { VERDICTS, recordJudgment } from '../lib/judgments.mjs';
 import { sha256 } from '../lib/text.mjs';
+
+// A broken or missing line is skipped, never fatal.
+function readJsonLines(path) {
+  if (!existsSync(path)) return [];
+  const lines = [];
+  for (const line of readFileSync(path, 'utf8').split('\n')) {
+    try {
+      if (line.trim()) lines.push(JSON.parse(line));
+    } catch {
+      // see above
+    }
+  }
+  return lines;
+}
 
 function parseArgs(argv) {
   const positional = [];
@@ -170,6 +201,120 @@ function ensureRegistered(root, record, sessionId) {
   registerLaunched(root, { sessionId, kind: 'background', project: record.project, name: record.name, worktree, at: new Date().toISOString() });
 }
 
+// The random suffix keeps two drafts composed within one second apart.
+function writeDraft(root, project, path, at, text) {
+  mkdirSync(draftsDir(root, project), { recursive: true });
+  const file = join(draftsDir(root, project), `${stamp(at)}-${path}-${randomBytes(2).toString('hex')}.md`);
+  writeFileSync(file, text, 'utf8');
+  return file;
+}
+
+// An approved record of a message to a running session; its baseline is what `prepareRecord` compares.
+function sessionRecord({ project, path, sessionId, derived, textFile, text, at }) {
+  return {
+    id: newRecordId(at),
+    project,
+    path,
+    sessionId,
+    name: derived.sessionTitle ?? null,
+    textFile,
+    textHash: sha256(text),
+    baseline: { sessionId, name: derived.sessionTitle ?? null, cwd: derived.cwd, ...gitInfo(derived.cwd) },
+    state: 'approved',
+    approvedAt: at,
+  };
+}
+
+// The pre-send checks, the sent file and the pending state: one path for `prepare`, a typed answer and a
+// voice order. Check 6 is a notice (U1): returned with the failures and with the success, never blocking.
+function prepareRecord(root, { project, record, records }, options) {
+  const poll = freshPoll(root, options);
+  const derived = derivedOf(root, record.sessionId);
+  const text = readFileSync(record.textFile, 'utf8');
+  if (!record.baseline.name) record.baseline.name = pollEntry(poll, record.sessionId)?.name ?? null;
+  const failures = runChecks({
+    record, records, poll, derived, git: gitInfo(derived.cwd), text,
+    confirmBusy: Boolean(options['confirm-busy']),
+    confirmResend: Boolean(options['confirm-resend']),
+  });
+  const warnings = waitingNotice(derived);
+  if (failures.length) return { ok: false, failures, warnings };
+  const at = new Date().toISOString();
+  mkdirSync(sentDir(root, project), { recursive: true });
+  const sentFile = join(sentDir(root, project), `${stamp(at)}-${record.id}.md`);
+  copyFileSync(record.textFile, sentFile);
+  const updated = { ...record, state: 'pending', sentAt: at, sentFile };
+  // Read again: the list came in before the poll, which can take seconds.
+  saveRecords(root, project, loadRecords(root, project).map((r) => (r.id === record.id ? updated : r)));
+  return { ok: true, id: record.id, to: pollEntry(poll, record.sessionId)?.name ?? null, sentFile, warnings };
+}
+
+// Sends what an item's claim (answeredAt, set under the lock) was taken for, the way any message goes: a
+// draft, a journal record, the checks. Any failure gives the claim back and leaves the record `not-sent`:
+// left `approved`, a later `prepare` would skip the wait check. Only the poll option is passed on: the
+// --confirm-* flags are Rafal's answers to the hub's questions, and nobody asked here.
+function sendClaimed(root, item, { path, origin, body }, options) {
+  let project = null;
+  let record = null;
+  const giveBack = (message) => {
+    const stuck = releaseClaim(root, item);
+    if (record) saveRecords(root, project, loadRecords(root, project).map((r) => (r.id === record.id ? { ...r, state: 'not-sent', error: message } : r)));
+    return refused(stuck ? `${message}\n${stuck}` : message);
+  };
+  try {
+    const derived = derivedOf(root, item.sessionId);
+    project = projectFor(derived.cwd, loadProjectMap(root).projects);
+    const at = new Date().toISOString();
+    const text = composeMessage({ path, project, sessionId: item.sessionId, origin, at, body });
+    const textFile = writeDraft(root, project, path, at, text);
+    record = sessionRecord({ project, path, sessionId: item.sessionId, derived, textFile, text, at });
+    const records = [...loadRecords(root, project), record];
+    saveRecords(root, project, records);
+    const prepared = prepareRecord(root, { project, record, records }, { 'agents-json': options['agents-json'] });
+    if (!prepared.ok) return giveBack(prepared.failures.map((failure) => failure.message).join('\n'));
+    storeAnswerRecord(root, item.key, record.id);
+    return { action: 'send', to: prepared.to, message: text, id: record.id, sentFile: prepared.sentFile, warnings: prepared.warnings };
+  } catch (error) {
+    return giveBack(error.message);
+  }
+}
+
+// Every outcome is one JSON object, an unreadable prompt or a busy lock included.
+function runTyped(root, options) {
+  try {
+    const text = readBody(options, 'prompt-file');
+    const parsed = parseTyped(text);
+    if (parsed.kind === 'other') return { action: 'none' };
+    if (parsed.kind === 'command-as-text') return refused(COMMAND_AS_TEXT);
+    if (parsed.kind === 'merged') return refused(MERGED_ANSWERS);
+    const { ok, eventId, at } = verifyPrompt(root, text);
+    if (!ok) return refused(HASH_MISMATCH);
+    const taken = takeTyped(root, parsed, { eventId, at });
+    return taken.action === 'claimed'
+      ? sendClaimed(root, taken.item, { path: 'gate-answer', origin: parsed.code, body: parsed.body }, options)
+      : taken;
+  } catch (error) {
+    return refused(error.message);
+  }
+}
+
+function runVoiceSend(root, code, file, options) {
+  try {
+    const order = voiceOrder(file, dialogRootOf());
+    if (order.error) return refused(order.error);
+    const claimed = claimVoice(root, code, order);
+    return claimed.action === 'claimed'
+      ? sendClaimed(root, claimed.item, { path: 'dialog', origin: `voice/${order.dirName}`, body: order.body }, options)
+      : claimed;
+  } catch (error) {
+    return refused(error.message);
+  }
+}
+
+// A gate answer and a voice order hold an item's claim; a record of any other path holds none.
+const holdsClaim = (record) => record.path === 'gate-answer' || record.path === 'dialog';
+const TYPED_ONLY = 'the path gate-answer is only for HUB typed, which checks the text against what Rafal typed';
+
 const root = hubRoot();
 const [command, ...rest] = process.argv.slice(2);
 const { positional, options } = parseArgs(rest);
@@ -177,7 +322,29 @@ const { positional, options } = parseArgs(rest);
 switch (command) {
   case 'overview': {
     if (!options['no-poll']) freshPoll(root, options);
-    console.log(renderOverview(buildOverview(root)));
+    const overview = buildOverview(root);
+    console.log(renderOverview(overview));
+    // The queue section never costs the table: a failure prints one line naming the error. The overview does
+    // not stamp rowsAt, which belongs to the watcher's passes.
+    try {
+      const now = Date.now();
+      const section = withQueue(root, (state) => {
+        reconcile(state, collectWaits({ rows: overview.rows, pendings: listOpenPendings(root), asks: readAsks(root), now }), now);
+        for (const item of openItems(state)) if (!item.code) giveCode(state, item.key, item.name, now);
+        return renderQueue(state);
+      });
+      if (section) console.log(`
+${section}`);
+    } catch (error) {
+      console.log(`
+Kolejka niedostępna: ${error.message}`);
+    }
+    break;
+  }
+  case 'item': {
+    const found = findItem(readQueue(root), positional[0]);
+    if (found.error) fail(found.error, 3);
+    console.log(renderItem(found.item, loadItemContext(root, found.item)));
     break;
   }
   case 'last': {
@@ -197,6 +364,7 @@ switch (command) {
   }
   case 'compose': {
     const path = need(options, 'path');
+    if (path === 'gate-answer') fail(TYPED_ONLY, 3);
     const at = new Date().toISOString();
     let project;
     let text;
@@ -220,14 +388,11 @@ switch (command) {
       const origin = options.origin && options.origin !== true ? options.origin : undefined;
       text = composeMessage({ path, project, sessionId, origin, at, body });
     }
-    mkdirSync(draftsDir(root, project), { recursive: true });
-    // The random suffix keeps two drafts composed within one second apart.
-    const file = join(draftsDir(root, project), `${stamp(at)}-${path}-${randomBytes(2).toString('hex')}.md`);
-    writeFileSync(file, text, 'utf8');
-    console.log(file);
+    console.log(writeDraft(root, project, path, at, text));
     break;
   }
   case 'approve': {
+    if (options.path === 'gate-answer') fail(TYPED_ONLY, 3);
     const textFile = need(options, 'text-file');
     const text = readFileSync(textFile, 'utf8');
     const textHash = sha256(text);
@@ -249,18 +414,7 @@ switch (command) {
       const sessionId = sessionArg(root, options.session, 'missing --session');
       const derived = derivedOf(root, sessionId);
       const project = options.project ?? projectFor(derived.cwd, loadProjectMap(root).projects);
-      record = {
-        id: newRecordId(at),
-        project,
-        path: need(options, 'path'),
-        sessionId,
-        name: derived.sessionTitle ?? null,
-        textFile,
-        textHash,
-        baseline: { sessionId, name: derived.sessionTitle ?? null, cwd: derived.cwd, ...gitInfo(derived.cwd) },
-        state: 'approved',
-        approvedAt: at,
-      };
+      record = sessionRecord({ project, path: need(options, 'path'), sessionId, derived, textFile, text, at });
     }
     saveRecords(root, record.project, [...loadRecords(root, record.project), record]);
     console.log(JSON.stringify({ id: record.id, project: record.project, baseline: record.baseline }));
@@ -364,10 +518,15 @@ switch (command) {
     break;
   }
   case 'voice': {
+    if (positional[0] === 'send') {
+      const code = positional[1] ?? fail('usage: voice send <code> --prompt-file <dialog dir>/prompt.md');
+      console.log(JSON.stringify(runVoiceSend(root, code, need(options, 'prompt-file'), options), null, 2));
+      break;
+    }
     // Read-only (voice spec §19.2 step 2): it launches nothing and writes only the poll record. The
     // hub then starts the voice fork through the talk CLI with this cwd. HUB_CLAUDE_PROJECTS replaces
     // ~/.claude/projects, where a transcript no hook event names is looked for, in tests.
-    if (positional[0] !== 'resolve') fail('usage: voice resolve --session <sessionId> [--agents-json <file>]');
+    if (positional[0] !== 'resolve') fail('usage: voice resolve --session <sessionId> [--agents-json <file>] | voice send <code> --prompt-file <file>');
     const requested = sessionArg(root, options.session, 'missing --session');
     const { source, twins, resolvedFrom } = liveSource(root, requested, options);
     if (!source.cwd) fail(`session ${source.sessionId} has no working directory; a voice fork starts in its source's directory`, 3);
@@ -436,41 +595,35 @@ switch (command) {
   case 'prepare': {
     const found = findRecord(root, positional[0] ?? fail('usage: prepare <recordId>'));
     if (!found) fail('record not found', 3);
-    const { project, record, records } = found;
-    if (record.state !== 'approved') fail(`record is ${record.state}, not approved`, 3);
-    const poll = freshPoll(root, options);
-    const derived = derivedOf(root, record.sessionId);
-    const text = readFileSync(record.textFile, 'utf8');
-    if (!record.baseline.name) record.baseline.name = pollEntry(poll, record.sessionId)?.name ?? null;
-    const failures = runChecks({
-      record, records, poll, derived, git: gitInfo(derived.cwd), text,
-      confirmBusy: Boolean(options['confirm-busy']),
-      confirmResend: Boolean(options['confirm-resend']),
-    });
-    // Check 6 is a notice (U1): printed with the failures and with the success, never blocking.
-    const warnings = waitingNotice(derived);
-    if (failures.length) {
-      console.log(JSON.stringify({ ok: false, failures, warnings }, null, 2));
-      process.exit(3);
-    }
-    const at = new Date().toISOString();
-    mkdirSync(sentDir(root, project), { recursive: true });
-    const sentFile = join(sentDir(root, project), `${stamp(at)}-${record.id}.md`);
-    copyFileSync(record.textFile, sentFile);
-    const updated = { ...record, state: 'pending', sentAt: at, sentFile };
-    saveRecords(root, project, records.map((r) => (r.id === record.id ? updated : r)));
-    console.log(JSON.stringify({ ok: true, id: record.id, to: pollEntry(poll, record.sessionId)?.name ?? null, sentFile, warnings }, null, 2));
+    if (found.record.state !== 'approved') fail(`record is ${found.record.state}, not approved`, 3);
+    const prepared = prepareRecord(root, found, options);
+    console.log(JSON.stringify(prepared, null, 2));
+    if (!prepared.ok) process.exit(3);
+    break;
+  }
+  case 'typed': {
+    need(options, 'prompt-file');
+    console.log(JSON.stringify(runTyped(root, options), null, 2));
+    break;
+  }
+  case 'outcome': {
+    const code = positional[0] ?? fail('usage: outcome <code> [--wait-ms <n>]');
+    const { accepted, text } = await decisionOutcome(root, code, options['wait-ms'] === undefined ? {} : { waitMs: Number(options['wait-ms']) });
+    console.log(text);
+    if (!accepted) process.exitCode = 3;
     break;
   }
   case 'result': {
     const found = findRecord(root, positional[0] ?? fail('usage: result <recordId>'));
     if (!found) fail('record not found', 3);
-    const { project, record, records } = found;
+    const { project, record } = found;
     if (record.state !== 'pending') fail(`record is ${record.state}, not pending`, 3);
     const updated = options.error
       ? { ...record, state: 'not-sent', error: String(options.error) }
       : { ...record, msgId: need(options, 'msg-id') };
-    saveRecords(root, project, records.map((r) => (r.id === record.id ? updated : r)));
+    // Before the save: if the queue is out of reach, the record stays pending and the command can run again.
+    if (options.error && holdsClaim(record)) releaseRecord(root, record.id);
+    saveRecords(root, project, loadRecords(root, project).map((r) => (r.id === record.id ? updated : r)));
     console.log(JSON.stringify({ id: record.id, state: updated.state, msgId: updated.msgId ?? null }));
     break;
   }
@@ -480,7 +633,9 @@ switch (command) {
     const found = notice.msgId ? findRecordByMsgId(root, notice.msgId) : null;
     if (!found) fail(`no record with msg_id ${notice.msgId ?? '(none in the notice)'}`, 3);
     const updated = applyNotice(found.record, notice, text);
-    saveRecords(root, found.project, found.records.map((r) => (r.id === updated.id ? updated : r)));
+    // Refused, denied or expired: the session never saw the answer, so the item waits again.
+    if (updated.state === 'not-sent' && holdsClaim(updated)) releaseRecord(root, updated.id);
+    saveRecords(root, found.project, loadRecords(root, found.project).map((r) => (r.id === updated.id ? updated : r)));
     console.log(JSON.stringify({ id: updated.id, kind: notice.kind, state: updated.state }));
     break;
   }
@@ -560,6 +715,27 @@ switch (command) {
     console.log(JSON.stringify(cleanup(root)));
     break;
   }
+  case 'alerts': {
+    const since = options.since;
+    if (since !== undefined && (!/^\d{4}-\d{2}-\d{2}$/.test(since) || Number.isNaN(Date.parse(since)))) fail('--since takes a date, YYYY-MM-DD');
+    const hubData = readHubSessions(root);
+    const hubIds = new Set(hubData.hub);
+    const forks = new Set(hubData.launched.filter((item) => item.kind === 'dialog').map((item) => item.sessionId));
+    const sessions = listSessionIds(root).map((sessionId) => {
+      const events = readEvents(root, sessionId).events;
+      const derived = deriveSession(events);
+      const hub = hubIds.has(sessionId) || Boolean(derived.firstCwd && samePath(derived.firstCwd, root));
+      const dialog = forks.has(sessionId) || events.some((event) => isDialogName(event.sessionTitle));
+      return { sessionId, events, hub, dialog };
+    });
+    // A hub or fork session with no event log still has its alerts left out.
+    const known = new Set(sessions.map((session) => session.sessionId));
+    for (const sessionId of [...hubIds, ...forks]) {
+      if (!known.has(sessionId)) sessions.push({ sessionId, events: [], hub: hubIds.has(sessionId), dialog: forks.has(sessionId) });
+    }
+    console.log(renderStats(alertStats({ alerts: readJsonLines(alertsLogPath(root)), sessions, since: since ?? null })));
+    break;
+  }
   default:
-    fail('usage: hub.mjs overview|last|judge|compose|approve|launch|dialog|voice|codex|prepare|result|notice|confirm|register|journal|projects|cleanup');
+    fail('usage: hub.mjs overview|item|last|judge|compose|approve|launch|dialog|voice|codex|prepare|typed|outcome|result|notice|confirm|register|journal|projects|cleanup|alerts');
 }

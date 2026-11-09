@@ -4,7 +4,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildEvent } from '../lib/events.mjs';
+import { buildEvent, inputHash } from '../lib/events.mjs';
 import { recordHook, readEvents } from '../lib/registry.mjs';
 import { sha256 } from '../lib/text.mjs';
 import { tempRoot, fixture } from './helpers.mjs';
@@ -24,6 +24,7 @@ test('every recorded kind keeps prompt_id and drops content', () => {
   assert.equal(bash.tool, 'Bash');
   assert.equal(bash.target, 'Fetch status');
   assert.ok(!JSON.stringify(bash).includes('secret'));
+  assert.equal(bash.inputHash, inputHash({ command: 'curl -H "Authorization: secret"', description: 'Fetch status' }));
   assert.ok(!('tool_response' in bash));
 
   const read = buildEvent(fixture('PostToolUse-Read.json', { tool_input: { file_path: 'C:\\repo\\a.md' } }), meta()).event;

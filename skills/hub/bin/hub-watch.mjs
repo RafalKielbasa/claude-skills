@@ -5,14 +5,17 @@
 // The previous states live in watch-state.json, so a re-armed watcher reports what changed while
 // no watcher ran. The first run ever only records the states and prints nothing. A watcher that
 // keeps running stops, without writing its state, once the claude process that started it is gone
-// (P14).
-// Usage: node hub-watch.mjs [--once] [--no-poll] [--interval-ms=120000] [--owner-pid=<pid>] [--owner-check-ms=10000]
+// (P14). It also speaks: a wait that is 60 s old is said aloud by a separate process, without a model,
+// and printed as an `announce:` line (lib/alerts.mjs). Every tick and every 5 s it writes the heartbeat
+// file that tells the permission hook the hub is open.
+// Usage: node hub-watch.mjs [--once] [--no-poll] [--interval-ms=120000] [--owner-pid=<pid>] [--owner-check-ms=10000] [--alert-check-ms=5000]
 import { watch, mkdirSync } from 'node:fs';
 import { hubRoot, registryDir } from '../lib/paths.mjs';
 import { runPoll, appendPoll } from '../lib/polls.mjs';
 import { buildOverview } from '../lib/overview.mjs';
-import { snapshot, transitions, readWatchState, writeWatchState, errorReporter } from '../lib/watch.mjs';
+import { snapshot, transitions, readWatchState, writeWatchState, errorReporter, debouncer } from '../lib/watch.mjs';
 import { processTable, findOwner, isAlive } from '../lib/owner.mjs';
+import { createAlerts, touchHeartbeat } from '../lib/alerts.mjs';
 
 const argv = process.argv.slice(2);
 const flags = new Set(argv.filter((arg) => !arg.includes('=')));
@@ -21,6 +24,10 @@ const intervalMs = Number(value('interval-ms') ?? 120000);
 const once = flags.has('--once');
 const root = hubRoot();
 const errors = errorReporter((line) => console.log(line));
+const alertErrors = errorReporter((line) => console.log(line));
+// The overview rows of the last successful tick and when they were built: the 5 s alert pass works on them and
+// does not rebuild the overview. Null until one overview has succeeded, and the alert pass does nothing until then.
+let current = null;
 
 // Only a watcher that keeps running needs an owner; a single --once tick cannot outlive it.
 let owner = null;
@@ -28,6 +35,10 @@ if (!once) {
   owner = value('owner-pid') ? Number(value('owner-pid')) : findOwner(processTable(), process.pid);
   if (!owner) console.log('watcher: no claude process among its ancestors; it will not stop with the hub session');
 }
+
+const alerts = createAlerts({
+  root, print: (line) => console.log(line), onError: (message) => alertErrors.fail(message), onOk: () => alertErrors.ok(), rows: () => current, owner,
+});
 
 function stopIfOrphaned() {
   if (owner && !isAlive(owner)) {
@@ -38,9 +49,12 @@ function stopIfOrphaned() {
 
 function tick(withPoll) {
   stopIfOrphaned();
+  touchHeartbeat(root);
   try {
     if (withPoll) appendPoll(root, runPoll());
-    const next = snapshot(buildOverview(root).rows);
+    const rows = buildOverview(root).rows;
+    current = { rows, rowsAt: Date.now() };
+    const next = snapshot(rows);
     const { state: prev, unreadable } = readWatchState(root);
     // The owner may have ended while the overview was built: check again right before the write.
     stopIfOrphaned();
@@ -51,16 +65,20 @@ function tick(withPoll) {
   } catch (error) {
     errors.fail(error.message);
   }
+  return alerts.pass();
 }
 
-tick(!flags.has('--no-poll'));
-if (!once) {
+await tick(!flags.has('--no-poll'));
+if (once) {
+  await alerts.drain();
+} else {
   mkdirSync(registryDir(root), { recursive: true });
-  let pending = null;
-  watch(registryDir(root), () => {
-    clearTimeout(pending);
-    pending = setTimeout(() => tick(false), 500);
-  });
+  watch(registryDir(root), debouncer(() => tick(false)));
   setInterval(() => tick(!flags.has('--no-poll')), intervalMs);
+  setInterval(() => {
+    stopIfOrphaned();
+    touchHeartbeat(root);
+    alerts.pass();
+  }, Number(value('alert-check-ms') ?? 5000));
   setInterval(stopIfOrphaned, Number(value('owner-check-ms') ?? 10000));
 }

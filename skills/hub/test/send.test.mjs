@@ -45,6 +45,13 @@ test('template check: every path needs the five sections, questionnaire answers 
   assert.deepEqual(templateProblems(FIVE, 'direct'), ['missing header line']);
 });
 
+test('template check: a gate answer needs only the header line, which carries its code', () => {
+  const message = composeMessage({ path: 'gate-answer', project: 'p', sessionId: 'abcdef123456', origin: 'a3', at: AT, offsetMinutes: 60, body: 'B' });
+  assert.equal(message, '[hub · gate-answer · p · abcdef12 · 2026-10-14 11:00 · a3]\n\nB\n');
+  assert.deepEqual(templateProblems(message, 'gate-answer'), []);
+  assert.deepEqual(templateProblems('B\n', 'gate-answer'), ['missing header line']);
+});
+
 const baseline = { sessionId: 's1', name: 'probe-a', cwd: 'C:\\repo', repoRoot: 'C:/repo', branch: 'main', sha: 'abc' };
 const text = composeMessage({ path: 'direct', project: 'p', sessionId: 's1', at: AT, body: FIVE });
 const record = { id: 'r1', path: 'direct', sessionId: 's1', textHash: sha256(text), baseline, state: 'approved' };

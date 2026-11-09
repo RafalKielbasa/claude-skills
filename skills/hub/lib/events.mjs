@@ -1,11 +1,17 @@
 // Turns one Claude Code hook input into one registry event (spec §5.1). Never keeps prompt text,
-// full commands or tool responses; a Stop also hands back its full message for its own file.
+// full commands or tool responses (a tool input enters only as its hash); a Stop also hands back its
+// full message for its own file.
 import { sha256, parseCrossSession, decodeEntities, markerText, summarize } from './text.mjs';
 import { safeId } from './paths.mjs';
 
-function toolTarget(toolInput) {
+export function toolTarget(toolInput) {
   const value = toolInput?.file_path ?? toolInput?.notebook_path ?? toolInput?.description ?? toolInput?.pattern ?? '';
   return String(value).slice(0, 200);
+}
+
+// The hook of a waiting call and the PostToolUse of that call compare this; a description can repeat.
+export function inputHash(toolInput) {
+  return sha256(JSON.stringify(toolInput ?? {}));
 }
 
 export function buildEvent(input, { id, at }) {
@@ -34,7 +40,7 @@ export function buildEvent(input, { id, at }) {
     }
     case 'PostToolUse':
       return {
-        event: { ...base, tool: input.tool_name ?? null, target: toolTarget(input.tool_input), toolUseId: input.tool_use_id ?? null },
+        event: { ...base, tool: input.tool_name ?? null, target: toolTarget(input.tool_input), inputHash: inputHash(input.tool_input), toolUseId: input.tool_use_id ?? null },
       };
     case 'Notification':
       // Only a pending permission prompt is a state change; idle_prompt and the rest are ignored.

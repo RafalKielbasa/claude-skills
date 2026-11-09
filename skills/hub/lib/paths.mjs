@@ -34,6 +34,16 @@ export const draftsDir = (root, project) => join(projectDir(root, project), 'dra
 export const dialogsDir = (root, project) => join(projectDir(root, project), 'dialogs');
 export const codexDir = (root, project) => join(projectDir(root, project), 'codex');
 
+// The queue of everything waiting for Rafal: its state file, the exclusive lock around it, the
+// watcher heartbeat, the hook's pending-call records and the append-only logs.
+export const queuePath = (root) => join(root, 'queue.json');
+export const queueLockPath = (root) => join(root, 'queue.lock');
+export const heartbeatPath = (root) => join(root, 'heartbeat');
+export const pendingDir = (root) => join(root, 'pending');
+export const asksPath = (root) => join(root, 'asks.jsonl');
+export const alertsLogPath = (root) => join(root, 'alerts.jsonl');
+export const approvalsLogPath = (root) => join(root, 'approvals.jsonl');
+
 // A directory a command names on its command line and then writes into must be exactly
 // <root>/projects/<project>/<kind>/<name>, after `..` and links are resolved: the hub writes only
 // into its data root (spec §8.2). The canonical path, or null.

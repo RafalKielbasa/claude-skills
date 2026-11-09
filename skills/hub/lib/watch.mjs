@@ -1,14 +1,19 @@
 // State transitions the watcher prints (spec §5.5): waiting for a decision or permission, a
 // problem, a turn ended, a new session or a /clear continuation. Nothing else, so Monitor never
-// stops the source for being too chatty.
+// stops the source for being too chatty. A plain session's wait is announced by the alert schedule
+// (lib/alerts.mjs) when it is 60 s old; only a dialog fork, which the queue ignores, keeps its line here.
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { watchStatePath } from './paths.mjs';
+import { isDialog } from './waits.mjs';
 
 export function snapshot(rows) {
   return Object.fromEntries(rows.map((row) => [row.sessionId, {
     label: row.state,
     detail: row.detail,
     name: row.name,
+    launchedKind: row.launchedKind ?? null,
+    // The same test the queue uses to ignore a dialog fork, so a fork is never both silent and unannounced.
+    isDialog: isDialog(row),
     project: row.projectName ?? row.project,
     continuedFrom: row.continuedFrom,
     // Unique per Stop: a new turn end under an unchanged label still shows as a change.
@@ -32,12 +37,12 @@ export function transitions(prev, next) {
       // without lastStop add no lines.
       if (before && 'lastStop' in before && 'lastStop' in s && before.lastStop !== s.lastStop) {
         if (s.label === 'turn ended') lines.push(`turn ended: ${who(sessionId, s)}`);
-        else if (s.label === 'waiting for decision') lines.push(`waiting for decision: ${who(sessionId, s)} — ${s.detail}`);
+        else if (s.label === 'waiting for decision' && s.isDialog) lines.push(`waiting for decision: ${who(sessionId, s)} — ${s.detail}`);
       }
       continue;
     }
-    if (s.label === 'waiting for decision') lines.push(`waiting for decision: ${who(sessionId, s)} — ${s.detail}`);
-    else if (s.label === 'waiting for permission') lines.push(`waiting for permission: ${who(sessionId, s)}`);
+    if (s.label === 'waiting for decision' && s.isDialog) lines.push(`waiting for decision: ${who(sessionId, s)} — ${s.detail}`);
+    else if (s.label === 'waiting for permission' && s.isDialog) lines.push(`waiting for permission: ${who(sessionId, s)}`);
     else if (s.label === 'problem') lines.push(`problem: ${who(sessionId, s)} — ${s.detail}`);
     else if (s.label === 'turn ended' && before && before.label !== 'turn ended') lines.push(`turn ended: ${who(sessionId, s)}`);
   }
@@ -52,6 +57,22 @@ export function readWatchState(root) {
   } catch {
     return { state: null, unreadable: true };
   }
+}
+
+// Calls `fn` once the changes pause for `waitMs`, and at most `maxMs` after the first change of a burst, so a busy
+// registry cannot keep the rows old for the whole 120 s poll.
+export function debouncer(fn, { waitMs = 500, maxMs = 5000, now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
+  let timer = null;
+  let firstAt = null;
+  return () => {
+    const at = now();
+    firstAt ??= at;
+    clearTimer(timer);
+    timer = setTimer(() => {
+      firstAt = null;
+      fn();
+    }, Math.max(0, Math.min(waitMs, firstAt + maxMs - at)));
+  };
 }
 
 // A persistent failure prints one line, not one per tick.

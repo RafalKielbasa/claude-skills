@@ -34,6 +34,13 @@ export function deriveSession(events) {
   };
 
   for (const event of sortEvents(events)) {
+    // The hook's note closes that wait and says nothing else about the session. A turn refused in the
+    // prompt stays `working` until its next event: `turn-ended` would wake the hub model to judge an older
+    // message about a refusal Rafal gave himself.
+    if (event.event === 'PermissionClosed') {
+      if (state.waiting?.kind === 'permission' && event.at >= state.waiting.since) state.waiting = null;
+      continue;
+    }
     state.firstAt ??= event.at;
     state.lastEventAt = event.at;
     if (event.cwd) {
