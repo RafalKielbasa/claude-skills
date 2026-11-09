@@ -1013,3 +1013,12 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - założono: self-check-nie-sprawdza-weryfikacji-i-kontraktu (skill: github-tickets, typ: porażka, status: zaadresowany) — 6 trafnych uwag `codex` z dwóch rund poza listą kontrolną; siedem linii z 2026-11-09 dopisanych do `references/self-check.md`.
 - Wpis z kroku 9 `github-tickets`, nie z `podsumuj-sesja-claude`; wzorce repo tej sesji: brak.
 - Brak nowych przejść na `nawrót`.
+
+## 2026-11-09 — sesja session_01WryF5WMM6e7iBT7efWZwJS (lokalnie 3089ecd1-38b8-4995-a6db-28273c325475; vault, instalacja i połowa akceptacji planu 1 `hub-approvals`)
+- założono: wartosc-do-wpisania-opisana-zamiast-odczytana (skill: ogólny, typ: porażka) — „odczytaj kod … ten po B” zamiast `a11` z `queue.json`; Rafał nie wiedział, który kod.
+- założono: zrobione-sprawdzone-w-logach-przed-zaliczeniem (skill: ogólny, typ: sukces) — logi wyłapały niespełniony warunek wiersza 2, niewysłane `a16 A` i pominięty wiersz 5b.
+- założono: restart-zakladki-huba-bez-pierwszego-promptu (skill: hub, typ: porażka) — po restarcie zakładki watcher ruszył dopiero po `start`.
+- założono: dluga-akceptacja-bez-mapy-postepu (skill: ogólny, typ: porażka) — „Czy dużo nam zostało” po godzinie akceptacji.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — pięć wtrąceń harnessu przy sprawdzaniu logów akceptacji.
+- Wzorce repo tej sesji: brak (patrz log repo vaulta).
+- Brak `nawrót` wśród dotkniętych. Kandydat (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji).

@@ -72,5 +72,7 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   harnessu: na początku pierwszego zadania, w pętli edycja hooka i testy oraz przy analizie transkryptu
   do podsumowania. Przy trzecim linia statusu pojawiła się dopiero po wtrąceniu.
 
+- 2026-11-09, sesja session_01WryF5WMM6e7iBT7efWZwJS (lokalnie 3089ecd1-38b8-4995-a6db-28273c325475; akceptacja planu 1 `hub-approvals`): pięć wtrąceń harnessu, każde przy sprawdzaniu „zrobione” w kilku logach naraz (proces huba, transkrypty sesji testowych, specyfikacja, mapa projektów, wiki). Linia statusu pojawiała się dopiero po wtrąceniu.
+
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.
