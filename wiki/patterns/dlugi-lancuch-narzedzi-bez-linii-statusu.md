@@ -73,6 +73,7 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
   do podsumowania. Przy trzecim linia statusu pojawiła się dopiero po wtrąceniu.
 
 - 2026-11-09, sesja session_01WryF5WMM6e7iBT7efWZwJS (lokalnie 3089ecd1-38b8-4995-a6db-28273c325475; akceptacja planu 1 `hub-approvals`): pięć wtrąceń harnessu, każde przy sprawdzaniu „zrobione” w kilku logach naraz (proces huba, transkrypty sesji testowych, specyfikacja, mapa projektów, wiki). Linia statusu pojawiała się dopiero po wtrąceniu.
+- 2026-11-09, sesja 3633cf62-9947-4cd6-8645-95bc257b4e9c (id claude.ai niedostępny; Baza wiedzy, `/sprint` 09.11–15.11): dwa wtrącenia „The user hasn't heard from you in a while” — po `pool`, listowaniu puli i `bind` przed pierwszym słowem do Rafała, i po pobraniu raportów, `sprint-review` i `sprint-candidates` przed szablonem notatki. Oba łańcuchy to kroki przygotowawcze przed pierwszą kartą; po pierwszej linii statusu dalsza część sesji szła bez wtrąceń, aż do zapisu wiki (trzecie).
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

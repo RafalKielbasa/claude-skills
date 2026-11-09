@@ -29,6 +29,7 @@ never reads.
   `CLOSED`. In the same session the fix worked for the ranking: `candidates` was run right before the
   ranking shown after #646 went to Done.
 - 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, po zamknięciu #741): the ranking shown after `status --to done` came from the session-start brief; only `mine` was re-run. `candidates` run afterwards, for this wiki entry, returned the same top items, so no harm this time, but nothing in the answer proved that.
+- 2026-11-09, sesja 3633cf62-9947-4cd6-8645-95bc257b4e9c (id claude.ai niedostępny; Baza wiedzy, `/sprint` 09.11–15.11): fix applied — after `status --to done` on #802, `candidates` was run again right before the ranking; it showed #908, created by `sprint-apply` an hour after the session-start brief, as the only Ready item. The brief's list could not have contained it.
 
 ## Rozwiązanie
 Run `candidates` immediately before every ranking you show, including after `status --to done`; never

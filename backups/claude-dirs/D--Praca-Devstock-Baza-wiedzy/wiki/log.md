@@ -558,3 +558,8 @@ Format wpisu:
 ## 2026-11-06 — sesja 2e20e7fb-3051-4c0d-899a-41666a866e98 (id claude.ai niedostępny; główny folder na gałęzi `rafal-kielbasa/05-11-2026`, praca wyłącznie w repo `.claude`, status line)
 - Bez nowych wzorców repo: sesja nie użyła skilli tego repo.
 - Wzorce globalne dotknięte w tej sesji: założone pole-o-pasujacej-nazwie-wziete-za-wymaganie i repo-claude-commituje-backup-nie-sesja; dowód do czterech. Patrz log globalny.
+
+## 2026-11-09 — sesja 3633cf62-9947-4cd6-8645-95bc257b4e9c (id claude.ai niedostępny; pierwszy realny `/sprint` 09.11–15.11 na gałęzi `rafal-kielbasa/09-11-2026`, zamknięcie DT-76 #802)
+- założono: kandydaci-sprintu-nieaktualni-w-trakcie-spotkania (skill: sprint, typ: porażka) — #308 zamknięte w trakcie spotkania przeszło `--check` i padło w `sprint-apply` („The item is archived”); #870/#844 zamknięte, #900–#904 nowe, #556 skasowane (410) w kandydatach.
+- założono: karta-sprintu-ponawiana-po-korekcie-jednoznacznej (skill: sprint, typ: porażka) — ponowne pytanie karty Barta po „Dodaj DT-51” przerwane przez Rafała („kontynnuj”); wątpliwy do drugiego dowodu.
+- Wzorce globalne dotknięte w tej sesji: dowód do derived-number-in-option-not-computed, dlugi-lancuch-narzedzi-bez-linii-statusu i ranking-from-session-start-snapshot. Patrz log globalny.

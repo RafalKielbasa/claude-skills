@@ -1022,3 +1022,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — pięć wtrąceń harnessu przy sprawdzaniu logów akceptacji.
 - Wzorce repo tej sesji: brak (patrz log repo vaulta).
 - Brak `nawrót` wśród dotkniętych. Kandydat (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji).
+
+## 2026-11-09 — sesja 3633cf62-9947-4cd6-8645-95bc257b4e9c (id claude.ai niedostępny; Baza wiedzy, pierwszy realny `/sprint` 09.11–15.11, zamknięcie DT-76)
+- dopisano dowód: derived-number-in-option-not-computed — karta Wiktora „9/4 d” zamiast 8,5/4; obciążenia na kartach sumowane w głowie, skrypt dopiero przed ekranem końcowym.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — dwa wtrącenia w krokach przygotowawczych przed pierwszą kartą, trzecie przy zapisie wiki.
+- dopisano dowód: ranking-from-session-start-snapshot — poprawka zadziałała: `candidates` przed rankingiem po #802 pokazał #908, utworzone godzinę po briefie.
+- Wzorce repo tej sesji: założone kandydaci-sprintu-nieaktualni-w-trakcie-spotkania i karta-sprintu-ponawiana-po-korekcie-jednoznacznej (patrz log repo).
+- Brak `nawrót` wśród dotkniętych. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji), ranking-from-session-start-snapshot (`/evolve-skill board-tracker`).
