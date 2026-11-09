@@ -64,6 +64,31 @@ says so. Lines marked with a date came from a finding on that date.
       is checked per element in the code. A reviewer's summary that groups them
       is a hypothesis for each one: in CP-109 a review comment said three state
       screens were "not centered", but the loading skeleton never centres.
+- [ ] **(2026-11-09)** Every manual verification step passes the same two tests
+      as an acceptance criterion: its result is observable, and it can be carried
+      out under every choice the ticket leaves to the implementer. A step that
+      depends on an optional outcome ("the rule that was moved") is written as
+      conditional. "Answers without reading the file" is not observable;
+      "answers without a file-read tool call" is.
+- [ ] **(2026-11-09)** Every example command in the body was run or grepped and
+      produces the result the body states. A file that exists but does not
+      contain the searched text makes the example prove nothing.
+- [ ] **(2026-11-09)** The rows of a contract table are checked against each
+      other: no example in one row also matches another row with a different
+      outcome. In DT-128 `node --env-file=.env` sat in an "allowed" row while it
+      also named the file that the "refused" row covers.
+- [ ] **(2026-11-09)** When the body documents a limit of the mechanism it
+      prescribes, the contract is achievable under that limit. "Confirm by
+      trying" does not resolve a contradiction the documentation already decides.
+- [ ] **(2026-11-09)** An exception in a contract is no wider than the instruction
+      it serves: it names the concrete commands or files, not a pattern that lets
+      an arbitrary script through.
+- [ ] **(2026-11-09)** A number read from a session's context rather than from a
+      file says so, because nobody can measure it again.
+- [ ] **(2026-11-09)** A measurement of a file in another repository is taken from
+      the default branch on the remote. The local checkout may stand on a feature
+      branch: in DT-128 the audit measured the mobile `CLAUDE.md` on a `dt-37`
+      branch at 201 lines, while `main` had 208.
 
 ## Per batch
 

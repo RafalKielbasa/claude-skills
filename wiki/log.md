@@ -1008,3 +1008,8 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Pierwsze wywołanie skilla (09:30 UTC) przerwała nowa prośba Rafała, bez zapisu; ten wpis pochodzi z drugiego wywołania.
 - Wzorce repo tej sesji: brak.
 - Brak nowych przejść na `nawrót`. Kandydat wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji).
+
+## 2026-11-09 — sesja a70b061f-baec-4d73-912c-99f058fc1e43 (repo Baza wiedzy, `github-tickets` w trybie pojedynczego ticketu: DT-128 #899)
+- założono: self-check-nie-sprawdza-weryfikacji-i-kontraktu (skill: github-tickets, typ: porażka, status: zaadresowany) — 6 trafnych uwag `codex` z dwóch rund poza listą kontrolną; siedem linii z 2026-11-09 dopisanych do `references/self-check.md`.
+- Wpis z kroku 9 `github-tickets`, nie z `podsumuj-sesja-claude`; wzorce repo tej sesji: brak.
+- Brak nowych przejść na `nawrót`.
