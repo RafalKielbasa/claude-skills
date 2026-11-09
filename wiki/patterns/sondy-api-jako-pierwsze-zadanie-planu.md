@@ -28,6 +28,7 @@ recenzjach.
   Zadanie 3 (klient API) napisane od razu na poprawionych interfejsach, nowe zadanie 3a. Zadania 2, 4 i 5
   (czyste funkcje) zrobione przed sondami bez poprawek. Pierwsze prawdziwe wgranie 15 lekcji przeszło
   bez błędu (15 × `uploaded`, weryfikacja ustawień zielona).
+- 2026-11-09, sesja f83b042b-5c80-43ff-8320-902beeeba944 (id claude.ai niedostępny; Baza wiedzy, DT-134 #910, plan `weekly-sprints-card-links-plan-1`): `token-probe` jako zadanie 1 wykonał raz każdy odczyt joba (tablica `devstock-org#3`, 5 repo, zakresy) na nowym tokenie classic, zanim powstał kod odczytów. Drugi raz potwierdził zawężenie zakresu do `read:project`. Pierwsze uruchomienie ujawniło fałszywe przejście na pustym `GH_TOKEN` ([[pusty-gh-token-wraca-do-zapisanego-logowania]]), naprawione strażnikiem w samej sondzie.
 
 ## Rozwiązanie
 Plan integracji z zewnętrznym API: zadanie 1 to sondy na prawdziwym koncie, każda z dosłownym wynikiem

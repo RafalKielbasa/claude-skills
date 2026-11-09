@@ -107,11 +107,19 @@ its recommended option.
    `BT sprint-review --sprint <date − 7 days> --team .claude/skills/sprint/team.json > planning/sprinty/<date>/zrodla/done-count.json`,
    and use only its `boards[].doneCount` and `interns` — nothing else from that file (no sprint was
    approved for that week, so its `planned` and `unplanned` are not a previous sprint).
-4. `BT sprint-candidates --team .claude/skills/sprint/team.json > planning/sprinty/<date>/zrodla/candidates.json`.
-5. A `BT` read that exits non-zero → quote its `error` (the redirected file holds
+4. **Trail**, only when a previous sprint exists:
+   `BT card-trail --read-only --cards <refs> > planning/sprinty/<date>/zrodla/trail.json`, `<refs>`
+   = the refs of the `outcome.json` items with a `settle`, comma-separated, only
+`devstock-org/devstock-team#…` refs (others get no trail count, and one foreign ref makes
+`card-trail` refuse the whole set); none → no call. A
+   non-zero exit does not stop the run (the exception to item 6): a file holding `cards` is used as
+   is, and its `failed` cards get no count; a file holding only `{ "ok": false, "error" }` → Step 2b
+   shows one line `Ślad: niedostępny — <error>`.
+5. `BT sprint-candidates --team .claude/skills/sprint/team.json > planning/sprinty/<date>/zrodla/candidates.json`.
+6. A `BT` read that exits non-zero → quote its `error` (the redirected file holds
    `{ "ok": false, "error" }`) and stop: no cards without the boards. Nothing has been written to
    GitHub.
-6. Create `sprint.md` from the template if it is missing: `{{OD}}–{{DO}}` = Monday–Sunday as
+7. Create `sprint.md` from the template if it is missing: `{{OD}}–{{DO}}` = Monday–Sunday as
    `DD.MM–DD.MM`, `**Status:** szkic`, `**Źródła:**` = the loaded reports in the `sprint.md` form
    of "Naming the reports", comma-separated, or `brak`.
 
@@ -121,7 +129,8 @@ What the inputs hold:
   Entry `{ board, ref, title, url, status, state, closed, stateReason, closedAt, assignees, estimate }`.
   `boards` covers all four boards, because archiving does. `planned` and `unplanned` are main-board
   only: `planned` = issues carrying the previous sprint; `unplanned` = issues finished that week
-  without it. `stateReason` = GitHub's close reason (`COMPLETED`, `NOT_PLANNED`, `DUPLICATE`,
+  without it, except those carrying an earlier sprint (closed by the previous review's `zrobione`).
+  `stateReason` = GitHub's close reason (`COMPLETED`, `NOT_PLANNED`, `DUPLICATE`,
   `REOPENED`) or null; `NOT_PLANNED` and `DUPLICATE` mean closed without the work, so `unplanned`
   and `interns` never hold them. `estimate` = the board's `Estimate` (number or null),
   here and in `candidates.json`. `interns` = the other three boards' issues with at least one
@@ -134,12 +143,16 @@ What the inputs hold:
   to someone on the team list, without the `type: epic` label; `board` is the board key
   `<owner>#<number>`, here always `devstock-org#3`; copy it into `sprint.json` as is. `projectWork`
   = the other three boards' open issues in state `in_progress` or `ready` with at least one
-  team-list assignee; read-only, used only for the `Bez karty` lines (Step 5) and the answer to
+  team-list assignee, without tasks already linked from an open main-board card; read-only, used
+  only for the `Bez karty` lines (Step 5) and the answer to
   `dodaj <ref>` (Step 4), never written to `sprint.json`.
 - `outcome.json`: the draft of the previous sprint's outcome, `{ sprint, items: [{ board, ref, assignees, planned, done, start, remaining, proposed: null, settle }], availability: [] }`
   — one entry per `planned`, then per `unplanned` item; `start` = the estimate settled a week ago,
   `assignees` = team-list logins only; `settle` tells Step 2b what to ask (`"remaining"`,
   `"effort"`, or null = nothing).
+- `trail.json`: `{ ok, readOnly, cards: [{ card, links, closed, total, prs, missing, entries, body, comment }], failed: [{ card, error }] }`
+  — `total` = the card's linked tasks GitHub found, minus those closed as not planned or duplicate;
+  `closed` = those closed as completed; `prs` = merged PRs on the card's trail.
 - `29` file: one `## <name> (<repo>)` section per repository with lists of done issues, merged PRs,
   stale items, waiting PRs and cleanup (age in days), then `## Narracja`. `31` file: the digest,
   then `## Statusy osób` (per person: done, plans, blockers).
@@ -203,7 +216,7 @@ Every card follows "The gate" in `docs/spotkania-kolejki.md`:
 | `items` | `{ "board", "ref", "goal": "g1" \| null, "assignee": "<login>" \| null, "estimate", "proposed" }` — `assignee` only when the meeting named someone not already among the item's assignees |
 | `drop` | `{ "board", "ref", "toBacklog": true \| false, "estimate" }` — `estimate` = the remaining work Step 2b settled, else null |
 | `newIssues` | `{ "key": "n1", "repo", "title", "body", "assignee", "goal", "domain", "size", "estimate", "proposed" }` — `key` without `/` or `#`; `repo` always `devstock-org/devstock-team`; `domain` and `size` always set |
-| `cleanup` | `{ "board", "ref", "action": "close" \| "keep" }` |
+| `cleanup` | `{ "board", "ref", "action": "close" \| "keep" \| "done" }` — `done` only from Step 2b |
 | `capacity` | `{ "login", "board", "days", "factor" }` — Step 2c, one per team member |
 | `outcome` | `{ "sprint": "<D>", "items": [ … ], "availability": [{ "login", "board", "days" }] }` — Step 2b, the `outcome.json` draft with the settled values, `availability` one per corrected person; absent on a first run |
 
@@ -321,20 +334,34 @@ Question „Pozostała praca”. The card settles what `outcome.json` leaves ope
   and one closed as `NOT_PLANNED` or `DUPLICATE` (`done: false` whatever its start), adds no done
   days.
 
+Each line ends with the card's trail from `trail.json` (`card` matched case-insensitively):
+`— zadania <closed>/<total> zamknięte` when `total` > 0, with `, PR <prs>` appended when `prs` > 0;
+`— PR <prs>` alone when `total` is 0 and `prs` > 0; `— ślad niedostępny` for a card in `failed`;
+nothing for a card with neither. A `trail.json` holding only `{ ok: false, error }` → one line
+`Ślad: niedostępny — <error>` on the card, and no line carries a trail.
+
 Proposals per "Estimating", except that a `"remaining"` item's remaining work is always Claude's
 proposal (its board `Estimate` is last week's `start`); a not-done item's remaining work is at
-least 0,5. More than 15 lines →
+least 0,5, except an item settled as `zrobione` (0). The trail informs Claude's proposals: a
+`"remaining"` item with `total` > 0, `closed === total` and an empty `missing` list is proposed as
+`zrobione`, its line reading `<ref> — <title> — było <start> d, zrobione` followed by the card's
+trail suffix exactly as on every other line; other proposals weigh the count.
+More than 15 lines →
 several cards of at most 15 („Pozostała praca (1/2)”, …), each asked and written in turn.
 
 - "Other": `<ref> zostało <dni>` (remaining work), `<ref> <dni> d` (effort), `<imię> faktycznie
-  <dni>` (the person's week went differently than declared — illness, leave).
+  <dni>` (the person's week went differently than declared — illness, leave), `<ref> zrobione`
+  (the card is finished: remaining work 0, closed as completed at execution; only a `"remaining"`
+  item — on another item say so and change nothing).
 - Options: **Zatwierdź** · **Popraw**.
 - Write on **Zatwierdź**: `outcome` into `sprint.json` = the `outcome.json` draft with the
   settled values — `remaining` of a `"remaining"` item, `start` (the effort) of an `"effort"` item;
-  `proposed` = Claude's value, null when it came from the board; `settle` unchanged —
+  `proposed` = Claude's value, null when it came from the board; `settle` unchanged; a `zrobione`
+  item gets `remaining: 0`, `proposed` = Claude's value (0 when Claude proposed `zrobione`) —
   and the `faktycznie` corrections as `outcome.availability` entries
-  `{ login, board: "devstock-org#3", days }`, one per corrected person (`[]` without any). Nothing
-  goes to `sprint.md`.
+  `{ login, board: "devstock-org#3", days }`, one per corrected person (`[]` without any); plus,
+  in `cleanup`, one `{ "board": "devstock-org#3", "ref", "action": "done" }` per `zrobione` item,
+  in place of the `done` entries an earlier pass wrote. Nothing goes to `sprint.md`.
 - Skip with one line on a first run (no `outcome`). With a previous sprint but no entry with a
   `settle`, skip the card and still write the draft unchanged as `outcome`: the calibration counts
   the previous sprint only through it.
@@ -403,8 +430,9 @@ The card, question „Dostępność”:
   with its status and, last on the line, its estimate ("Estimating"). Each person group opens with
   one load line ("Load"), e.g. `Grzegorz 4/2,5 d ⚠`. When unsure whether an issue serves the goal,
   leave it out — a short list is right, padding is wrong. An issue chosen for an earlier goal is
-  not proposed again.
-- **Z poprzedniego sprintu**: unfinished `planned` items that serve this goal, marked
+  not proposed again, nor a ref with a `cleanup` entry `done`.
+- **Z poprzedniego sprintu**: unfinished `planned` items that serve this goal, except those with
+  a `cleanup` entry `done` (settled at Step 2b), marked
   `przenoszę` (carried over unless the card drops them), with the remaining work Step 2b settled
   as their estimate, listed only here, not again above.
 - **No issue behind the goal** (nothing proposed, nothing carried): the card says `BRAK ISSUE dla
@@ -415,7 +443,8 @@ The card, question „Dostępność”:
   - add: `dodaj <ref>` — the ref must be in `candidates.json` `items`, or in `review.json` `planned`
     or `unplanned`, whose entry gives its board. A ref in `candidates.json` `projectWork` → say it
     has no card on the main board and to use `nowe issue: <title> <ref>`; anything else → say it is
-    not a sprint candidate on the main board. Either way, change nothing;
+    not a sprint candidate on the main board. Either way, change nothing. A ref with a `cleanup`
+    entry `done` → say it was settled as `zrobione` at Step 2b (undo it there) and change nothing;
   - assign: `<ref> dla <imię>` (also `dodaj <ref> dla <imię>`) — `<imię>` is a team-list name in
     any grammatical form („dla Anny” → Anna) or a login, resolved through `team.json`; `assignee` =
     that login unless it is already among the item's assignees (then `null`); a name not on the
@@ -450,7 +479,7 @@ The card, question „Dostępność”:
 - In `team.json` order. First line: the member's load ("Load"), e.g. `Grzegorz 2/1,5 d ⚠`; load 0
   and capacity 0 → `<imię> — brak dostępności i zadań`. Then pre-filled: the member's
   `candidates.json` `items` in state `in_progress` or `ready` (their login among `assignees`) in
-  neither `items` nor `drop` of `sprint.json`, In progress first, then Ready, each line ending with
+  none of `items`, `drop` and `cleanup` of `sprint.json`, In progress first, then Ready, each line ending with
   its estimate ("Estimating"); carry-overs marked. Adding the items' shares in that order to the
   member's load, an item after which the load exceeds capacity gets `⚠` at the end of its line.
   Then one optional line from the `31` file: `Plany (Przegląd daili): <plany>`.
@@ -478,8 +507,8 @@ The card, question „Dostępność”:
 
 ## Step 6. Leftovers card
 
-- Leftovers = `planned` entries not done and not closed whose ref is in neither `items` nor
-  `drop`. First run, or no leftovers → skip with one line.
+- Leftovers = `planned` entries not done and not closed whose ref is in none of `items`, `drop`
+  and `cleanup`. First run, or no leftovers → skip with one line.
 - Each line: ref, title, status, assignees, and last its estimate ("Estimating": the remaining
   work Step 2b settled, when it did).
 - Options, in this order: **Odrzuć wszystkie** first, the recommended one (Sprint value cleared,
@@ -498,7 +527,8 @@ The card, question „Dostępność”:
   are epics and issues on no board, which never leave its head, so filtering it left an empty card
   every week. Keep an entry only when its state is not `in_progress` (age here is time since
   creation, not idle time, and person cards already show work in progress), its labels lack
-  `zostaje`, and it is in neither `items` nor `drop` of `sprint.json`. Sort by age (oldest first;
+  `zostaje`, and it is in neither `items` nor `drop` of `sprint.json` and has no `cleanup` entry
+  `done` (Step 2b). Sort by age (oldest first;
   ties by ref) and keep **the 5 oldest**, or all of them when fewer. `board` = `devstock-org#3`.
 - Nothing left → skip with one line.
 - Each line: `<k>. <ref> — <title> (<N> dni) — zamknij|zostaje`, numbered from `1.` in that order,
@@ -506,7 +536,8 @@ The card, question „Dostępność”:
   mention the issue, `zamknij` otherwise.
 - Options: **Przyjmij propozycję** · **Wszystkie zostają** · **Pomiń w tym tygodniu** (nothing).
   "Other" changes single items by their number, e.g. „2 zostaje”.
-- Write: `cleanup` entries (`zamknij` → `close`, `zostaje` → `keep`; **Pomiń** → `[]`);
+- Write: `cleanup` entries (`zamknij` → `close`, `zostaje` → `keep`; **Pomiń** → none), Step 2b's
+  `done` entries kept;
   `## Porządki` with each decision, or „Pominięte w tym tygodniu.”
 
 ## Step 8. Final screen
@@ -517,14 +548,15 @@ The card, question „Dostępność”:
   table — team members × one column, cells `<load>/<capacity>` ("Load") with `⚠` where load >
   capacity, a person at 0/0 left out, plus a `Bez osoby` row (load only) when an item has no owner;
   items per person with their estimates in the compact form of "Cards", carry-overs and drops, new
-  issues to create, cleanup decisions, closed by the path `planning/sprinty/<date>/sprint.md`.
+  issues to create, cleanup decisions with `zamknięte jako zrobione: #n, …` (the `done` entries),
+  closed by the path `planning/sprinty/<date>/sprint.md`.
 - Preview of **Jeszcze nie**: „SKUTEK: nic nie wykonuję, decyzje zostają zapisane”, then what
   execution would do, in its order — archive Done on the four boards (`boards[].doneCount` per
   board and their total, from `review.json`, on a first run from `done-count.json`), set the
   Sprint on N items, assign N, ustaw Estimate na N pozycjach (items, new issues and drops whose
   `estimate` differs from the board value in `candidates.json` / `review.json`; every new issue
   counts, a drop with `estimate: null` does not), drop N (N to Backlog), create N issues, close
-  N, label N `zostaje`.
+  N (the `close` and `done` entries), label N `zostaje`.
 - "Other": a correction or „wróć do <karta>” → apply it or walk that card, then ask this question
   again.
 - **Jeszcze nie** → stop. Nothing executed; `sprint.md` stays `szkic`, `results` stays `{}`.
@@ -541,7 +573,8 @@ Only after **Akceptuj i wykonaj**, or on re-entry with approval (start at 9.3).
    - `ok: true` → 3.
    - `failed: "validate"` → show `error` verbatim; nothing was written. Ask again the card it
      concerns — a goal → Step 3; a ref in `items`, or an item's `estimate` or `proposed` → the
-     work or person card that chose it; in `drop` → Step 6; in `cleanup` → Step 7; a `newIssues`
+     work or person card that chose it; in `drop` → Step 6; in `cleanup` → Step 7, with action
+     `done` → Step 2b; a `newIssues`
      key → the work card of its goal, or the person card that created it when `goal` is null;
      `capacity` → Step 2c; `outcome` → Step 2b — then the final screen again. An error saying the
      main board has no Sprint iteration field, no iteration on `<date>`, or no Estimate number
@@ -567,7 +600,7 @@ Only after **Akceptuj i wykonaj**, or on re-entry with approval (start at 9.3).
        `/sprint <date>` wznowi od tej operacji.” and stop; `results` untouched. If `error` says an
        issue may already exist, repeat that: Rafał checks the repo before the rerun.
      - **Usuń tę pozycję i wznów** — only for a failure tied to one entry: `failed` is `sprint:`,
-       `assign:`, `estimate:`, `drop:`, `backlog:`, `create:`, `board:`, `close:` or `keep:` with
+       `assign:`, `estimate:`, `drop:`, `backlog:`, `create:`, `board:`, `close:`, `done:` or `keep:` with
        a ref or key, or `validate` with an `error` naming one ref of `items`, `drop` or `cleanup`.
        Never recommended: removing an entry changes the sprint. Remove that entry from its list
        in `sprint.json` (`items`, `drop`, `newIssues` or `cleanup`, by ref or key) and its line
@@ -582,7 +615,8 @@ Only after **Akceptuj i wykonaj**, or on re-entry with approval (start at 9.3).
    `results["archive:<board>"].archived`; `## Porządki` states what was closed and labelled;
    `## Przeniesione i odrzucone` is written from `sprint.json` whether or not Step 6 ran —
    `przeniesione:` every `items` ref that is in `review.json` `planned`, `odrzucone:` every `drop`
-   (`odrzucone i do Backlogu:` with `toBacklog`); `## Dostępność i obciążenie` gets one row per
+   (`odrzucone i do Backlogu:` with `toBacklog`), `- zrobione na przeglądzie: <ref> <title>` per
+   `cleanup` entry `done`; `## Dostępność i obciążenie` gets one row per
    team member in `team.json` order, cells `<zaplanowane>/<dostępne>` — load ("Load") over
    `capacity[].days`, never the capacity — `—` when both are 0, plus a
    `Bez osoby` row (planned days only) when an item has no owner. No capacity, factor or `⚠`
@@ -612,7 +646,8 @@ Only after **Akceptuj i wykonaj**, or on re-entry with approval (start at 9.3).
 | Keeping four goals, or dropping one yourself | Ask which to drop |
 | Padding a goal with loosely related issues | Flag `BRAK ISSUE`, offer **Utwórz issue teraz** |
 | Writing `DT-<n>:` into a `newIssues` title | `sprint-apply` numbers it |
-| Cleanup from the `29` file or other boards (Part B handled them), or more than 5 entries | Only `candidates.json` `items` at least 30 days old and not in progress, the 5 oldest |
+| Cleanup from the `29` file or other boards (Part B handled them), or more than 5 lines on Step 7's cleanup card (`done` entries from Step 2b are not counted) | Only `candidates.json` `items` at least 30 days old and not in progress, the 5 oldest |
+| Closing a card at Step 2b yourself, or putting a `zrobione` card in `items` or `drop` | Only the `cleanup` entry `done`; `sprint-apply` closes it after **Akceptuj i wykonaj** |
 | A `kodozercy/*` or other project ref in `items` | Only main-board cards; project work without a card is a `Bez karty` line |
 | `devstock-org/devstock-team#n` on a card or the final screen, or `#n` in `sprint.json` or `sprint.md` | `#n` on cards and the final screen; the full ref in the files, and on `Bez karty` and `Praktykanci` lines |
 | A card asking for availability while every cell is empty | Ask in chat first; the card only approves the numbers |

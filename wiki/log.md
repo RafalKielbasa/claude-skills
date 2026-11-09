@@ -1029,3 +1029,23 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: ranking-from-session-start-snapshot — poprawka zadziałała: `candidates` przed rankingiem po #802 pokazał #908, utworzone godzinę po briefie.
 - Wzorce repo tej sesji: założone kandydaci-sprintu-nieaktualni-w-trakcie-spotkania i karta-sprintu-ponawiana-po-korekcie-jednoznacznej (patrz log repo).
 - Brak `nawrót` wśród dotkniętych. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji), ranking-from-session-start-snapshot (`/evolve-skill board-tracker`).
+
+## 2026-11-09 — sesja 0facbde7-f16e-4ba0-a2f0-b304f63f372a (id claude.ai niedostępny; Baza wiedzy + worktree code-busters, DT-81 #815: poprawki ekranów publicznych, konsultacja UX darmowej lekcji, PR kodozercy/code-busters#1741)
+- założono: kod-wyjscia-z-ukrytym-stderr-czytany-jako-werdykt (skill: ogólny, typ: porażka) — `merge-tree --write-tree` na git 2.35 dał fałszywe „CONFLICT”; złapane przez sprzeczność z `behind 0 / ahead 0`.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie — NAWRÓT: `status --to in_review` po wariancie A odrzucone, linia `!` zadziałała; skill wymienia tylko `done` i `close`.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — dwa wtrącenia: przed pierwszym słowem po „ok” (cykl RED) i przy czytaniu wiki.
+- Wzorce repo tej sesji: założone analiza-waskiego-ekranu-ograniczona-do-zgloszenia, makieta-storybook-z-klasami-aplikacji-jako-pomiar i zamkniecie-konsultacji-koliduje-z-markerem-bramki (patrz log repo).
+- Nawrót: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (`/evolve-skill board-tracker`). Kandydat (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji).
+
+## 2026-11-09 — sesja f83b042b-5c80-43ff-8320-902beeeba944 (id claude.ai niedostępny; Baza wiedzy, część C `weekly-sprints-card-links`: wykonanie planu 1 subagentami i uruchomienie śladu, DT-134 #910)
+- założono: pusty-gh-token-wraca-do-zapisanego-logowania (skill: ogólny, typ: porażka) — sonda nowego tokenu przeszła na zapisanym loginie `gh`, bo plik z tokenem nie istniał.
+- założono: sekret-actions-repo-czytelny-dla-kazdego-z-zapisem (skill: superpowers:brainstorming, typ: porażka) — spec dał token w sekret repo; dopiero recenzja końcowa wskazała 6 osób z prawem zapisu.
+- założono: przebieg-z-lista-pomija-selekcje-joba (skill: ogólny, typ: porażka) — wniosek o #791 z przebiegu `--cards`, a karta była zamknięta.
+- założono: sdd-usuniecie-workspace-gubi-odlozone-uwagi (skill: superpowers:subagent-driven-development, typ: porażka) — ~30 uwag „może poczekać” przeniesione do `…-followups.md` przed usunięciem katalogu.
+- założono: pierwszy-zapis-automatu-na-jednym-elemencie-i-powtorka (skill: ogólny, typ: sukces) — #60 dwa razy, potem dwa pełne przebiegi; drugi bez zmian.
+- dopisano dowód: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie — `gh workflow run` odrzucony mimo „scal dzień” z bramką, która go wymieniała; Rafał uruchomił z `!`.
+- dopisano dowód: odpowiedz-bez-wariantu-wykonana-czesc-wspolna — „Zrobione” w trakcie tury; środowisko założone, zakres potwierdzony sondą.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — pięć wtrąceń harnessu w zadaniu 12.
+- dopisano dowód: sondy-api-jako-pierwsze-zadanie-planu — `token-probe` jako zadanie 1, 8 odczytów joba przed kodem.
+- Wzorce repo tej sesji: brak (patrz log repo).
+- Brak nowych `nawrót` z tej sesji: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie ma już status `nawrót (2026-11-09)`, ustawiony przez równoległą sesję 0facbde7. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji).

@@ -74,6 +74,11 @@ Linię tekstu traktuję jak „raport”, który należy się na końcu, a nie j
 
 - 2026-11-09, sesja session_01WryF5WMM6e7iBT7efWZwJS (lokalnie 3089ecd1-38b8-4995-a6db-28273c325475; akceptacja planu 1 `hub-approvals`): pięć wtrąceń harnessu, każde przy sprawdzaniu „zrobione” w kilku logach naraz (proces huba, transkrypty sesji testowych, specyfikacja, mapa projektów, wiki). Linia statusu pojawiała się dopiero po wtrąceniu.
 - 2026-11-09, sesja 3633cf62-9947-4cd6-8645-95bc257b4e9c (id claude.ai niedostępny; Baza wiedzy, `/sprint` 09.11–15.11): dwa wtrącenia „The user hasn't heard from you in a while” — po `pool`, listowaniu puli i `bind` przed pierwszym słowem do Rafała, i po pobraniu raportów, `sprint-review` i `sprint-candidates` przed szablonem notatki. Oba łańcuchy to kroki przygotowawcze przed pierwszą kartą; po pierwszej linii statusu dalsza część sesji szła bez wtrąceń, aż do zapisu wiki (trzecie).
+- 2026-11-09, sesja 0facbde7-f16e-4ba0-a2f0-b304f63f372a (id claude.ai niedostępny; DT-81 #815, po „ok” na D2/D3, potem `/podsumuj-sesja-claude`). Dwa wtrącenia „The user hasn't heard from you in a while”:
+  - po odczycie `LessonHeader.tsx`, grepie testów, edycji testu i przebiegu RED, zanim padło pierwsze słowo po „ok”;
+  - przy czytaniu dwóch indeksów wiki, stron wzorców i `skill-impact.md` przed zapisem.
+  Po wtrąceniu pisałem linię statusu przed każdym kolejnym blokiem (makiety, zapis w `decyzje.md`, PR) i dalej szło bez wtrąceń, aż do kroku wiki.
+- 2026-11-09, sesja f83b042b-5c80-43ff-8320-902beeeba944 (id claude.ai niedostępny; Baza wiedzy, DT-134 #910, zadanie 12 planu card-links): pięć wtrąceń „The user hasn't heard from you in a while”, każde po kilku wywołaniach bez tekstu: przy porównaniu przebiegu próbnego z poprzednim, po wiadomości „Zrobione” w trakcie tury, po merge PR #911, przy zbieraniu odłożonych uwag z ledgera i przy usuwaniu katalogu SDD.
 
 ## Rozwiązanie
 Przed krokiem, który potrwa ponad minutę (render, STT, upload, długi `npm run`), i po trzech wywołaniach narzędzi z rzędu bez tekstu napisz jedną linię: co robię i po co, np. „Kontrola układu odrzuciła slajd 5; sprawdzam warianty na kopii”. Bez podsumowań, jedna linia.

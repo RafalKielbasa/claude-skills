@@ -563,3 +563,13 @@ Format wpisu:
 - założono: kandydaci-sprintu-nieaktualni-w-trakcie-spotkania (skill: sprint, typ: porażka) — #308 zamknięte w trakcie spotkania przeszło `--check` i padło w `sprint-apply` („The item is archived”); #870/#844 zamknięte, #900–#904 nowe, #556 skasowane (410) w kandydatach.
 - założono: karta-sprintu-ponawiana-po-korekcie-jednoznacznej (skill: sprint, typ: porażka) — ponowne pytanie karty Barta po „Dodaj DT-51” przerwane przez Rafała („kontynnuj”); wątpliwy do drugiego dowodu.
 - Wzorce globalne dotknięte w tej sesji: dowód do derived-number-in-option-not-computed, dlugi-lancuch-narzedzi-bez-linii-statusu i ranking-from-session-start-snapshot. Patrz log globalny.
+
+## 2026-11-09 — sesja 0facbde7-f16e-4ba0-a2f0-b304f63f372a (id claude.ai niedostępny; DT-81 #815 w worktree code-busters, konsultacja UX darmowej lekcji na telefonie, wpis w `platforma/widoki/publiczne/decyzje.md` na gałęzi `rafal-kielbasa/09-11-2026`)
+- założono: analiza-waskiego-ekranu-ograniczona-do-zgloszenia (skill: konsultant-ux-kodozercy, typ: porażka) — makiety mierzyły tylko dwie wady ze zgłoszenia, nieczytelny tytuł lekcji zauważył Rafał.
+- założono: makieta-storybook-z-klasami-aplikacji-jako-pomiar (skill: konsultant-ux-kodozercy, typ: sukces) — bez danych na prodzie makiety w Storybooku z odczytem liczb dały pomiar pięciu decyzji; usunięte przed PR.
+- założono: zamkniecie-konsultacji-koliduje-z-markerem-bramki (skill: konsultant-ux-kodozercy, typ: porażka) — `Konsultacja zamknięta.` i `⏸` obie z regułą „ostatnia linia”; `skill-evolution/cli.mjs` na tej maszynie nie ma.
+- Wzorce globalne dotknięte w tej sesji: założony kod-wyjscia-z-ukrytym-stderr-czytany-jako-werdykt; dowód do zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (nawrót, `status --to in_review`) i dlugi-lancuch-narzedzi-bez-linii-statusu. Patrz log globalny.
+
+## 2026-11-09 — sesja f83b042b-5c80-43ff-8320-902beeeba944 (id claude.ai niedostępny; część C `weekly-sprints-card-links`, plan 1 subagentami na gałęzi `rafal-kielbasa/09-11-2026`, uruchomienie workflow `card-trail`, DT-134 #910)
+- Bez nowych wzorców repo: skill `sprint` był zmieniany przez plan, ale nie uruchamiany.
+- Wzorce globalne dotknięte w tej sesji: założone pusty-gh-token-wraca-do-zapisanego-logowania, sekret-actions-repo-czytelny-dla-kazdego-z-zapisem, przebieg-z-lista-pomija-selekcje-joba, sdd-usuniecie-workspace-gubi-odlozone-uwagi i pierwszy-zapis-automatu-na-jednym-elemencie-i-powtorka; dowód do czterech. Patrz log globalny.

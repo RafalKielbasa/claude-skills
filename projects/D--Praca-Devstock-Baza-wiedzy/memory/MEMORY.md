@@ -62,3 +62,4 @@
 - [Adres konta kursu w filmie](adres-konta-kursu-w-filmie.md) — zostaje widoczny przez chwilę na słowo Rafała (3.1, 2026-11-04); rozmywamy drugie konto; na kartę bez samego adresu.
 - [Przyciski z osobami na kartach zadań](bramka-assignee-przyciski.md) — karta zadania bez deklaracji przypisania ma „Akceptuj, <osoba>”, bo Rafał rozdziela zadania w bramce i inaczej wypada z okna pytania (2026-11-05).
 - [n8n: fetch bez browser-id wylogowuje](n8n-fetch-bez-browser-id-wylogowuje.md) — własny fetch do `/rest` bez nagłówka `browser-id` to 401 i koniec sesji profilu kursu (2026-11-05); używaj helpera `api` z `uslugi/n8n.js`; powrót: ręczny `login` Rafała.
+- [Ślad kart — workflow card-trail aktywny](card-trail-workflow-aktywny.md) — od 2026-11-09 codziennie 07:30 UTC; sekret w środowisku `card-trail` (tylko `main`), token w `~/.config/card-trail-token` (czyta tylko Rafał); `gh workflow run` blokuje klasyfikator → komenda z `!`.

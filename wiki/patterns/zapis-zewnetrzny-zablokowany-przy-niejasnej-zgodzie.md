@@ -2,7 +2,7 @@
 
 - **Skill:** ogólny (dotyczy board-tracker)
 - **Typ:** porażka
-- **Status:** nawrót (2026-11-04)
+- **Status:** nawrót (2026-11-09)
 
 ## Opis
 Zamknięcie dwóch issues w głównej sesji (jedna komenda Bash z dwoma zapisami do GitHuba) odrzucił
@@ -69,6 +69,14 @@ ta sama zmiana na Done przeszła.
   plan, nie na wysłanie gałęzi; push pytać osobno albo od razu podać linię `!`.
 - 2026-11-04, sesja 83cd4b89-dc72-4c37-aab9-f5b63095719c (kontynuacja 78788d89-0fb4-49f8-86e8-69106f4e6036; id claude.ai niedostępny): NAWRÓT: `create` po „ok” na kartę nowego issue odrzucone „[External System Writes]”. Obsługa ze skilla zadziałała: bez ponawiania, linia `!`, którą Rafał uruchomił (#860). Skill wymienia jednak tylko `status --to done` i `close`, a dotyczy to też `create`. `status --to done` po „Przesuń” przeszło we własnym wywołaniu.
 - 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, porządki po DT-52 #741) (obsługa ze skilla zadziałała, status bez zmian): po „zrób porządek na tablicy” dwa osobne wywołania `status --to done` w jednej turze: #772 przeszło (`closed: true`), #773 odrzucone („[External System Writes]”). Po „D1 A” na wariant „Odpinam #773 od #741 i zamykam epik” `status --ref …#741 --to done` przeszło, choć wariant nazywał operację słowami, bez komendy. `removeSubIssue` (dwa razy), `gh issue edit --add-assignee Szymon0C` i `status --to in_progress` przeszły. Bez ponawiania, linia `!` podana, a potem wycofana, bo Rafał zmienił zakres. Ta sama komenda przy tej samej zgodzie daje różny wynik, więc hipoteza o treści zgody nadal niczego nie przesądza.
+- 2026-11-09, sesja 0facbde7-f16e-4ba0-a2f0-b304f63f372a (id claude.ai niedostępny; Baza wiedzy + worktree code-busters, DT-81 #815). NAWRÓT, tym razem dla przejścia, którego skill nie wymienia.
+  - Wariant [A] brzmiał: „Zaznaczam wszystkie 5 pozycji w treści #815 i przesuwam kartę do In review”.
+  - Rafał odpisał „A dodaj otwórz PR i …”.
+  - Przeszły: `gh issue edit 815 --body-file` (zaznaczenie pozycji), commit, `git push` i `gh pr create --reviewer`.
+  - `status --ref …#815 --to in_review` w osobnym wywołaniu klasyfikator odrzucił („[External System Writes]”).
+  - Obsługa ze skilla zadziałała: bez ponawiania podałem linię `!`, Rafał ją uruchomił (`"state": "in_review"`).
+  - Skill wymienia tylko `status --to done` i `close`, a odmowa dotyczy też `in_review`, jak 2026-11-04 `create`.
+- 2026-11-09, sesja f83b042b-5c80-43ff-8320-902beeeba944 (id claude.ai niedostępny; Baza wiedzy, DT-134 #910, zadanie 12 planu `weekly-sprints-card-links-plan-1`): bramka kończyła się markerem „Twoje „scal dzień” (push gałęzi dnia, PR i merge), po którym uruchamiam workflow `card-trail`”, a tabela kroków wymieniała `gh workflow run card-trail.yml`. Po „scal dzień” push, `gh pr create` i `gh pr merge --merge` przeszły. `gh workflow run card-trail.yml --repo … --ref main`, w łańcuchu z `sleep` i `gh run list`, odrzucone („[External System Writes]”). Nie ponawiałem, podałem linię `!`. Rafał uruchomił sam oba przebiegi, a odczyt (`gh run watch`, `gh run view --log`) robiłem ja. Wcześniej po „A” na wariant, który je nazywał, przeszły `gh api -X PUT …/environments/card-trail` i POST reguły gałęzi. Nowe: odmowa dotyczy też uruchomienia workflow wymienionego w bramce dosłownie. Komenda była łańcuchem z odczytem, więc nie wiadomo, czy zdecydowało samo uruchomienie.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu
