@@ -18,11 +18,11 @@
 
 <!-- - Praktykanci: jan-kowalski: zrobione kodozercy/code-busters#1700; w toku kodozercy/code-busters#1702 -->
 
-<!-- PIERWSZY SPRINT: zamiast tabeli po jednej linii na listę z raportu 29 (etykieta, liczba, najwyżej 3 odwołania owner/repo#n, potem +N) i po jednej linii na osobę z blokerem z raportu 31:
-- zrobione (29): 88 — kodozercy/edu_saas#449, kodozercy/edu_saas#450, devstock-org/devstock-team#760 +85
-- utknęło (29): 12 — devstock-org/devstock-team#790 (15 dni), devstock-org/devstock-team#512 (132 dni) +10
-- czeka na review (29): 3 — kodozercy/code-busters#1700, kodozercy/code-busters#1702 +1
-- blokery (31): Szymon — czeka na dostęp do konta Apple -->
+<!-- PIERWSZY SPRINT: zamiast tabeli po jednej linii na listę z Raportu tygodniowego (n8n 29: nazwa źródła, co liczone, liczba, najwyżej 3 odwołania owner/repo#n, potem +N) i po jednej linii na osobę z blokerem z Przeglądu daili (n8n 31):
+- Raport tygodniowy — zrobione: 88 issues, 40 PR — kodozercy/edu_saas#449, kodozercy/edu_saas#450, devstock-org/devstock-team#760 +125
+- Raport tygodniowy — zaległe, ≥14 dni bez ruchu: 12 — devstock-org/devstock-team#790 (15 dni), devstock-org/devstock-team#512 (132 dni) +10
+- Raport tygodniowy — najdłużej czekające PR-y: 3 — kodozercy/code-busters#1700, kodozercy/code-busters#1702 +1
+- Przegląd daili — blokery: Szymon — czeka na dostęp do konta Apple -->
 
 ## Zrobione poza planem
 

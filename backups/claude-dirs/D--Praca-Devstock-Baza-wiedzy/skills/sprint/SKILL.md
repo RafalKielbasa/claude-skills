@@ -112,8 +112,8 @@ its recommended option.
    `{ "ok": false, "error" }`) and stop: no cards without the boards. Nothing has been written to
    GitHub.
 6. Create `sprint.md` from the template if it is missing: `{{OD}}–{{DO}}` = Monday–Sunday as
-   `DD.MM–DD.MM`, `**Status:** szkic`, `**Źródła:**` = the report names that loaded,
-   comma-separated, or `brak`.
+   `DD.MM–DD.MM`, `**Status:** szkic`, `**Źródła:**` = the loaded reports in the `sprint.md` form
+   of "Naming the reports", comma-separated, or `brak`.
 
 What the inputs hold:
 
@@ -145,6 +145,24 @@ What the inputs hold:
   then `## Statusy osób` (per person: done, plans, blockers).
 - Previous `sprint.json`: its `goals`, `items[].goal`, and `newIssues[].goal` with the created
   ref in `results["create:<key>"].ref`.
+
+### Naming the reports
+
+The meeting does not know the n8n numbers, so a card and `sprint.md` never name a report by a bare
+`29` or `31`. Each report has three forms:
+
+| Report | Full form (the review card's `Źródła` lines, Step 2) | Short form (every other card line) | `sprint.md` `**Źródła:**` |
+|---|---|---|---|
+| `29` | `Raport tygodniowy (n8n 29): <okres>, issues i PR-y z GitHuba, <N> repo: <nazwy>` | `Raport tygodniowy` | `Raport tygodniowy (n8n 29, <okres>)` |
+| `31` | `Przegląd daili (n8n 31): <okres>, <N> daily, statusy osób i blokery` | `Przegląd daili` | `Przegląd daili (n8n 31, <okres>, <N> daily)` |
+
+- `<okres>` and `<N>` come from the file's first heading as written: the `29` heading ends with
+  `(DD.MM–DD.MM)`; the `31` heading holds `YYYY-MM-DD – YYYY-MM-DD (<N> spotkania)`, shown as
+  `DD.MM–DD.MM` and `<N> daily`. `<nazwy>` = the `<name>` of each `## <name> (<repo>)` section of
+  the `29` file, `## Narracja` excluded, comma-separated. A heading that does not parse → the file
+  name in place of the period and the count.
+- A report that did not load keeps its full-form line on the review card:
+  `<Raport> (n8n <nr>): brak — <the Step 1 reason in a few words>`.
 
 ## Cards
 
@@ -248,6 +266,10 @@ Claude's proposal:
 
 ## Step 2. Review card
 
+- **Sources, every run.** The card opens with `Źródła:` and one line per report in the full form
+  of "Naming the reports", a missing report included, so the meeting knows what the lines below
+  and the goals card (Step 3) draw from. These lines stay on the card; `sprint.md` names the
+  reports in its `**Źródła:**` header.
 - **Previous sprint exists.** One table `| Cel | Wynik | Zrobione | Niezrobione |`, one row per
   previous goal. A goal's issues = previous `items` with that goal plus its created `newIssues`,
   looked up in `review.json` `planned` by ref (case-insensitive); done = `state` `done` or
@@ -260,10 +282,13 @@ Claude's proposal:
   `Bez celu` for `planned` refs absent from the previous `sprint.json` (only if any), and always
   the row `Zrobione poza planem` with the `unplanned` refs (`—` when empty). Cells hold refs only;
   more than 5 → the first 5 and `+N`.
-- **First run.** No goal rows: the card shows only what the loaded reports say. Each `29` list
-  (done, stale with days, waiting PRs) is exactly one line: its label, the count when the report
-  gives one, at most 3 refs (a stale ref with its days), then `+N`. `31`: blockers, one line per
-  person who has a blocker. Nothing else from the boards; the one exception is `Praktykanci`, from `done-count.json`. No report loaded and no
+- **First run.** No goal rows: the card shows only what the loaded reports say, every line opened
+  by its report's short form. Each `29` list (done, stale with days, waiting PRs) is exactly one
+  line, `Raport tygodniowy — <co liczone>: <liczba> — <refs>`: `<co liczone>` names the items and
+  any threshold the report's own heading gives (`zrobione: 93 issues, 90 PR`, `zaległe, ≥14 dni
+  bez ruchu: 139`, `najdłużej czekające PR-y`), then the count when the report gives one, at most
+  3 refs (a stale ref with its days), then `+N`. `31`: blockers, one line per person who has a
+  blocker, `Przegląd daili — blokery: <imię> — <bloker>`. Nothing else from the boards; the one exception is `Praktykanci`, from `done-count.json`. No report loaded and no
   `interns` → skip the card with one line and go to Step 2c (Step 2b is skipped on a first run).
 - **`Praktykanci`, previous sprint and first run alike.** After the table or the report lines, a
   heading `Praktykanci`, then one line per login in `interns` (`review.json`, on a first run
@@ -356,8 +381,9 @@ The card, question „Dostępność”:
 ## Step 3. Goals card
 
 - Propose up to three goals, each one sentence naming a concrete outcome this week, with its
-  basis in brackets: an unfinished previous goal (`częściowo`/`nie` from Step 2), stale items
-  (`29`), declared plans or blockers (`31`). Fewer is fine; a goal without a basis is not proposed.
+  basis in brackets, the source in words: an unfinished previous goal (`(poprzedni cel:
+  częściowo)`), stale items (`(Raport tygodniowy: zaległe #790)`), declared plans or blockers
+  (`(Przegląd daili: plany Grzegorza)`). Fewer is fine; a goal without a basis is not proposed.
 - Options: **Przyjmij cele** · **Wpiszę własne** (nothing written; Rafał types them). With no
   basis at all, the preview says „Brak podstaw do propozycji — wpisz cele.” and **Wpiszę
   własne** comes first.
@@ -427,7 +453,7 @@ The card, question „Dostępność”:
   neither `items` nor `drop` of `sprint.json`, In progress first, then Ready, each line ending with
   its estimate ("Estimating"); carry-overs marked. Adding the items' shares in that order to the
   member's load, an item after which the load exceeds capacity gets `⚠` at the end of its line.
-  Then one optional line: the member's plans from the `31` file.
+  Then one optional line from the `31` file: `Plany (Przegląd daili): <plany>`.
 - Last lines: `Bez karty: <ref> — <title>` from the member's `projectWork` (their login among
   `assignees`), at most 5, then `+N`; a ref that a new issue of this sprint already names in its
   body is left out. They do not count as item lines, never enter the sprint, and on consecutive
@@ -581,6 +607,7 @@ Only after **Akceptuj i wykonaj**, or on re-entry with approval (start at 9.3).
 | Treating `sprint.json` with empty `results` as approved and running `sprint-apply` | Approval = `finalna` or a written result (Re-entry) |
 | Running `sprint-apply` (even `--check`) before **Akceptuj i wykonaj** | The walk only writes files |
 | Calling `KB report` for a file already in `zrodla/` | It counts as fetched; `KB` refuses an existing file anyway |
+| A bare `29` or `31` on a card or in `sprint.md` | The forms of "Naming the reports": full in the review card's `Źródła` lines, short on other lines |
 | Reviewing a previous sprint on the first run | No earlier approved `sprint.json` → only `done-count.json`, and only its `doneCount` and `interns` |
 | Keeping four goals, or dropping one yourself | Ask which to drop |
 | Padding a goal with loosely related issues | Flag `BRAK ISSUE`, offer **Utwórz issue teraz** |
