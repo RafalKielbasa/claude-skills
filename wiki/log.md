@@ -1049,3 +1049,8 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: sondy-api-jako-pierwsze-zadanie-planu — `token-probe` jako zadanie 1, 8 odczytów joba przed kodem.
 - Wzorce repo tej sesji: brak (patrz log repo).
 - Brak nowych `nawrót` z tej sesji: zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie ma już status `nawrót (2026-11-09)`, ustawiony przez równoległą sesję 0facbde7. Kandydaci (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny, bez skilla do ewolucji).
+
+## 2026-11-10 — sesja 2755dabd-6161-454c-a435-d571c7e46f91 (id claude.ai niedostępny; DT-92/DT-93, krok 9 `github-tickets` po wysłaniu DT-138 #916)
+- dopisano dowód: rama-ticketu-z-grepa-przed-sprawdzeniem-per-element — rama DT-138 bez sprawdzenia skutków w kodzie; treść odeszła od niej w dwóch miejscach, złapał tylko `codex`; nowa linia w `self-check.md` (2026-11-10).
+- założono: jezyk-tytulu-w-self-check-wbrew-konwencjom-projektu (skill: github-tickets, typ: porażka, zaadresowany) — linia self-checku „Title is English” zmieniona na odwołanie do pliku konwencji.
+- Kandydaci do ewolucji: brak nowych (rama-ticketu-z-grepa-przed-sprawdzeniem-per-element ma dowody z 2 sesji, próg to więcej niż 2).

@@ -22,9 +22,18 @@ ciąg znaków występuje. Ogólny mechanizm: [twierdzenie-o-pliku-bez-odczytu](t
   wołanym też przy edycji i publikacji, a trafienie w `team/invitations.service.ts:295` wybiera 404/409/410
   według stanu zaproszenia, więc nie jest kopią. Tytuł zmieniony, zależność usunięta, korekta pokazana jako
   pierwsza na bramce 2; wysłane jako kodozercy/edu_saas#210.
+- 2026-11-10, sesja 2755dabd-6161-454c-a435-d571c7e46f91 (id claude.ai niedostępny): rama DT-138 (porządki po
+  usunięciu Circle) zbudowana z wniosków sesji, bez sprawdzenia skutków w kodzie: „przed wdrożeniem DT-92”
+  i „`DRAFT` albo do usunięcia”; Rafał odpowiedział „ok”. Przy treści wyszło, że gałąź mobile DT-93 usuwa ten
+  sam wyjątek (kolejność obejmuje też ją), a historia programu czyta tytuł i nagrodę z szablonu (usuwanie
+  odpada). Treść odeszła od ramy w dwóch miejscach; self-check tego nie złapał, złapał `codex` („Ticket
+  rozszerza kolejność wdrożenia poza zatwierdzoną ramę”). Odstępstwa wypisane na bramce 2, Rafał przyjął;
+  wysłane jako devstock-org/devstock-team#916. Linia „treść nie wychodzi poza ramę” dopisana do
+  `self-check.md` (2026-11-10).
 
 ## Rozwiązanie
 Dopisz do sekcji „Mode: a single ticket” w `SKILL.md`, przed pokazaniem ramy: „Każde twierdzenie ramy o kilku
-miejscach w kodzie (lista kopii, metody, których dotyczy, zależność od innego PR) sprawdź per element, czytając
-kod wokół każdego trafienia, nie tylko listę z `grep`. Rama, której zakres zmienił się po akceptacji, wraca na
-bramkę 1 albo idzie na bramkę 2 z korektą wypisaną jako pierwsza.”
+miejscach w kodzie (lista kopii, metody, których dotyczy, zależność od innego PR) albo o skutku zmiany (kolejność
+wdrożeń, dopuszczalne warianty działania) sprawdź w kodzie, czytając go wokół każdego trafienia, nie tylko listę
+z `grep`. Rama, której zakres zmienił się po akceptacji, wraca na bramkę 1 albo idzie na bramkę 2 z korektą
+wypisaną jako pierwsza.” Kontrola wtórna jest już w `references/self-check.md` (linia z 2026-11-10).

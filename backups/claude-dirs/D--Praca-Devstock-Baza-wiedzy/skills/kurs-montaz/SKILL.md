@@ -252,10 +252,12 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    - Only `sync` moves `od`/`do` (the lead-in rule below). `oczekiwania` that overlap an execution
      (`run_workflow`, `run_step`, `send_chat_message`) are removed by `sync`.
    - A standing screen keeps 1 s: a declared still wait, and the still ranges `sync` finds with `freezedetect`
-     (`n=0.0008`, at least 1.5 s) on each recording with markers, cached in `work/stills/`. It takes out what runs an
-     execution, a cut or a declared wait, splits the rest at every anchor, drops what is shorter than 1.5 s, and
-     writes `still_ranges` on every run, so do not edit that field. A source without markers gets none and the report
-     names it. A moving pointer counts as motion; a small canvas change can read as still, so check the `K` tiles.
+     (`n=0.0008`, at least 1.5 s) on each recording with markers, cached in `work/stills/`. It takes out the window
+     of every marker action (an execution, and also a click, hover, scroll or typing), a cut or a declared wait,
+     splits the rest at every anchor, drops what is shorter than 1.5 s, and writes `still_ranges` on every run, so do
+     not edit that field. A source without markers gets none and the report names it. `freezedetect` does not see a
+     moving pointer (it is too small for the threshold), which is why the action windows are taken out; a pointer
+     movement outside them and a small canvas change can still read as still, so check the `K` tiles.
    - The rule: a stretch runs from a sentence pinned to an action up to the next pinned sentence, or to the paragraph's
      end. `N` is its narration time, `R` its recording time with standing screens at 1 s, `E = R - N`, and `L` the break
      limit: 5 s for a stretch with at least 3 s of an execution action in its recording, 6 s for any other stretch.

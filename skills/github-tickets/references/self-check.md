@@ -10,7 +10,10 @@ says so. Lines marked with a date came from a finding on that date.
 
 ## Per ticket
 
-- [ ] Title is English and starts with the number, `<PREFIX>-<n> <Title>`.
+- [ ] Title language and format follow the conventions file read at step 0
+      (for example `DT-<n>: <tytuł>` in Polish for `devstock-org/devstock-team`),
+      and the title starts with the number. **(changed 2026-11-10: was "Title is
+      English", which contradicted the DT conventions)**
 - [ ] Body is Polish.
 - [ ] No em dash and no en dash anywhere in the body.
 - [ ] No solution code: no model, service, controller, DTO or component code.
@@ -89,6 +92,13 @@ says so. Lines marked with a date came from a finding on that date.
       the default branch on the remote. The local checkout may stand on a feature
       branch: in DT-128 the audit measured the mobile `CLAUDE.md` on a `dt-37`
       branch at 201 lines, while `main` had 208.
+- [ ] **(2026-11-10)** The body stays inside the frame approved at gate one (or
+      the split, for a batch). Every place where the body narrows, widens or
+      reorders it (a step, an ordering between deployments, an allowed variant
+      of an action) is listed for the user at gate two, before the codex table.
+      A fact found while writing is a reason to change the frame openly, never
+      silently: in DT-138 the body added a second deployment to the ordering
+      and dropped "or delete" from the approved scope, and only codex noticed.
 
 ## Per batch
 
