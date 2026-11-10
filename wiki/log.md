@@ -1054,3 +1054,16 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: rama-ticketu-z-grepa-przed-sprawdzeniem-per-element — rama DT-138 bez sprawdzenia skutków w kodzie; treść odeszła od niej w dwóch miejscach, złapał tylko `codex`; nowa linia w `self-check.md` (2026-11-10).
 - założono: jezyk-tytulu-w-self-check-wbrew-konwencjom-projektu (skill: github-tickets, typ: porażka, zaadresowany) — linia self-checku „Title is English” zmieniona na odwołanie do pliku konwencji.
 - Kandydaci do ewolucji: brak nowych (rama-ticketu-z-grepa-przed-sprawdzeniem-per-element ma dowody z 2 sesji, próg to więcej niż 2).
+
+## 2026-11-10 — sesja 2755dabd-6161-454c-a435-d571c7e46f91, podsumowanie (id claude.ai niedostępny; ciąg dalszy wpisu z kroku 9 `github-tickets` wyżej: przegląd lokalny, commity, PR #1742 i #428)
+- założono: metro-w-tle-z-ci-bez-przeladowania (skill: ogólny, typ: porażka) — `CI=1` przy `expo start` w tle wyłączył przeładowanie, restart zablokowany.
+- założono: weryfikacja-pr-z-listy-kontrolnej-zamiast-z-relacji (skill: ogólny, typ: porażka) — szkic PR przypisał Rafałowi test z innym `SESSION_SECRET`, którego nie było; poprawione przed wysyłką.
+- dopisano dowód: taskstop-nie-zabija-procesu-potomnego-na-windows — `npx next dev` i `npx expo start` przeżyły `TaskStop`, goły `node` CMS nie.
+- dopisano dowód: zatrzymanie-procesu-blokowane-przez-klasyfikator — `Stop-Process` bez zgody odrzucony, `taskkill` w Bashu po „OK” przeszedł.
+- dopisano dowód: sprawdzenie-sekretu-przez-rozwiniecie-zmiennej — filtr po nazwie przepuścił wartość `CIRCLE_API` z `.env` do wyniku narzędzia.
+- dopisano dowód: przekierowanie-github-ukrywa-nieaktualne-odwolanie-do-repo — PR na starą nazwę repo wylądował w `kodozercy/code-busters`.
+- dopisano dowód: docker-compose-w-worktree-zaklada-drugi-projekt — rozwiązanie zastosowane ze strony wzorca, bez drugiego kontenera.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — około dziesięciu wtrąceń, linia statusu dopiero po wtrąceniu.
+- dopisano dowód: paczka-dt-przez-gh-create-i-ensure — pojedynczy DT-138 przez `create` przypiął sesję do pracy kogoś innego.
+- Wzorce repo tej sesji: dowód do plan-zmian-ui-kodozercow-bez-konsultanta-ux (patrz log repo).
+- Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: taskstop-nie-zabija-procesu-potomnego-na-windows, zatrzymanie-procesu-blokowane-przez-klasyfikator, dlugi-lancuch-narzedzi-bez-linii-statusu — wszystkie ogólne, bez skilla do ewolucji. Nawrotów brak.

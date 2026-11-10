@@ -20,8 +20,19 @@ pliku z tokenem, więc komenda na zmiennych nie przeszła tej samej kontroli.
   token GitHub"; w tej samej komendzie `grep -c 'oauth_token'` na `hosts.yml` (bez wypisania
   treści) i `cmdkey /list` filtrowane do nazw celów — oba bezpieczne. Wyciekłaby tylko linia z
   rozwinięciem zmiennej, gdyby `GH_TOKEN` był ustawiony.
+- 2026-11-10, sesja 2755dabd-6161-454c-a435-d571c7e46f91 (id claude.ai niedostępny; przygotowanie
+  przeglądu DT-92): tym razem wyciek, nie near-miss. Chciałem z `apps/codebusters/.env` adresy usług:
+  `grep -E '^[A-Z_]*(URL|ROOT|API)[A-Z_]*=' | grep -v -i 'secret\|key\|token'`. Filtr po nazwie
+  przepuścił `CIRCLE_API=…`, bo klucz API Circle leży w zmiennej, której nazwa nie mówi, że to sekret.
+  Wartość trafiła do wyniku narzędzia (transkrypt lokalny, nigdzie dalej). W tej samej sesji
+  `DATABASE_URL` i `SESSION_SECRET` zamaskowałem `sed`-em, czyli ochrona była tylko tam, gdzie nazwa
+  ją podpowiadała.
 
 ## Rozwiązanie
 Istnienie sekretu sprawdzać testem bez rozwinięcia wartości: `[ -n "$GH_TOKEN" ] && echo yes ||
 echo no` (PowerShell: `[bool]$env:GH_TOKEN`). Nigdy `${VAR:-…}`, `echo $VAR` ani `printenv` dla
 nazw zawierających TOKEN/KEY/SECRET/PASSWORD — także „tylko żeby sprawdzić".
+Z plików `.env` czytaj domyślnie same nazwy (`cut -d= -f1`). Wartość wypisuj tylko dla zmiennej
+wskazanej z nazwy, o której wiesz, że nie jest sekretem (adres, port), albo zamaskuj wszystkie
+wartości poza hostem (`sed -E 's/=.*/=***/'`). Filtr wykluczający po nazwie nie chroni, bo nazwa nie
+mówi, co jest sekretem (`CIRCLE_API`).

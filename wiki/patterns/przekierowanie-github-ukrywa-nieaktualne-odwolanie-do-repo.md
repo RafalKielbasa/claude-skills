@@ -24,6 +24,11 @@ w tej samej sekundzie, bez żadnej zmiany po ich stronie.
   czytał 19 issues zamiast 497 z repo z tablicą. Wyszło dopiero przy planowaniu scalenia repo,
   przez grep po eksportach. Po zmianie nazwy `core-team` → `devstock-team` te same odwołania
   zaczęły wskazywać scalone repo bez żadnej edycji.
+- 2026-11-10, sesja 2755dabd-6161-454c-a435-d571c7e46f91 (id claude.ai niedostępny; PR-y DT-92/DT-93):
+  `gh pr create --repo Devstock-Academy/code-busters-v2` założył PR w `kodozercy/code-busters`
+  (#1742), a push przeszedł na stary adres `origin`. Rejestr repo w `CLAUDE.md` „Bazy wiedzy” i
+  lokalny `origin` w `code-busters-v2` dalej mówią `Devstock-Academy/code-busters-v2`. Zauważone
+  tylko dlatego, że `gh` zwrócił URL nowego repo; żadna komenda nie padła.
 
 ## Rozwiązanie
 Przy każdej zmianie nazwy albo przenosinach repo: `gh api repos/<owner>/<stara-nazwa> --jq

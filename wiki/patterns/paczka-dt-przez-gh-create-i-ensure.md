@@ -22,6 +22,12 @@ którym sesja pracuje. Statusy, rodzic i brak assigneeów zgadzały się z plane
   `create` przypiął oba do sesji, choć sesja nad nimi nie pracowała. Śladów w nich nie zostawiłem, a magazyn
   przypięć ma trzy wpisy zamiast jednego (#650). Szkody brak, ale potwierdza się reguła tej strony: issue,
   które nie jest pracą sesji, zakładaj przez `gh issue create` i `ensure`, także przy dwóch sztukach.
+- 2026-11-10, sesja 2755dabd-6161-454c-a435-d571c7e46f91 (id claude.ai niedostępny; DT-92/DT-93): pojedynczy DT-138
+  (#916, porządki produkcji po usunięciu Circle, praca ręczna Rafała) przez `board-tracker create --status backlog`
+  z `github-tickets` w trybie pojedynczego ticketu. Wynik: `"done": ["created","added_to_board","status:backlog","bound"]`,
+  assignee `RafalKielbasa` (zgodnie z ramą zaakceptowaną przez Rafała), ale sesja przypięta do issue, którego nie
+  wykona. Zostawiłem tam ślad o założeniu, więc przypięcie nie jest puste, tylko zbędne. Reguła „`create` dla
+  pojedynczego issue z karty »Nowe issue«” nie rozróżnia issue pracy sesji od issue dla kogoś na później.
 
 ## Rozwiązanie
 Paczka nowych DT: numer sam (krok 1 `github-tickets`), `gh issue create --label <domena> --label size/<S>` bez assignee, potem `board-tracker ensure --ref <ref> --status <state> --epic <n>`, a `bind` tylko dla issue, nad którym sesja pracuje. `board-tracker create` zostaw dla pojedynczego issue z karty „Nowe issue”.
