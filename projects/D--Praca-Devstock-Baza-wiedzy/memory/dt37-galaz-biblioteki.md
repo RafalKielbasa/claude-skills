@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 7875e423-9ae8-4e55-a56b-31766c608f4e
-  modified: 2026-11-05T07:22:42.868Z
+  modified: 2026-11-10T19:17:25.369Z
 ---
 
 Since 2026-10-16 (Rafał): the component library (#665, direction 8 „Pikselowe pola”, dark + light theme) and the related screen work go on the existing branch `feat/rafal-kielbasa/dt-37-design-system-tokens` in both code repos (web `code-busters-v2`, mobile `code-busters-mobile`). PRs #1652 (web) and #403 (mobile) go to `main` once, for the whole redesign.
@@ -18,4 +18,4 @@ Since 2026-10-28 (Rafał: „Do main nie wdrażamy, wszystko ląduje na feature 
 
 **Why:** Rafał prepared the whole redesign first and deployed it in one go; tasks that were finished but waiting for the merge should not hang open.
 
-**How to apply:** do not start new streams from DT-37 any more; the epic #741 stays open only for the mobile store release and the unconfirmed production steps of W5. For the pre-merge history of a task, look at DT-37 commits, not `main`. Note: #665 and #741 are both children of #78, so #665 is not formally under the epic. Related: [[tryb-commitow-per-repo]].
+**How to apply:** do not start new streams from DT-37 any more; the epic #741 stays open only for the mobile store release and the unconfirmed production steps of W5. For the pre-merge history of a task, look at DT-37 commits, not `main`. **Web: since 2026-11-10 no local `dt-37-*` branch or W3–W5 worktree exists** (all deleted after a check that each tip is an ancestor of the #1730 head `da17cc22a`; none was on `origin`). The history is in `git fetch origin pull/1730/head`. The SDD ledgers of plans 5, 7 and 9 are in `.superpowers/sdd/` of the main checkout. Note: #665 and #741 are both children of #78, so #665 is not formally under the epic. Related: [[tryb-commitow-per-repo]].

@@ -86,6 +86,9 @@ and the quiz or exercises already at `do_review`, the video when `lekcja.yaml` h
   prints `OK: usunięto platformIds.staging.activityIds.<key> (<id>) z lekcja.yaml`, or
   `BŁĄD: lekcja nie ma platformIds.staging.activityIds.<key>` (exit 1). The next send then creates
   the activity afresh.
+- **Staging rebuild:** a line starting `ODBUDOWA STAGINGU: …` means a CMS deploy reset staging and
+  the send rebuilt it in the same run. Show it to Rafał verbatim; it is not an error and the
+  calling skill continues.
 - **Never `--env=prod`** from this section or from any skill other than `/kurs-publikuj` after an
   explicit "na prod". A staging send never writes `status.publikacja`; only a prod publish does.
 - The command loads `tools/course-pipeline/.env` itself; do not add `--env-file`. Secrets are
@@ -102,9 +105,12 @@ reran it. Used when Rafał asks to catch up staging ("wrzuć zaległe na staging
 1. List (read-only):
    `cd tools/course-pipeline && npm run publish -- zalegle ../../kursy/<slug>[/modul-NN-x]`
    It prints `ZALEGŁE NA STAGINGU (lekcji: N):` and one line per lesson with what is missing, or
-   `OK: brak zaległych na stagingu` (stop here), or a `POMINIĘTO:` line (stop, report it).
+   `OK: brak zaległych na stagingu`, or a `POMINIĘTO:` line (stop, report it). An empty list
+   (`OK: …`) is reported as is when Rafał only asked what is overdue. When he asked to refill
+   staging, an empty list is not the end: `--wykonaj` still reads staging and rebuilds it after a
+   reset (step 3), so continue to step 2.
 2. Show the list and **wait for Rafał's "OK"**. No answer, and a question-tool timeout, are not
-   approval.
+   approval. Nothing is sent before it, also when the list is empty.
 3. Send: the same command with `--wykonaj`. It prints the per-activity lines as in the section
    above and ends with
    `PODSUMOWANIE: lekcji wysłanych <n>, elementów pominiętych <dropped>, nieaktualnych na stagingu <stale>, modułów nieudanych <failed>`.
@@ -120,8 +126,9 @@ reran it. Used when Rafał asks to catch up staging ("wrzuć zaległe na staging
 - `preview` is for testing the endpoint before it is merged to `main`. Say so when asked to use
   it, and remind that a preview deploy reseeds the database, so ids stored under
   `platformIds.preview` become stale after every deploy.
-- No file ever goes to Vimeo from here, no `Course` creation, no deletions — the endpoint cannot
-  delete, and the skill does not ask it to. The recording reaches Vimeo through `/kurs-video`
+- No file ever goes to Vimeo from here. A staging send may create the `Course` and prune dead ids
+  from the YAML files only as the staging rebuild after a reset (spec 7.9); it never deletes
+  anything on the CMS — the endpoint cannot delete, and the skill does not ask it to. The recording reaches Vimeo through `/kurs-video`
   (step 6, `npm run vimeo`) in a course with `vimeo.automat: true`, which also writes its id into
   `lekcja.yaml`; in other courses Rafał uploads it himself and writes the id by hand.
 - **The video activity has no status gate**: `publish` sends it whenever `lekcja.yaml` carries

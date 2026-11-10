@@ -1,3 +1,4 @@
 - [Worktree session git guard](worktree-session-git-guard.md) — isolated sessions can't run git in the main checkout (even via `!`); Rafał merges in his own terminal, verify with `pnpm -C`; exception: ExitWorktree(keep) after EnterWorktree
 - [W2/W3 gate harness lessons](w2-gate-harness-lessons.md) — Tailwind 3.3 silent classes, `2xl`=1440, dialog root zero-size, worktree CMS start, direct-node servers stop with TaskStop, push the schema after merging main, worktree codegen/.env/ports, devtools overlay, fetch cache, light theme, db push via `!`, handoff/terms/chat e2e quirks
+- [Streaming makes redirect/notFound 200](locale-loading-streams-status.md) — `[locale]/loading.tsx` streams pages: server `redirect()`/`notFound()` answer 200 with meta refresh / noindex; flag specs promising 307/404
 - [Python CRLF on Windows](python-crlf-on-windows.md) — text-mode Python writes turn LF files into CRLF; use newline='' and check git ls-files --eol
