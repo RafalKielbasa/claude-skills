@@ -40,6 +40,14 @@ względem bazy ekranów w `platforma/`.
     dopiero potem była zmiana.
 
   Zasada trafiła do pamięci projektu (`rownolegle-subagenty-paczka-poprawek`).
+- 2026-11-10, sesja session_01WryF5Vs7iJSRzH27PExCPE (lokalnie d05fa43f-c46f-49dc-9cd3-4eb8fdea782f; DT-83, plany darmowej lekcji), dowód zadziałania rozwiązania w planie,
+  który dodaje nowy element ekranu:
+  - plany 1 (web) i 2 (mobile) zapisały zadania z panelem oferty (zadanie 9 i zadanie 4) jako
+    wstrzymane do akceptacji grafik konceptu; reszta zadań ruszyła w dwóch sesjach wykonawczych;
+  - grafiki powstały skillem `konsultant-ux-kodozercy` (koncept „Darmowa lekcja w kursie”, commit
+    `2e1e61de`), zanim sesje doszły do tych zadań;
+  - po akceptacji do obu zadań doszła linia „Graphics approved 2026-11-10” z klasami i odstępami
+    odczytanymi z grafik.
 
 ## Rozwiązanie
 W planie albo specu, który zmienia ekran Kodożerców ponad przeniesienie 1:1 na zatwierdzoną
