@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 697b7bfb-0bd6-46b7-a761-81427aabcf6e
-  modified: 2026-11-06T09:34:27.193Z
+  modified: 2026-11-10T08:21:10.126Z
 ---
 
 2026-11-04: zadanie onboardingowe `CP-INTRO` nie ma issue i nie wymaga jego założenia. Sam
@@ -29,3 +29,5 @@ błędami autora.
 **Aktualizacja 2026-11-04:** odświeżony CP-INTRO zmergowany w #214 (`773d4bf`). Kolejne osoby oceniam wg tej wersji, a #212 nadal wg wersji z własnej gałęzi Tomasza.
 
 **Aktualizacja 2026-11-06:** PR nietknięty ok. 37,5 h po review: head nadal `4fd9184`, 0 komentarzy `tomrud88`, 7/7 wątków otwartych, opis bez edycji; `recheck` nie ruszony. Status na Discordzie: [[intern-hours-in-discord-status]].
+
+**Aktualizacja 2026-11-10 (`recheck 212`):** gałąź zrebase'owana na `3d24760`, poprawki w `87df7ed`; 3/3 blokujące i 4/4 punkty opisu naniesione, sugestie 3 z 5 (zostały: szkic kursu, formatowanie `schema.prisma`), CI zielone. Nowe: `87df7ed` przywraca `docs/onboarding/CP-INTRO-course-reviews.md` do wersji sprzed #214 (blob `47b8a61`), czyli merge cofnąłby #214 — dosłowne wykonanie komentarza Rafała z 2026-11-04 („still in your branch… keep working from that version”) po rebase. Rafał wybrał APPROVE z notą (bez kolejnej rundy, bo cofnięcie wynikło z jego komentarza): review 5838740047 APPROVED na `87df7ed`, 2026-11-10 08:21 UTC, POST przez `!` Rafała, jeden komentarz `Suggestion:` przy linii 1 dokumentu. Karty brak (PR nie zamyka issue).
