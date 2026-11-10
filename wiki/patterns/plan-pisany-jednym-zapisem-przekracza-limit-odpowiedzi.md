@@ -25,6 +25,12 @@ za duży, a limit wychodzi dopiero po tym, jak większość treści już powsta�
   kolejne 2-3 zadania plus znacznik, ostatni bez znacznika. Skan po `CONTINUE`
   na końcu potwierdził, że nic nie zostało. Zero utraconej treści, jedna
   zmarnowana tura.
+- 2026-11-10, sesja session_01WryF5Vs7iJSRzH27PExCPE (lokalnie d05fa43f-c46f-49dc-9cd3-4eb8fdea782f; DT-83): plan 1 darmowej lekcji (9 zadań, same
+  sygnatury i testy, bez ciał funkcji, jak każe writing-plans 7.0.0) pisany jednym `Write`. Po ok.
+  2 min odpowiedź urwała się na „API Error: Connection lost mid-response”; Rafał napisał
+  „kontynuuj” po 11 min. Po wznowieniu ten sam plan i plan 2 przeszły jednym `Write` bez błędu.
+  Wpis wątpliwy jako ten sam mechanizm: to zerwane połączenie, nie limit tokenów. Wspólne jest to,
+  że przerwana długa odpowiedź traci cały zapis i turę użytkownika.
 
 ## Rozwiązanie
 Plan powyżej ok. 8 zadań z kodem pisz w częściach od pierwszego zapisu:

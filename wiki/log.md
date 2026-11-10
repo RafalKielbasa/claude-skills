@@ -1067,3 +1067,12 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: paczka-dt-przez-gh-create-i-ensure — pojedynczy DT-138 przez `create` przypiął sesję do pracy kogoś innego.
 - Wzorce repo tej sesji: dowód do plan-zmian-ui-kodozercow-bez-konsultanta-ux (patrz log repo).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: taskstop-nie-zabija-procesu-potomnego-na-windows, zatrzymanie-procesu-blokowane-przez-klasyfikator, dlugi-lancuch-narzedzi-bez-linii-statusu — wszystkie ogólne, bez skilla do ewolucji. Nawrotów brak.
+
+## 2026-11-10 — sesja session_01WryF5Vs7iJSRzH27PExCPE (lokalnie d05fa43f-c46f-49dc-9cd3-4eb8fdea782f; Baza wiedzy, DT-83 #817: spec i plany darmowej lekcji, trzy rozmowy `/talk`, koncept z grafikami web i telefonu)
+- założono: wtracenie-w-naglowku-decyzji-czytane-jako-jej-tresc (skill: ogólny, typ: porażka) — nawias „plan 2 wykonuje Szymon w swoim trybie” w nagłówku D2 wzięty za treść decyzji; wyjaśnienie odsłoniło zmianę wykonawcy (D3 B).
+- założono: wariant-rekomendowany-nie-jako-a (skill: ogólny, typ: porażka) — „Rekomendacja agenta: D1 B”, warianty ułożone według zakresu; odstępstwo zgłoszone dopiero turę później.
+- dopisano dowód: plan-pisany-jednym-zapisem-przekracza-limit-odpowiedzi — plan 1 pisany jednym `Write` urwany przez „Connection lost mid-response”, Rafał napisał „kontynuuj” po 11 min; wpis wątpliwy jako ten sam mechanizm.
+- dopisano dowód: kod-decyzji-numerowany-od-nowa-koliduje-w-sesji — cztery numeracje D w jednej sesji, każda z nazwą, bez pomyłki w odpowiedziach.
+- dopisano dowód: prosba-o-dane-podana-jako-wariant-z-domyslnym-ok — rozwiązanie zastosowane dwa razy (pole w CMS, zrzuty z aplikacji), bez domyślnego OK, dane w jednej turze.
+- Wzorce repo tej sesji: założone makieta-aplikacji-mobilnej-ze-zrzutow-i-kodu-mobile i sekcja-doskonalenia-wola-cli-nieobecne-na-maszynie; dowód do plan-zmian-ui-kodozercow-bez-konsultanta-ux (patrz log repo).
+- Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: kod-decyzji-numerowany-od-nowa-koliduje-w-sesji (4 sesje), ogólny, bez skilla do ewolucji. Nawrotów brak.

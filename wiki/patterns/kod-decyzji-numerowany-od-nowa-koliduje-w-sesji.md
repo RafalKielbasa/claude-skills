@@ -26,6 +26,15 @@ ale nie zapobiega kolizji.
   decyzje zapisane samymi nazwami, bez kodów.
 - 2026-10-24, sesja session_01UTQuE3EwUpLuJMEs83YJwD (lokalnie 362d75a8-47e4-4b51-a94a-5c747a21b5c6), wiadomość bramki W1: decyzje D1–D3 (kolory jasnego motywu, stan aktywacji na arkuszu, wyciszenie tagów analitycznych) w sesji, w której spec ma D1–D12 („D1 Mobile release”, „D5 fallback #1647”), a raport pętli bramki D1–D6 o innych znaczeniach. Każdy kod opatrzyłem nazwą, ale trzy numeracje „D” były w jednym oknie naraz.
 - 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, DT-52 #741): pytanie o epik i follow-upy numerowane D1 i D2, choć dwie tury wcześniej stała „Decyzja o wydaniu mobile (D1)” ze specu migracji. Rafał odpowiedział „D1 A D2 Zostaje jak jest”, bez nieporozumienia, ale reguły „przy kolizji sama nazwa” nie zastosowałem.
+- 2026-11-10, sesja session_01WryF5Vs7iJSRzH27PExCPE (lokalnie d05fa43f-c46f-49dc-9cd3-4eb8fdea782f; DT-83): cztery numeracje „D” w jednej sesji:
+  - D1–D3 z rozmowy głosowej (adres darmowej lekcji, lekcja dla zalogowanego, postęp gościa);
+  - D1–D2 z pytań recenzenta specu (kursy kupowane osobno, skutki zapisu do kursu);
+  - D1–D3 przy planach (unikalność uczestnika kursu, tryb wykonania, wykonawca planu 2);
+  - D1–D2 przy grafikach (źródło „przed” dla web i telefonu).
+
+  Każdy kod stał obok nazwy, a w indeksie projektu są same nazwy. Rafał odpowiadał kodami („D3 B”)
+  bez pomyłki. Nieporozumienie przy D2 wyszło z wtrącenia w nagłówku, nie z kolizji kodów
+  ([[wtracenie-w-naglowku-decyzji-czytane-jako-jej-tresc]]).
 
 ## Rozwiązanie
 Etykiety strumieni, plików roboczych i subagentów nazywaj słowami (`cms-data`, `screens-package`),

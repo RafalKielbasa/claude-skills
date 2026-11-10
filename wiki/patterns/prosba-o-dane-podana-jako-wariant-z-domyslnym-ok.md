@@ -17,6 +17,9 @@ Szablon decyzji dokleja linię „[Domyślnie] OK” do każdej sekcji ❓. Pro�
   - Za drugim razem [A] brzmiało „Podajesz trzy liczby…” z linią „[Domyślnie] Wpisz "OK"”. Rafał odpowiedział „ok”, a ja musiałem ponowić prośbę.
   - Potem przyszło pytanie Rafała „jaki jest adres do sprawdzenia limitów”. Adres `platform.claude.com/settings/limits` dało się wyprowadzić z `kursy/agenty-ai/zrodla.md` (`/settings/keys`, `/settings/billing`) już przy pierwszej prośbie.
   - Liczby przyszły jako zrzut ekranu dopiero w piątej turze od pierwszej prośby.
+- 2026-11-10, sesja session_01WryF5Vs7iJSRzH27PExCPE (lokalnie d05fa43f-c46f-49dc-9cd3-4eb8fdea782f; DT-83), rozwiązanie zastosowane dwa razy, bez linii „[Domyślnie] OK”:
+  - wartość pola `requiredPreviusLessonProgress` lekcji 2 „Misji AI: Start”: prośba z drogą w panelu CMS (lekcja → wymagania dostępu → pole), a [A]/[B] jako możliwe wartości i to, co zrobię z każdą; odpowiedź „brak wymogu” w następnej turze;
+  - zrzuty kursu z aplikacji: „Potrzebuję samych zrzutów, nie wyboru wariantu. Wklej je tutaj albo podaj ścieżkę”; zrzuty przyszły w następnej turze.
 
 ## Rozwiązanie
 „Gdy następny krok wymaga danych, których nie da się wyliczyć (liczby z konta użytkownika, ścieżka, treść), to prośba o dane, nie wariant. Podaj dokładne miejsce odczytu (URL, menu, ścieżka) i oczekiwany format odpowiedzi, np. »wklej trzy liczby albo zrzut«. Linii „[Domyślnie] OK” nie dawaj wariantowi, którego nie da się wykonać bez danych: domyślne „OK” uruchamia wtedy wariant bez danych albo w ogóle go nie ma.”
