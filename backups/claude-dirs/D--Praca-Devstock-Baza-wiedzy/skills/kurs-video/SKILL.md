@@ -331,6 +331,13 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
    - Błąd: akceptacja zostaje (`status.video: zaakceptowane` się nie cofa). Zacytuj linię `BŁĄD:` dosłownie
      i podaj komendę do ponowienia. Ponowienie jest bezpieczne: `video/vimeo.json` prowadzi do tego samego
      wideo, nigdy do drugiego.
+   - **Staging.** Gdy `npm run vimeo` wypisało `OK: …` (wideo utworzone albo podmienione), w tej samej turze
+     wyślij tę lekcję na staging według sekcji „Wysyłka na staging (wołają ją inne skille)” w pliku `.claude/skills/kurs-publikuj/SKILL.md`
+     (przeczytaj tę sekcję; nie wołaj skilla `/kurs-publikuj`, bo ten jest tylko na prod)
+     (aktywność wideo powstaje, bo `lekcja.yaml` ma już `vimeo`). Przy błędzie wgrania nic nie wysyłasz.
+     Wysyłka nie jest bramką: jej błąd pokazujesz dosłownie z komendą ponowienia, a akceptacja i wgranie
+     zostają. `platformIds` zapisane przez wysyłkę leżą w `lekcja.yaml` i `kurs.yaml` — dochodzą do reguły
+     commitu z tego kroku jak klucz `vimeo`.
    - Kurs bez `vimeo.automat: true`: jedna linia „kurs bez automatu Vimeo” i nic więcej.
 
 ## Zaległe filmy na Vimeo
@@ -402,5 +409,6 @@ Lekcje zaakceptowane, zanim kurs dostał `vimeo.automat: true`, albo takie, któ
   segmentów, jak dotąd. Intro i outro są wspólne dla wszystkich kursów:
   `kursy/_wspolne/oprawa/intro.mp4` i `outro.mp4` — bramka `/kurs-montaz`
   proponuje je jako pierwsze.
-- NIE publikuje do CMS — to `/kurs-publikuj` (kolejny etap). Na Vimeo wgrywa wyłącznie przez
+- Do CMS wysyła wyłącznie na staging, według sekcji „Wysyłka na staging (wołają ją inne skille)”
+  w `/kurs-publikuj` (krok 6, po `OK:` z `npm run vimeo`); na prod nigdy — to `/kurs-publikuj`. Na Vimeo wgrywa wyłącznie przez
   `npm run vimeo` (krok 6 i „Zaległe filmy na Vimeo”); nigdy niczego na Vimeo nie usuwa.

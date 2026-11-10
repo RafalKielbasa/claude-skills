@@ -29,6 +29,17 @@ względem bazy ekranów w `platforma/`.
 
   Rafał przyjął decyzje M2 jednym „OK”, bez uwag do UI. Obserwacja modelu, użytkownik tego nie
   komentował.
+- 2026-11-10, sesja 2755dabd-6161-454c-a435-d571c7e46f91 (id claude.ai niedostępny; paczka P1 DT-92/DT-93
+  wykonywana równolegle przez subagentów), dowód zadziałania rozwiązania: zanim rozdałem zadania, przeszedłem
+  listę skillem `konsultant-ux-kodozercy` w pytaniu o tryb. Wynik:
+  - poprawki błędów (podwójne marginesy, strzałka wstecz na ekranach błędu, snackbar nad CTA, etykiety
+    czytnika) poszły od razu do subagentów;
+  - nowy mechanizm (licznik nieprzeczytanych na zakładce Społeczność) dostał najpierw subagenta tylko do
+    rozpoznania;
+  - wariant licznika rozstrzygnął Rafał w rozmowie głosowej („pigułka w rogu ikony, odświeżanie co 60 s”),
+    dopiero potem była zmiana.
+
+  Zasada trafiła do pamięci projektu (`rownolegle-subagenty-paczka-poprawek`).
 
 ## Rozwiązanie
 W planie albo specu, który zmienia ekran Kodożerców ponad przeniesienie 1:1 na zatwierdzoną

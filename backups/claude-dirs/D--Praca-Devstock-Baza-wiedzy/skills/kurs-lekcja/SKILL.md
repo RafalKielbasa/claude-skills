@@ -233,14 +233,21 @@ przedstawione Rafałowi do bramki review.
    - Komenda kończy się `BŁĄD` (np. Codex niezalogowany) - w bramce jedno
      zdanie, że review Codexa się nie odbył i dlaczego; bramki nie blokuje.
    Po naniesieniu uruchom ponownie walidację z kroku 5.
-7. **BRAMKA: prezentacja Rafałowi.** Pokaż: ścieżki plików, streszczenie
+7. **BRAMKA: prezentacja Rafałowi.** Zanim ją pokażesz, wyślij lekcję na staging
+   (przeczytaj w `.claude/skills/kurs-publikuj/SKILL.md` sekcję „Wysyłka na staging (wołają ją inne skille)”,
+   nie wołaj skilla `/kurs-publikuj`, bo ten jest tylko na prod; walidacja
+   z kroków 5–6 już przeszła) i dołącz do bramki jej wynik: linki do aktywności albo
+   linię `POMINIĘTO`. Wysyłka nie jest bramką i niczego nie blokuje. Pokaż: ścieżki plików, streszczenie
    lekcji (3–5 zdań), werdykt z review-ai.md + co poprawiono, tabelę uwag
    Codexa (nr | segment | uwaga | zasadna? | naniesiona / po korekcie / dlaczego nie) i osobno
-   uwagi `Typ: treść` do decyzji, liczbę segmentów avatar. Uwagi Rafała nanoś od ręki i iteruj. Rafał może też
+   uwagi `Typ: treść` do decyzji, liczbę segmentów avatar. Uwagi Rafała nanoś od ręki i iteruj;
+   po każdej rundzie uwag, która zmieniła `artykul.md`, powtórz wysyłkę na staging (ta sama
+   sekcja). Rafał może też
    wpisać je wprost do `video/scenariusz.md` jako linie `[UWAGA: ...]` — wtedy
    nanosi je `/kurs-uwagi`, a nie ta procedura.
 8. **Po zatwierdzeniu przez Rafała:** ustaw `status.tresc: zatwierdzona`,
-   uruchom walidację ponownie. Zmiany zostają niezacommitowane - commit robi
+   uruchom walidację ponownie, potem wyślij lekcję na staging (sekcja „Wysyłka na staging
+   (wołają ją inne skille)” w `/kurs-publikuj`). Zmiany zostają niezacommitowane - commit robi
    Rafał.
    Dla `typ_video: demo` dopisz do `video/konspekt-nagrania.md` sekcję
    `## Do wklejenia i wpisania na ekranie`, między
@@ -297,6 +304,10 @@ Po zgodzie Rafała, wyłącznie dla tej jednej lekcji:
 
 - NIE renderuj video, NIE generuj quizów/ćwiczeń — to inne skille
   (etapy 1b/1c).
+- Na staging wysyłasz wyłącznie wg sekcji „Wysyłka na staging (wołają ją inne skille)”
+  w `/kurs-publikuj`; na prod nigdy (to `/kurs-publikuj` na jawne „na prod”). Błąd wysyłki
+  pokazujesz dosłownie z komendą ponowienia i idziesz dalej: bramka, status i walidacja
+  zostają.
 - Jeśli lekcja.yaml nie istnieje lub kurs nie ma programu — przerwij
   i skieruj na /kurs-nowy.
 - Poprawki po review Rafała nie wymagają ponownego review-ai ani

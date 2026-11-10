@@ -99,18 +99,26 @@ Wynik: `quiz.json` w statusie `status.zadania: do_review` (+ opcjonalnie
    `npm run validate -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog
    lekcji, nie kursu — błędy z innych lekcji nie wchodzą do tej bramki) —
    napraw wszystkie BŁĘDY.
-6. **BRAMKA: prezentacja Rafałowi.** Pokaż: treść pytań quizu (z poprawnymi
+6. **BRAMKA: prezentacja Rafałowi.** Zanim ją pokażesz, wyślij lekcję na staging
+   (przeczytaj w `.claude/skills/kurs-publikuj/SKILL.md` sekcję „Wysyłka na staging (wołają ją inne skille)”,
+   nie wołaj skilla `/kurs-publikuj`, bo ten jest tylko na prod; walidacja
+   z kroku 5 już przeszła) i dołącz do bramki jej wynik: linki do aktywności albo
+   linię `POMINIĘTO`. Wysyłka nie jest bramką i niczego nie blokuje. Pokaż: treść pytań quizu (z poprawnymi
    odpowiedziami oznaczonymi), wygenerowane ćwiczenie (polecenie + treść
    właściwa dla rodzaju) albo uzasadnienie, czemu go nie ma. Uwagi Rafała
-   nanoś od ręki i iteruj.
+   nanoś od ręki i iteruj; po każdej rundzie uwag, która zmieniła quiz albo
+   ćwiczenia, powtórz wysyłkę na staging (ta sama sekcja).
 7. **Po zatwierdzeniu przez Rafała:** ustaw `status.zadania: zatwierdzone`,
-   uruchom walidację ponownie. Zmiany zostają niezacommitowane — commit robi
+   uruchom walidację ponownie, potem wyślij lekcję na staging (sekcja „Wysyłka na staging
+   (wołają ją inne skille)” w `/kurs-publikuj`). Zmiany zostają niezacommitowane — commit robi
    Rafał.
 
 ## Zasady
 
-- NIE publikuje do CMS ani nie zakłada kont zewnętrznych API — to
-  `/kurs-publikuj`.
+- Publikuje na staging (sekcja „Wysyłka na staging (wołają ją inne skille)”
+  w `/kurs-publikuj`), na prod nigdy — to `/kurs-publikuj` na jawne „na prod”.
+  Nie zakłada kont zewnętrznych API. Błąd wysyłki pokazujesz dosłownie z komendą
+  ponowienia i idziesz dalej: bramka i status zostają.
 - Obsługiwane rodzaje ćwiczeń: `automatyzacja`, `prompt`, `dopasowanie`
   (patrz `struktura-zadania.md`). Inne typy platformy (kod, sandbox) są poza
   zakresem — kurs ma zasadę "bariera kodu", kursant nie pisze kodu.

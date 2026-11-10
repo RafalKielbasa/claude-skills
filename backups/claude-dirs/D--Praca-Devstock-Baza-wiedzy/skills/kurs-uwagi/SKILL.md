@@ -133,6 +133,11 @@ for the segments that actually changed.
 11. **After Rafał approves.** If you made further edits, run validation again. Changes stay
     uncommitted — Rafał commits. Offer a Conventional Commits message, e.g.
     `kurs(<slug>): uwagi do scenariusza lekcji NN-y`.
+    **Staging.** When propagation changed `artykul.md`, send the lesson to staging at the end
+    (after validation), following the section „Wysyłka na staging (wołają ją inne skille)” in
+    the file `.claude/skills/kurs-publikuj/SKILL.md` (read that section; do not invoke the
+    `/kurs-publikuj` skill, which is prod-only). The send is not a gate; show its failure verbatim with the retry command.
+    A run that left `artykul.md` untouched sends nothing.
 
 ## Auto mode (dry-pass markers)
 

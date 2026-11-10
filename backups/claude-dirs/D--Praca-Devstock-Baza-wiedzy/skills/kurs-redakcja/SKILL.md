@@ -268,6 +268,11 @@ z modelem i effortem wybranym przez Rafała na starcie.
    Jeśli poprawki po uwagach ruszyły `video/scenariusz.md` albo
    `video/konspekt-nagrania.md`, przegeneruj plan nagrania jeszcze raz
    (warunki i komenda — krok 7) i dopiero potem uruchom walidację.
+   **Staging.** Gdy redakcja zmieniła `artykul.md`, `quiz.json` albo `cwiczenia/`, na końcu (po
+   walidacji) wyślij lekcję na staging według sekcji „Wysyłka na staging (wołają ją inne skille)”
+   w pliku `.claude/skills/kurs-publikuj/SKILL.md` (przeczytaj tę sekcję; nie wołaj skilla
+   `/kurs-publikuj`, bo ten jest tylko na prod). Wysyłka nie jest bramką; jej błąd pokazujesz dosłownie z komendą ponowienia.
+   Redakcja samego scenariusza albo slajdów niczego nie wysyła.
 
 ## Zasady
 
