@@ -1076,3 +1076,15 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: prosba-o-dane-podana-jako-wariant-z-domyslnym-ok — rozwiązanie zastosowane dwa razy (pole w CMS, zrzuty z aplikacji), bez domyślnego OK, dane w jednej turze.
 - Wzorce repo tej sesji: założone makieta-aplikacji-mobilnej-ze-zrzutow-i-kodu-mobile i sekcja-doskonalenia-wola-cli-nieobecne-na-maszynie; dowód do plan-zmian-ui-kodozercow-bez-konsultanta-ux (patrz log repo).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: kod-decyzji-numerowany-od-nowa-koliduje-w-sesji (4 sesje), ogólny, bez skilla do ewolucji. Nawrotów brak.
+
+## 2026-11-10 — sesja 66df8097-5d05-43de-91f6-b84bd9bfc361 (id claude.ai niedostępny; Baza wiedzy + code-busters-v2, DT-101 #852: plany 2 i 3 subagentami, PR #1744, odbiór na stagingu, poprawka zapisu YAML, zamknięcie #852, start brainstormingu DT-102 #853)
+- założono: grep-c-zero-przerywa-lancuch-przed-zapisem (skill: ogólny, typ: porażka) — `grep -c` z wynikiem 0 przerwał łańcuch `&&` przed `git commit`; commit wyszedł dopiero osobną komendą.
+- założono: plan-z-nowa-zmienna-env-pomija-deklaracje-monorepo (skill: superpowers:writing-plans, typ: porażka) — plan 2 pominął `turbo.json`, trzy recenzje przepuściły, złapał Rafał checklistą ci-devops.
+- założono: odrzucone-wywolanie-narzedzia-moglo-sie-wykonac (skill: ogólny, typ: sukces) — odrzucona wysyłka na staging wykonała się w całości; skutki sprawdzone przed ponowieniem, bez drugiej wysyłki.
+- dopisano dowód: git-worktree-remove-pada-na-dlugich-sciezkach-windows — `code-busters-v2-dt101`, `rd` przeszedł tylko ze ścieżką dosłowną (harness odrzuca cel ze zmiennej); rozwiązanie uzupełnione.
+- dopisano dowód: board-tracker-cli-fails-whole-op-on-board-step — #852: „Could not close the issue”, a issue `CLOSED COMPLETED` i karta w Done; bez ponawiania.
+- dopisano dowód: sdd-bez-commitow-paczki-review-z-migawek — migawki jako obiekty drzewa przez tymczasowy indeks; commit na „wypychaj” dał dokładnie drzewo po recenzji.
+- dopisano dowód: paczka-review-wciaga-cudze-commity-galezi-dnia — cudzy `e74cadf0` w zakresie planu 3, paczka ograniczona ścieżkami.
+- dopisano dowód: przekierowanie-github-ukrywa-nieaktualne-odwolanie-do-repo — push na `Devstock-Academy/code-busters-v2`, PR w `kodozercy/code-busters#1744`.
+- Wzorce repo tej sesji: dowód do zapis-statusu-lekcji-przepisuje-caly-lekcja-yaml (patrz log repo).
+- Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: board-tracker-cli-fails-whole-op-on-board-step → `/evolve-skill board-tracker`; paczka-review-wciaga-cudze-commity-galezi-dnia (skill wtyczki superpowers); git-worktree-remove-pada-na-dlugich-sciezkach-windows (ogólny). Nawrotów brak.

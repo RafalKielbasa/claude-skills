@@ -29,6 +29,10 @@ w tej samej sekundzie, bez żadnej zmiany po ich stronie.
   (#1742), a push przeszedł na stary adres `origin`. Rejestr repo w `CLAUDE.md` „Bazy wiedzy” i
   lokalny `origin` w `code-busters-v2` dalej mówią `Devstock-Academy/code-busters-v2`. Zauważone
   tylko dlatego, że `gh` zwrócił URL nowego repo; żadna komenda nie padła.
+- 2026-11-10, sesja 66df8097-5d05-43de-91f6-b84bd9bfc361 (id claude.ai niedostępny; Baza wiedzy + code-busters-v2, DT-101 #852): `git push` na `origin` = `Devstock-Academy/code-busters-v2` odpowiedział, że repo
+  przeniesiono do `kodozercy/code-busters`, a `gh pr create` dał `https://github.com/kodozercy/code-busters/pull/1744`.
+  Rejestr repo w `CLAUDE.md` „Bazy wiedzy” i lokalny `origin` dalej na starej nazwie; zgłoszone Rafałowi, nic nie
+  zmieniane.
 
 ## Rozwiązanie
 Przy każdej zmianie nazwy albo przenosinach repo: `gh api repos/<owner>/<stara-nazwa> --jq

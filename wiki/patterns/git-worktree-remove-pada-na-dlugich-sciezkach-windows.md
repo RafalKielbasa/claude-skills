@@ -30,11 +30,16 @@ katalogu to dla gita osobne kroki, więc po błędzie zostaje sierota: katalog, 
   `code-busters-app-migration-w1-shell` bez `node_modules` zszedł zwykłym `git worktree remove`. Dwa z nich
   miały blokadę `locked claude session (pid …)` z martwym pid (`Get-Process` pusty) — najpierw `git worktree
   unlock`. Przed każdym: `git status --short` pusty i `merge-base --is-ancestor` gałęzi z DT-37.
+- 2026-11-10, sesja 66df8097-5d05-43de-91f6-b84bd9bfc361 (id claude.ai niedostępny; Baza wiedzy + code-busters-v2, DT-101 #852): po „OK” (D2 A) `git -C <główny checkout> worktree remove …/code-busters-v2-dt101` padł
+  `Filename too long`; worktree zniknął z listy, katalog został z plikami i `node_modules`, a `&&` nie dopuścił do
+  `branch -D`. Pierwsza próba `rd` z PowerShella ze ścieżką w zmiennej (`"\\?\$p"`) odrzucona przez harness
+  („if its variables are empty, it targets '\\'”); przeszło `cmd /c 'rd /s /q "\\?\D:\…\code-busters-v2-dt101"'`
+  ze ścieżką wpisaną dosłownie (`Test-Path` → `False`), potem `branch -D` i `worktree prune`.
 
 ## Rozwiązanie
 Usuwanie worktree na Windowsie: najpierw upewnij się, że drzewo jest czyste, a gałąź scalona
 (`git merge-base --is-ancestor`); blokadę `locked claude session (pid N)` zdejmij `git worktree unlock` dopiero
 po sprawdzeniu, że proces N nie żyje. Potem `git worktree remove <ścieżka>`. Gdy padnie `Filename too long`,
-skasuj katalog przez `cmd /c 'rd /s /q "\\?\<ścieżka bezwzględna>"'`, uruchom `git worktree prune` i sprawdź
+skasuj katalog przez `cmd /c 'rd /s /q "\\?\<ścieżka bezwzględna>"'` ze ścieżką wpisaną dosłownie, nie ze zmiennej (harness odrzuca `rd`, którego cel składa się ze zmiennej), uruchom `git worktree prune` i sprawdź
 wynik przez `Test-Path` oraz `git worktree list`. Nie zgłaszaj usunięcia na podstawie samego kodu wyjścia
 gita.

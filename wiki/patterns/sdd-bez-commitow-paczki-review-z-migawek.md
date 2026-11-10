@@ -48,7 +48,13 @@ odtwarzalny z `git log`. Diff jest jednak funkcja dwoch stanow plikow, nie dwoch
   zapytać. Rafał rozstrzygnął to dopiero po recenzji końcowej („D3 B”). Paczki rundy 0 dla nowych plików szły
   z `git diff --no-index /dev/null <plik>`, poprawki z migawek. Odstępstwo od „Rozwiązania”: stanu po
   implementacji zadania 3 nie zapisałem przed pierwszą rundą poprawek, więc migawkę rundy 0 odtworzyłem
-  `awk` z linii `+` paczki. Zadziałało, ale tylko dlatego, że plik był nowy w całości.
+  `awk` z linii `+` paczki. Zadziałało, ale tylko dlatego, że plik był nowy w całości.- 2026-11-10, sesja 66df8097-5d05-43de-91f6-b84bd9bfc361 (id claude.ai niedostępny; Baza wiedzy + code-busters-v2, DT-101 #852): plan 2 (endpoint Course w code-busters-v2, repo z regułą „commit tylko na słowo”) — dwa
+  zadania, recenzja całości i fala poprawek bez commita. Nowa odmiana migawki: drzewo robocze zapisane jako obiekt
+  drzewa przez tymczasowy indeks (`GIT_INDEX_FILE=tmp git read-tree HEAD; git add -A; git write-tree`), paczka to
+  `git diff <drzewo przed> <drzewo po>`; gałąź i prawdziwy indeks nietknięte, każda runda ma w ledgerze swój hash
+  drzewa. Na „wypychaj” jeden commit, którego `git write-tree` dał dokładnie drzewo po recenzji (`9d9a6773a`), co
+  dowiodło, że zacommitowano to, co recenzowano.
+
 ## Rozwiazanie
 W repo bez commitow per zadanie: na starcie zapisz ruling o migawkach w ledgerze, przed kazdym
 dispatchem kopiuj pliki zadania do katalogu roboczego planu, a paczke review buduj jako `diff -u`

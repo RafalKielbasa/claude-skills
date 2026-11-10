@@ -27,6 +27,10 @@ step of the CLI races with it or hits an archived item.
   `"GraphQL: Could not close the issue. (closeIssue)"`, exit 1. The skill's interim rule worked: one
   `gh issue view 851 --json state,stateReason,closedAt` showed `CLOSED`/`COMPLETED` at 10:31:08Z, no retry.
   The later `trail` on the same issue returned `closed: true`, as expected.
+- 2026-11-10, sesja 66df8097-5d05-43de-91f6-b84bd9bfc361 (id claude.ai niedostępny; Baza wiedzy + code-busters-v2, DT-101 #852): `status --ref devstock-org/devstock-team#852 --to done` po „ok” (D1 A) zwrócił
+  `"GraphQL: Could not close the issue. (closeIssue)"`, exit 1. Jeden odczyt `gh issue view 852 --json
+  state,stateReason,closedAt` i zapytanie GraphQL o status karty: `CLOSED COMPLETED` 21:19:20Z, „Devstock main
+  board: Done”; bez ponawiania. Późniejszy `trail` zwrócił `closed: true`, zgodnie z oczekiwaniem.
 
 ## Rozwiązanie
 In the CLI: after a failing step, read the issue state and board status and return `ok: true` with a

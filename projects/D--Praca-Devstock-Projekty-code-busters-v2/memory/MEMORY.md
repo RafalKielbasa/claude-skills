@@ -3,3 +3,4 @@
 - [Streaming makes redirect/notFound 200](locale-loading-streams-status.md) — `[locale]/loading.tsx` streams pages: server `redirect()`/`notFound()` answer 200 with meta refresh / noindex; flag specs promising 307/404
 - [Shared index: commit own lines](shared-index-own-lines-commit.md) — another session's uncommitted index edits: stage your version via hash-object/update-index, not a pathspec commit
 - [Python CRLF on Windows](python-crlf-on-windows.md) — text-mode Python writes turn LF files into CRLF; use newline='' and check git ls-files --eol
+- [Worktree removal on Windows](worktree-removal-on-windows.md) — resumed session: ExitWorktree(remove) refuses; keep, `git worktree remove` (dies on long node_modules paths), then `rd /s /q "\\?\…"`, prune, `branch -d`
