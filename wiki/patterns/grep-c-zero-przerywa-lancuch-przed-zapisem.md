@@ -21,9 +21,15 @@ porażką dla powłoki.
   (DT-83) zamiast mojego. Commit poszedł dopiero osobną komendą (`be977301`). Wcześniej tego samego
   dnia `git worktree remove … && git branch -D …` zostawił gałąź z tego samego powodu (kod błędu
   pierwszej komendy).
+- 2026-11-10, ta sama sesja, odwrotny skutek tej samej przyczyny: `git switch main 2>&1 | tail -2 && git pull
+  --ff-only … && git branch -d …`. `switch` odmówił („Please commit your changes or stash them”), ale kod łańcucha
+  dał `tail` (0), więc `git pull --ff-only` uruchomił się na gałęzi dnia („Already up to date”, bez szkody), a
+  `branch -d` padł na gałęzi wybranej w checkoucie. Naprawa: `git fetch origin main:main`, potem sam `git switch main`.
 
 ## Rozwiązanie
-Kontrole diagnostyczne (`grep -c`, `test`, `diff --quiet`) nie stoją w łańcuchu `&&` przed zapisem:
+Komenda, od której zależy dalszy krok (`git switch`, `git commit`), nie idzie przez rurę (`| tail`, `| head`):
+kod rury to kod ostatniej komendy, więc błąd znika, a łańcuch rusza dalej. Kroki zmieniające gałąź uruchamiaj
+osobno i czytaj ich wynik. Kontrole diagnostyczne (`grep -c`, `test`, `diff --quiet`) nie stoją w łańcuchu `&&` przed zapisem:
 oddziel je `;` albo dopisz `|| true`, a o zapisie decyduj osobno. Po każdym commicie potwierdź go
 jego własnym wyjściem (linia `[gałąź hash] tytuł`), a nie ostatnią linią łańcucha. Do liczenia
 znaków CR używaj `tr -cd '\r' | wc -c` (zob. python-write-text-na-windows-zmienia-konce-linii).
