@@ -1,1 +1,1 @@
-- [Android emulator setup](android-emulator-setup.md) — SDK in D:\Android\Sdk, AVD Medium_Phone_API_37.0, EAS dev client 9a9c5a26, Android 17 local-network permission, slow first load
+- [Android emulator setup](android-emulator-setup.md) — SDK in D:\Android\Sdk, AVD Medium_Phone_API_37.0, EAS dev client cc074e54 (local build fails on long paths), Metro --clear after pnpm install, JS/CSS task deep links, Android 17 local-network permission
