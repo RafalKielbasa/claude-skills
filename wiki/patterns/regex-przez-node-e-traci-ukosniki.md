@@ -42,6 +42,7 @@ poprawiania wzorca zamiast sposobu jego uruchomienia.
   w `src/transcribe.js` — jako `split('` + nowa linia + `', 10)`. Dwa razy w jednej sesji, oba razy
   wykryte dopiero `cat -A`. Wniosek rozszerza tę stronę: samo zapisanie skryptu do pliku nie
   wystarcza, jeśli **plik powstaje heredokiem** — transport psuje treść, zanim node ją zobaczy.
+- 2026-11-12, sesja 62c8c4bb-8377-436d-a2b6-aea1aa8bd57b: `sed -i 's/ (?=\\S)\/gu;/ (?=\\S|$)\/gu;/'` w narzędziu Bash nie zmienił skryptu i nie zgłosił błędu - wzorzec z okrojonymi ukośnikami nic nie dopasował, a skrypt dalej pomijał sierotki przed kodem inline. Ta sama zmiana przez Edit przeszła od razu. Ten sam mechanizm co pamięć `bash-heredoc-backslash-halved`: tekst z ukośnikiem idzie przez Edit/Write, nie przez sed w Bashu.
 
 ## Rozwiązanie
 

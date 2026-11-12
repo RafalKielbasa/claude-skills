@@ -44,6 +44,7 @@ głowy.
     kursu: wolne”, „Kolejka: pusta”, czyli brak blokady narzędzia.
   - Powody znalazłem dopiero wtedy: maile 2.1 z `mail_age days_ago 1` oraz ścieżki resetu, które nigdy nie
     działały na koncie. Rafał przyjął kolejność („ok”), ale kosztowało to dodatkową turę.
+- 2026-11-12, sesja 62c8c4bb-8377-436d-a2b6-aea1aa8bd57b (Baza wiedzy, lekcja agenty-ai 4.1): raport subagenta przytoczył zakres specu pulpitu z gałęzi `kurs/claude-na-komputerze` („Out of scope: the terminal and other desktop apps”), oznaczając wnioski jako „Inferred”. Napisałem Rafałowi, że automat pulpitu „obsługuje wyłącznie aplikację Claude Desktop”, i oparłem na tym warianty decyzji. Rafał: „Grzegorz pracował nad logiką która to umożliwia na branchu kurs/claude-na-komputerze”. Dopiero odczyt kodu na gałęzi (`schemat-pulpitu.js:12` - każda usługa z polem `pulpit`; `aplikacja.js:18` - dowolny `.exe` z `kurs.yaml`) pokazał, że silnik jest ogólny, a ograniczenie dotyczy jedynej gotowej usługi i zakresu specu, nie kodu.
 
 ## Rozwiązanie
 Ograniczenie narzędzia, które znasz tylko z podsumowania kontekstu, traktuj jak hipotezę. Zanim oddasz pracę

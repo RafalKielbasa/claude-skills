@@ -48,6 +48,7 @@ gdy scenariusz jest już zatwierdzony i czasem wyrenderowany.
   podpowiedzi. Położenie „pod polem” dopisano przy pisaniu, a kod pokazuje dymek przy etykiecie. Przebieg
   próbny, w którym automat musi znaleźć każdy nazwany element, okazał się kontrolą, której ten wzorzec brakowało.
   Narracja poprawiona w `38ed1e52`.
+- 2026-11-12, sesja 62c8c4bb-8377-436d-a2b6-aea1aa8bd57b: lekcja agenty-ai 4.1, pisana 2026-09-22 bez otwarcia n8n, miała „menu z trzema kropkami w prawym górnym rogu” (dokumentacja mówi dziś o „Workflow menu icon” w nagłówku kanwy), przycisk „Templates” „przy zakładaniu nowego przepływu” (niepotwierdzony w żadnej lekcji ani sondzie) i „otwórz adres formularza w nowej karcie” (Execute step otwiera formularz sam, jak w 1.3:43). Wykryte przy przejściu zgodności, nie przy klikaniu; położenie menu oddane przebiegowi próbnemu jako wiersz przygotowania.
 
 ## Rozwiązanie
 

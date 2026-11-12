@@ -62,7 +62,7 @@ popełnienia od zera.
   liniach" działa jako pętla, o ile fixer puszcza się tylko na liniach, które
   się zmieniło. Nadal nie ma `npm run sierotki` w `course-pipeline` ani reguły
   w żadnym skillcie `kurs-*` — trzeci raz skrypt powstał od zera.
-
+- 2026-11-12, sesja 62c8c4bb-8377-436d-a2b6-aea1aa8bd57b: własny skrypt wstawiający U+00A0 do artykułu agenty-ai 4.1 dzielił linię na prozę i kod inline i szukał `([aiouwz]) (?=\S)` w samej prozie. Pominął 5 jednoliterowych słów stojących tuż przed kodem inline (`i \`typeVersion\``, `(źródło w \`zrodla.md\`)`): w odcinku prozy po spacji nie ma już znaku. Walidator wycina kod przed sprawdzeniem (`bezKodu` w `typografia.js`), więc te słowa zostały sierotkami („5 wystąpień”). Naprawa: koniec odcinka przed kodem liczony jak granica (`(?=\S|$)`), drugi przebieg i walidacja czysta. `course-pipeline` nadal nie ma fixera, a krok 3f `/kurs-lekcja` nie wskazuje narzędzia.
 
 ## Rozwiązanie
 Regex z walidatora kopiuj do skryptu naprawczego, ale **przepisz lookahead na

@@ -68,6 +68,7 @@ dokładnie ten tekst, który kursant zobaczy na ekranie.
   a n8n pokazuje `description` w dymku znaku zapytania przy etykiecie (`N8nInputLabel`, `show-after` 300 ms).
   Rozjazd wyszedł dopiero w przebiegu próbnym automatu (krok 15). Cytat z kodu był prawdziwy, a twierdzenie
   o miejscu na ekranie zostało dopowiedziane.
+- 2026-11-12, sesja 62c8c4bb-8377-436d-a2b6-aea1aa8bd57b: dokumentacja eksportu n8n nie mówi, w jakiej postaci schowek dostaje JSON węzłów. `gh search code` znalazł `packages/frontend/editor-ui/src/app/composables/useCanvasOperations.ts` (WebFetch po starej ścieżce bez `app/` dał 404), a `gh api` dał `copyNodes` z `clipboard.copy(JSON.stringify(workflowData, null, 2))` (linia 3727) i `getNodesToSave` z kluczami `nodes`, `connections`, `pinData`. Rozstrzygnęło, że kursantowi lekcji 4.1 wystarczy Notatnik, i potwierdziło klucze z kroku 2; wpis w `zrodla.md` z linkiem do pliku.
 
 ## Rozwiązanie
 Gdy lekcja opiera się na konkretnym polu, przycisku albo komunikacie

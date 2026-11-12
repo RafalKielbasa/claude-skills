@@ -30,6 +30,7 @@ poza zasięgiem.
   zmyślony fakt podany jako poprawka stylistyczna. Odrzucona na regule, nie na guście. Niezależnie
   agent grupy B sam oznaczył jedyne dopisane przez siebie zdanie w pierwszej osobie („Ja też się na
   tym potknąłem.") jako wymagające decyzji Rafała — czyli redaktor granicę widział, a recenzent nie.
+- 2026-11-12, sesja 62c8c4bb-8377-436d-a2b6-aea1aa8bd57b: `review-ai.md` lekcji agenty-ai 4.1 z 2026-09-22 (punkt 7, R8) proponował gotowe zdanie „Sam kiedyś szukałem takiego błędu dobre pół godziny, bo zjadło mi klamrę przy kopiowaniu” - zmyśloną wpadkę prowadzącego. W tej sesji poszło do bramki jako decyzja (D2); Rafał wybrał wariant bez anegdoty. Kontrast: review-codex tej samej lekcji oznaczył brak R8 jako „Typ: treść” z dopiskiem „nie należy wymyślać takiego zdarzenia redakcyjnie”, a ponowny review-ai z 2026-11-12 R8 już nie podniósł.
 
 ## Rozwiązanie
 
