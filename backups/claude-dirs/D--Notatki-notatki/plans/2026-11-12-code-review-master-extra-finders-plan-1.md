@@ -77,19 +77,19 @@ Not code. Produces the pinned tag and a real output fixture the later tasks test
 
 ---
 
-## Task 2: Changed-line hunks and the PR number in `plan.json`
+## Task 2: Changed-line hunks and the PR number in the target
 
 **Files:**
 - Create: `lib/hunks.mjs`
-- Modify: `bin/crm.mjs` `plan` (around `:162`, the returned object)
-- Test: `test/hunks.test.mjs`, `test/cli.test.mjs`
+- Modify: `lib/target.mjs` `collectTarget` (return object at `:124`)
+- Test: `test/hunks.test.mjs`, `test/target.test.mjs`, `test/cli.test.mjs`
 
 **Interfaces:**
 - Produces:
   - `parseHunks(patch: string): Map<string, Array<[number, number]>>` — new-side added line ranges per file from a unified diff with any context size; a `+c,0` hunk adds nothing; path from the `+++ b/<path>` line; `+++ /dev/null` files are absent.
   - `overlapsHunks(hunks: Map, file: string, lines: [number, number]): boolean`
-  - `changedHunks({ repo: string, plan: object, git?: (args: string[]) => string, gh?: (args: string[]) => string }): Map | null` — `branch`: `git -C <repo> diff -U0 <plan.target.base> HEAD`; `pr`: `gh pr diff <plan.pr>`; `null` when the call throws.
-  - `plan.json` gains `pr: number | null`.
+  - `changedHunks({ repo: string, plan: object, git?: (args: string[]) => string, gh?: (args: string[]) => string }): Map | null` — `branch`: `git -C <repo> diff -U0 <plan.target.base> HEAD`; `pr`: `gh pr diff <plan.target.pr>`; `null` when the call throws.
+  - `collectTarget` returns `pr: number | null` (`Number(opts.pr)` in `pr` mode, `null` otherwise), so `plan.json` carries it as `target.pr`.
 
 - [ ] **Step 1: Write failing tests** in `test/hunks.test.mjs`:
   - `added ranges are read from the new side` — patch with `@@ -3,0 +4,2 @@` and `@@ -10 +12 @@` for `+++ b/a.ts` → `[[4, 5], [12, 12]]`.
@@ -98,9 +98,11 @@ Not code. Produces the pinned tag and a real output fixture the later tasks test
   - `overlap is inclusive at both ends` — ranges `[[4, 5]]`: `[5, 9]` true, `[6, 9]` false, `[1, 4]` true.
   - `changedHunks returns null when the diff cannot be computed` — injected `gh` throws → `null`.
   - `changedHunks asks gh for the PR diff in pr mode` — injected `gh` records args → `['pr', 'diff', '42']`.
-- [ ] **Step 2: Write a failing CLI test** in `test/cli.test.mjs`: `a branch plan records pr as null` — `plan --mode branch` writes `pr: null` into `plan.json` (the `pr` path needs a live `gh` and is covered by the `changedHunks` test above).
-- [ ] **Step 3: Run** both files — new tests FAIL.
-- [ ] **Step 4: Implement** `lib/hunks.mjs` and add `pr: args.pr === undefined ? null : Number(args.pr)` to the `plan` result.
+- [ ] **Step 2: Write failing tests for the PR number:**
+  - `test/target.test.mjs`: `a pr target records its number` — `collectTarget(dir, 'pr', { pr: '42', gh })` with the file's existing injected `gh` stub → `target.pr === 42`.
+  - `test/cli.test.mjs`: `a branch plan records pr as null` — `plan --mode branch` writes `target.pr: null` into `plan.json`.
+- [ ] **Step 3: Run** the three files — new tests FAIL.
+- [ ] **Step 4: Implement** `lib/hunks.mjs` and the `pr` field in `collectTarget`.
 - [ ] **Step 5: Run** the whole suite — all pass.
 
 ---
@@ -117,7 +119,7 @@ Not code. Produces the pinned tag and a real output fixture the later tasks test
 - Produces:
   - `buildSemgrepArgs({ repo: string, image: string, name: string, packs: string[], files: string[] }): string[]` — the `docker` argv: `run --rm --pull=never --name <name> -v <repo>:/src:ro -w /src <image> semgrep scan --metrics=off --json --quiet --config <p1> … <file> …`, files with `\` turned into `/`.
   - `mapSemgrepResults(output: object, { axisId: string, sourceOf: (path) => string }): Finding[]` — §6.2 mapping: `axis = axisId`, `lines = [start.line, end.line]`, `evidence` = those lines read through `sourceOf` joined with `\n`, `severity` from `ERROR|CRITICAL|HIGH → blocking`, `WARNING|MEDIUM → suggestion`, `INFO|LOW → nitpick`, anything else `suggestion`; `claim` = first sentence of `extra.message` + ` (semgrep: <check_id>)`; `rule = check_id`.
-  - `runSemgrep({ repo, plan, settings, spawn?, hunks, headOf? }): { status, findings, scannedAxes: string[], outsideChange: number, hunksAvailable: boolean, image: string, reason?: string }` — rules come from each selected entry's member `axes[].semgrep`; `scannedAxes` lists member axis ids; `image` is echoed for the report line.
+  - `runSemgrep({ runId: string, repo, plan, settings, spawn?, hunks, headOf? }): { status, findings, scannedAxes: string[], outsideChange: number, hunksAvailable: boolean, image: string, reason?: string, detail?: string }` — rules come from each selected entry's member `axes[].semgrep`; `scannedAxes` lists member axis ids; `image` is echoed for the report line; `runId` names the containers; `detail` is the first non-empty line of Docker's stderr (or the spawn error message), trimmed, at most 200 characters, present on every `unavailable` and `unparsable` (§6.2 "raw stderr").
   - Side files: `<runId>-semgrep-raw.json` (array), `<runId>-semgrep-status.json` (the object without `findings`, plus `found`).
   - Command `crm semgrep --run <runId>` returns the status object.
 
@@ -138,8 +140,10 @@ Behaviour `runSemgrep` must have (tests below pin each):
   - `a missing file is not handed to docker` — plan lists `gone.ts` (absent) and `a.ts` → spawned argv has `a.ts` and not `gone.ts`.
   - `a pr run on a different checkout does not scan` — `headOf` returns `abc`, `plan.target.head` `def` → `unavailable`, `pr-not-checked-out`, spawn never called.
   - `docker missing, image missing, daemon error, timeout, garbage` — five cases → statuses/reasons as listed above; the timeout case's second spawn call is `['rm', '-f', 'crm-<runId>-0']`.
+  - `docker's error is kept as one line of detail` — stderr `"error during connect: open //./pipe/docker_engine\nmore\n"` → `detail === 'error during connect: open //./pipe/docker_engine'`; a 300-character first line is cut to 200.
+  - `every semgrep severity maps as the spec says` — table over `ERROR`, `CRITICAL`, `HIGH` → `blocking`; `WARNING`, `MEDIUM` → `suggestion`; `INFO`, `LOW` → `nitpick`; `WHATEVER` → `suggestion`.
 - [ ] **Step 2: Write failing CLI tests** in `test/cli.test.mjs`:
-  - `semgrep is not-in-mode outside pr and branch` — `plan --mode working` then `semgrep --run <id>` → `{ status: 'not-in-mode' }`, no `-semgrep-raw.json` file.
+  - `semgrep is not-in-mode outside pr and branch` — for each of `working`, `since` (seed `state.json` `last_reviewed_sha` with the first commit's sha, as existing `since` tests do) and `full`: `plan` then `semgrep --run <id>` → `{ status: 'not-in-mode' }`, and neither `<runId>-semgrep-raw.json` nor `<runId>-semgrep-status.json` exists.
   - `semgrep with no rules in the plan has nothing to scan` — `branch` run, config without `semgrep:` → `nothing-to-scan`, status file written.
 - [ ] **Step 3: Run** both files — new tests FAIL.
 - [ ] **Step 4: Implement** `lib/semgrep.mjs` and the command (`headOf` default: `git -C <repo> rev-parse HEAD`; `hunks` from `changedHunks`).
@@ -173,7 +177,7 @@ Behaviour `runSemgrep` must have (tests below pin each):
   - `unparsable output is reported, not thrown` — `runCodexFind` with spawn returning `status 0, stdout 'no json'` → `status: 'unparsable'`.
   - `the finder reuses the Windows fallback` — spawn fails first with ENOENT on `win32` → second call is `cmd.exe /d /s /c codex exec --sandbox read-only -`, prompt only on stdin.
 - [ ] **Step 2: Write a failing prompt test** in `test/prompts.test.mjs`: `the codex finder prompt fixes the return shape and forbids edits` — `codex-find.md` matches `/verbatim/i`, `/"fix"/`, `/\[\]/`, `/do not modify any file/i`, `/{{AXES}}/`.
-- [ ] **Step 3: Write failing CLI tests**: `codex-find is not-in-mode outside pr and branch`; `codex-find honours codex.find: false` (branch run, config frontmatter `codex: { find: false }` → `disabled`, status file written, no raw file).
+- [ ] **Step 3: Write failing CLI tests**: `codex-find is not-in-mode outside pr and branch` (same three modes as Task 3, asserting neither `<runId>-codex-raw.json` nor `<runId>-codex-find-status.json` exists); `codex-find honours codex.find: false` (branch run, config frontmatter `codex: { find: false }` → `disabled`, status file written, no raw file).
 - [ ] **Step 4: Run** the three files — new tests FAIL.
 - [ ] **Step 5: Implement** the prompt, `spawnCodex` extraction, finder functions and command.
 - [ ] **Step 6: Run** the whole suite — all pass, including every pre-existing `codex.test.mjs` test unchanged.
@@ -190,12 +194,12 @@ Behaviour `runSemgrep` must have (tests below pin each):
 - Consumes: commands `codex-find`, `semgrep` (Tasks 3–4).
 - Produces:
   - `crm finders --run <id> --start` → `{ started: true }`, or `{ started: false, reason: 'not-in-mode' }`. Spawns `process.execPath <skill>/bin/crm.mjs finders-worker --run <id> --repo <repo>` with `detached: true, stdio: 'ignore', windowsHide: true`, then `unref()`, and writes `<runId>-finders.pid` (the worker's pid).
-  - `crm finders-worker` (internal): starts `codex-find` and `semgrep` as two concurrent child processes (async `spawn`, `--json`), parses each stdout line, and when both exit writes `<runId>-finders.json`: `{ codexFind: <status object>, semgrep: <status object>, finishedAt: ISO }`. A child that exits non-zero or prints no JSON becomes `{ status: 'unavailable', reason: 'command-failed' }` for that finder.
+  - `crm finders-worker` (internal): starts `codex-find` and `semgrep` as two concurrent child processes (async `spawn`, `--json`), parses each stdout line, and when both exit writes `<runId>-finders.json`: `{ codexFind: <status object>, semgrep: <status object>, finishedAt: ISO }`, where each status object also carries `startedAt` (ISO), `finishedAt` (ISO) and `durationMs` (number) for that finder alone. A child that exits non-zero or prints no JSON becomes `{ status: 'unavailable', reason: 'command-failed', detail: <first stderr line> }` for that finder, timings included.
   - `crm finders --run <id> --wait [--max-s <n>]` (default 500): returns the content of `<runId>-finders.json` as soon as it exists; `{ status: 'pending' }` after `--max-s`; `{ codexFind: { status: 'unavailable', reason: 'worker-died' }, semgrep: { … same } }` — and writes that to `<runId>-finders.json` — when the pid in `<runId>-finders.pid` is no longer alive (`process.kill(pid, 0)` throws `ESRCH`) and the file is still missing. Sleep between checks without busy-waiting (`Atomics.wait` on a `SharedArrayBuffer`, 1 s).
   - `--wait` without a prior `--start` (no pid file, no result file) → exit 2 via `fail()` with a message naming `crm finders --start`.
 
 - [ ] **Step 1: Write failing CLI tests** in `test/cli.test.mjs` (throwaway repo with a `main` commit and a feature branch commit; config frontmatter `codex: { enabled: false }`, no `semgrep:` axes, so the worker finishes in well under a second):
-  - `finders start returns at once and wait collects both statuses` — `plan --mode branch`, `finders --start` → `started: true`; `finders --wait --max-s 20` → `codexFind.status === 'disabled'`, `semgrep.status === 'nothing-to-scan'`.
+  - `finders start returns at once and wait collects both statuses` — `plan --mode branch`, `finders --start` → `started: true`; `finders --wait --max-s 20` → `codexFind.status === 'disabled'`, `semgrep.status === 'nothing-to-scan'`; each of the two has a string `startedAt` and `finishedAt` and a numeric `durationMs >= 0`.
   - `finders do not start outside pr and branch` — `working` plan → `started: false`, `reason: 'not-in-mode'`, no pid file.
   - `a dead worker is reported, not waited on` — write `<runId>-finders.pid` containing a pid that is not alive (spawn `process.execPath -e ""`, wait for it to exit, use its pid) and no result file → `finders --wait --max-s 20` returns within 5 s with both `reason: 'worker-died'`.
   - `wait without start is a broken run` — exit code 2, stderr matches `/finders --start/`.
@@ -279,7 +283,7 @@ for each cluster: kept = highest severity, tie by source order;
 
 Exact Polish copy (report). `{n uwag}` means the existing `plural()` with `uwaga`/`uwagi`/`uwag`:
 - codex finder, under the existing codex note: `ok` → `codex jako szukający: {n uwag} przed weryfikacją.`; `disabled` → `codex jako szukający wyłączony w konfiguracji.`; `unavailable` → `**codex jako szukający niedostępny** — uwagi pochodzą tylko od pozostałych źródeł.`; `timeout` → `**codex jako szukający przekroczył limit czasu** — uwagi pochodzą tylko od pozostałych źródeł.`; `unparsable` → `**odpowiedź codexa jako szukającego nieczytelna** — uwagi pochodzą tylko od pozostałych źródeł.`
-- Semgrep: `ok` → `Semgrep (osie: {scannedAxes}): {n uwag} w zmienionych liniach, {outsideChange} poza zmianą pominięto.`, plus ` Filtr zmienionych linii niedostępny — wyniki niefiltrowane.` when `hunksAvailable` is false; `nothing-to-scan` → `Semgrep: żadna oś w tym przebiegu nie ma reguł.`; `disabled` → `Semgrep wyłączony w konfiguracji.`; `unavailable` + `image-not-pulled` → `**Semgrep niedostępny**: brak obrazu \`{image}\` — uruchom raz \`docker pull {image}\`.`; `unavailable` + `pr-not-checked-out` → `**Semgrep pominięty**: lokalny checkout nie jest tipem PR-a.`; other `unavailable` → `**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany).`; `timeout` → `**Semgrep przekroczył limit czasu.**`
+- Semgrep: `ok` → `Semgrep (osie: {scannedAxes}): {n uwag} w zmienionych liniach, {outsideChange} poza zmianą pominięto.`, plus ` Filtr zmienionych linii niedostępny — wyniki niefiltrowane.` when `hunksAvailable` is false; `nothing-to-scan` → `Semgrep: żadna oś w tym przebiegu nie ma reguł.`; `disabled` → `Semgrep wyłączony w konfiguracji.`; `unavailable` + `image-not-pulled` → `**Semgrep niedostępny**: brak obrazu \`{image}\` — uruchom raz \`docker pull {image}\`.`; `unavailable` + `pr-not-checked-out` → `**Semgrep pominięty**: lokalny checkout nie jest tipem PR-a.`; other `unavailable` → `**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany): \`{detail}\`.` (without the `: \`{detail}\`` part when `detail` is empty); `timeout` → `**Semgrep przekroczył limit czasu.**`; `unparsable` → `**odpowiedź Semgrepa nieczytelna** — brak uwag od Semgrepa.`
 - Either finder `worker-died` → `**proces szukających przerwał pracę** — brak uwag od codexa jako szukającego i od Semgrepa.` (one line instead of both).
 - Mode `pr`/`branch` with `finders === null` → `**krok szukających nie został wykonany** — uwagi pochodzą tylko od agentów Sonnet.`
 - Sources line, only when `finders` is present: `Źródła uwag: sonnet {a}, codex {b}, semgrep {c}; wskazane przez więcej niż jedno źródło: {d}.` (counts over kept findings, a finding counted once per source in `sources`).
@@ -288,7 +292,7 @@ Exact Polish copy (report). `{n uwag}` means the existing `plural()` with `uwaga
 - Artifact (English, like its existing labels): `CODEX_LABEL.own = 'Codex: own finding'`; a `source` badge with the joined sources; a third `<select data-filter="source">` with options built from the sources present; finder status lines mirroring the report's meaning in English.
 
 - [ ] **Step 1: Write failing tests** in `test/report.test.mjs`:
-  - `each finder outcome is named for what it was` — table-driven over the statuses above; asserts the exact Polish line for each and that no raw enum (`/\b(unavailable|timeout|unparsable|not-in-mode)\b/`) appears.
+  - `each finder outcome is named for what it was` — table-driven over every status above for both finders, Semgrep `unparsable` and `unavailable` with and without `detail` included; asserts the exact Polish line for each and that no raw enum (`/\b(unavailable|timeout|unparsable|not-in-mode)\b/`) appears.
   - `a finding shows its sources and what else was claimed at that place` — `sources ['sonnet','codex']`, one `alsoClaimed` → `źródło: sonnet+codex` and `_Też w tym miejscu (sonnet):_`.
   - `codex's own finding is not labelled as confirmed` — `codex.verdict 'own'` → contains `codex: własne znalezisko`, not `codex: potwierdza`.
   - `a working-mode report says nothing about finders` — mode `working`, `finders null` → no `szukając` and no `Źródła uwag`.
@@ -336,4 +340,4 @@ Manual, interactive, in a session in `D:\Praca\Devstock\Projekty\code-busters-v2
 - [ ] **Run A — `branch`:** on a branch Rafal names, Docker running, image pulled. Pass when: the budget line shows the `Dodatkowo` line; `raport.md` shows a codex-finder line and a Semgrep line with status `ok` (or a named, true reason); at least one finding shows `źródło:`; `crm finish` exit 0 or 1 (not 2).
 - [ ] **Run B — `pr <n>`:** a PR Rafal names, checked out locally. Same pass criteria; additionally the Semgrep line counts `poza zmianą`.
 - [ ] **Run C — Docker stopped** (Rafal stops Docker Desktop): `pr <n>` again. Pass when the Semgrep line reads `Semgrep niedostępny …` and the run completes.
-- [ ] **Wall-clock note:** record each run's duration and the codex finder's share (from `<runId>-finders.json` `finishedAt` vs plan time) to judge cost; nothing is changed on that basis in this plan.
+- [ ] **Wall-clock note:** record each run's duration and each finder's `durationMs` from `<runId>-finders.json`, to judge cost; nothing is changed on that basis in this plan.
