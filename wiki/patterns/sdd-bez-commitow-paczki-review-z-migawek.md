@@ -54,6 +54,14 @@ odtwarzalny z `git log`. Diff jest jednak funkcja dwoch stanow plikow, nie dwoch
   `git diff <drzewo przed> <drzewo po>`; gałąź i prawdziwy indeks nietknięte, każda runda ma w ledgerze swój hash
   drzewa. Na „wypychaj” jeden commit, którego `git write-tree` dał dokładnie drzewo po recenzji (`9d9a6773a`), co
   dowiodło, że zacommitowano to, co recenzowano.
+- 2026-11-12, sesja 70c314dd-32d0-4c65-ac33-357c06802095 (id claude.ai niedostępny; code-busters-v2 jako katalog, praca w ~/.claude/skills/code-review-master): plan `code-review-master-extra-finders-plan-1`, dziewięć zadań, pięć rund poprawek
+  i fala po recenzji całości bez commita w `~/.claude`. Nowa odmiana migawki: osobny katalog gita w scratchpadzie
+  podpięty do skilla (`git --git-dir=<scratch>/shadow.git --work-tree=<skill> add -A && commit` po każdym zadaniu
+  i rundzie), paczka to `diff BASE HEAD` w tym repo. Odporność potwierdzona w praktyce: automatyczny backup
+  `~/.claude` zacommitował i wypchnął częściowe stany skilla trzy razy w trakcie runu (15:01, 15:23, 15:54), a żadna
+  paczka tego nie odczuła, bo shadow repo nie zależy od HEAD prawdziwego repo. Jedna pułapka: plik z bajtem NUL
+  w bazie zakresu daje „Binary files differ” także dla poprawionej wersji — paczkę rundy poprawek trzeba było złożyć
+  z `git diff --text`.
 
 ## Rozwiazanie
 W repo bez commitow per zadanie: na starcie zapisz ruling o migawkach w ledgerze, przed kazdym

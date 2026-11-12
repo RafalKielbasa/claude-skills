@@ -24,6 +24,13 @@ nie odróżnia „mój zapis" od „czyjś zapis" w stanie współdzielonym.
   (4) „ostatnie issue w repo bez zmian", a issues #561–#563 założył w tym czasie członek zespołu;
   (5) fixture „zamkniętego" spotkania bez znacznika `**Opublikowano:**`, który nowa reguła czyni
   warunkiem zamknięcia.
+- 2026-11-12, sesja 70c314dd-32d0-4c65-ac33-357c06802095 (id claude.ai niedostępny; code-busters-v2 jako katalog, praca w ~/.claude/skills/code-review-master): wykonanie planu subagentami, trzy testy implementerów (Sonnet) przechodziły
+  z niewłaściwego powodu, każdy złapany dopiero przez recenzenta zadania: (1) `changedHunks returns null when the diff
+  cannot be computed` — plan bez `mode: 'pr'`, więc `null` brał się z `TypeError` gita na `undefined`, a wstrzyknięty
+  `gh` nie był wołany; (2) filtr zmienionych linii Semgrepa sprawdzany samymi licznikami (`findings.length === 1`,
+  `outsideChange === 1`), co przechodziło także z odwróconym warunkiem; (3) test „podrobione `source` jest nadpisane”
+  podawał od razu `source: 'codex'`, więc nie sprawdzał nadpisania, na którym stoi reguła `fix`. Każda poprawka
+  dopisała asercję na samym artefakcie (`lines` [11, 11], wywołanie `gh`, `sources` w zapisanym `findings.json`).
 
 ## Rozwiązanie
 Asercję formułuj na artefakcie, który zmiana ma wytworzyć (tytuł notatki, para kategoria +

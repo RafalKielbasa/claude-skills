@@ -34,6 +34,12 @@ oprzeć decyzji; punkty z konkretem obok przechodzą za pierwszym razem.
   który hub zgłosił.”, bez tego, co Rafał zobaczy w oknie huba i co ma tam wpisać. Rafał: „Chyba nie
   rozumiem tego elementu”. Druga wersja: tabela siedmiu kroków wysyłki z miejscem, w którym stanęła,
   cztery możliwe stany okna huba i dosłowne zdanie do wpisania. Zlecenie przyszło 5 min później.
+- 2026-11-12, sesja 70c314dd-32d0-4c65-ac33-357c06802095 (id claude.ai niedostępny; code-busters-v2 jako katalog, praca w ~/.claude/skills/code-review-master): po długim autonomicznym wykonaniu planu raport kończył się decyzją
+  „D2: linia `semgrep: [p/security-audit]` dla osi `cms-security` w `code-busters-v2/.claude/review/config.md:229-233`”,
+  powtórzoną po commicie w podobnie skrótowej formie. Rafał: „Nie rozumiem”. Brakowało tego, co ta linia włącza, dlaczego
+  jej nie dopisałem (repo na `main`) i co się stanie bez niej; druga wersja z tymi trzema blokami dostała od razu
+  konkretną odpowiedź („podaj mi prompt” dla sesji pracującej w tamtym repo). Odmiana mechanizmu: kontekst decyzji
+  istniał w rozmowie, ale kilkadziesiąt tur wcześniej, a decyzja odwoływała się do niego bez przypomnienia.
 
 ## Rozwiązanie
 Każdy punkt, który prosi użytkownika o decyzję, ma stały kształt:

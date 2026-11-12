@@ -1096,3 +1096,11 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: przekierowanie-github-ukrywa-nieaktualne-odwolanie-do-repo — push z worktree znów „This repository moved”, `origin` dalej na starej nazwie.
 - Wzorce repo tej sesji: brak (skill repo `course-import` nieużyty).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: obowiazki-pierwszej-odpowiedzi-zgubione-w-sesji-autonomicznej (3 sesje) → `/evolve-skill board-tracker`; przekierowanie-github-ukrywa-nieaktualne-odwolanie-do-repo (4 sesje, ogólny, bez skilla do ewolucji). Nawrotów brak.
+
+## 2026-11-12 — sesja 70c314dd-32d0-4c65-ac33-357c06802095 (id claude.ai niedostępny; katalog code-busters-v2, praca w `~/.claude/skills/code-review-master`: brainstorming → spec → plan → subagent-driven-development, codex jako szukający i Semgrep w `pr`/`branch`, commit `fa3f9d5` i push)
+- założono: plik-z-ksztaltem-sekretu-w-katalogu-wypychanym-przez-backup (skill: ogólny, typ: porażka) — sonda ze zmyślonymi kluczami zapisana pod `~/.claude`, usunięta przed backupem, który tego dnia trzy razy wypchnął częściowe stany skilla.
+- dopisano dowód: sdd-bez-commitow-paczki-review-z-migawek — osobny katalog gita w scratchpadzie jako migawki; odporny na commity backupu; bajt NUL wymusił `git diff --text`.
+- dopisano dowód: asercja-testu-na-sygnale-zastepczym — trzy testy implementerów przechodziły z niewłaściwego powodu (gałąź gita zamiast `gh`, same liczniki filtra, `source` podany wprost); złapane przez recenzentów zadań.
+- dopisano dowód: decyzja-w-bramce-bez-przed-i-po — „Nie rozumiem” na decyzję D2 po długim autonomicznym wykonaniu; pomogło: co włącza, dlaczego nie zrobione, co bez niej.
+- Wzorce repo tej sesji: brak (patrz log repo).
+- Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: decyzja-w-bramce-bez-przed-i-po (3 sesje, ogólny, bez skilla do ewolucji). Nawrotów brak.
