@@ -1104,3 +1104,13 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: decyzja-w-bramce-bez-przed-i-po — „Nie rozumiem” na decyzję D2 po długim autonomicznym wykonaniu; pomogło: co włącza, dlaczego nie zrobione, co bez niej.
 - Wzorce repo tej sesji: brak (patrz log repo).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: decyzja-w-bramce-bez-przed-i-po (3 sesje, ogólny, bez skilla do ewolucji). Nawrotów brak.
+
+## 2026-11-12 — sesja 0437af48-c40c-473a-a2a5-5d2bb978768c (id claude.ai niedostępny; code-busters-v2, DT-92 #833: cztery równoległe tory w worktree, PR-y #1751–#1754, sprzątanie, odpowiedzi Wiktora, issue #1755–#1757, zamknięcie #833)
+- założono: crm-plan-diffu-z-usuniec-pomija-zmienione-pliki (skill: code-review-master, typ: porażka) — plan dla gałęzi usuwającej 132 pliki ikon wybrał 40 usuniętych plików i pominął zmienione barrele; review pominięte decyzją Rafała.
+- założono: utrata-dzialania-datowana-po-konsumencie-nie-po-definicji (skill: ogólny, typ: sukces) — `git log -S` po selektorze i `git log -G` po `prose-article` przesunęły przyczynę z W5 na #937 (2025-09-29).
+- założono: create-task-przypina-issue-zakladane-na-pozniej (skill: board-tracker, typ: porażka) — trzy follow-upy w Backlogu przypięte do sesji (`bound`); wątpliwy, jeden dowód, mała szkoda.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — pięć wtrąceń harnessu, trzy w serii odczytów gita przy poz. 41.
+- dopisano dowód: git-worktree-remove-pada-na-dlugich-sciezkach-windows — cztery worktree przez `rd` ze ścieżką dosłowną; do rozwiązania dopisany `branch -D` po zgodności `patch-id` przy squashu.
+- dopisano dowód: zamkniecie-issue-z-bramka-i-sladem-zamykajacym — zamknięcie #833 w czterech bramkach; wyszukanie przed kartą zamieniło nowe issue na komentarz w DT-24 #662.
+- Wzorce repo tej sesji: brak (skill repo `course-import` nieużyty).
+- Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (21 sesji) i git-worktree-remove-pada-na-dlugich-sciezkach-windows (4 sesje), oba ogólne, bez skilla do ewolucji. Nawrotów brak.

@@ -35,6 +35,7 @@ katalogu to dla gita osobne kroki, więc po błędzie zostaje sierota: katalog, 
   `branch -D`. Pierwsza próba `rd` z PowerShella ze ścieżką w zmiennej (`"\\?\$p"`) odrzucona przez harness
   („if its variables are empty, it targets '\\'”); przeszło `cmd /c 'rd /s /q "\\?\D:\…\code-busters-v2-dt101"'`
   ze ścieżką wpisaną dosłownie (`Test-Path` → `False`), potem `branch -D` i `worktree prune`.
+- 2026-11-12, sesja 0437af48-c40c-473a-a2a5-5d2bb978768c (id claude.ai niedostępny; code-busters-v2, DT-92 #833, po „Branche zmergowane możemy robić czyszczenie worktree”): cztery worktree `dt-92-{blog-dedup,dead-icons,w4-nits,w3-nits}` z `node_modules`; `rd` ze ścieżką w zmiennej PowerShella znów odrzucony, przeszły cztery `cmd /c 'rd /s /q "\\?\D:\…\dt-92-<nazwa>"'` ze ścieżką dosłowną, potem `git worktree prune`; `git worktree list` pokazał tylko główny checkout i cudzy `code-busters-v2-dt102`. `git branch -d` odmówił („not fully merged”: squash-merge, gałęzie zdalne skasowane przez GitHub); `-D` dopiero po zgodności `git patch-id --stable` commita gałęzi i squasha na `main` dla wszystkich czterech par.
 
 ## Rozwiązanie
 Usuwanie worktree na Windowsie: najpierw upewnij się, że drzewo jest czyste, a gałąź scalona
@@ -42,4 +43,4 @@ Usuwanie worktree na Windowsie: najpierw upewnij się, że drzewo jest czyste, a
 po sprawdzeniu, że proces N nie żyje. Potem `git worktree remove <ścieżka>`. Gdy padnie `Filename too long`,
 skasuj katalog przez `cmd /c 'rd /s /q "\\?\<ścieżka bezwzględna>"'` ze ścieżką wpisaną dosłownie, nie ze zmiennej (harness odrzuca `rd`, którego cel składa się ze zmiennej), uruchom `git worktree prune` i sprawdź
 wynik przez `Test-Path` oraz `git worktree list`. Nie zgłaszaj usunięcia na podstawie samego kodu wyjścia
-gita.
+gita. Gałąź scaloną squashem `git branch -d` odrzuca jako niescaloną; `-D` dopiero po porównaniu `git show <sha> | git patch-id --stable` commita gałęzi i squasha na `main`.
