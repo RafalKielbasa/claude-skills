@@ -117,6 +117,11 @@
       }
     ]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"C:/Users/rafal/.claude/hooks/statusline-git.mjs\"",
+    "refreshInterval": 5
+  },
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
     "figma@claude-plugins-official": true
@@ -139,11 +144,6 @@
   "askUserQuestionTimeout": "10m",
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
-  "statusLine": {
-    "type": "command",
-    "command": "node \"C:/Users/rafal/.claude/hooks/statusline-git.mjs\"",
-    "refreshInterval": 5
-  },
   "voice": {
     "enabled": true,
     "mode": "hold"

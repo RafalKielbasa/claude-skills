@@ -1088,3 +1088,11 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: przekierowanie-github-ukrywa-nieaktualne-odwolanie-do-repo — push na `Devstock-Academy/code-busters-v2`, PR w `kodozercy/code-busters#1744`.
 - Wzorce repo tej sesji: dowód do zapis-statusu-lekcji-przepisuje-caly-lekcja-yaml (patrz log repo).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: board-tracker-cli-fails-whole-op-on-board-step → `/evolve-skill board-tracker`; paczka-review-wciaga-cudze-commity-galezi-dnia (skill wtyczki superpowers); git-worktree-remove-pada-na-dlugich-sciezkach-windows (ogólny). Nawrotów brak.
+
+## 2026-11-12 — sesja 35a425f6-9ecb-4c57-96c1-1edac5c3bd05 (id claude.ai niedostępny; code-busters-v2, `/code-review-master pr 1749`, poprawka `f-01` w worktree `code-busters-v2-dt102`, commit `1b316a588` i push, DT-102 #853)
+- założono: crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr (skill: code-review-master, typ: porażka) — `crm plan --mode pr` z `main` dał nowe pliki z `size: 0`; przebieg powtórzony z `--repo` = worktree na tipie PR-a.
+- założono: weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (skill: code-review-master, typ: porażka) — `f-01` (zdublowane sygnatury, pozycja blocking) dostała 50 i wypadła z raportu; wyszła z ręcznego odczytu.
+- dopisano dowód: obowiazki-pierwszej-odpowiedzi-zgubione-w-sesji-autonomicznej — linie tablicy dopiero w raporcie końcowym, w sesji bez huba uruchomionej slash-komendą.
+- dopisano dowód: przekierowanie-github-ukrywa-nieaktualne-odwolanie-do-repo — push z worktree znów „This repository moved”, `origin` dalej na starej nazwie.
+- Wzorce repo tej sesji: brak (skill repo `course-import` nieużyty).
+- Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: obowiazki-pierwszej-odpowiedzi-zgubione-w-sesji-autonomicznej (3 sesje) → `/evolve-skill board-tracker`; przekierowanie-github-ukrywa-nieaktualne-odwolanie-do-repo (4 sesje, ogólny, bez skilla do ewolucji). Nawrotów brak.

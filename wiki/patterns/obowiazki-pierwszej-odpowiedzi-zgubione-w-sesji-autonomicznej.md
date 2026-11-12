@@ -22,6 +22,10 @@ Skill wykonawczy (subagent-driven-development) wymaga ciągłej pracy bez meldun
   częściowa: pierwszy wypisany tekst (po przypomnieniu „say in a few words”) miał linie tablicy z briefu i nagłówek
   wiadomości huba, ale zamiast dosłownego cytatu — skrót „(wiadomość huba jak wyżej: cel „…”, z kontekstem,
   decyzjami…)”. Obowiązek wykonany w porę, cytat nie był dosłowny ani zwinięty w `<details>`.
+- 2026-11-12, sesja 35a425f6-9ecb-4c57-96c1-1edac5c3bd05 (id claude.ai niedostępny; code-busters-v2, review PR #1749), sesja
+  bez huba, uruchomiona komendą `/code-review-master`: pierwsze teksty to statusy przebiegu (plan, budżet, fale),
+  a linie tablicy z briefu `SessionStart` pojawiły się dopiero w raporcie końcowym review. Ten sam mechanizm bez
+  SDD: skill uruchomiony slash-komendą od razu woła narzędzia i żaden z jego statusów nie niesie linii tablicy.
 
 ## Rozwiązanie
 Pierwszy tekst sesji uruchomionej przez hub, także jednolinijkowy status, zaczyna się od cytatu wiadomości huba (zwiniętego w `<details>`, gdy jest długa) i zawiera linie tablicy z briefu. Dopiero potem idzie status. Obowiązek dotyczy pierwszego wypisanego tekstu, nie pierwszej odpowiedzi „merytorycznej”.

@@ -1,0 +1,1 @@
+- [Android emulator setup](android-emulator-setup.md) — SDK in D:\Android\Sdk, AVD Medium_Phone_API_37.0, EAS dev client 9a9c5a26, Android 17 local-network permission, slow first load

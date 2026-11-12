@@ -33,6 +33,9 @@ w tej samej sekundzie, bez żadnej zmiany po ich stronie.
   przeniesiono do `kodozercy/code-busters`, a `gh pr create` dał `https://github.com/kodozercy/code-busters/pull/1744`.
   Rejestr repo w `CLAUDE.md` „Bazy wiedzy” i lokalny `origin` dalej na starej nazwie; zgłoszone Rafałowi, nic nie
   zmieniane.
+- 2026-11-12, sesja 35a425f6-9ecb-4c57-96c1-1edac5c3bd05 (id claude.ai niedostępny; code-busters-v2, PR #1749): `git push origin`
+  z worktree `code-busters-v2-dt102` znów odpowiedział „This repository moved … kodozercy/code-busters.git”;
+  push przeszedł, `origin` dalej na starej nazwie. Zgłoszone Rafałowi w raporcie, nic nie zmieniane.
 
 ## Rozwiązanie
 Przy każdej zmianie nazwy albo przenosinach repo: `gh api repos/<owner>/<stara-nazwa> --jq

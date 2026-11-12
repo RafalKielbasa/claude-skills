@@ -33,7 +33,11 @@ phrase) in this conversation. A request to put something on staging gets one sen
    `cd tools/course-pipeline && npm run publish -- <path> --env=prod --dry-run`
    and show the `PLAN` block verbatim: per module `create`/`update` of the `Lesson`, per
    artefact `create` / `update` / `skip (reason)`. Validation errors printed by the command end
-   the procedure here; report them verbatim.
+   the procedure here; report them verbatim. An article line that ends with
+   `grafiki: <n> do wgrania, <m> bez zmian` counts the article's images (`artykul-grafiki/`) that
+   the run would upload. After the usual order (staging first) `<n>` is 0; a non-zero `<n>` on
+   prod means an image changed after its last staging send, or the course has no staging sends.
+   Point it out to Rafał with the plan before the gate in step 3.
 3. **GATE: Rafał approves the plan.** Wait for an explicit yes. No answer is not approval. A
    timeout of the question tool is not approval either — say you are waiting and ask again.
 4. **Publish.** The same command without `--dry-run`. Show the output verbatim. After `OK`, list
@@ -105,7 +109,10 @@ reran it. Used when Rafał asks to catch up staging ("wrzuć zaległe na staging
 1. List (read-only):
    `cd tools/course-pipeline && npm run publish -- zalegle ../../kursy/<slug>[/modul-NN-x]`
    It prints `ZALEGŁE NA STAGINGU (lekcji: N):` and one line per lesson with what is missing, or
-   `OK: brak zaległych na stagingu`, or a `POMINIĘTO:` line (stop, report it). An empty list
+   `OK: brak zaległych na stagingu`, or a `POMINIĘTO:` line (stop, report it). A lesson whose
+   article is on staging but has an image with no matching `grafiki_artykulu` entry in
+   `lekcja.yaml` (no entry, or another hash) also gets `  artykuł: grafiki do wgrania: <n>`; on
+   Rafał's "OK" the article goes out as `update` with its images. An empty list
    (`OK: …`) is reported as is when Rafał only asked what is overdue. When he asked to refill
    staging, an empty list is not the end: `--wykonaj` still reads staging and rebuilds it after a
    reset (step 3), so continue to step 2.

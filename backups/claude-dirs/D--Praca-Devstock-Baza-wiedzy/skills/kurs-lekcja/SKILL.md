@@ -213,6 +213,8 @@ przedstawione Rafałowi do bramki review.
    wszystkich kursów). Linie `(info)` są tylko informacją.
 6. **Niezależny review AI.**
    `npm run review-ai -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`.
+   `review-ai` ocenia też grafiki artykułu (`artykul-grafiki/`), a jego punkt o grafikach czytasz
+   jak każdy inny punkt raportu.
    Przeczytaj `review-ai.md`: problemy zasadne → popraw treść i powtórz
    kroki 5–6 (max 2 iteracje); problemy niezasadne → odnotuj dlaczego.
    Potem **review scenariusza przez Codex** (jedno przejście, po poprawkach
