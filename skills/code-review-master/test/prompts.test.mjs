@@ -53,3 +53,12 @@ test('the verify prompt carries the 0-100 rubric and is batched', () => {
   assert.match(text, /all of the findings below/i);
   assert.match(text, /\{\{FINDINGS\}\}/);
 });
+
+test('the codex finder prompt fixes the return shape and forbids edits', () => {
+  const text = read('codex-find.md');
+  assert.match(text, /verbatim/i);
+  assert.match(text, /"fix"/);
+  assert.match(text, /\[\]/);
+  assert.match(text, /do not modify any file/i);
+  assert.match(text, /{{AXES}}/);
+});

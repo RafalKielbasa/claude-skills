@@ -105,3 +105,38 @@ test('validateConfig reports a bad rank and a duplicate id', () => {
   assert.match(problems.join('\n'), /rank/);
   assert.match(problems.join('\n'), /duplicate/);
 });
+
+const axisDoc = (yamlLines) => parseConfigDoc(`---\n---\n\n## S\n\n\`\`\`yaml\nid: s\n${yamlLines}\n\`\`\`\n\n- x\n`);
+const EMPTY = () => parseConfigDoc('---\n---\n');
+
+test('an axis may list semgrep rule packs', () => {
+  assert.deepEqual(axisDoc('semgrep: [p/secrets, p/security-audit]').axes[0].semgrep, ['p/secrets', 'p/security-audit']);
+  assert.deepEqual(axisDoc('rank: always').axes[0].semgrep, []);
+});
+
+test('a semgrep value that is not a list of non-empty strings is a configuration error', () => {
+  for (const line of ['semgrep: p/secrets', "semgrep: ['']"]) {
+    const problems = validateConfig({ settings: DEFAULT_SETTINGS, axes: axisDoc(line).axes });
+    assert.ok(problems.some((p) => p.includes('semgrep')), `no semgrep problem for ${line}: ${problems}`);
+  }
+});
+
+test('codex and semgrep settings merge key by key', () => {
+  const repo = parseConfigDoc('---\nsemgrep: { timeout_s: 60 }\ncodex: { timeout_s: 10 }\n---\n');
+  const global = parseConfigDoc('---\ncodex: { find: false }\n---\n');
+  const merged = mergeConfig(global, repo).settings;
+  assert.equal(merged.semgrep.timeout_s, 60);
+  assert.equal(merged.semgrep.image, DEFAULT_SETTINGS.semgrep.image);
+  assert.equal(merged.semgrep.enabled, true);
+  assert.equal(merged.codex.find, false);
+  assert.equal(merged.codex.timeout_s, 10);
+  assert.equal(merged.codex.find_timeout_s, 600);
+});
+
+test('the semgrep image must be pinned', () => {
+  for (const image of ['semgrep/semgrep:latest', 'semgrep/semgrep']) {
+    const merged = mergeConfig(EMPTY(), parseConfigDoc(`---\nsemgrep: { image: '${image}' }\n---\n`));
+    const problems = validateConfig(merged);
+    assert.ok(problems.some((p) => p.includes('pinned')), `no pinned problem for ${image}: ${problems}`);
+  }
+});

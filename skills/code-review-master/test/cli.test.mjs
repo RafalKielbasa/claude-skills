@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { writeFileSync, readFileSync, mkdtempSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { writeFileSync, readFileSync, mkdtempSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { tmpdir } from 'node:os';
-import { makeRepo, writeFiles, git } from '../test-helpers/repo.mjs';
+import { makeRepo, writeFiles, commitAll, git } from '../test-helpers/repo.mjs';
 
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'crm.mjs');
 
@@ -462,4 +462,155 @@ test('a global config outside the repository does not change a run', () => {
     { env: { ...process.env, CRM_GLOBAL_CONFIG: join(dir, 'nope.md') } }));
   assert.equal(withGlobal.selection.selected.length, 2, 'the global axis is inherited when one is configured');
   assert.equal(without.selection.selected.length, 1, 'and absent when none is');
+});
+
+test('a branch plan records pr as null', () => {
+  const dir = makeRepo({ 'a.ts': 'one\n', '.claude/review/config.md': CONFIG });
+  git(dir, 'checkout', '-q', '-b', 'feature');
+  writeFiles(dir, { 'a.ts': 'one\ntwo\n' });
+  commitAll(dir, 'change');
+  const out = JSON.parse(run(['plan', '--repo', dir, '--mode', 'branch', '--base', 'main', '--json']));
+  const plan = JSON.parse(readFileSync(join(dir, '.claude', 'review', 'reports', `${out.runId}-plan.json`), 'utf8'));
+  assert.equal(plan.target.pr, null);
+});
+
+const SEMGREP_FREE_CONFIG = CONFIG;
+const reportsFile = (dir, runId, name) => join(dir, '.claude', 'review', 'reports', `${runId}-${name}`);
+
+test('semgrep is not-in-mode outside pr and branch', () => {
+  for (const mode of ['working', 'since', 'full']) {
+    const dir = makeRepo({ 'a.ts': 'one\n', '.claude/review/config.md': SEMGREP_FREE_CONFIG });
+    if (mode === 'since') {
+      const seed = git(dir, 'rev-parse', 'HEAD');
+      writeFiles(dir, {
+        '.claude/review/state.json': JSON.stringify({
+          schema: 1, last_reviewed_sha: seed, axis_cursor: [], file_cursor: {},
+          pending_files: {}, triage: [], runs: [],
+        }),
+        'a.ts': 'one\ntwo\n',
+      });
+      commitAll(dir, 'change');
+    } else {
+      writeFiles(dir, { 'a.ts': 'one\ntwo\n' });
+    }
+    const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', mode, '--json']));
+    const out = JSON.parse(run(['semgrep', '--repo', dir, '--run', plan.runId, '--json']));
+    assert.deepEqual(out, { status: 'not-in-mode' }, mode);
+    assert.equal(existsSync(reportsFile(dir, plan.runId, 'semgrep-raw.json')), false, mode);
+    assert.equal(existsSync(reportsFile(dir, plan.runId, 'semgrep-status.json')), false, mode);
+  }
+});
+
+test('semgrep with no rules in the plan has nothing to scan', () => {
+  const dir = makeRepo({ 'a.ts': 'one\n', '.claude/review/config.md': SEMGREP_FREE_CONFIG });
+  git(dir, 'checkout', '-q', '-b', 'feature');
+  writeFiles(dir, { 'a.ts': 'one\ntwo\n' });
+  commitAll(dir, 'change');
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'branch', '--base', 'main', '--json']));
+  const out = JSON.parse(run(['semgrep', '--repo', dir, '--run', plan.runId, '--json']));
+  assert.equal(out.status, 'nothing-to-scan');
+  const saved = JSON.parse(readFileSync(reportsFile(dir, plan.runId, 'semgrep-status.json'), 'utf8'));
+  assert.equal(saved.status, 'nothing-to-scan');
+  assert.equal(saved.found, 0);
+  assert.equal(existsSync(reportsFile(dir, plan.runId, 'semgrep-raw.json')), false);
+});
+
+test('codex-find is not-in-mode outside pr and branch', () => {
+  for (const mode of ['working', 'since', 'full']) {
+    const dir = makeRepo({ 'a.ts': 'one\n', '.claude/review/config.md': CONFIG });
+    if (mode === 'since') {
+      const seed = git(dir, 'rev-parse', 'HEAD');
+      writeFiles(dir, {
+        '.claude/review/state.json': JSON.stringify({
+          schema: 1, last_reviewed_sha: seed, axis_cursor: [], file_cursor: {},
+          pending_files: {}, triage: [], runs: [],
+        }),
+        'a.ts': 'one\ntwo\n',
+      });
+      commitAll(dir, 'change');
+    } else {
+      writeFiles(dir, { 'a.ts': 'one\ntwo\n' });
+    }
+    const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', mode, '--json']));
+    const out = JSON.parse(run(['codex-find', '--repo', dir, '--run', plan.runId, '--json']));
+    assert.deepEqual(out, { status: 'not-in-mode' }, mode);
+    assert.equal(existsSync(reportsFile(dir, plan.runId, 'codex-raw.json')), false, mode);
+    assert.equal(existsSync(reportsFile(dir, plan.runId, 'codex-find-status.json')), false, mode);
+  }
+});
+
+test('codex-find honours codex.find: false', () => {
+  const config = CONFIG.replace('---\nbudget', '---\ncodex: { find: false }\nbudget');
+  const dir = makeRepo({ 'a.ts': 'one\n', '.claude/review/config.md': config });
+  git(dir, 'checkout', '-q', '-b', 'feature');
+  writeFiles(dir, { 'a.ts': 'one\ntwo\n' });
+  commitAll(dir, 'change');
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'branch', '--base', 'main', '--json']));
+  const out = JSON.parse(run(['codex-find', '--repo', dir, '--run', plan.runId, '--json']));
+  assert.deepEqual(out, { status: 'disabled', found: 0, droppedOffAxis: 0 });
+  const saved = JSON.parse(readFileSync(reportsFile(dir, plan.runId, 'codex-find-status.json'), 'utf8'));
+  assert.equal(saved.status, 'disabled');
+  assert.equal(existsSync(reportsFile(dir, plan.runId, 'codex-raw.json')), false);
+});
+
+// The worker is detached, so these tests only ever talk to it through
+// `finders --start` / `--wait`; it exits on its own once both children do.
+const branchRun = (config) => {
+  const dir = makeRepo({ 'a.ts': 'one\n', '.claude/review/config.md': config });
+  git(dir, 'checkout', '-q', '-b', 'feature');
+  writeFiles(dir, { 'a.ts': 'one\ntwo\n' });
+  commitAll(dir, 'change');
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'branch', '--base', 'main', '--json']));
+  return { dir, runId: plan.runId };
+};
+
+test('finders start returns at once and wait collects both statuses', () => {
+  const config = CONFIG.replace('---\nbudget', '---\ncodex: { enabled: false }\nbudget');
+  const { dir, runId } = branchRun(config);
+  const started = JSON.parse(run(['finders', '--repo', dir, '--run', runId, '--start', '--json']));
+  assert.deepEqual(started, { started: true });
+  assert.equal(existsSync(reportsFile(dir, runId, 'finders.pid')), true);
+  const out = JSON.parse(run(['finders', '--repo', dir, '--run', runId, '--wait', '--max-s', '20', '--json']));
+  assert.equal(out.codexFind.status, 'disabled');
+  assert.equal(out.semgrep.status, 'nothing-to-scan');
+  assert.equal(typeof out.finishedAt, 'string');
+  for (const finder of [out.codexFind, out.semgrep]) {
+    assert.equal(typeof finder.startedAt, 'string');
+    assert.equal(typeof finder.finishedAt, 'string');
+    assert.equal(typeof finder.durationMs, 'number');
+    assert.ok(finder.durationMs >= 0);
+  }
+  const saved = JSON.parse(readFileSync(reportsFile(dir, runId, 'finders.json'), 'utf8'));
+  assert.equal(saved.codexFind.status, 'disabled');
+});
+
+test('finders do not start outside pr and branch', () => {
+  const dir = makeRepo({ 'a.ts': 'one\n', '.claude/review/config.md': CONFIG });
+  writeFiles(dir, { 'a.ts': 'one\ntwo\n' });
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json']));
+  const out = JSON.parse(run(['finders', '--repo', dir, '--run', plan.runId, '--start', '--json']));
+  assert.deepEqual(out, { started: false, reason: 'not-in-mode' });
+  assert.equal(existsSync(reportsFile(dir, plan.runId, 'finders.pid')), false);
+});
+
+test('a dead worker is reported, not waited on', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  const dead = spawnSync(process.execPath, ['-e', ''], { encoding: 'utf8' });
+  mkdirSync(join(dir, '.claude', 'review', 'reports'), { recursive: true });
+  writeFileSync(reportsFile(dir, runId, 'finders.pid'), String(dead.pid));
+  const t0 = Date.now();
+  const out = JSON.parse(run(['finders', '--repo', dir, '--run', runId, '--wait', '--max-s', '20', '--json']));
+  assert.ok(Date.now() - t0 < 5000);
+  assert.equal(out.codexFind.reason, 'worker-died');
+  assert.equal(out.semgrep.reason, 'worker-died');
+  assert.equal(out.codexFind.status, 'unavailable');
+  assert.ok(existsSync(reportsFile(dir, runId, 'finders.json')));
+});
+
+test('wait without start is a broken run', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  const result = spawnSync(process.execPath, [CLI, 'finders', '--repo', dir, '--run', runId, '--wait', '--json'],
+    { encoding: 'utf8', env: { ...process.env, CRM_GLOBAL_CONFIG: join(dir, 'no-global.md') } });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /finders --start/);
 });

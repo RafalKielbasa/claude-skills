@@ -2,5 +2,5 @@
   "name": "code-review-master",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test test/" }
+  "scripts": { "test": "node --test \"test/*.test.mjs\"" }
 }

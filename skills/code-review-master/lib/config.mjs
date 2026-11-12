@@ -5,7 +5,11 @@ export const DEFAULT_SETTINGS = {
   confidence_threshold: { blocking: 85, suggestion: 70, nitpick: 70 },
   gate: 'blocking',
   gate_on_disputed: true,
-  codex: { enabled: true, timeout_s: 300 },
+  // codex.find: codex also runs as a finder (not only as the verifier).
+  codex: { enabled: true, timeout_s: 300, find: true, find_timeout_s: 600 },
+  // The image is pinned on purpose: an unpinned scanner changes its rules
+  // between runs, so a finding could appear or vanish without any code change.
+  semgrep: { enabled: true, image: 'semgrep/semgrep:1.182.1', timeout_s: 300 },
   commands: {},
   // A review's own artefacts are never its subject: without this, a
   // repository whose config.md predates this default keeps spending its
@@ -40,6 +44,7 @@ function sectionToAxis(heading, body) {
     severity_default: meta.severity_default ?? 'suggestion',
     max_files: meta.max_files ?? null,
     tools: meta.tools ?? [],
+    semgrep: meta.semgrep ?? [],
     heading,
     checklist,
   };
@@ -75,6 +80,7 @@ export function mergeConfig(globalDoc, repoDoc) {
       ...repoDoc.settings.confidence_threshold,
     },
     codex: { ...DEFAULT_SETTINGS.codex, ...globalDoc.settings.codex, ...repoDoc.settings.codex },
+    semgrep: { ...DEFAULT_SETTINGS.semgrep, ...globalDoc.settings.semgrep, ...repoDoc.settings.semgrep },
   };
   const disabled = new Set(settings.disable ?? []);
   const byId = new Map();
@@ -105,6 +111,9 @@ export function validateConfig({ settings, axes }) {
     if (axis.max_files !== null && !(Number.isInteger(axis.max_files) && axis.max_files > 0)) {
       problems.push(`axis "${axis.id}" has max_files ${JSON.stringify(axis.max_files)}; use a positive integer, or omit it to inherit the default`);
     }
+    if (!Array.isArray(axis.semgrep) || !axis.semgrep.every((p) => typeof p === 'string' && p.trim() !== '')) {
+      problems.push(`axis "${axis.id}" has a semgrep value that is not a list of non-empty rule-pack strings`);
+    }
   }
   if (!['blocking', 'any', 'none'].includes(settings.gate)) {
     problems.push(`gate is "${settings.gate}", expected blocking, any or none`);
@@ -114,6 +123,11 @@ export function validateConfig({ settings, axes }) {
   }
   if (!(Number.isInteger(settings.budget.max_files_per_axis) && settings.budget.max_files_per_axis > 0)) {
     problems.push('budget.max_files_per_axis must be a positive integer');
+  }
+  // A tag-less or :latest image drifts silently between runs (see DEFAULT_SETTINGS).
+  const image = settings.semgrep.image;
+  if (typeof image !== 'string' || !/:[^:/]+$/.test(image) || image.endsWith(':latest')) {
+    problems.push(`semgrep.image "${image}" must be pinned to a version tag, not latest or tag-less`);
   }
   return problems;
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync, rmSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync, rmSync, renameSync } from 'node:fs';
+import { execFileSync, spawn } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
@@ -10,7 +10,9 @@ import { selectAxes } from '../lib/axes.mjs';
 import { assemble, validateFinding, applyThresholds } from '../lib/findings.mjs';
 import { recordTriage } from '../lib/triage.mjs';
 import { renderReport } from '../lib/report.mjs';
-import { buildCodexPrompt, runCodex } from '../lib/codex.mjs';
+import { buildCodexPrompt, runCodex, runCodexFind } from '../lib/codex.mjs';
+import { runSemgrep } from '../lib/semgrep.mjs';
+import { changedHunks } from '../lib/hunks.mjs';
 import { blobLink } from '../lib/links.mjs';
 import { embedJson } from '../lib/embed.mjs';
 import { exitCode } from '../lib/gate.mjs';
@@ -111,6 +113,62 @@ function readInputFile(path, flag) {
 function writeJson(path, value) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+}
+
+// Temp file + rename, so a reader polling for the file (`finders --wait`) can
+// never observe a half-written document.
+function writeJsonAtomic(path, value) {
+  const tmp = `${path}.tmp`;
+  writeJson(tmp, value);
+  renameSync(tmp, path);
+}
+
+const sleepSync = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+// `kill(pid, 0)` sends no signal; it only asks whether the pid can be
+// signalled. ESRCH means the process is gone (also on Windows); EPERM means it
+// exists but belongs to someone else, which still counts as alive.
+function pidAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err.code !== 'ESRCH';
+  }
+}
+
+// Runs one finder as a child `crm` process and resolves to its status object
+// plus its own timings. Never rejects: a finder that crashes must not take
+// the other one's result down with it.
+function runFinderChild(command, repo, runId) {
+  const startedAt = new Date();
+  return new Promise((resolve) => {
+    const finish = (status) => {
+      const finishedAt = new Date();
+      resolve({ ...status, startedAt: startedAt.toISOString(), finishedAt: finishedAt.toISOString(),
+        durationMs: finishedAt - startedAt });
+    };
+    const child = spawn(process.execPath, [fileURLToPath(import.meta.url), command, '--run', runId, '--repo', repo, '--json'],
+      { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    const failed = (detail) => finish({ status: 'unavailable', reason: 'command-failed', detail });
+    child.on('error', (err) => failed(String(err.message).slice(0, 200)));
+    child.on('close', (code) => {
+      const firstStderr = stderr.split(/\r?\n/).map((l) => l.trim()).find((l) => l !== '') ?? '';
+      if (code !== 0) return failed(firstStderr.slice(0, 200));
+      const line = stdout.split(/\r?\n/).map((l) => l.trim()).filter((l) => l !== '').at(-1);
+      try {
+        const parsed = JSON.parse(line);
+        if (parsed === null || typeof parsed !== 'object') throw new Error('not an object');
+        return finish(parsed);
+      } catch {
+        return failed(firstStderr.slice(0, 200) || 'no JSON on stdout');
+      }
+    });
+  });
 }
 
 function gitRemote(repo) {
@@ -280,6 +338,114 @@ const COMMANDS = {
     data.codexStatus = result.status;
     writeJson(path, data);
     return { status: result.status, judged: Object.keys(result.verdicts).length };
+  },
+
+  // Same persistence contract as `semgrep`: status file plus identical stdout,
+  // raw file only on `ok`. The mode gate comes first so a working/since/full
+  // run leaves no files behind, then the switches, then the slow codex call.
+  'codex-find'(args) {
+    const repo = args.repo ?? process.cwd();
+    const config = loadConfig(repo);
+    const plan = readRunFile(repo, args.run, 'plan.json');
+    if (plan.mode !== 'pr' && plan.mode !== 'branch') return { status: 'not-in-mode' };
+    const statusPath = reportPath(repo, args.run, 'codex-find-status.json');
+    const { codex } = config.settings;
+    if (!codex.enabled || !codex.find) {
+      const summary = { status: 'disabled', found: 0, droppedOffAxis: 0 };
+      writeJson(statusPath, summary);
+      return summary;
+    }
+    const result = runCodexFind(plan.selection.selected,
+      { cwd: repo, timeoutMs: codex.find_timeout_s * 1000 });
+    const summary = { status: result.status, found: result.findings.length, droppedOffAxis: result.droppedOffAxis };
+    if (result.status === 'ok') {
+      writeJson(reportPath(repo, args.run, 'codex-raw.json'), result.findings);
+    } else {
+      // Why it failed: the first non-empty line of what codex printed.
+      const line = String(result.raw ?? '').split(/\r?\n/).map((l) => l.trim()).find((l) => l !== '');
+      if (line) summary.detail = line.slice(0, 200);
+    }
+    writeJson(statusPath, summary);
+    return summary;
+  },
+
+  // Writes its own status file and prints the same object, because the worker
+  // that runs this in the background reads stdout and `assemble` reads the
+  // files. `not-in-mode` writes nothing: no finder ran, so nothing to report.
+  semgrep(args) {
+    const repo = args.repo ?? process.cwd();
+    const config = loadConfig(repo);
+    const plan = readRunFile(repo, args.run, 'plan.json');
+    const inMode = plan.mode === 'pr' || plan.mode === 'branch';
+    // The diff is only worth computing (gh call in pr mode) when a scan can happen.
+    const hunks = inMode && config.settings.semgrep.enabled !== false
+      ? changedHunks({ repo, plan })
+      : null;
+    const result = runSemgrep({ runId: args.run, repo, plan, settings: config.settings, hunks });
+    if (result.status === 'not-in-mode') return { status: 'not-in-mode' };
+    const { findings, ...status } = result;
+    const summary = { ...status, found: findings.length };
+    if (result.status === 'ok') writeJson(reportPath(repo, args.run, 'semgrep-raw.json'), findings);
+    writeJson(reportPath(repo, args.run, 'semgrep-status.json'), summary);
+    return summary;
+  },
+
+  // The two finders are slow (codex, Docker) and independent of the Sonnet
+  // axis agents, so the session starts them right before dispatching the axes
+  // and collects them before `assemble`. A detached worker owns the children
+  // because a headless `claude -p` run has no harness background tools.
+  finders(args) {
+    const repo = args.repo ?? process.cwd();
+    const pidPath = reportPath(repo, args.run, 'finders.pid');
+    const resultPath = reportPath(repo, args.run, 'finders.json');
+    if (args.start) {
+      const plan = readRunFile(repo, args.run, 'plan.json');
+      if (plan.mode !== 'pr' && plan.mode !== 'branch') return { started: false, reason: 'not-in-mode' };
+      // A re-run with the same id must not be answered with the old result.
+      rmSync(resultPath, { force: true });
+      const worker = spawn(process.execPath,
+        [fileURLToPath(import.meta.url), 'finders-worker', '--run', args.run, '--repo', repo],
+        { detached: true, stdio: 'ignore', windowsHide: true });
+      worker.unref();
+      mkdirSync(dirname(pidPath), { recursive: true });
+      writeFileSync(pidPath, String(worker.pid), 'utf8');
+      return { started: true };
+    }
+    if (!args.wait) fail('finders needs --start or --wait');
+    if (!existsSync(pidPath) && !existsSync(resultPath)) {
+      fail(`run ${args.run} has no finders to wait for — call "crm finders --start" first`);
+    }
+    const maxS = args['max-s'] === undefined ? 500 : Number(args['max-s']);
+    if (!Number.isFinite(maxS) || maxS < 0) fail(`--max-s must be a non-negative number, got "${args['max-s']}"`);
+    const deadline = Date.now() + maxS * 1000;
+    for (;;) {
+      if (existsSync(resultPath)) return readJson(resultPath);
+      const pid = existsSync(pidPath) ? Number(readFileSync(pidPath, 'utf8').trim()) : NaN;
+      if (Number.isInteger(pid) && !pidAlive(pid)) {
+        // The worker renames the result into place right before it exits, so
+        // look once more before declaring it dead.
+        if (existsSync(resultPath)) return readJson(resultPath);
+        const died = { status: 'unavailable', reason: 'worker-died' };
+        const summary = { codexFind: { ...died }, semgrep: { ...died }, finishedAt: new Date().toISOString() };
+        writeJsonAtomic(resultPath, summary);
+        return summary;
+      }
+      if (Date.now() >= deadline) return { status: 'pending' };
+      sleepSync(Math.min(1000, Math.max(0, deadline - Date.now())));
+    }
+  },
+
+  // Internal: spawned detached by `finders --start`. Exits by itself once both
+  // children have, so nothing is left running after the result file exists.
+  async 'finders-worker'(args) {
+    const repo = args.repo ?? process.cwd();
+    const [codexFind, semgrep] = await Promise.all([
+      runFinderChild('codex-find', repo, args.run),
+      runFinderChild('semgrep', repo, args.run),
+    ]);
+    writeJsonAtomic(reportPath(repo, args.run, 'finders.json'),
+      { codexFind, semgrep, finishedAt: new Date().toISOString() });
+    return { done: true };
   },
 
   render(args) {
@@ -523,6 +689,8 @@ if (!command) fail(`unknown command "${name ?? ''}" — expected one of ${Object
 let result;
 try {
   result = command(args);
+  // Only `finders-worker` is async; every other command stays synchronous.
+  if (result instanceof Promise) result = await result;
   if (name === 'plan') {
     const repo = args.repo ?? process.cwd();
     writeJson(reportPath(repo, result.runId, 'plan.json'), result);

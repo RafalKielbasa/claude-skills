@@ -69,6 +69,13 @@ test('pr mode takes both shas from the pull request, not from the checkout', () 
   assert.equal(target.files[0].added, 3);
 });
 
+test('a pr target records its number', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  const gh = () => JSON.stringify({ baseRefOid: 'b', headRefOid: 'h', files: [] });
+  const target = collectTarget(dir, 'pr', { pr: '42', gh });
+  assert.equal(target.pr, 42);
+});
+
 // An untracked file has no diff for `git diff --numstat` to count, so it used
 // to report added: 0 and rank below every modified file on the churn key —
 // backwards, since a brand-new file is entirely unreviewed code.

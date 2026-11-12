@@ -122,7 +122,9 @@ export function collectTarget(repoDir, mode, opts = {}) {
   // differently, which let this sort's order disagree with the cursor's — an
   // audit whose only purpose is completeness was silently dropping files.
   files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  return { mode, base, head: prHead ?? head, files };
+  // The PR number rides along in plan.json so later stages (the Semgrep
+  // changed-line filter) can ask gh for the same diff without re-parsing CLI args.
+  return { mode, base, head: prHead ?? head, pr: mode === 'pr' ? Number(opts.pr) : null, files };
 }
 
 export function isEmpty(target) {
