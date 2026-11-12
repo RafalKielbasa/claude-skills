@@ -140,3 +140,24 @@ test('the semgrep image must be pinned', () => {
     assert.ok(problems.some((p) => p.includes('pinned')), `no pinned problem for ${image}: ${problems}`);
   }
 });
+
+test('a semgrep image or rule pack shaped like an option is a configuration error', () => {
+  const withImage = (image) => validateConfig({ settings: { ...DEFAULT_SETTINGS, semgrep: { ...DEFAULT_SETTINGS.semgrep, image } }, axes: [] });
+  for (const image of ['-semgrep/semgrep:1.182.1', '--privileged:1', 'Semgrep/Semgrep:1.182.1', ' semgrep/semgrep:1']) {
+    const problems = withImage(image);
+    assert.equal(problems.length, 1, `${image}: ${problems}`);
+    assert.match(problems[0], /semgrep\.image/);
+  }
+  const digest = `semgrep/semgrep@sha256:${'a1'.repeat(32)}`;
+  for (const image of ['semgrep/semgrep:1.182.1', 'localhost:5000/semgrep/semgrep:1.2', digest]) {
+    assert.deepEqual(withImage(image), [], image);
+  }
+  for (const image of ['semgrep/semgrep:latest', 'semgrep/semgrep', 'localhost:5000/semgrep']) {
+    assert.ok(withImage(image).some((p) => p.includes('pinned')), image);
+  }
+  for (const line of ["semgrep: ['--config=/etc/passwd']", "semgrep: ['-x']", "semgrep: [p/secrets, '-v']"]) {
+    const problems = validateConfig({ settings: DEFAULT_SETTINGS, axes: axisDoc(line).axes });
+    assert.ok(problems.some((p) => p.includes('semgrep') && p.includes('"-')), `no option-shaped pack problem for ${line}: ${problems}`);
+  }
+  assert.deepEqual(validateConfig({ settings: DEFAULT_SETTINGS, axes: axisDoc('semgrep: [p/secrets, r/a-b]').axes }), []);
+});

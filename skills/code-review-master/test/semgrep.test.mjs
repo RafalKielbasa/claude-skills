@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, relative, resolve, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeRepo } from '../test-helpers/repo.mjs';
 import { buildSemgrepArgs, mapSemgrepResults, runSemgrep } from '../lib/semgrep.mjs';
@@ -273,4 +273,63 @@ test('a throw while mapping, reading or spawning becomes a status, never an exce
   const badTimeout = go(okSpawn([]), { semgrep: { ...SETTINGS.semgrep, timeout_s: 'soon' } });
   assert.deepEqual([badTimeout.status, badTimeout.reason], ['unavailable', 'docker-error']);
   assert.ok(badTimeout.detail);
+});
+
+test('an exit-0 scan that reported errors stays ok and counts them across calls', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  const members = [{ id: 'one', when: 'always', semgrep: ['p/a'] }, { id: 'two', when: 'always', semgrep: ['p/b'] }];
+  const plan = planOf(members.map((m) => slot(m.id, [m], ['a.ts'])));
+  const outputs = [
+    { results: [], errors: [{ message: 'Syntax error at line a.ts:1' }, { message: 'rule failed' }] },
+    { results: [], errors: [{ message: 'timeout on a.ts' }] },
+  ];
+  let n = 0;
+  const out = runSemgrep({
+    runId: 'r1', repo: dir, plan, settings: SETTINGS, hunks: null,
+    spawn: () => ({ status: 0, stdout: JSON.stringify(outputs[n++]), stderr: '' }),
+  });
+  assert.equal(out.status, 'ok');
+  assert.equal(out.errors, 3);
+  const clean = runSemgrep({ runId: 'r1', repo: dir, plan, settings: SETTINGS, hunks: null, spawn: okSpawn([]) });
+  assert.equal(clean.errors, 0);
+});
+
+test('a relative repository is mounted by its absolute path', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  const rel = relative(process.cwd(), dir);
+  assert.equal(isAbsolute(rel), false, 'precondition: the test repo must be reachable by a relative path');
+  const plan = planOf([slot('secrets', [{ id: 'secrets', when: 'always', semgrep: ['p/secrets'] }], ['a.ts'])]);
+  const calls = [];
+  runSemgrep({
+    runId: 'r1', repo: rel, plan, settings: SETTINGS, hunks: null,
+    spawn: (cmd, args) => { calls.push(args); return { status: 0, stdout: '{"results":[]}', stderr: '' }; },
+  });
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0].includes(`${resolve(rel)}:/src:ro`), calls[0].join(' '));
+});
+
+test('the changed-line diff is computed only when a scan will happen', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  const rules = [{ id: 'secrets', when: 'always', semgrep: ['p/secrets'] }];
+  const noRules = planOf([slot('quality', [{ id: 'quality', semgrep: [] }], ['a.ts'])], { mode: 'pr' });
+  const withRules = planOf([slot('secrets', rules, ['a.ts'])], { mode: 'pr' });
+  const forbidden = () => { throw new Error('the diff (gh/git) must not be computed'); };
+  const go = (plan, extra = {}) => runSemgrep({
+    runId: 'r1', repo: dir, plan, settings: SETTINGS, hunks: forbidden, spawn: forbidden, headOf: () => 'abc', ...extra,
+  });
+  assert.equal(go(noRules).status, 'nothing-to-scan');
+  assert.equal(go({ ...withRules, mode: 'working' }).status, 'not-in-mode');
+  assert.equal(go(withRules, { settings: { semgrep: { ...SETTINGS.semgrep, enabled: false } } }).status, 'disabled');
+  assert.equal(go(withRules).reason, 'pr-not-checked-out');
+
+  let computed = 0;
+  const out = runSemgrep({
+    runId: 'r1', repo: dir, plan: withRules, settings: SETTINGS, headOf: () => 'def',
+    hunks: () => { computed += 1; return new Map([['a.ts', [[1, 1]]]]); },
+    spawn: okSpawn([result(1)]),
+  });
+  assert.equal(computed, 1);
+  assert.equal(out.status, 'ok');
+  assert.equal(out.hunksAvailable, true);
+  assert.equal(out.findings.length, 1);
 });

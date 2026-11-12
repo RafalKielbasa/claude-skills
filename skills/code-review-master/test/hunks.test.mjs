@@ -45,7 +45,7 @@ test('changedHunks asks gh for the PR diff in pr mode', () => {
   const calls = [];
   const gh = (args) => { calls.push(args); return ''; };
   changedHunks({ repo: '.', plan: { mode: 'pr', target: { pr: 42 } }, gh });
-  assert.deepEqual(calls, [['pr', 'diff', '42']]);
+  assert.deepEqual(calls, [['pr', 'diff', '42', '--color=never']]);
 });
 
 test('changedHunks runs a config-independent git diff in branch mode', () => {

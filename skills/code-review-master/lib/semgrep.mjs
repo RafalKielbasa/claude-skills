@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { statSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { overlapsHunks } from './hunks.mjs';
 import { matchGlob } from './glob.mjs';
 
@@ -77,9 +77,14 @@ const defaultHeadOf = (repo) => {
 
 // Every outcome carries the same fields, so the report can render any status
 // without checking which ones exist.
+// `hunks` is a Map, null, or a function returning either. A function is called
+// only once a scan is certain: in `pr` mode it runs `gh pr diff`, a network call
+// that every early status (not-in-mode, disabled, nothing-to-scan, a PR not
+// checked out) would otherwise pay for nothing.
 export function runSemgrep({ runId, repo, plan, settings, spawn = spawnSync, hunks, headOf = defaultHeadOf, now = Date.now }) {
   const image = settings.semgrep.image;
-  const base = { findings: [], scannedAxes: [], outsideChange: 0, hunksAvailable: hunks instanceof Map, image };
+  const lazy = typeof hunks === 'function';
+  const base = { findings: [], scannedAxes: [], outsideChange: 0, errors: 0, hunksAvailable: hunks instanceof Map, image };
   const stop = (status, extra = {}) => ({ ...base, status, ...extra });
 
   if (plan.mode !== 'pr' && plan.mode !== 'branch') return stop('not-in-mode');
@@ -119,10 +124,21 @@ export function runSemgrep({ runId, repo, plan, settings, spawn = spawnSync, hun
   if (!Number.isFinite(budgetMs) || budgetMs <= 0) {
     return stop('unavailable', { reason: 'docker-error', detail: `invalid semgrep.timeout_s: ${settings.semgrep.timeout_s}` });
   }
+  let changed = hunks;
+  if (lazy) {
+    // A diff that cannot be computed fails open (unfiltered, and the report
+    // says so), exactly like `changedHunks` returning null.
+    try { changed = hunks(); } catch { changed = null; }
+  }
+  const hunksAvailable = changed instanceof Map;
+  // Absolute, because an older Docker CLI reads a relative `-v` source as the
+  // name of a volume, not as a directory, and mounts an empty one.
+  const mountRepo = resolve(repo);
   const startedAt = now();
   const scannedAxes = [];
   const kept = [];
   let outsideChange = 0;
+  let errors = 0;
 
   for (const [n, job] of jobs.entries()) {
     const name = `crm-${runId}-${n}`;
@@ -130,7 +146,7 @@ export function runSemgrep({ runId, repo, plan, settings, spawn = spawnSync, hun
     if (remaining <= 0) return stop('timeout');
     let result;
     try {
-      result = spawn('docker', buildSemgrepArgs({ repo, image, name, packs: job.packs, files: job.files }),
+      result = spawn('docker', buildSemgrepArgs({ repo: mountRepo, image, name, packs: job.packs, files: job.files }),
         { encoding: 'utf8', timeout: remaining, maxBuffer: 64 * 1024 * 1024 });
     } catch (err) {
       // A finder failure never fails the command; the report gets one line.
@@ -161,6 +177,9 @@ export function runSemgrep({ runId, repo, plan, settings, spawn = spawnSync, hun
     if (!output || !Array.isArray(output.results)) {
       return stop('unparsable', { detail: firstLine(result.stderr) ?? firstLine(result.stdout) ?? 'no JSON results in output' });
     }
+    // Exit 0 with `errors[]` is a partial scan (a file it could not parse, a
+    // rule that failed): the results stand, but the report must say so.
+    if (Array.isArray(output.errors)) errors += output.errors.length;
     let mapped;
     try {
       mapped = mapSemgrepResults(output, { axisId: job.slotId, sourceOf });
@@ -169,12 +188,12 @@ export function runSemgrep({ runId, repo, plan, settings, spawn = spawnSync, hun
     }
     scannedAxes.push(job.axisId);
     for (const finding of mapped) {
-      if (hunks instanceof Map && !overlapsHunks(hunks, finding.file, finding.lines)) {
+      if (hunksAvailable && !overlapsHunks(changed, finding.file, finding.lines)) {
         outsideChange += 1;
       } else {
         kept.push(finding);
       }
     }
   }
-  return { ...base, status: 'ok', findings: kept, scannedAxes, outsideChange };
+  return { ...base, status: 'ok', findings: kept, scannedAxes, outsideChange, errors, hunksAvailable };
 }

@@ -20,6 +20,13 @@ export const DEFAULT_SETTINGS = {
   disable: [],
 };
 
+// The image lands in docker's argv right before the container command, so a
+// value starting with `-` would be parsed as a docker option (`--privileged`).
+// A tag or a digest at the end is what "pinned" means; the name before it is
+// held to the lowercase characters Docker allows in a repository name.
+const PINNED_IMAGE_SUFFIX = /(:[^:/@]+|@sha256:[0-9a-f]{64})$/;
+const IMAGE_REFERENCE = /^[a-z0-9][a-z0-9._/:-]*(:[^:/@]+|@sha256:[0-9a-f]{64})$/;
+
 const RANKS = new Set(['always', 'rotate']);
 const SEVERITIES = new Set(['blocking', 'suggestion', 'nitpick']);
 
@@ -113,6 +120,12 @@ export function validateConfig({ settings, axes }) {
     }
     if (!Array.isArray(axis.semgrep) || !axis.semgrep.every((p) => typeof p === 'string' && p.trim() !== '')) {
       problems.push(`axis "${axis.id}" has a semgrep value that is not a list of non-empty rule-pack strings`);
+    } else {
+      // Each pack follows `--config` in docker's argv; one starting with `-`
+      // would be read by Semgrep as an option of its own, not as a rule pack.
+      for (const pack of axis.semgrep.filter((p) => /^\s*-/.test(p))) {
+        problems.push(`axis "${axis.id}" has a semgrep rule pack "${pack}" that starts with "-"; a rule pack is a registry id or a path`);
+      }
     }
   }
   if (!['blocking', 'any', 'none'].includes(settings.gate)) {
@@ -126,8 +139,10 @@ export function validateConfig({ settings, axes }) {
   }
   // A tag-less or :latest image drifts silently between runs (see DEFAULT_SETTINGS).
   const image = settings.semgrep.image;
-  if (typeof image !== 'string' || !/:[^:/]+$/.test(image) || image.endsWith(':latest')) {
+  if (typeof image !== 'string' || !PINNED_IMAGE_SUFFIX.test(image) || image.endsWith(':latest')) {
     problems.push(`semgrep.image "${image}" must be pinned to a version tag, not latest or tag-less`);
+  } else if (!IMAGE_REFERENCE.test(image)) {
+    problems.push(`semgrep.image "${image}" is not an image reference: lowercase name starting with a letter or digit, then a tag or @sha256 digest`);
   }
   return problems;
 }

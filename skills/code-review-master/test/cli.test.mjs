@@ -683,6 +683,9 @@ test('the worker deadline stops finders that are still running', () => {
   }
 });
 
+// assemble reads a finder's side file only behind an `ok` status in finders.json.
+const CODEX_FIND_OK = { codexFind: { status: 'ok', found: 1, droppedOffAxis: 0 }, semgrep: { status: 'disabled' }, finishedAt: 'now' };
+
 test('assemble reads the finder side files and counts rejections per source', () => {
   const dir = makeRepo({ 'a.ts': 'const course = findFirst({ where: { id } });\n' });
   writeFiles(dir, { '.claude/review/config.md': CONFIG, 'a.ts': 'const course = findFirst({ where: { id } });\nchanged\n' });
@@ -698,6 +701,7 @@ test('assemble reads the finder side files and counts rejections per source', ()
     axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking',
     claim: 'invented', evidence: 'this text is not in the file at all',
   }]));
+  writeFileSync(join(reports, `${plan.runId}-finders.json`), JSON.stringify(CODEX_FIND_OK));
   const out = JSON.parse(run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']));
   assert.equal(out.findings.length, 1);
   assert.deepEqual(out.rejectedBySource, { sonnet: 0, codex: 1, semgrep: 0 });
@@ -720,6 +724,7 @@ test('assemble stamps source from the side file, ignoring what the finder wrote'
     axis: 'quality', file: 'a.ts', lines: [2, 2], severity: 'blocking', source: 'sonnet',
     claim: 'unbounded query', evidence: 'const other = findMany({ where: { id } });',
   }]));
+  writeFileSync(join(reports, `${plan.runId}-finders.json`), JSON.stringify(CODEX_FIND_OK));
   run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']);
   const written = JSON.parse(readFileSync(join(reports, `${plan.runId}-findings.json`), 'utf8'));
   const codexOne = written.findings.find((f) => f.claim === 'unbounded query');
@@ -743,4 +748,105 @@ test("the judge skips findings whose kept claim is codex's", () => {
   const saved = JSON.parse(readFileSync(file, 'utf8'));
   assert.equal(saved.findings[0].codex.verdict, 'own');
   assert.equal(saved.findings[0].codex.fix, 'do x');
+});
+
+const writeReport = (dir, runId, name, value) => {
+  mkdirSync(join(dir, '.claude', 'review', 'reports'), { recursive: true });
+  writeFileSync(reportsFile(dir, runId, name), JSON.stringify(value));
+};
+const SOURCE_LINES = 'const course = findFirst({ where: { id } });\nconst other = findMany({ where: { id } });\n';
+// A planned working run with one Sonnet finding on line 1 and the raw path.
+const assembleRun = () => {
+  const dir = makeRepo({ 'a.ts': SOURCE_LINES });
+  writeFiles(dir, { '.claude/review/config.md': CONFIG, 'a.ts': `${SOURCE_LINES}changed\n` });
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json']));
+  const raw = join(dir, `${plan.runId}-raw.json`);
+  writeFileSync(raw, JSON.stringify([{
+    axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'suggestion',
+    claim: 'query without tenant filter', evidence: 'const course = findFirst({ where: { id } });',
+  }]));
+  return { dir, runId: plan.runId, raw };
+};
+const codexRaw = [{ axis: 'quality', file: 'a.ts', lines: [2, 2], severity: 'blocking',
+  claim: 'unbounded query', evidence: 'const other = findMany({ where: { id } });' }];
+const semgrepRaw = [{ axis: 'quality', file: 'a.ts', lines: [2, 2], severity: 'nitpick',
+  claim: 'semgrep says (semgrep: rule.x)', evidence: 'const other = findMany({ where: { id } });', rule: 'rule.x' }];
+
+test('assemble ignores leftover finder files when no finders result exists', () => {
+  const { dir, runId, raw } = assembleRun();
+  writeReport(dir, runId, 'codex-raw.json', codexRaw);
+  writeReport(dir, runId, 'semgrep-raw.json', semgrepRaw);
+  const out = JSON.parse(run(['assemble', '--repo', dir, '--run', runId, '--raw', raw, '--json']));
+  assert.deepEqual(out.findings.map((f) => f.claim), ['query without tenant filter']);
+});
+
+test('assemble reads a finder file only when that finder ended ok', () => {
+  const { dir, runId, raw } = assembleRun();
+  writeReport(dir, runId, 'codex-raw.json', codexRaw);
+  writeReport(dir, runId, 'semgrep-raw.json', semgrepRaw);
+  writeReport(dir, runId, 'finders.json', {
+    codexFind: { status: 'ok', found: 1, droppedOffAxis: 0 },
+    semgrep: { status: 'unavailable', reason: 'worker-died' }, finishedAt: 'now',
+  });
+  const out = JSON.parse(run(['assemble', '--repo', dir, '--run', runId, '--raw', raw, '--json']));
+  assert.deepEqual(out.findings.map((f) => f.claim).sort(), ['query without tenant filter', 'unbounded query']);
+  const written = JSON.parse(readFileSync(reportsFile(dir, runId, 'findings.json'), 'utf8'));
+  assert.equal(written.findings.some((f) => f.sources.includes('semgrep')), false,
+    'a semgrep file left by a dead worker must not reach assemble');
+});
+
+test('assemble hands sources and alsoClaimed to the wave-2 verifier', () => {
+  const { dir, runId, raw } = assembleRun();
+  writeReport(dir, runId, 'codex-raw.json', [{ ...codexRaw[0], lines: [1, 1], claim: 'codex claim',
+    evidence: 'const course = findFirst({ where: { id } });', fix: 'add a filter' }]);
+  writeReport(dir, runId, 'finders.json', {
+    codexFind: { status: 'ok', found: 1, droppedOffAxis: 0 }, semgrep: { status: 'disabled' }, finishedAt: 'now',
+  });
+  const out = JSON.parse(run(['assemble', '--repo', dir, '--run', runId, '--raw', raw, '--json']));
+  assert.equal(out.findings.length, 1);
+  assert.deepEqual(out.findings[0].sources, ['sonnet', 'codex']);
+  assert.equal(out.findings[0].claim, 'codex claim', 'the blocking codex claim is the kept one');
+  assert.deepEqual(out.findings[0].alsoClaimed,
+    [{ source: 'sonnet', claim: 'query without tenant filter', severity: 'suggestion', fix: null }]);
+});
+
+const STALE_SIDE_FILES = ['codex-raw.json', 'codex-find-status.json', 'semgrep-raw.json', 'semgrep-status.json'];
+const writeStaleSideFiles = (dir, runId) => {
+  writeReport(dir, runId, 'codex-raw.json', codexRaw);
+  writeReport(dir, runId, 'codex-find-status.json', { status: 'ok', found: 9, droppedOffAxis: 0 });
+  writeReport(dir, runId, 'semgrep-raw.json', semgrepRaw);
+  writeReport(dir, runId, 'semgrep-status.json', { status: 'ok', found: 9 });
+  writeReport(dir, runId, 'finders.json', { codexFind: { status: 'ok' }, semgrep: { status: 'ok' }, finishedAt: 'old' });
+};
+
+test('finders --start clears the previous attempt\'s side files before the worker starts', () => {
+  const config = CONFIG.replace('---\nbudget', '---\ncodex: { enabled: false }\nbudget');
+  const { dir, runId } = branchRun(config);
+  writeStaleSideFiles(dir, runId);
+  const started = JSON.parse(run(['finders', '--repo', dir, '--run', runId, '--start', '--json']));
+  assert.deepEqual(started, { started: true });
+  // The worker never writes raw files here (codex disabled, no Semgrep rules).
+  assert.equal(existsSync(reportsFile(dir, runId, 'codex-raw.json')), false);
+  assert.equal(existsSync(reportsFile(dir, runId, 'semgrep-raw.json')), false);
+  const out = runWait(dir, runId, ['--max-s', '20']);
+  assert.equal(out.codexFind.status, 'disabled');
+  assert.equal(JSON.parse(readFileSync(reportsFile(dir, runId, 'codex-find-status.json'), 'utf8')).status, 'disabled');
+  assert.equal(JSON.parse(readFileSync(reportsFile(dir, runId, 'semgrep-status.json'), 'utf8')).status, 'nothing-to-scan');
+});
+
+test('finders --start leaves side files alone when it does not start a worker', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  writeStaleSideFiles(dir, runId);
+  writePid(dir, runId, process.pid);
+  const busy = JSON.parse(run(['finders', '--repo', dir, '--run', runId, '--start', '--json']));
+  assert.deepEqual(busy, { started: false, reason: 'already-running' });
+  for (const name of [...STALE_SIDE_FILES, 'finders.json']) assert.ok(existsSync(reportsFile(dir, runId, name)), name);
+
+  const other = makeRepo({ 'a.ts': 'one\n', '.claude/review/config.md': CONFIG });
+  writeFiles(other, { 'a.ts': 'one\ntwo\n' });
+  const plan = JSON.parse(run(['plan', '--repo', other, '--mode', 'working', '--json']));
+  writeStaleSideFiles(other, plan.runId);
+  const out = JSON.parse(run(['finders', '--repo', other, '--run', plan.runId, '--start', '--json']));
+  assert.deepEqual(out, { started: false, reason: 'not-in-mode' });
+  for (const name of [...STALE_SIDE_FILES, 'finders.json']) assert.ok(existsSync(reportsFile(other, plan.runId, name)), name);
 });

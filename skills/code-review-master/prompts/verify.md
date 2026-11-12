@@ -18,6 +18,10 @@ A finding whose evidence you cannot find at the cited lines scores **0**,
 however convincing its wording. **Not-found and not-sure are different:**
 not-found is 0, not-sure is 25. Say which one you mean in the note.
 
+A finding may carry `alsoClaimed`: other finders' claims at the same place.
+Score the finding's own `claim`, not those. If an `alsoClaimed` entry describes a
+real problem different from the `claim`, say so in the note.
+
 Return a JSON array: `[{"id": "f-01", "confidence": 92, "note": "one line"}]`.
 
 Do not dispatch or spawn any further agents. Do not modify any file.

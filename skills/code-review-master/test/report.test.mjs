@@ -151,8 +151,7 @@ test('each finder outcome is named for what it was', () => {
     [{ status: 'unavailable', reason: 'pr-not-checked-out' }, '**Semgrep pominięty**: lokalny checkout nie jest tipem PR-a.'],
     [{ status: 'unavailable', reason: 'docker-missing', detail: 'spawn docker ENOENT' },
       '**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany): `spawn docker ENOENT`.'],
-    [{ status: 'unavailable', reason: 'docker-error' },
-      '**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany).'],
+    [{ status: 'unavailable', reason: 'docker-error' }, '**Semgrep nie zadziałał**.'],
     [{ status: 'timeout' }, '**Semgrep przekroczył limit czasu.**'],
     [{ status: 'timeout', reason: 'worker-deadline' }, '**Semgrep przekroczył limit czasu.**'],
     [{ status: 'unparsable' }, '**odpowiedź Semgrepa nieczytelna** — brak uwag od Semgrepa.'],
@@ -165,16 +164,63 @@ test('each finder outcome is named for what it was', () => {
   }
 });
 
-test('a finder that died replaces both finder lines with one', () => {
-  const died = '**proces szukających przerwał pracę** — brak uwag od codexa jako szukającego i od Semgrepa.';
-  for (const finders of [
-    { codexFind: { status: 'unavailable', reason: 'worker-died' }, semgrep: okSemgrep },
-    { codexFind: okCodex, semgrep: { status: 'unavailable', reason: 'worker-died' } },
-  ]) {
-    const md = renderPr(finders);
-    assert.equal(md.split(died).length - 1, 1);
-    assert.equal(/codex jako szukający|Semgrep \(osie|Semgrep niedostępny/.test(md), false);
+test('codex finder findings dropped as off-axis are counted in its line', () => {
+  const md = renderPr({ codexFind: { status: 'ok', found: 4, droppedOffAxis: 2 }, semgrep: { status: 'disabled' } });
+  assert.ok(md.includes('codex jako szukający: 4 uwagi przed weryfikacją, 2 odrzucono jako spoza osi.'));
+  const none = renderPr({ codexFind: okCodex, semgrep: { status: 'disabled' } });
+  assert.equal(none.includes('spoza osi'), false);
+});
+
+test('only the Docker-shaped failures blame Docker', () => {
+  const docker = '**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany)';
+  const cases = [
+    [{ reason: 'docker-error', detail: 'error during connect: open //./pipe/docker_engine' },
+      `${docker}: \`error during connect: open //./pipe/docker_engine\`.`],
+    [{ reason: 'docker-error', detail: 'Cannot connect to the Docker daemon at unix:///var/run/docker.sock.' },
+      `${docker}: \`Cannot connect to the Docker daemon at unix:///var/run/docker.sock.\`.`],
+    [{ reason: 'docker-error', detail: 'bad config' }, '**Semgrep nie zadziałał**: `bad config`.'],
+    [{ reason: 'command-failed', detail: 'exit code 3' }, '**Semgrep nie zadziałał**: `exit code 3`.'],
+    [{ reason: 'command-failed' }, '**Semgrep nie zadziałał**.'],
+  ];
+  for (const [failure, line] of cases) {
+    const md = renderPr({ codexFind: { status: 'disabled' }, semgrep: { status: 'unavailable', ...failure } });
+    assert.ok(md.includes(line), `missing: ${line}`);
   }
+  for (const [failure] of cases.slice(2)) {
+    const md = renderPr({ codexFind: { status: 'disabled' }, semgrep: { status: 'unavailable', ...failure } });
+    assert.equal(md.includes('Docker nie działa'), false, JSON.stringify(failure));
+  }
+});
+
+test('a dead worker is named per finder, and once when both died', () => {
+  const both = '**proces szukających przerwał pracę** — brak uwag od codexa jako szukającego i od Semgrepa.';
+  const codexDied = '**proces szukających przerwał pracę** — brak uwag od codexa jako szukającego.';
+  const semgrepDied = '**proces szukających przerwał pracę** — brak uwag od Semgrepa.';
+  const died = { status: 'unavailable', reason: 'worker-died' };
+
+  const all = renderPr({ codexFind: died, semgrep: died });
+  assert.equal(all.split(both).length - 1, 1);
+  assert.equal(/codex jako szukający:|Semgrep \(osie|Semgrep niedostępny/.test(all), false);
+
+  const onlyCodex = renderPr({ codexFind: died, semgrep: okSemgrep });
+  assert.ok(onlyCodex.includes(codexDied));
+  assert.ok(onlyCodex.includes('Semgrep (osie: security, conventions): 2 uwagi w zmienionych liniach'));
+  assert.equal(onlyCodex.includes(both), false);
+
+  const onlySemgrep = renderPr({ codexFind: okCodex, semgrep: died });
+  assert.ok(onlySemgrep.includes(semgrepDied));
+  assert.ok(onlySemgrep.includes('codex jako szukający: 4 uwagi przed weryfikacją.'));
+  assert.equal(onlySemgrep.includes(both), false);
+});
+
+test('scan errors Semgrep reported on an ok run are named with a Polish plural', () => {
+  const tail = 'skanowania — część plików mogła nie zostać przejrzana.';
+  for (const [errors, words] of [[1, '1 błąd'], [3, '3 błędy'], [5, '5 błędów'], [22, '22 błędy']]) {
+    const md = renderPr({ codexFind: { status: 'disabled' }, semgrep: { ...okSemgrep, errors } });
+    assert.ok(md.includes(`3 poza zmianą pominięto. Semgrep zgłosił ${words} ${tail}`), `${errors}: ${md}`);
+  }
+  const clean = renderPr({ codexFind: { status: 'disabled' }, semgrep: { ...okSemgrep, errors: 0 } });
+  assert.equal(clean.includes('zgłosił'), false);
 });
 
 test('a not-in-mode finder prints nothing', () => {

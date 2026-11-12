@@ -61,7 +61,9 @@ const defaultGh = (repo) => (args) => execFileSync('gh', args,
 export function changedHunks({ repo, plan, git = defaultGit(repo), gh = defaultGh(repo) }) {
   try {
     const patch = plan.mode === 'pr'
-      ? gh(['pr', 'diff', String(plan.target.pr)])
+      // `--color=never`: gh colours output when it thinks it has a terminal
+      // (GH_FORCE_TTY, CLICOLOR_FORCE), and escape codes break the `@@` parse.
+      ? gh(['pr', 'diff', String(plan.target.pr), '--color=never'])
       // Pinned against user config: quotepath would octal-escape non-ASCII
       // paths, a diff.noprefix/mnemonicPrefix setting would change the b/
       // prefix, and color or an external differ would corrupt the text. The

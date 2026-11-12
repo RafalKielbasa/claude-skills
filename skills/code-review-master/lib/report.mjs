@@ -28,8 +28,18 @@ const CODEX_FIND_NOTE = {
   unavailable: () => '**codex jako szukający niedostępny** — uwagi pochodzą tylko od pozostałych źródeł.',
   timeout: () => '**codex jako szukający przekroczył limit czasu** — uwagi pochodzą tylko od pozostałych źródeł.',
   unparsable: () => '**odpowiedź codexa jako szukającego nieczytelna** — uwagi pochodzą tylko od pozostałych źródeł.',
-  ok: (c) => `codex jako szukający: ${remarks(c.found ?? 0)} przed weryfikacją.`,
+  // Off-axis drops are named: a finding codex gave on a file or axis outside
+  // the plan is lost work, and the count is the only trace of it.
+  ok: (c) => `codex jako szukający: ${remarks(c.found ?? 0)} przed weryfikacją`
+    + `${c.droppedOffAxis > 0 ? `, ${c.droppedOffAxis} odrzucono jako spoza osi` : ''}.`,
 };
+
+// Only a failure Docker itself reported is blamed on Docker. A bad rule pack, a
+// Semgrep crash or a dead crm child is something else, and telling the reader
+// to start Docker would send them to fix what is not broken.
+const DOCKER_DOWN = /error during connect|Cannot connect to the Docker daemon/i;
+const dockerIsDown = (s) => s.reason === 'docker-missing'
+  || (s.reason === 'docker-error' && DOCKER_DOWN.test(s.detail ?? ''));
 
 function semgrepUnavailable(s) {
   if (s.reason === 'image-not-pulled') {
@@ -37,8 +47,15 @@ function semgrepUnavailable(s) {
   }
   if (s.reason === 'pr-not-checked-out') return '**Semgrep pominięty**: lokalny checkout nie jest tipem PR-a.';
   const detail = s.detail ? `: \`${s.detail}\`` : '';
-  return `**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany)${detail}.`;
+  if (dockerIsDown(s)) return `**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany)${detail}.`;
+  return `**Semgrep nie zadziałał**${detail}.`;
 }
+
+// Exit 0 with entries in `errors[]` means Semgrep skipped part of the scan (a
+// file it could not parse, a rule that failed); "0 uwag" alone would read as clean.
+const scanErrors = (n) => (n > 0
+  ? ` Semgrep zgłosił ${n} ${plural(n, 'błąd', 'błędy', 'błędów')} skanowania — część plików mogła nie zostać przejrzana.`
+  : '');
 
 const SEMGREP_NOTE = {
   disabled: () => 'Semgrep wyłączony w konfiguracji.',
@@ -48,7 +65,8 @@ const SEMGREP_NOTE = {
   unparsable: () => '**odpowiedź Semgrepa nieczytelna** — brak uwag od Semgrepa.',
   ok: (s) => `Semgrep (osie: ${(s.scannedAxes ?? []).join(', ')}): ${remarks(s.found ?? 0)} w zmienionych liniach, `
     + `${s.outsideChange ?? 0} poza zmianą pominięto.`
-    + (s.hunksAvailable === false ? ' Filtr zmienionych linii niedostępny — wyniki niefiltrowane.' : ''),
+    + (s.hunksAvailable === false ? ' Filtr zmienionych linii niedostępny — wyniki niefiltrowane.' : '')
+    + scanErrors(s.errors ?? 0),
 };
 
 const workerDied = (f) => f?.reason === 'worker-died';
@@ -58,13 +76,16 @@ function finderLines({ run, finders }) {
   if (!hasFinderStep(run)) return [];
   if (!finders) return ['**krok szukających nie został wykonany** — uwagi pochodzą tylko od agentów Sonnet.'];
   const { codexFind, semgrep } = finders;
-  // One dead worker means neither result can be trusted to be complete, so one
-  // line replaces both rather than reporting the other finder as fine.
-  if (workerDied(codexFind) || workerDied(semgrep)) {
-    return ['**proces szukających przerwał pracę** — brak uwag od codexa jako szukającego i od Semgrepa.'];
+  const died = '**proces szukających przerwał pracę**';
+  if (workerDied(codexFind) && workerDied(semgrep)) {
+    return [`${died} — brak uwag od codexa jako szukającego i od Semgrepa.`];
   }
-  return [CODEX_FIND_NOTE[codexFind?.status]?.(codexFind), SEMGREP_NOTE[semgrep?.status]?.(semgrep)]
-    .filter(Boolean);
+  // A finder that finished before the worker died left its own status file
+  // (`finders --wait`), and that result stands: only the dead one loses its line.
+  return [
+    workerDied(codexFind) ? `${died} — brak uwag od codexa jako szukającego.` : CODEX_FIND_NOTE[codexFind?.status]?.(codexFind),
+    workerDied(semgrep) ? `${died} — brak uwag od Semgrepa.` : SEMGREP_NOTE[semgrep?.status]?.(semgrep),
+  ].filter(Boolean);
 }
 
 function sourcesLine(findings) {

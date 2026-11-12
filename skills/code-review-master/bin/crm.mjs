@@ -11,7 +11,7 @@ import { assemble, validateFinding, applyThresholds } from '../lib/findings.mjs'
 import { recordTriage } from '../lib/triage.mjs';
 import { renderReport } from '../lib/report.mjs';
 import { buildCodexPrompt, runCodex, runCodexFind } from '../lib/codex.mjs';
-import { effectiveDeadlineMs, failureDetail, startWorker } from '../lib/finders.mjs';
+import { effectiveDeadlineMs, failureDetail, killProcessTree, startWorker } from '../lib/finders.mjs';
 import { runSemgrep } from '../lib/semgrep.mjs';
 import { changedHunks } from '../lib/hunks.mjs';
 import { blobLink } from '../lib/links.mjs';
@@ -192,7 +192,7 @@ function runFinderChild(command, repo, runId) {
   });
   const expire = () => {
     if (settled) return;
-    child.kill();
+    killProcessTree(child);
     // Grandchildren (codex, docker) can keep the pipes open after the crm
     // child dies; destroying our ends lets the worker's event loop drain.
     child.stdout.destroy();
@@ -319,11 +319,16 @@ const COMMANDS = {
     const valid = [];
     const rejectedBySource = { sonnet: 0, codex: 0, semgrep: 0 };
     // `source` is stamped from the file a finding came from, never from what the
-    // finder wrote in it. A finder that is absent or failed leaves no side file.
+    // finder wrote in it. A side file is read only when this run's finders
+    // result says that finder ended `ok`: a file left by an earlier attempt, or
+    // by a finder the worker was declared dead around, would otherwise reach
+    // the report while its header says that finder produced nothing.
+    const finders = readFinders(repo, args.run);
+    const finderFile = (key, name) => (finders?.[key]?.status === 'ok' ? readSideFile(repo, args.run, name) : []);
     const inputs = [
       ['sonnet', readInputFile(args.raw, '--raw')],
-      ['semgrep', readSideFile(repo, args.run, 'semgrep-raw.json')],
-      ['codex', readSideFile(repo, args.run, 'codex-raw.json')],
+      ['semgrep', finderFile('semgrep', 'semgrep-raw.json')],
+      ['codex', finderFile('codexFind', 'codex-raw.json')],
     ];
     for (const [source, list] of inputs) {
       for (const raw of list) {
@@ -340,8 +345,14 @@ const COMMANDS = {
     out.rejectedForEvidence = rejected;
     out.rejectedBySource = rejectedBySource;
     writeJson(reportPath(repo, args.run, 'findings.json'), out);
+    // This projection is what wave 2 verifies (SKILL.md Step 6), so it carries
+    // `sources` and `alsoClaimed`: a verifier that never sees another finder's
+    // claim at the same lines cannot say it describes a different problem.
     return {
-      findings: out.findings.map((f) => ({ id: f.id, axis: f.axis, file: f.file, lines: f.lines, severity: f.severity, claim: f.claim, evidence: f.evidence })),
+      findings: out.findings.map((f) => ({
+        id: f.id, axis: f.axis, file: f.file, lines: f.lines, severity: f.severity, claim: f.claim, evidence: f.evidence,
+        sources: f.sources, alsoClaimed: f.alsoClaimed,
+      })),
       suppressed: out.suppressed.length,
       rejectedForEvidence: rejected.length,
       rejectedBySource,
@@ -438,12 +449,11 @@ const COMMANDS = {
     const repo = args.repo ?? process.cwd();
     const config = loadConfig(repo);
     const plan = readRunFile(repo, args.run, 'plan.json');
-    const inMode = plan.mode === 'pr' || plan.mode === 'branch';
-    // The diff is only worth computing (gh call in pr mode) when a scan can happen.
-    const hunks = inMode && config.settings.semgrep.enabled !== false
-      ? changedHunks({ repo, plan })
-      : null;
-    const result = runSemgrep({ runId: args.run, repo, plan, settings: config.settings, hunks });
+    // Passed as a function: `runSemgrep` computes the diff (a gh call in pr
+    // mode) only after every status that ends without a scan is ruled out.
+    const result = runSemgrep({
+      runId: args.run, repo, plan, settings: config.settings, hunks: () => changedHunks({ repo, plan }),
+    });
     if (result.status === 'not-in-mode') return { status: 'not-in-mode' };
     const { findings, ...status } = result;
     const summary = { ...status, found: findings.length };
@@ -471,7 +481,12 @@ const COMMANDS = {
           return { started: false, reason: 'already-running' };
         }
       }
-      rmSync(resultPath, { force: true });
+      // The previous attempt's status and raw files go too: a finder that this
+      // attempt does not get to (worker killed, deadline) must not be reported
+      // from them, nor `--wait` keep an old status for a worker declared dead.
+      for (const name of ['finders.json', 'codex-raw.json', 'codex-find-status.json', 'semgrep-raw.json', 'semgrep-status.json']) {
+        rmSync(reportPath(repo, args.run, name), { force: true });
+      }
       return startWorker(spawn, {
         command: process.execPath,
         args: [fileURLToPath(import.meta.url), 'finders-worker', '--run', args.run, '--repo', repo],

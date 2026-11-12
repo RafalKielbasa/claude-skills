@@ -168,3 +168,28 @@ test('the finders wait loop is capped and a poll is not a re-dispatch', () => {
   assert.match(step5, /3 consecutive `pending`/);
   assert.match(step5, /not a re-dispatch/);
 });
+
+// G4: a finder failure costs one line in the conversation as well as in the
+// report; the report alone is read after the run, the conversation during it.
+test('after the wait, each finder that did not work is named in one Polish line', () => {
+  const step5 = section('## Step 5 — assemble', '## Step 6 — wave 2');
+  assert.match(step5, /one line in Polish per finder/i);
+  assert.match(step5, /not `ok`, `disabled` or `nothing-to-scan`/);
+  assert.match(step5, /wording `raport\.md` uses for that status/);
+  assert.match(step5, /`image-not-pulled`[\s\S]{0,200}`docker pull <image>`/);
+});
+
+test('send never names the finder in a GitHub comment', () => {
+  const send = section('## Mode `send`', '## Mode `fix`');
+  assert.match(send, /never names the finder/i);
+  assert.match(send, /`sonnet`, `codex`, `semgrep`/);
+  assert.match(send, /`\(semgrep: <check_id>\)`/);
+});
+
+test('the extra-finders budget line follows the switches and the axes that will scan', () => {
+  const step1 = section('## Step 1 — plan', '## Step 2 — raise');
+  assert.match(step1, /settings\.codex\.enabled && settings\.codex\.find/);
+  assert.match(step1, /settings\.semgrep\.enabled/);
+  assert.match(step1, /`when` matches at least one file of (its|their) slot/);
+  assert.match(step1, /omit the whole line/i);
+});

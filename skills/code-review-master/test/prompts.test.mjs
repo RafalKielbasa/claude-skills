@@ -62,3 +62,10 @@ test('the codex finder prompt fixes the return shape and forbids edits', () => {
   assert.match(text, /do not modify any file/i);
   assert.match(text, /{{AXES}}/);
 });
+
+test('the verify prompt scores the claim and only notes what alsoClaimed adds', () => {
+  const text = read('verify.md');
+  assert.match(text, /`alsoClaimed`/);
+  assert.match(text, /Score the finding's own `claim`/);
+  assert.match(text, /different from the `claim`, say so in the note/);
+});

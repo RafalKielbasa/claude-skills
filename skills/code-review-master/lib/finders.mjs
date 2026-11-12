@@ -1,4 +1,5 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { dirname } from 'node:path';
 
 // The env override can only shorten the worker's life: a test needs a deadline
@@ -28,4 +29,20 @@ export function startWorker(spawnFn, { command, args, pidPath }) {
   mkdirSync(dirname(pidPath), { recursive: true });
   writeFileSync(pidPath, String(worker.pid), 'utf8');
   return { started: true };
+}
+
+// Kills a finder child at the worker deadline. On Windows `child.kill()` ends
+// only the crm child: codex and docker, its own children, run on past the
+// deadline. `taskkill /T` takes the whole tree, so it runs first, while the
+// child is still alive to be walked from; `child.kill()` follows as the
+// fallback and is all POSIX needs. Both are best effort: the worker writes its
+// result whether or not a kill succeeded. `spawn` and `platform` are injectable
+// so the command can be tested without killing anything.
+export function killProcessTree(child, { platform = process.platform, spawn = spawnSync } = {}) {
+  if (platform === 'win32' && Number.isInteger(child.pid)) {
+    try {
+      spawn('taskkill', ['/T', '/F', '/PID', String(child.pid)], { stdio: 'ignore', windowsHide: true, timeout: 10000 });
+    } catch { /* taskkill missing or failed: child.kill() below still runs */ }
+  }
+  try { child.kill(); } catch { /* already gone */ }
 }

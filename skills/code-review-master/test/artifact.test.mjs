@@ -12,6 +12,12 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const CLI = join(HERE, '..', 'bin', 'crm.mjs');
 const TEXT = readFileSync(join(HERE, '..', 'templates', 'artifact.html'), 'utf8');
 
+// The finder lines are page script, not a module. Evaluating just those two
+// functions tests their wording against the report's, instead of grepping it.
+const pageFinderLines = new Function(`${TEXT.slice(TEXT.indexOf('function remarksText'),
+  TEXT.indexOf('function renderFinderLines'))}\nreturn finderLines;`)();
+const pageLines = (finders) => pageFinderLines({ run: { mode: 'pr' }, finders, findings: [] });
+
 test('the template carries a title and the data placeholder', () => {
   assert.match(TEXT, /<title>[^<]+<\/title>/);
   assert.match(TEXT, /id="findings"/);
@@ -178,4 +184,44 @@ test('the page carries sources and a source filter', () => {
   assert.equal(payload.findings[0].alsoClaimed[0].claim, 'other');
   assert.equal(payload.finders.codexFind.status, 'ok');
   assert.equal(payload.finders.semgrep.status, 'disabled');
+});
+
+test('the page counts codex finder findings dropped as off-axis', () => {
+  const lines = pageLines({ codexFind: { status: 'ok', found: 4, droppedOffAxis: 2 }, semgrep: { status: 'disabled' } });
+  assert.ok(lines.includes('Codex as a finder: 4 findings before verification, 2 dropped as off-axis.'), lines.join('\n'));
+  const none = pageLines({ codexFind: { status: 'ok', found: 1, droppedOffAxis: 0 }, semgrep: { status: 'disabled' } });
+  assert.ok(none.includes('Codex as a finder: 1 finding before verification.'), none.join('\n'));
+});
+
+test('the page blames Docker only for Docker-shaped failures', () => {
+  const docker = 'Semgrep unavailable (Docker is not running or not installed)';
+  const line = (semgrep) => pageLines({ codexFind: { status: 'disabled' }, semgrep: { status: 'unavailable', ...semgrep } })[1];
+  assert.equal(line({ reason: 'docker-missing', detail: 'spawn docker ENOENT' }), `${docker}: spawn docker ENOENT.`);
+  assert.equal(line({ reason: 'docker-error', detail: 'error during connect: x' }), `${docker}: error during connect: x.`);
+  assert.equal(line({ reason: 'docker-error', detail: 'Cannot connect to the Docker daemon' }),
+    `${docker}: Cannot connect to the Docker daemon.`);
+  assert.equal(line({ reason: 'docker-error', detail: 'bad config' }), 'Semgrep failed: bad config.');
+  assert.equal(line({ reason: 'command-failed', detail: 'exit code 3' }), 'Semgrep failed: exit code 3.');
+  assert.equal(line({ reason: 'command-failed' }), 'Semgrep failed.');
+});
+
+test('the page names a dead worker per finder, and once when both died', () => {
+  const died = { status: 'unavailable', reason: 'worker-died' };
+  const okSemgrep = { status: 'ok', found: 1, scannedAxes: ['secrets'], outsideChange: 0, hunksAvailable: true };
+  assert.deepEqual(pageLines({ codexFind: died, semgrep: died }),
+    ['The finder process stopped — no findings from codex as a finder or from Semgrep.']);
+  const onlyCodex = pageLines({ codexFind: died, semgrep: okSemgrep });
+  assert.equal(onlyCodex[0], 'The finder process stopped — no findings from codex as a finder.');
+  assert.match(onlyCodex[1], /^Semgrep \(axes: secrets\)/);
+  const onlySemgrep = pageLines({ codexFind: { status: 'ok', found: 2 }, semgrep: died });
+  assert.equal(onlySemgrep[0], 'Codex as a finder: 2 findings before verification.');
+  assert.equal(onlySemgrep[1], 'The finder process stopped — no findings from Semgrep.');
+});
+
+test('the page names scan errors Semgrep reported on an ok run', () => {
+  const semgrep = { status: 'ok', found: 0, scannedAxes: ['secrets'], outsideChange: 0, hunksAvailable: true };
+  const line = (errors) => pageLines({ codexFind: { status: 'disabled' }, semgrep: { ...semgrep, errors } })[1];
+  assert.ok(line(1).endsWith(' Semgrep reported 1 scan error — some files may not have been scanned.'), line(1));
+  assert.ok(line(4).endsWith(' Semgrep reported 4 scan errors — some files may not have been scanned.'), line(4));
+  assert.equal(line(0).includes('scan error'), false);
 });

@@ -467,7 +467,9 @@
     if (!finders) return ['Finder step did not run — findings come only from the Sonnet agents.'];
     var codexFind = finders.codexFind || {};
     var semgrep = finders.semgrep || {};
-    if (codexFind.reason === 'worker-died' || semgrep.reason === 'worker-died') {
+    var codexDied = codexFind.reason === 'worker-died';
+    var semgrepDied = semgrep.reason === 'worker-died';
+    if (codexDied && semgrepDied) {
       return ['The finder process stopped — no findings from codex as a finder or from Semgrep.'];
     }
     var lines = [];
@@ -476,15 +478,22 @@
       unavailable: 'Codex as a finder was unavailable — findings come only from the other sources.',
       timeout: 'Codex as a finder timed out — findings come only from the other sources.',
       unparsable: 'The response of codex as a finder was unreadable — findings come only from the other sources.',
-      ok: 'Codex as a finder: ' + remarksText(codexFind.found || 0) + ' before verification.',
+      ok: 'Codex as a finder: ' + remarksText(codexFind.found || 0) + ' before verification'
+        + (codexFind.droppedOffAxis > 0 ? ', ' + codexFind.droppedOffAxis + ' dropped as off-axis' : '') + '.',
     };
-    if (codexNotes[codexFind.status]) lines.push(codexNotes[codexFind.status]);
+    if (codexDied) lines.push('The finder process stopped — no findings from codex as a finder.');
+    else if (codexNotes[codexFind.status]) lines.push(codexNotes[codexFind.status]);
     var semgrepText = null;
-    if (semgrep.status === 'ok') {
+    var scanErrors = semgrep.errors || 0;
+    if (semgrepDied) {
+      semgrepText = 'The finder process stopped — no findings from Semgrep.';
+    } else if (semgrep.status === 'ok') {
       semgrepText = 'Semgrep (axes: ' + (semgrep.scannedAxes || []).join(', ') + '): '
         + remarksText(semgrep.found || 0) + ' in changed lines, ' + (semgrep.outsideChange || 0)
         + ' outside the change skipped.'
-        + (semgrep.hunksAvailable === false ? ' Changed-line filter unavailable — results unfiltered.' : '');
+        + (semgrep.hunksAvailable === false ? ' Changed-line filter unavailable — results unfiltered.' : '')
+        + (scanErrors > 0 ? ' Semgrep reported ' + scanErrors + ' scan error' + (scanErrors === 1 ? '' : 's')
+          + ' — some files may not have been scanned.' : '');
     } else if (semgrep.status === 'nothing-to-scan') {
       semgrepText = 'Semgrep: no axis in this run has rules.';
     } else if (semgrep.status === 'disabled') {
@@ -494,9 +503,12 @@
         semgrepText = 'Semgrep unavailable: image ' + semgrep.image + ' is missing — run docker pull ' + semgrep.image + ' once.';
       } else if (semgrep.reason === 'pr-not-checked-out') {
         semgrepText = 'Semgrep skipped: the local checkout is not the PR tip.';
-      } else {
+      } else if (semgrep.reason === 'docker-missing' || (semgrep.reason === 'docker-error'
+          && /error during connect|Cannot connect to the Docker daemon/i.test(semgrep.detail || ''))) {
         semgrepText = 'Semgrep unavailable (Docker is not running or not installed)'
           + (semgrep.detail ? ': ' + semgrep.detail : '') + '.';
+      } else {
+        semgrepText = 'Semgrep failed' + (semgrep.detail ? ': ' + semgrep.detail : '') + '.';
       }
     } else if (semgrep.status === 'timeout') {
       semgrepText = 'Semgrep timed out.';
