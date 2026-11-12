@@ -31,6 +31,9 @@
     --codex-unsure-bg: #eef1f5;
     --codex-unsure-fg: #3c4450;
     --codex-unsure-border: #ccd3dc;
+    --codex-own-bg: #e8f0fb;
+    --codex-own-fg: #1a4a8a;
+    --codex-own-border: #b3cbee;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -65,6 +68,9 @@
       --codex-unsure-bg: #262a31;
       --codex-unsure-fg: #c3cad4;
       --codex-unsure-border: #3a4048;
+      --codex-own-bg: #14283f;
+      --codex-own-fg: #9cc2f0;
+      --codex-own-border: #25476f;
     }
   }
 
@@ -99,6 +105,9 @@
     --codex-unsure-bg: #262a31;
     --codex-unsure-fg: #c3cad4;
     --codex-unsure-border: #3a4048;
+    --codex-own-bg: #14283f;
+    --codex-own-fg: #9cc2f0;
+    --codex-own-border: #25476f;
   }
 
   * { box-sizing: border-box; }
@@ -208,6 +217,17 @@
   .badge-codex-rejects { background: var(--codex-rejects-bg); color: var(--codex-rejects-fg); border-color: var(--codex-rejects-border); }
   .badge-codex-unsure { background: var(--codex-unsure-bg); color: var(--codex-unsure-fg); border-color: var(--codex-unsure-border); }
 
+  .badge-codex-own { background: var(--codex-own-bg); color: var(--codex-own-fg); border-color: var(--codex-own-border); }
+  .badge-source { background: var(--sev-nitpick-bg); color: var(--sev-nitpick-fg); border-color: var(--sev-nitpick-border); text-transform: none; }
+
+  .also-claimed {
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  #finder-lines p { margin: 4px 0; color: var(--muted); }
+
   .axis-tag {
     font-size: 12px;
     color: var(--muted);
@@ -281,6 +301,7 @@
     <p id="spend-line"></p>
     <p id="incomplete-line" hidden></p>
     <p id="codex-line" hidden></p>
+    <div id="finder-lines"></div>
     <p id="suppressed-line" hidden></p>
   </header>
 
@@ -295,6 +316,9 @@
         <option value="suggestion">Suggestion</option>
         <option value="nitpick">Nitpick</option>
       </select>
+    </label>
+    <label>Source
+      <select data-filter="source"><option value="">All sources</option></select>
     </label>
     <span id="count"></span>
   </section>
@@ -315,7 +339,7 @@
 
   var SEVERITY_LABEL = { blocking: 'Blocking', suggestion: 'Suggestion', nitpick: 'Nitpick' };
   var SEVERITY_ORDER = { blocking: 0, suggestion: 1, nitpick: 2 };
-  var CODEX_LABEL = { confirms: 'Codex: confirmed', rejects: 'Codex: disputed', unsure: 'Codex: unsure' };
+  var CODEX_LABEL = { confirms: 'Codex: confirmed', rejects: 'Codex: disputed', unsure: 'Codex: unsure', own: 'Codex: own finding' };
 
   function shortSha(sha) {
     return typeof sha === 'string' && /^[0-9a-f]{40}$/.test(sha) ? sha.slice(0, 7) : sha;
@@ -409,11 +433,20 @@
       unparsable: 'Codex response was unreadable — findings carry no second opinion.',
     };
     var codexLine = document.getElementById('codex-line');
-    if (payload.codexStatus && payload.codexStatus !== 'ok') {
+    // Same rule as lib/report.mjs: when codex judged nothing only because every
+    // remark was its own, say that instead of "nothing to judge".
+    var allOwn = payload.codexStatus === 'nothing-to-judge'
+      && payload.findings.some(function (f) { return f.codex && f.codex.verdict === 'own'; });
+    if (allOwn) {
+      codexLine.textContent = 'Note: Codex as judge skipped — all findings came from codex as a finder.';
+      codexLine.hidden = false;
+    } else if (payload.codexStatus && payload.codexStatus !== 'ok') {
       codexLine.textContent = 'Note: '
         + (CODEX_NOTE[payload.codexStatus] || ('unknown codex status: ' + payload.codexStatus));
       codexLine.hidden = false;
     }
+
+    renderFinderLines(payload);
 
     var suppressedLine = document.getElementById('suppressed-line');
     if (payload.suppressed > 0) {
@@ -421,6 +454,72 @@
         + ' finding' + (payload.suppressed === 1 ? '' : 's') + ' (not shown here).';
       suppressedLine.hidden = false;
     }
+  }
+
+  // Mirrors lib/report.mjs's finder lines in meaning. A status with no entry
+  // prints nothing rather than a raw enum.
+  function remarksText(count) { return count + ' finding' + (count === 1 ? '' : 's'); }
+
+  function finderLines(payload) {
+    var mode = payload.run.mode;
+    if (mode !== 'pr' && mode !== 'branch') return [];
+    var finders = payload.finders;
+    if (!finders) return ['Finder step did not run — findings come only from the Sonnet agents.'];
+    var codexFind = finders.codexFind || {};
+    var semgrep = finders.semgrep || {};
+    if (codexFind.reason === 'worker-died' || semgrep.reason === 'worker-died') {
+      return ['The finder process stopped — no findings from codex as a finder or from Semgrep.'];
+    }
+    var lines = [];
+    var codexNotes = {
+      disabled: 'Codex as a finder is disabled in configuration.',
+      unavailable: 'Codex as a finder was unavailable — findings come only from the other sources.',
+      timeout: 'Codex as a finder timed out — findings come only from the other sources.',
+      unparsable: 'The response of codex as a finder was unreadable — findings come only from the other sources.',
+      ok: 'Codex as a finder: ' + remarksText(codexFind.found || 0) + ' before verification.',
+    };
+    if (codexNotes[codexFind.status]) lines.push(codexNotes[codexFind.status]);
+    var semgrepText = null;
+    if (semgrep.status === 'ok') {
+      semgrepText = 'Semgrep (axes: ' + (semgrep.scannedAxes || []).join(', ') + '): '
+        + remarksText(semgrep.found || 0) + ' in changed lines, ' + (semgrep.outsideChange || 0)
+        + ' outside the change skipped.'
+        + (semgrep.hunksAvailable === false ? ' Changed-line filter unavailable — results unfiltered.' : '');
+    } else if (semgrep.status === 'nothing-to-scan') {
+      semgrepText = 'Semgrep: no axis in this run has rules.';
+    } else if (semgrep.status === 'disabled') {
+      semgrepText = 'Semgrep is disabled in configuration.';
+    } else if (semgrep.status === 'unavailable') {
+      if (semgrep.reason === 'image-not-pulled') {
+        semgrepText = 'Semgrep unavailable: image ' + semgrep.image + ' is missing — run docker pull ' + semgrep.image + ' once.';
+      } else if (semgrep.reason === 'pr-not-checked-out') {
+        semgrepText = 'Semgrep skipped: the local checkout is not the PR tip.';
+      } else {
+        semgrepText = 'Semgrep unavailable (Docker is not running or not installed)'
+          + (semgrep.detail ? ': ' + semgrep.detail : '') + '.';
+      }
+    } else if (semgrep.status === 'timeout') {
+      semgrepText = 'Semgrep timed out.';
+    } else if (semgrep.status === 'unparsable') {
+      semgrepText = 'The Semgrep response was unreadable — no findings from Semgrep.';
+    }
+    if (semgrepText) lines.push(semgrepText);
+
+    var counts = { sonnet: 0, codex: 0, semgrep: 0 };
+    var multi = 0;
+    payload.findings.forEach(function (f) {
+      var sources = f.sources || [];
+      sources.forEach(function (src) { if (src in counts) counts[src] += 1; });
+      if (sources.length > 1) multi += 1;
+    });
+    lines.push('Finding sources: sonnet ' + counts.sonnet + ', codex ' + counts.codex + ', semgrep '
+      + counts.semgrep + '; flagged by more than one source: ' + multi + '.');
+    return lines;
+  }
+
+  function renderFinderLines(payload) {
+    var root = document.getElementById('finder-lines');
+    finderLines(payload).forEach(function (line) { root.appendChild(el('p', { text: line })); });
   }
 
   function locationNode(finding) {
@@ -442,6 +541,9 @@
         text: CODEX_LABEL[finding.codex.verdict] || ('Codex: ' + finding.codex.verdict),
       }));
     }
+    if (finding.sources && finding.sources.length > 0) {
+      badges.push(el('span', { className: 'badge badge-source', text: 'Source: ' + finding.sources.join('+') }));
+    }
     badges.push(el('span', { className: 'axis-tag', text: finding.axis }));
 
     var children = [
@@ -456,6 +558,9 @@
     if (finding.codex && finding.codex.fix) {
       children.push(el('p', { className: 'codex-fix', text: 'Codex suggestion: ' + finding.codex.fix }));
     }
+    (finding.alsoClaimed || []).forEach(function (c) {
+      children.push(el('p', { className: 'also-claimed', text: 'Also claimed here (' + c.source + '): ' + c.claim }));
+    });
     children.push(el('p', {
       className: 'meta',
       text: 'Rule: ' + (finding.rule || finding.axis) + '  ·  Confidence: ' + finding.confidence
@@ -472,10 +577,12 @@
   function applyFilters(state) {
     var axisValue = state.axisSelect.value;
     var severityValue = state.severitySelect.value;
+    var sourceValue = state.sourceSelect.value;
     var shown = 0;
     state.cards.forEach(function (entry) {
       var visible = (axisValue === '' || entry.finding.axis === axisValue)
-        && (severityValue === '' || entry.finding.severity === severityValue);
+        && (severityValue === '' || entry.finding.severity === severityValue)
+        && (sourceValue === '' || (entry.finding.sources || []).indexOf(sourceValue) !== -1);
       entry.node.hidden = !visible;
       if (visible) shown += 1;
     });
@@ -491,6 +598,20 @@
     axes.sort();
     axes.forEach(function (axis) {
       select.appendChild(el('option', { text: axis, value: axis }));
+    });
+  }
+
+  function populateSourceOptions(select, findings) {
+    var seen = {};
+    var sources = [];
+    findings.forEach(function (f) {
+      (f.sources || []).forEach(function (src) {
+        if (!seen[src]) { seen[src] = true; sources.push(src); }
+      });
+    });
+    sources.sort();
+    sources.forEach(function (src) {
+      select.appendChild(el('option', { text: src, value: src }));
     });
   }
 
@@ -520,11 +641,14 @@
 
     var axisSelect = document.querySelector('[data-filter="axis"]');
     var severitySelect = document.querySelector('[data-filter="severity"]');
+    var sourceSelect = document.querySelector('[data-filter="source"]');
     populateAxisOptions(axisSelect, findings);
+    populateSourceOptions(sourceSelect, findings);
 
-    var state = { axisSelect: axisSelect, severitySelect: severitySelect, cards: cards };
+    var state = { axisSelect: axisSelect, severitySelect: severitySelect, sourceSelect: sourceSelect, cards: cards };
     axisSelect.addEventListener('change', function () { applyFilters(state); });
     severitySelect.addEventListener('change', function () { applyFilters(state); });
+    sourceSelect.addEventListener('change', function () { applyFilters(state); });
     applyFilters(state);
   }
 

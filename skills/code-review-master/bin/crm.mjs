@@ -103,6 +103,14 @@ function readRunFile(repo, runId, name) {
   return readJson(path);
 }
 
+// The finders result exists only for pr/branch runs where `crm finders` ran;
+// absence is meaningful (the report says the step did not run), so it is null
+// here rather than a failure.
+function readFinders(repo, runId) {
+  const path = reportPath(repo, runId, 'finders.json');
+  return existsSync(path) ? readJson(path) : null;
+}
+
 // Same contract for caller-supplied paths. A wave agent that failed to write
 // its output is a broken run, not a failed gate, and must not exit 1.
 function readInputFile(path, flag) {
@@ -371,9 +379,22 @@ const COMMANDS = {
       writeJson(path, data);
       return { status: data.codexStatus };
     }
-    const result = runCodex(buildCodexPrompt(data.findings),
-      { cwd: repo, timeoutMs: config.settings.codex.timeout_s * 1000 });
+    // codex must not confirm a claim it wrote itself: those findings get an
+    // 'own' verdict and only the rest go to the judge.
+    const toJudge = [];
     for (const finding of data.findings) {
+      if (finding.keptFrom === 'codex') {
+        finding.codex = { verdict: 'own', reason: 'found by codex — not cross-checked', fix: finding.fix ?? null };
+      } else toJudge.push(finding);
+    }
+    if (toJudge.length === 0) {
+      data.codexStatus = 'nothing-to-judge';
+      writeJson(path, data);
+      return { status: data.codexStatus };
+    }
+    const result = runCodex(buildCodexPrompt(toJudge),
+      { cwd: repo, timeoutMs: config.settings.codex.timeout_s * 1000 });
+    for (const finding of toJudge) {
       finding.codex = result.verdicts[finding.id] ?? { verdict: 'unsure', reason: result.status, fix: null };
     }
     data.codexStatus = result.status;
@@ -530,6 +551,7 @@ const COMMANDS = {
       selection: plan.selection, findings: data.findings, suppressed: data.suppressed,
       prose: args.prose ? readInputFile(args.prose, '--prose') : {},
       codexStatus: data.codexStatus ?? 'skipped', remote: gitRemote(repo), incomplete,
+      finders: readFinders(repo, args.run),
     });
     const out = reportPath(repo, args.run, 'raport.md');
     mkdirSync(dirname(out), { recursive: true });
@@ -597,6 +619,7 @@ const COMMANDS = {
         // templates/artifact.html, against lib/report.mjs's, so the two
         // renderings of one run cannot disagree.
         incomplete, codexStatus: data.codexStatus ?? 'skipped',
+        finders: readFinders(repo, args.run),
       }));
     mkdirSync(dirname(args.out), { recursive: true });
     writeFileSync(args.out, page, 'utf8');

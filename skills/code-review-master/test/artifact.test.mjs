@@ -150,3 +150,32 @@ test('a repository with no remote yields no link rather than a broken one', () =
   const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(readFileSync(out, 'utf8'))[1]);
   assert.equal(payload.findings[0].link, null);
 });
+
+test('the page carries sources and a source filter', () => {
+  assert.match(TEXT, /data-filter="source"/);
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  const reports = join(dir, '.claude', 'review', 'reports');
+  mkdirSync(reports, { recursive: true });
+  writeFileSync(join(reports, 'r1-plan.json'), JSON.stringify({
+    mode: 'pr', target: { head: 'a1f2e30' },
+    selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 },
+  }));
+  writeFileSync(join(reports, 'r1-findings.json'), JSON.stringify({
+    findings: [{
+      id: 'f-01', axis: 'sec', severity: 'blocking', confidence: 90, file: 'a.ts', lines: [1, 1], evidence: 'x', claim: 'c',
+      sources: ['sonnet', 'codex'], alsoClaimed: [{ source: 'sonnet', claim: 'other', severity: 'nitpick', fix: '' }], codex: null,
+    }],
+    suppressed: [],
+  }));
+  writeFileSync(join(reports, 'r1-finders.json'), JSON.stringify({
+    codexFind: { status: 'ok', found: 2, droppedOffAxis: 0 }, semgrep: { status: 'disabled' }, finishedAt: 'now',
+  }));
+  const out = join(dir, 'page.html');
+  execFileSync(process.execPath, [CLI, 'artifact', '--repo', dir, '--run', 'r1', '--out', out], { encoding: 'utf8' });
+  const page = readFileSync(out, 'utf8');
+  const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(page)[1]);
+  assert.deepEqual(payload.findings[0].sources, ['sonnet', 'codex']);
+  assert.equal(payload.findings[0].alsoClaimed[0].claim, 'other');
+  assert.equal(payload.finders.codexFind.status, 'ok');
+  assert.equal(payload.finders.semgrep.status, 'disabled');
+});

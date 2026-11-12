@@ -125,3 +125,46 @@ test('crm artifact in Step 9 takes --incomplete on the same terms as crm render 
     'Step 9\'s crm artifact call must also accept --incomplete, or the artifact can never show an incomplete axis');
   assert.match(step9, /same terms as Step 8/i);
 });
+
+// Slices a Step section out of SKILL.md by its heading and the next heading.
+const section = (from, to) => {
+  const at = TEXT.indexOf(from);
+  const end = TEXT.indexOf(to);
+  assert.ok(at > 0, `${from} heading is missing`);
+  assert.ok(end > at, `${to} must come after ${from}`);
+  return TEXT.slice(at, end);
+};
+
+test('finders start before wave 1 and are collected before assemble', () => {
+  const step4 = section('## Step 4 — wave 1', '## Step 5 — assemble');
+  const step5 = section('## Step 5 — assemble', '## Step 6 — wave 2');
+  assert.match(step4, /crm finders --run <runId> --start/);
+  assert.match(step5, /crm finders --run <runId> --wait/);
+  assert.match(step5, /pending/);
+  assert.ok(step5.indexOf('crm finders') < step5.indexOf('crm assemble'),
+    'the finders must be collected before crm assemble reads their side files');
+});
+
+test('the judge skips codex\'s own findings', () => {
+  const step7 = section('## Step 7 — codex', '## Step 8 — prose');
+  assert.match(step7, /\bown\b/);
+  assert.match(step7, /keptFrom/);
+});
+
+test('the budget line names the extra finders outside the agent budget', () => {
+  const step1 = section('## Step 1 — plan', '## Step 2 — raise');
+  assert.match(step1, /Dodatkowo \(poza budżetem agentów\)/);
+});
+
+test('the global template gives the secrets axis the secrets rule pack', async () => {
+  const { parseConfigDoc } = await import('../lib/config.mjs');
+  const text = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'templates', 'global.md'), 'utf8');
+  const secrets = parseConfigDoc(text).axes.find((axis) => axis.id === 'secrets');
+  assert.deepEqual(secrets.semgrep, ['p/secrets']);
+});
+
+test('the finders wait loop is capped and a poll is not a re-dispatch', () => {
+  const step5 = section('## Step 5 — assemble', '## Step 6 — wave 2');
+  assert.match(step5, /3 consecutive `pending`/);
+  assert.match(step5, /not a re-dispatch/);
+});

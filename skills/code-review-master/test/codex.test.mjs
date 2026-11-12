@@ -119,6 +119,31 @@ test('a file belonging to another entry does not pass for this axis', () => {
   assert.equal(out.droppedOffAxis, 1);
 });
 
+test('a member axis id in a grouped slot is kept under the slot id', () => {
+  const out = parseCodexFindings(JSON.stringify([{ ...goodFinding, axis: 'cms-data', file: 'b.ts' }]), selected);
+  assert.equal(out.droppedOffAxis, 0);
+  assert.equal(out.findings.length, 1);
+  assert.equal(out.findings[0].axis, 'cms-security+cms-data');
+});
+
+test('a file written as ./path or with backslashes is normalised and kept', () => {
+  const plan = [{ axisId: 'security', group: null,
+    axes: [{ id: 'security', checklist: '- x', severity_default: 'blocking' }],
+    files: [{ path: 'apps/x.ts', added: 1, removed: 0 }] }];
+  const out = parseCodexFindings(JSON.stringify([
+    { ...goodFinding, file: './apps/x.ts' },
+    { ...goodFinding, file: 'apps\\x.ts' },
+  ]), plan);
+  assert.equal(out.droppedOffAxis, 0);
+  assert.deepEqual(out.findings.map((f) => f.file), ['apps/x.ts', 'apps/x.ts']);
+});
+
+test('the find prompt says a grouped slot is answered with the slot id', () => {
+  const prompt = buildCodexFindPrompt(selected);
+  assert.match(prompt, /`###` heading/);
+  assert.match(prompt, /`####`/);
+});
+
 test('unparsable output is reported, not thrown', () => {
   const spawn = () => ({ status: 0, stdout: 'no json' });
   const out = runCodexFind(selected, { cwd: '.', timeoutMs: 1000, spawn, platform: 'linux' });

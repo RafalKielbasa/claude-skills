@@ -13,6 +13,17 @@ export function selectFixable(findings, ids = null) {
       continue;
     }
     if (!finding.codex) { skipped.push({ id: finding.id, why: 'no codex verdict — cross-check did not run' }); continue; }
+    // codex wrote the kept claim itself and nobody else raised it: its own
+    // "own" verdict is not a second opinion, so auto-fixing it would let one
+    // model both find and approve the change.
+    if (finding.codex.verdict === 'own') {
+      if (finding.sources?.length === 1 && finding.sources[0] === 'codex') {
+        skipped.push({ id: finding.id, why: 'found only by codex — no independent second opinion' });
+        continue;
+      }
+      fixable.push(finding);
+      continue;
+    }
     if (finding.codex.verdict !== 'confirms') { skipped.push({ id: finding.id, why: `codex ${finding.codex.verdict}` }); continue; }
     fixable.push(finding);
   }

@@ -28,6 +28,11 @@ One object per finding:
 be one of the files listed under that axis. A finding that names any other axis or
 file is discarded.
 
+`axis` is always the id from the `###` heading, even when an axis lists several
+`####` member checklists and the finding comes from just one of them: for
+`### cms-security+cms-data` write `"axis": "cms-security+cms-data"`, never
+`"cms-data"`.
+
 Unless the checklist item you are reporting against says otherwise, use the
 severity default stated under the axis. Choose a different severity only when the
 specific finding plainly warrants it, and say why in the claim.

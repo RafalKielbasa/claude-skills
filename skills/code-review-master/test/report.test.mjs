@@ -108,3 +108,134 @@ test('each codex outcome is named for what it was', () => {
   assert.equal(/codex: /.test(render('something-new')), false, 'no raw enum reaches a Polish report');
   assert.equal(/Uwaga:/.test(render('ok')), false, 'a working codex earns no note at all');
 });
+
+// ---- extra finders (codex as a finder, Semgrep) ----
+
+const prRun = { id: 'r1', mode: 'pr', base: 'x', head: 'y' };
+const okSemgrep = {
+  status: 'ok', found: 2, scannedAxes: ['security', 'conventions'], outsideChange: 3,
+  hunksAvailable: true, image: 'semgrep/semgrep:1',
+};
+const okCodex = { status: 'ok', found: 4, droppedOffAxis: 0 };
+const renderPr = (finders, extra = {}) => renderReport({
+  run: prRun, selection, findings, suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  finders, ...extra,
+});
+const RAW_ENUM = /\b(unavailable|timeout|unparsable|not-in-mode)\b/;
+
+test('each finder outcome is named for what it was', () => {
+  const image = 'semgrep/semgrep:1';
+  const codexCases = [
+    [{ status: 'ok', found: 4 }, 'codex jako szukający: 4 uwagi przed weryfikacją.'],
+    [{ status: 'ok', found: 1 }, 'codex jako szukający: 1 uwaga przed weryfikacją.'],
+    [{ status: 'ok', found: 5 }, 'codex jako szukający: 5 uwag przed weryfikacją.'],
+    [{ status: 'disabled' }, 'codex jako szukający wyłączony w konfiguracji.'],
+    [{ status: 'unavailable' }, '**codex jako szukający niedostępny** — uwagi pochodzą tylko od pozostałych źródeł.'],
+    [{ status: 'timeout' }, '**codex jako szukający przekroczył limit czasu** — uwagi pochodzą tylko od pozostałych źródeł.'],
+    [{ status: 'timeout', reason: 'worker-deadline' }, '**codex jako szukający przekroczył limit czasu** — uwagi pochodzą tylko od pozostałych źródeł.'],
+    [{ status: 'unparsable' }, '**odpowiedź codexa jako szukającego nieczytelna** — uwagi pochodzą tylko od pozostałych źródeł.'],
+  ];
+  for (const [codexFind, line] of codexCases) {
+    const md = renderPr({ codexFind, semgrep: { status: 'disabled' } });
+    assert.ok(md.includes(line), `missing: ${line}`);
+    assert.equal(RAW_ENUM.test(md), false, `raw enum in: ${line}`);
+  }
+  const semgrepCases = [
+    [okSemgrep, 'Semgrep (osie: security, conventions): 2 uwagi w zmienionych liniach, 3 poza zmianą pominięto.'],
+    [{ ...okSemgrep, hunksAvailable: false },
+      'Semgrep (osie: security, conventions): 2 uwagi w zmienionych liniach, 3 poza zmianą pominięto. Filtr zmienionych linii niedostępny — wyniki niefiltrowane.'],
+    [{ status: 'nothing-to-scan' }, 'Semgrep: żadna oś w tym przebiegu nie ma reguł.'],
+    [{ status: 'disabled' }, 'Semgrep wyłączony w konfiguracji.'],
+    [{ status: 'unavailable', reason: 'image-not-pulled', image },
+      `**Semgrep niedostępny**: brak obrazu \`${image}\` — uruchom raz \`docker pull ${image}\`.`],
+    [{ status: 'unavailable', reason: 'pr-not-checked-out' }, '**Semgrep pominięty**: lokalny checkout nie jest tipem PR-a.'],
+    [{ status: 'unavailable', reason: 'docker-missing', detail: 'spawn docker ENOENT' },
+      '**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany): `spawn docker ENOENT`.'],
+    [{ status: 'unavailable', reason: 'docker-error' },
+      '**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany).'],
+    [{ status: 'timeout' }, '**Semgrep przekroczył limit czasu.**'],
+    [{ status: 'timeout', reason: 'worker-deadline' }, '**Semgrep przekroczył limit czasu.**'],
+    [{ status: 'unparsable' }, '**odpowiedź Semgrepa nieczytelna** — brak uwag od Semgrepa.'],
+    [{ status: 'unparsable', detail: 'bad json' }, '**odpowiedź Semgrepa nieczytelna** — brak uwag od Semgrepa.'],
+  ];
+  for (const [semgrep, line] of semgrepCases) {
+    const md = renderPr({ codexFind: { status: 'disabled' }, semgrep });
+    assert.ok(md.includes(line), `missing: ${line}`);
+    assert.equal(RAW_ENUM.test(md), false, `raw enum in: ${line}`);
+  }
+});
+
+test('a finder that died replaces both finder lines with one', () => {
+  const died = '**proces szukających przerwał pracę** — brak uwag od codexa jako szukającego i od Semgrepa.';
+  for (const finders of [
+    { codexFind: { status: 'unavailable', reason: 'worker-died' }, semgrep: okSemgrep },
+    { codexFind: okCodex, semgrep: { status: 'unavailable', reason: 'worker-died' } },
+  ]) {
+    const md = renderPr(finders);
+    assert.equal(md.split(died).length - 1, 1);
+    assert.equal(/codex jako szukający|Semgrep \(osie|Semgrep niedostępny/.test(md), false);
+  }
+});
+
+test('a not-in-mode finder prints nothing', () => {
+  const md = renderPr({ codexFind: { status: 'not-in-mode' }, semgrep: { status: 'not-in-mode' } });
+  assert.equal(/not-in-mode|szukając|Semgrep/.test(md), false);
+});
+
+test('a finding shows its sources and what else was claimed at that place', () => {
+  const md = renderReport({
+    run: prRun, selection, suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+    finders: { codexFind: okCodex, semgrep: okSemgrep },
+    findings: [{
+      ...findings[0], sources: ['sonnet', 'codex'],
+      alsoClaimed: [{ source: 'sonnet', claim: 'missing check', severity: 'suggestion', fix: 'x' }],
+    }],
+  });
+  assert.match(md, /źródło: sonnet\+codex/);
+  assert.match(md, /_Też w tym miejscu \(sonnet\):_ missing check/);
+});
+
+test('the sources line counts kept findings once per source', () => {
+  const md = renderReport({
+    run: prRun, selection, suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+    finders: { codexFind: okCodex, semgrep: okSemgrep },
+    findings: [
+      { ...findings[0], id: 'f-01', sources: ['sonnet', 'codex'] },
+      { ...findings[0], id: 'f-02', sources: ['semgrep'] },
+      { ...findings[0], id: 'f-03', sources: ['sonnet'] },
+    ],
+  });
+  assert.match(md, /Źródła uwag: sonnet 2, codex 1, semgrep 1; wskazane przez więcej niż jedno źródło: 1\./);
+});
+
+test('codex own finding is not labelled as confirmed', () => {
+  const md = renderReport({
+    run: prRun, selection, suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+    findings: [{ ...findings[0], sources: ['codex'], codex: { verdict: 'own', reason: 'r', fix: '' } }],
+  });
+  assert.match(md, /codex: własne znalezisko/);
+  assert.equal(md.includes('codex: potwierdza'), false);
+});
+
+test('codex as judge is skipped when all remarks are its own', () => {
+  const md = renderReport({
+    run: prRun, selection, suppressed: [], prose: {}, codexStatus: 'nothing-to-judge', remote: null,
+    findings: [{ ...findings[0], sources: ['codex'], codex: { verdict: 'own', reason: 'r', fix: '' } }],
+  });
+  assert.match(md, /codex jako sędzia pominięty — wszystkie uwagi pochodzą od codexa jako szukającego\./);
+  assert.equal(md.includes('nie było uwag do oceny'), false);
+});
+
+test('a working-mode report says nothing about finders', () => {
+  const md = renderReport({
+    run: { id: 'r1', mode: 'working', base: 'x', head: 'y' },
+    selection, findings, suppressed: [], prose: {}, codexStatus: 'ok', remote: null, finders: null,
+  });
+  assert.equal(md.includes('szukając'), false);
+  assert.equal(md.includes('Źródła uwag'), false);
+});
+
+test('a pr report whose finders never ran says so', () => {
+  const md = renderPr(null);
+  assert.match(md, /\*\*krok szukających nie został wykonany\*\* — uwagi pochodzą tylko od agentów Sonnet\./);
+});

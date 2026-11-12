@@ -42,6 +42,7 @@ id: secrets
 when: always
 rank: always
 severity_default: blocking
+semgrep: [p/secrets]
 ```
 
 - No credentials, API keys, tokens, or private keys committed to the repository.

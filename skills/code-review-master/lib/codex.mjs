@@ -144,21 +144,34 @@ const lastJsonArray = (text) => {
   return emptyFallback;
 };
 
+// Plan paths are repo-relative with forward slashes; codex on Windows may echo
+// `apps\x.ts` or `./apps/x.ts` for the same file, which is not off-axis.
+const normalisePath = (file) => (typeof file === 'string' ? file.replace(/\\/g, '/').replace(/^(\.\/)+/, '') : file);
+
 export function parseCodexFindings(stdout, selected) {
   const array = lastJsonArray(String(stdout));
   if (array === null) return null;
   const filesByAxis = new Map(selected.map((e) => [e.axisId, new Set(e.files.map((f) => f.path))]));
+  // A grouped slot shows each member's checklist under its own `####` heading,
+  // so codex may answer with the member id. Wave 2 groups by the slot id, so the
+  // member id is mapped to it; dropping it would lose a finding on a listed file.
+  const slotOf = new Map();
+  for (const entry of selected) {
+    slotOf.set(entry.axisId, entry.axisId);
+    for (const axis of entry.axes ?? []) if (!slotOf.has(axis.id)) slotOf.set(axis.id, entry.axisId);
+  }
   const findings = [];
   let droppedOffAxis = 0;
   for (const item of array) {
-    const files = item && typeof item === 'object' ? filesByAxis.get(item.axis) : undefined;
-    if (!files || !files.has(item.file)) {
+    const axis = item && typeof item === 'object' ? slotOf.get(item.axis) : undefined;
+    const file = axis ? normalisePath(item.file) : undefined;
+    if (!axis || !filesByAxis.get(axis).has(file)) {
       droppedOffAxis += 1;
       continue;
     }
     // `fix` is the only optional field given a defined shape; anything else the
     // finder adds is left alone, since assemble overwrites provenance fields.
-    findings.push({ ...item, fix: typeof item.fix === 'string' ? item.fix : null });
+    findings.push({ ...item, axis, file, fix: typeof item.fix === 'string' ? item.fix : null });
   }
   return { findings, droppedOffAxis };
 }

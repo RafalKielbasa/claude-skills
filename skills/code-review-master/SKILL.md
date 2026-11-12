@@ -60,11 +60,19 @@ Read the result:
 
   This is the number the whole run is held to. `crm finish` (Step 10) checks the dispatch ledger against exactly this figure.
 
+  In `pr` and `branch` runs only, print a second line right after it — the two extra finders (Step 4) are not agents and sit outside that number, so the user must be told they run:
+
+  `Dodatkowo (poza budżetem agentów): codex jako szukający, Semgrep dla osi: {axis ids}.`
+
+  Fill `{axis ids}` with the ids of the member axes whose `semgrep` list is non-empty in the selected entries, comma-separated, or `—` when there are none.
+
+  Read the axis ids from the `axes[]` of `selection.selected`. Print nothing of the kind in `working`, `since` and `full` runs: the finders do not run there.
+
 ## Step 2 — raise the budget only on request
 
 Pass `--slots <n>` to the `crm plan` call in Step 1 only when the user typed a number in their own invocation of this skill (e.g. `/code-review-master branch main --slots 8`). Never infer a value, never suggest one, never default one yourself — the budget line in Step 1 already tells the user what the default would review, and raising it is their call alone. When you do pass `--slots`, pass `--interactive` alongside it too — but **only** when the user typed the flag themselves in an interactive session, i.e. someone is at the keyboard to have typed `--slots` in the first place. `crm plan` refuses `--slots` without `--interactive` (exit 2), so a bare `--slots` with no flag never silently no-ops — it fails loudly instead.
 
-In a non-interactive run (nightly, CI, any invocation with no one at the keyboard to answer a prompt), never pass `--slots` or `--interactive`, regardless of what a config file or environment variable might suggest. `crm plan` enforces the same rule independently — it exits 2 without `--interactive` — so this is belt and suspenders, not the only guard, but the instruction on this side must hold too: an unattended run must not be able to raise its own agent budget. The wrapper scripts (`scripts/review.sh`, `scripts/review.ps1`) never pass `--slots` or `--interactive` at all — that omission, not any TTY detection, is what actually keeps an unattended run from raising its own budget.
+In a non-interactive run (nightly, CI, any invocation with no one at the keyboard to answer a prompt), never pass `--slots` or `--interactive` (the Step 4 finders are the one exception to "nothing extra runs unattended": they start in non-interactive `pr`/`branch` runs exactly as in interactive ones, because they are not agents and this restriction does not cover them), regardless of what a config file or environment variable might suggest. `crm plan` enforces the same rule independently — it exits 2 without `--interactive` — so this is belt and suspenders, not the only guard, but the instruction on this side must hold too: an unattended run must not be able to raise its own agent budget. The wrapper scripts (`scripts/review.sh`, `scripts/review.ps1`) never pass `--slots` or `--interactive` at all — that omission, not any TTY detection, is what actually keeps an unattended run from raising its own budget.
 
 ## Step 3 — wave 0 (brief)
 
@@ -96,6 +104,23 @@ What to record depends on which wave failed:
 
 ## Step 4 — wave 1 (axis agents)
 
+**Before dispatching wave 1**, in `pr` and `branch` runs only, start the two extra finders:
+
+```
+crm finders --run <runId> --start
+```
+
+This spawns a detached worker that runs `codex` as a finder and Semgrep in Docker while the agents work; it returns at once. Neither finder is an agent: never log them with `crm dispatched`, and they do not count against the budget. The finders start in non-interactive runs exactly as in interactive ones: they are not agents, need no approval, and the `--slots` and `fix` restrictions do not cover them.
+
+Read the result. If the output cannot be parsed or the command exits non-zero, treat it as `spawn-failed`.
+
+- `{started: true}` — go on to dispatch wave 1.
+- `{started: false, reason: 'not-in-mode'}` — the run is not `pr` or `branch`, so your mode check above was wrong. Skip the finders silently.
+- `{started: false, reason: 'spawn-failed'}` — say one line to the user, in Polish, that the extra finders did not start; skip Step 5's `--wait`. The report will then say the finders step did not run.
+- `{started: false, reason: 'already-running'}` — a worker for this run is already going. Go on, and `--wait` for it in Step 5.
+
+Start them before wave 1, not after: the worker takes minutes, and starting it first lets it overlap with the agents instead of adding to the wall-clock time.
+
 For **each entry** in `selection.selected`, in a **single message** so all of them run concurrently:
 
 - `{{AXIS_ID}}` — the entry's `axisId`.
@@ -110,15 +135,23 @@ Collect every agent's JSON array (parse the fenced block if it wrapped one) into
 
 ## Step 5 — assemble
 
-Run:
+In `pr` and `branch` runs where Step 4's `--start` returned `started: true` or `already-running`, first collect the extra finders:
+
+```
+crm finders --run <runId> --wait
+```
+
+Run it with the Bash tool's `timeout` set to 600000 ms: the call blocks for up to 500 s, and the default 120 s would kill it. When it returns `{status: 'pending'}`, the wait ran out before the worker finished — call it again, but only up to 3 consecutive `pending` replies. After the third, tell the user one line in Polish (`Szukający nie skończyli w limicie — przegląd idzie dalej bez nich.`), do not call `--wait` again, and continue to `crm assemble`; the report then states the finders step did not finish. Calling `--wait` again is a poll, not a re-dispatch in the sense of Step 3b: it starts no agent. The loop ends by itself because the worker has its own hard deadline. Anything else is the final result (`codexFind`, `semgrep`, `finishedAt`); a finder that failed or timed out carries its own status there, and never blocks the run. Skip this call when `--start` was never made or returned `spawn-failed` (`--wait` itself exits 2 when no `--start` happened for the run).
+
+Then run:
 
 ```
 crm assemble --run <runId> --raw <repo>/.claude/review/reports/<runId>-raw.json
 ```
 
-This validates every finding's evidence against the actual file content, dedupes, applies triage suppression carried in `state.json`, and **assigns the finding ids** (`f-01`, `f-02`, …). It runs before wave 2 because wave 2 scores by id — an id that does not exist yet cannot be scored.
+This also reads the finders' side files, so the codex and Semgrep findings pass the same gates as Sonnet's and carry ids that wave 2 scores. It validates every finding's evidence against the actual file content, dedupes, applies triage suppression carried in `state.json`, and **assigns the finding ids** (`f-01`, `f-02`, …). It runs before wave 2 because wave 2 scores by id — an id that does not exist yet cannot be scored.
 
-Tell the user, in one line and in Polish, how many findings `rejectedForEvidence` discarded for evidence that was missing or could not be found verbatim in the file — a finding that fails this check never reaches a person.
+Tell the user, in one line and in Polish, how many findings `rejectedForEvidence` discarded for evidence that was missing or could not be found verbatim in the file, given per source from `rejectedBySource` (`sonnet`, `codex`, `semgrep`) — a finding that fails this check never reaches a person.
 
 ## Step 6 — wave 2 (verification)
 
@@ -141,6 +174,8 @@ Run:
 ```
 crm codex --run <runId>
 ```
+
+`crm codex` judges only the findings whose `keptFrom` is not `codex`. A finding kept from codex's own finder run gets the verdict `own`: codex cannot give a second opinion on what it found itself, so `own` is not a confirmation and must never be reported as one.
 
 If the returned `status` is not `ok` (`skipped`, `unavailable`, `timeout`, `unparsable`), tell the user in one line, in Polish, what happened and continue — a codex failure never blocks the run, it only means the surviving findings ship without a second opinion.
 
@@ -186,7 +221,7 @@ crm finish --run <runId>
 
 This checks the dispatch ledger recorded by every `crm dispatched` call in this run against the budget Step 1 announced, and only then sets the exit code from the gate. If the ledger holds more agents than were announced, or names an axis label the plan never selected, this exits 2 — the run is broken, and that is a defect in how this document was followed, not a review verdict. Report an exit 2 as a defect, not as "the review failed." A ledger shorter than the announced budget does not fail this step — it prints a warning to stderr instead (see Step 3), because Step 3b's `--incomplete` handling is how that case is meant to be resolved, not an error to fix after the fact.
 
-On success, show the user (in Polish) the path to `raport.md` and the headline counts (findings by severity, how many codex confirmed).
+On success, show the user (in Polish) the path to `raport.md` and the headline counts (findings by severity, how many codex confirmed — verdict `confirms` only; `own` findings are never counted as confirmed — and the split by source — how many findings Sonnet, codex and Semgrep each kept, as in `sources` of `findings.json`).
 
 ## Mode `init`
 
@@ -242,7 +277,7 @@ On success, show the user (in Polish) the path to `raport.md` and the headline c
 `/code-review-master fix [ids]` implements the findings codex confirmed in the latest run. **Interactive only.** In a non-interactive run — nightly, CI, any invocation with no one at the keyboard to answer a prompt — refuse before touching anything and say why, in Polish: a scheduled or CI run that edits code unattended is a different product with a different risk profile. This is not left to your discretion — `crm fixable` itself exits 2 without `--interactive`, so the flow cannot start unattended even if this section were ignored. Pass `--interactive` on every `crm fixable` call this mode makes, because only a person typing this command themselves in an interactive session can have reached this section at all; the wrapper scripts never pass it, and a bare `crm fixable` without the flag is refused for exactly that reason.
 
 1. Run `crm latest` (unless the user named a run); `runId: null` means there is no report to fix from — say so and stop.
-2. Run `crm fixable --run <runId> --interactive [--ids <ids>]`. It returns `{ fixable, skipped }` — a finding is fixable only when codex's verdict on it was `confirms` and it still carries a `confidence`. A finding with neither has never been scored, which `crm fixable` treats as skipped rather than fixable — a guard against a `findings.json` that never went through `crm score`, not a second confidence threshold on top of the one `crm score` already applied.
+2. Run `crm fixable --run <runId> --interactive [--ids <ids>]`. It returns `{ fixable, skipped }` — a finding is fixable only when codex's verdict on it was `confirms` and it still carries a `confidence`. A finding with verdict `own` — kept from codex's own finder run — is fixable only when a second source also found it; found only by codex, it is skipped with the reason `found only by codex — no independent second opinion`. A finding with neither has never been scored, which `crm fixable` treats as skipped rather than fixable — a guard against a `findings.json` that never went through `crm score`, not a second confidence threshold on top of the one `crm score` already applied.
 3. **Show the user the full list**: what will be attempted (`fixable`) and what is skipped, with the reason `crm fixable` gave for each skip. **Wait for approval before editing a single file.** Nothing in this mode touches the working tree before that approval arrives.
 4. **Before implementing any single fix, ask whether it would change scope, add a dependency, or do something irreversible.** If it would, that fix is not this mode's to make: set it aside for the separate list below and move to the next one. Make this judgement per fix, before touching that fix's files — never as a pass over the work afterwards, because by then an irreversible edit is already in the working tree.
 5. Implement each remaining fix yourself. `codex.fix` is advice: judge it before writing it, and reject it when it is wrong, stating why.
@@ -258,4 +293,5 @@ On success, show the user (in Polish) the path to `raport.md` and the headline c
 - Verification is one agent per axis, never one agent per finding.
 - A non-interactive run never applies a fix and never raises the budget with `--slots`.
 - A finding without evidence found verbatim in the file is discarded by `crm assemble` before anyone reads it, never reported on the strength of its wording alone.
+- Extra finders (codex as a finder, Semgrep) run only in `pr` and `branch`, are not agents, and their findings pass `crm assemble` and wave 2 like Sonnet's.
 - Nothing reaches GitHub before the user has read the exact text: mode `send` shows the full payload and waits, and it never runs unattended.

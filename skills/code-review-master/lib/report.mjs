@@ -1,7 +1,8 @@
 import { blobLink } from './links.mjs';
 
 const SEVERITY_LABEL = { blocking: 'BLOKUJĄCE', suggestion: 'sugestia', nitpick: 'drobiazg' };
-const CODEX_LABEL = { confirms: 'codex: potwierdza', rejects: 'codex: odrzuca (sporne)', unsure: 'codex: bez zdania' };
+const CODEX_LABEL = { confirms: 'codex: potwierdza', rejects: 'codex: odrzuca (sporne)', unsure: 'codex: bez zdania',
+  own: 'codex: własne znalezisko' };
 
 // Polish plural for counts, so the header does not read like machine output.
 function plural(n, one, few, many) {
@@ -16,7 +17,69 @@ function plural(n, one, few, many) {
 // path; seven characters is what git itself shows and what the reader compares.
 const short = (sha) => (typeof sha === 'string' && /^[0-9a-f]{40}$/.test(sha) ? sha.slice(0, 7) : sha);
 
-function header({ run, selection, codexStatus, incomplete }) {
+const remarks = (count) => `${count} ${plural(count, 'uwaga', 'uwagi', 'uwag')}`;
+
+// One line per finder, naming what happened. A raw enum in the report is the
+// same failure as a wrong label, so an unknown status prints nothing at all
+// (`not-in-mode` cannot occur in a pr/branch report; if it does, silence is
+// more honest than a made-up sentence).
+const CODEX_FIND_NOTE = {
+  disabled: () => 'codex jako szukający wyłączony w konfiguracji.',
+  unavailable: () => '**codex jako szukający niedostępny** — uwagi pochodzą tylko od pozostałych źródeł.',
+  timeout: () => '**codex jako szukający przekroczył limit czasu** — uwagi pochodzą tylko od pozostałych źródeł.',
+  unparsable: () => '**odpowiedź codexa jako szukającego nieczytelna** — uwagi pochodzą tylko od pozostałych źródeł.',
+  ok: (c) => `codex jako szukający: ${remarks(c.found ?? 0)} przed weryfikacją.`,
+};
+
+function semgrepUnavailable(s) {
+  if (s.reason === 'image-not-pulled') {
+    return `**Semgrep niedostępny**: brak obrazu \`${s.image}\` — uruchom raz \`docker pull ${s.image}\`.`;
+  }
+  if (s.reason === 'pr-not-checked-out') return '**Semgrep pominięty**: lokalny checkout nie jest tipem PR-a.';
+  const detail = s.detail ? `: \`${s.detail}\`` : '';
+  return `**Semgrep niedostępny** (Docker nie działa albo nie jest zainstalowany)${detail}.`;
+}
+
+const SEMGREP_NOTE = {
+  disabled: () => 'Semgrep wyłączony w konfiguracji.',
+  'nothing-to-scan': () => 'Semgrep: żadna oś w tym przebiegu nie ma reguł.',
+  unavailable: semgrepUnavailable,
+  timeout: () => '**Semgrep przekroczył limit czasu.**',
+  unparsable: () => '**odpowiedź Semgrepa nieczytelna** — brak uwag od Semgrepa.',
+  ok: (s) => `Semgrep (osie: ${(s.scannedAxes ?? []).join(', ')}): ${remarks(s.found ?? 0)} w zmienionych liniach, `
+    + `${s.outsideChange ?? 0} poza zmianą pominięto.`
+    + (s.hunksAvailable === false ? ' Filtr zmienionych linii niedostępny — wyniki niefiltrowane.' : ''),
+};
+
+const workerDied = (f) => f?.reason === 'worker-died';
+const hasFinderStep = (run) => run.mode === 'pr' || run.mode === 'branch';
+
+function finderLines({ run, finders }) {
+  if (!hasFinderStep(run)) return [];
+  if (!finders) return ['**krok szukających nie został wykonany** — uwagi pochodzą tylko od agentów Sonnet.'];
+  const { codexFind, semgrep } = finders;
+  // One dead worker means neither result can be trusted to be complete, so one
+  // line replaces both rather than reporting the other finder as fine.
+  if (workerDied(codexFind) || workerDied(semgrep)) {
+    return ['**proces szukających przerwał pracę** — brak uwag od codexa jako szukającego i od Semgrepa.'];
+  }
+  return [CODEX_FIND_NOTE[codexFind?.status]?.(codexFind), SEMGREP_NOTE[semgrep?.status]?.(semgrep)]
+    .filter(Boolean);
+}
+
+function sourcesLine(findings) {
+  const counts = { sonnet: 0, codex: 0, semgrep: 0 };
+  let multi = 0;
+  for (const f of findings) {
+    const sources = f.sources ?? [];
+    for (const s of sources) if (s in counts) counts[s] += 1;
+    if (sources.length > 1) multi += 1;
+  }
+  return `Źródła uwag: sonnet ${counts.sonnet}, codex ${counts.codex}, semgrep ${counts.semgrep}; `
+    + `wskazane przez więcej niż jedno źródło: ${multi}.`;
+}
+
+function header({ run, selection, codexStatus, incomplete, findings, finders }) {
   const chosen = selection.selected.map((s) => s.axisId);
   const total = chosen.length + selection.skippedOnTouch.length + selection.deferred.length;
   const lines = [
@@ -61,9 +124,16 @@ function header({ run, selection, codexStatus, incomplete }) {
   };
   // The fallback is Polish too. A raw enum spliced into this report is the same
   // failure as a wrong label: the reader stops trusting the line.
-  if (codexStatus !== 'ok') {
+  // When codex judged nothing only because every remark was its own, "nothing
+  // to judge" would hide that codex did contribute — say so instead.
+  const allOwn = codexStatus === 'nothing-to-judge' && findings.some((f) => f.codex?.verdict === 'own');
+  if (allOwn) {
+    lines.push('Uwaga: codex jako sędzia pominięty — wszystkie uwagi pochodzą od codexa jako szukającego.');
+  } else if (codexStatus !== 'ok') {
     lines.push(`Uwaga: ${CODEX_NOTE[codexStatus] ?? `nieznany status codexa: \`${codexStatus}\`.`}`);
   }
+  lines.push(...finderLines({ run, finders }));
+  if (finders && hasFinderStep(run)) lines.push(sourcesLine(findings));
   return lines.join('\n');
 }
 
@@ -75,6 +145,7 @@ function renderFinding(finding, prose, run, remote) {
   const where = link ? `[\`${finding.file}:${finding.lines[0]}\`](${link})` : `\`${finding.file}:${finding.lines[0]}\``;
   const badges = [`**${SEVERITY_LABEL[finding.severity]}**`, `pewność ${finding.confidence}`];
   if (finding.codex) badges.push(CODEX_LABEL[finding.codex.verdict]);
+  if (finding.sources?.length > 0) badges.push(`źródło: ${finding.sources.join('+')}`);
   return [
     `### ${finding.id} — ${title}`,
     '',
@@ -86,11 +157,12 @@ function renderFinding(finding, prose, run, remote) {
     '',
     body,
     finding.codex && finding.codex.fix ? `\n_Propozycja codexa:_ ${finding.codex.fix}` : '',
+    ...(finding.alsoClaimed ?? []).map((c) => `\n_Też w tym miejscu (${c.source}):_ ${c.claim}`),
   ].filter((part) => part !== '').join('\n');
 }
 
-export function renderReport({ run, selection, findings, suppressed, prose, codexStatus, remote, incomplete = [] }) {
-  const parts = [header({ run, selection, codexStatus, incomplete }), ''];
+export function renderReport({ run, selection, findings, suppressed, prose, codexStatus, remote, incomplete = [], finders = null }) {
+  const parts = [header({ run, selection, codexStatus, incomplete, findings, finders }), ''];
   const byAxis = new Map();
   for (const finding of findings) {
     if (!byAxis.has(finding.axis)) byAxis.set(finding.axis, []);
