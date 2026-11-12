@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateFinding, dedupe, applyThresholds, assemble } from '../lib/findings.mjs';
+import { validateFinding, dedupe, applyThresholds, assemble, mergeAgreement } from '../lib/findings.mjs';
 import { recordTriage } from '../lib/triage.mjs';
 import { emptyState } from '../lib/state.mjs';
 
@@ -145,4 +145,84 @@ test('ids are stable and sequential', () => {
     triage: [], today: '2026-09-04',
   });
   assert.deepEqual(out.findings.map((f) => f.id), ['f-01', 'f-02']);
+});
+
+const withSource = (source, over = {}) => ({ ...base, confidence: 95, source, ...over });
+const assembleAll = (findings) => assemble({ run: { id: 'r1' }, findings, triage: [], today: '2026-09-04' }).findings;
+
+test('a finder\'s own source field is overwritten by the file it came from', () => {
+  // crm stamps `source` from the side file name; a codex finding claiming to be
+  // sonnet must not survive, or agreement would be forged.
+  const out = assembleAll([{ ...withSource('codex'), keptFrom: 'sonnet', alsoClaimed: [{ source: 'x' }] }]);
+  assert.deepEqual(out[0].sources, ['codex']);
+  assert.equal(out[0].keptFrom, 'codex');
+  assert.deepEqual(out[0].alsoClaimed, []);
+});
+
+test('findings from two sources on overlapping lines merge into one', () => {
+  const out = assembleAll([
+    withSource('sonnet', { lines: [10, 14], severity: 'suggestion', claim: 'sonnet wording' }),
+    withSource('codex', { lines: [12, 20], severity: 'blocking', claim: 'codex wording', fix: 'use a filter' }),
+  ]);
+  assert.equal(out.length, 1);
+  assert.deepEqual(out[0].lines, [10, 20]);
+  assert.equal(out[0].severity, 'blocking');
+  assert.equal(out[0].keptFrom, 'codex');
+  assert.equal(out[0].fix, 'use a filter');
+  assert.deepEqual(out[0].sources, ['sonnet', 'codex']);
+  assert.equal(out[0].alsoClaimed[0].source, 'sonnet');
+  assert.equal(out[0].alsoClaimed[0].fix, null);
+});
+
+test('adjacent lines, another file or another axis do not merge', () => {
+  const pairs = [
+    [withSource('sonnet', { lines: [10, 14] }), withSource('codex', { lines: [15, 20] })],
+    [withSource('sonnet', { lines: [10, 14] }), withSource('codex', { lines: [10, 14], file: 'b.ts' })],
+    [withSource('sonnet', { lines: [10, 14] }), withSource('codex', { lines: [10, 14], axis: 'quality' })],
+  ];
+  for (const pair of pairs) assert.equal(mergeAgreement(pair).length, 2);
+});
+
+test('two findings of one source never merge through a third', () => {
+  const out = mergeAgreement([
+    withSource('sonnet', { lines: [10, 12], claim: 'one' }),
+    withSource('sonnet', { lines: [14, 16], claim: 'two' }),
+    withSource('codex', { lines: [11, 15] }),
+  ]);
+  assert.equal(out.length, 2);
+  const first = out.find((f) => f.lines[0] === 10);
+  assert.deepEqual(first.sources, ['sonnet', 'codex']);
+  assert.deepEqual(out.find((f) => f.lines[0] === 14).sources, ['sonnet']);
+});
+
+test('equal severity keeps the sonnet claim', () => {
+  const out = mergeAgreement([
+    withSource('semgrep', { claim: 'semgrep wording' }),
+    withSource('sonnet', { claim: 'sonnet wording' }),
+  ]);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].keptFrom, 'sonnet');
+  assert.equal(out[0].claim, 'sonnet wording');
+  assert.deepEqual(out[0].sources, ['sonnet', 'semgrep']);
+});
+
+test('an exact duplicate across sources unions sources', () => {
+  const out = assembleAll([withSource('sonnet'), withSource('codex')]);
+  assert.equal(out.length, 1);
+  assert.deepEqual(out[0].sources, ['sonnet', 'codex']);
+});
+
+test('an off-contract severity never swallows another source\'s valid claim', () => {
+  const out = mergeAgreement([
+    withSource('sonnet', { lines: [10, 12], severity: 'high' }),
+    withSource('codex', { lines: [11, 13], severity: 'blocking' }),
+  ]);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].keptFrom, 'codex');
+  assert.equal(out[0].severity, 'blocking');
+});
+
+test('an assembled finding has no own source property', () => {
+  const out = assembleAll([withSource('sonnet'), withSource('codex')]);
+  assert.equal(Object.hasOwn(out[0], 'source'), false);
 });

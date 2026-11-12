@@ -11,6 +11,7 @@ import { assemble, validateFinding, applyThresholds } from '../lib/findings.mjs'
 import { recordTriage } from '../lib/triage.mjs';
 import { renderReport } from '../lib/report.mjs';
 import { buildCodexPrompt, runCodex, runCodexFind } from '../lib/codex.mjs';
+import { effectiveDeadlineMs, failureDetail, startWorker } from '../lib/finders.mjs';
 import { runSemgrep } from '../lib/semgrep.mjs';
 import { changedHunks } from '../lib/hunks.mjs';
 import { blobLink } from '../lib/links.mjs';
@@ -118,7 +119,9 @@ function writeJson(path, value) {
 // Temp file + rename, so a reader polling for the file (`finders --wait`) can
 // never observe a half-written document.
 function writeJsonAtomic(path, value) {
-  const tmp = `${path}.tmp`;
+  // Per-process name: two writers (worker and a `--wait` declaring it dead) must
+  // not rename each other's half-written temp file.
+  const tmp = `${path}.${process.pid}.tmp`;
   writeJson(tmp, value);
   renameSync(tmp, path);
 }
@@ -137,38 +140,58 @@ function pidAlive(pid) {
   }
 }
 
-// Runs one finder as a child `crm` process and resolves to its status object
-// plus its own timings. Never rejects: a finder that crashes must not take
-// the other one's result down with it.
+// How long the worker may live: the slowest finder's own timeout plus slack
+// for startup, the diff (`gh pr diff`) and I/O. Past this the worker gives up
+// on whatever is still running, so `--wait` can never be stuck on `pending`.
+const workerDeadlineMs = (settings) =>
+  (Math.max(settings.codex.find_timeout_s, settings.semgrep.timeout_s) + 120) * 1000;
+
+// Runs one finder as a child `crm` process. `done` resolves to its status
+// object plus its own timings and never rejects: a finder that crashes must
+// not take the other one's result down with it. `expire()` kills the child
+// and settles `done` as a worker-deadline timeout (no-op once settled).
 function runFinderChild(command, repo, runId) {
   const startedAt = new Date();
-  return new Promise((resolve) => {
-    const finish = (status) => {
-      const finishedAt = new Date();
-      resolve({ ...status, startedAt: startedAt.toISOString(), finishedAt: finishedAt.toISOString(),
-        durationMs: finishedAt - startedAt });
-    };
-    const child = spawn(process.execPath, [fileURLToPath(import.meta.url), command, '--run', runId, '--repo', repo, '--json'],
-      { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
-    let stdout = '';
-    let stderr = '';
-    child.stdout.on('data', (chunk) => { stdout += chunk; });
-    child.stderr.on('data', (chunk) => { stderr += chunk; });
-    const failed = (detail) => finish({ status: 'unavailable', reason: 'command-failed', detail });
-    child.on('error', (err) => failed(String(err.message).slice(0, 200)));
-    child.on('close', (code) => {
-      const firstStderr = stderr.split(/\r?\n/).map((l) => l.trim()).find((l) => l !== '') ?? '';
-      if (code !== 0) return failed(firstStderr.slice(0, 200));
-      const line = stdout.split(/\r?\n/).map((l) => l.trim()).filter((l) => l !== '').at(-1);
-      try {
-        const parsed = JSON.parse(line);
-        if (parsed === null || typeof parsed !== 'object') throw new Error('not an object');
-        return finish(parsed);
-      } catch {
-        return failed(firstStderr.slice(0, 200) || 'no JSON on stdout');
-      }
-    });
+  let settled = false;
+  let settle;
+  const done = new Promise((resolve) => { settle = resolve; });
+  const finish = (status) => {
+    if (settled) return;
+    settled = true;
+    const finishedAt = new Date();
+    settle({ ...status, startedAt: startedAt.toISOString(), finishedAt: finishedAt.toISOString(),
+      durationMs: finishedAt - startedAt });
+  };
+  const child = spawn(process.execPath, [fileURLToPath(import.meta.url), command, '--run', runId, '--repo', repo, '--json'],
+    { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+  let stdout = '';
+  let stderr = '';
+  child.stdout.on('data', (chunk) => { stdout += chunk; });
+  child.stderr.on('data', (chunk) => { stderr += chunk; });
+  const failed = (detail) => finish({ status: 'unavailable', reason: 'command-failed', detail });
+  child.on('error', (err) => failed(String(err.message).slice(0, 200)));
+  child.on('close', (code) => {
+    const firstStderr = stderr.split(/\r?\n/).map((l) => l.trim()).find((l) => l !== '') ?? '';
+    if (code !== 0) return failed(failureDetail(code, stderr));
+    const line = stdout.split(/\r?\n/).map((l) => l.trim()).filter((l) => l !== '').at(-1);
+    try {
+      const parsed = JSON.parse(line);
+      if (parsed === null || typeof parsed !== 'object') throw new Error('not an object');
+      return finish(parsed);
+    } catch {
+      return failed(firstStderr.slice(0, 200) || 'no JSON on stdout');
+    }
   });
+  const expire = () => {
+    if (settled) return;
+    child.kill();
+    // Grandchildren (codex, docker) can keep the pipes open after the crm
+    // child dies; destroying our ends lets the worker's event loop drain.
+    child.stdout.destroy();
+    child.stderr.destroy();
+    finish({ status: 'timeout', reason: 'worker-deadline' });
+  };
+  return { done, expire };
 }
 
 function gitRemote(repo) {
@@ -181,6 +204,11 @@ function gitRemote(repo) {
     return null;
   }
 }
+
+const readSideFile = (repo, runId, name) => {
+  const path = reportPath(repo, runId, name);
+  return existsSync(path) ? readJson(path) : [];
+};
 
 const COMMANDS = {
   plan(args) {
@@ -281,21 +309,34 @@ const COMMANDS = {
     const sourceOf = (path) => readFileSync(join(repo, path), 'utf8');
     const rejected = [];
     const valid = [];
-    for (const finding of readInputFile(args.raw, '--raw')) {
-      const check = validateFinding(finding, sourceOf);
-      if (!check.ok) { rejected.push({ claim: finding.claim, why: check.why }); continue; }
-      valid.push(finding);
+    const rejectedBySource = { sonnet: 0, codex: 0, semgrep: 0 };
+    // `source` is stamped from the file a finding came from, never from what the
+    // finder wrote in it. A finder that is absent or failed leaves no side file.
+    const inputs = [
+      ['sonnet', readInputFile(args.raw, '--raw')],
+      ['semgrep', readSideFile(repo, args.run, 'semgrep-raw.json')],
+      ['codex', readSideFile(repo, args.run, 'codex-raw.json')],
+    ];
+    for (const [source, list] of inputs) {
+      for (const raw of list) {
+        const finding = { ...raw, source };
+        const check = validateFinding(finding, sourceOf);
+        if (!check.ok) { rejected.push({ claim: finding.claim, why: check.why, source }); rejectedBySource[source] += 1; continue; }
+        valid.push(finding);
+      }
     }
     const out = assemble({
       run: { id: args.run, mode: args.mode ?? null },
       findings: valid, triage: state.triage, today: new Date().toISOString().slice(0, 10),
     });
     out.rejectedForEvidence = rejected;
+    out.rejectedBySource = rejectedBySource;
     writeJson(reportPath(repo, args.run, 'findings.json'), out);
     return {
       findings: out.findings.map((f) => ({ id: f.id, axis: f.axis, file: f.file, lines: f.lines, severity: f.severity, claim: f.claim, evidence: f.evidence })),
       suppressed: out.suppressed.length,
       rejectedForEvidence: rejected.length,
+      rejectedBySource,
     };
   },
 
@@ -402,31 +443,49 @@ const COMMANDS = {
       const plan = readRunFile(repo, args.run, 'plan.json');
       if (plan.mode !== 'pr' && plan.mode !== 'branch') return { started: false, reason: 'not-in-mode' };
       // A re-run with the same id must not be answered with the old result.
+      const ageLimitMs = workerDeadlineMs(loadConfig(repo).settings) + 60 * 1000;
+      if (existsSync(pidPath)) {
+        const previous = Number(readFileSync(pidPath, 'utf8').trim());
+        if (Number.isInteger(previous) && pidAlive(previous) && Date.now() - statSync(pidPath).mtimeMs <= ageLimitMs) {
+          return { started: false, reason: 'already-running' };
+        }
+      }
       rmSync(resultPath, { force: true });
-      const worker = spawn(process.execPath,
-        [fileURLToPath(import.meta.url), 'finders-worker', '--run', args.run, '--repo', repo],
-        { detached: true, stdio: 'ignore', windowsHide: true });
-      worker.unref();
-      mkdirSync(dirname(pidPath), { recursive: true });
-      writeFileSync(pidPath, String(worker.pid), 'utf8');
-      return { started: true };
+      return startWorker(spawn, {
+        command: process.execPath,
+        args: [fileURLToPath(import.meta.url), 'finders-worker', '--run', args.run, '--repo', repo],
+        pidPath,
+      });
     }
     if (!args.wait) fail('finders needs --start or --wait');
     if (!existsSync(pidPath) && !existsSync(resultPath)) {
       fail(`run ${args.run} has no finders to wait for — call "crm finders --start" first`);
     }
+    // A bare `--max-s` parses as `true`, and `Number(true)` is 1.
+    if (args['max-s'] === true) fail('--max-s needs a number of seconds, for example --max-s 20');
     const maxS = args['max-s'] === undefined ? 500 : Number(args['max-s']);
     if (!Number.isFinite(maxS) || maxS < 0) fail(`--max-s must be a non-negative number, got "${args['max-s']}"`);
     const deadline = Date.now() + maxS * 1000;
+    let ageLimitMs = null;
     for (;;) {
       if (existsSync(resultPath)) return readJson(resultPath);
       const pid = existsSync(pidPath) ? Number(readFileSync(pidPath, 'utf8').trim()) : NaN;
-      if (Number.isInteger(pid) && !pidAlive(pid)) {
+      // A live pid is not proof: Windows and Linux reuse pids, so a pid file
+      // older than the worker's own deadline names some other process.
+      if (Number.isInteger(pid) && ageLimitMs === null) ageLimitMs = workerDeadlineMs(loadConfig(repo).settings) + 60 * 1000;
+      const stale = Number.isInteger(pid) && Date.now() - statSync(pidPath).mtimeMs > ageLimitMs;
+      if (Number.isInteger(pid) && (stale || !pidAlive(pid))) {
         // The worker renames the result into place right before it exits, so
         // look once more before declaring it dead.
         if (existsSync(resultPath)) return readJson(resultPath);
-        const died = { status: 'unavailable', reason: 'worker-died' };
-        const summary = { codexFind: { ...died }, semgrep: { ...died }, finishedAt: new Date().toISOString() };
+        // A finder that finished before the worker died left its own status
+        // file; keep that instead of reporting it as lost.
+        const own = (name) => {
+          const path = reportPath(repo, args.run, name);
+          return existsSync(path) ? readJson(path) : { status: 'unavailable', reason: 'worker-died' };
+        };
+        const summary = { codexFind: own('codex-find-status.json'), semgrep: own('semgrep-status.json'),
+          finishedAt: new Date().toISOString() };
         writeJsonAtomic(resultPath, summary);
         return summary;
       }
@@ -439,12 +498,20 @@ const COMMANDS = {
   // children have, so nothing is left running after the result file exists.
   async 'finders-worker'(args) {
     const repo = args.repo ?? process.cwd();
-    const [codexFind, semgrep] = await Promise.all([
-      runFinderChild('codex-find', repo, args.run),
-      runFinderChild('semgrep', repo, args.run),
-    ]);
+    const { settings } = loadConfig(repo);
+    // The env override can only shorten the worker's life; it exists so a test
+    // can exercise the deadline without a finder that really hangs.
+    const deadlineMs = effectiveDeadlineMs(workerDeadlineMs(settings), process.env.CRM_FINDERS_DEADLINE_MS);
+    const finders = [runFinderChild('codex-find', repo, args.run), runFinderChild('semgrep', repo, args.run)];
+    let expired = false;
+    const timer = setTimeout(() => { expired = true; finders.forEach((f) => f.expire()); }, deadlineMs);
+    const [codexFind, semgrep] = await Promise.all(finders.map((f) => f.done));
+    clearTimeout(timer);
     writeJsonAtomic(reportPath(repo, args.run, 'finders.json'),
       { codexFind, semgrep, finishedAt: new Date().toISOString() });
+    // Past the deadline a killed finder's grandchildren may still hold handles;
+    // the result is written, so leave without waiting for them.
+    if (expired) process.exit(0);
     return { done: true };
   },
 

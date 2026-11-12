@@ -51,9 +51,9 @@ export function overlapsHunks(hunks, file, lines) {
 }
 
 const defaultGit = (repo) => (args) => execFileSync('git', ['-C', repo, ...args],
-  { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 60000 });
 const defaultGh = (repo) => (args) => execFileSync('gh', args,
-  { cwd: repo, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  { cwd: repo, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 60000 });
 
 // The lines the change added, or null when the diff cannot be computed (no
 // network, gh missing, base gone). Null lets the caller fail open instead of

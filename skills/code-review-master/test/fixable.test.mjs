@@ -61,3 +61,20 @@ test('the CLI proceeds past the guard once --interactive is passed', () => {
     assert.match(String(err.stderr), /run anyrun has no findings\.json/);
   }
 });
+
+test("codex's own finding confirmed by another source is fixable", () => {
+  const out = selectFixable([
+    { id: 'f-01', severity: 'blocking', confidence: 90, sources: ['sonnet', 'codex'], keptFrom: 'codex',
+      codex: { verdict: 'own', reason: 'found by codex — not cross-checked', fix: 'do x' } },
+  ]);
+  assert.deepEqual(out.fixable.map((f) => f.id), ['f-01']);
+});
+
+test("codex's own finding with no other source is skipped with the reason", () => {
+  const out = selectFixable([
+    { id: 'f-01', severity: 'blocking', confidence: 90, sources: ['codex'], keptFrom: 'codex',
+      codex: { verdict: 'own', reason: 'found by codex — not cross-checked', fix: 'do x' } },
+  ]);
+  assert.deepEqual(out.fixable, []);
+  assert.deepEqual(out.skipped, [{ id: 'f-01', why: 'found only by codex — no independent second opinion' }]);
+});

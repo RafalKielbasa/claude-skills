@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { writeFileSync, readFileSync, mkdtempSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, readFileSync, mkdtempSync, existsSync, mkdirSync, utimesSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
@@ -613,4 +613,134 @@ test('wait without start is a broken run', () => {
     { encoding: 'utf8', env: { ...process.env, CRM_GLOBAL_CONFIG: join(dir, 'no-global.md') } });
   assert.equal(result.status, 2);
   assert.match(result.stderr, /finders --start/);
+});
+
+const writePid = (dir, runId, pid) => {
+  mkdirSync(join(dir, '.claude', 'review', 'reports'), { recursive: true });
+  writeFileSync(reportsFile(dir, runId, 'finders.pid'), String(pid));
+};
+const runWait = (dir, runId, extra = []) =>
+  JSON.parse(run(['finders', '--repo', dir, '--run', runId, '--wait', ...extra, '--json']));
+
+test('wait reports pending while a live worker has not finished', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  writePid(dir, runId, process.pid);
+  const t0 = Date.now();
+  assert.deepEqual(runWait(dir, runId, ['--max-s', '1']), { status: 'pending' });
+  assert.ok(Date.now() - t0 < 3000 + 2000);
+  assert.equal(existsSync(reportsFile(dir, runId, 'finders.json')), false);
+});
+
+test('a pid file older than the worker deadline is a dead worker even if the pid is alive', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  writePid(dir, runId, process.pid);
+  const old = new Date(Date.now() - 24 * 3600 * 1000);
+  utimesSync(reportsFile(dir, runId, 'finders.pid'), old, old);
+  const out = runWait(dir, runId, ['--max-s', '20']);
+  assert.equal(out.codexFind.reason, 'worker-died');
+  assert.equal(out.semgrep.reason, 'worker-died');
+});
+
+test('a second start for a run whose worker is alive is refused', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  writePid(dir, runId, process.pid);
+  const out = JSON.parse(run(['finders', '--repo', dir, '--run', runId, '--start', '--json']));
+  assert.deepEqual(out, { started: false, reason: 'already-running' });
+  assert.equal(readFileSync(reportsFile(dir, runId, 'finders.pid'), 'utf8'), String(process.pid));
+});
+
+test('worker-died keeps the status of a finder that had finished', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  const dead = spawnSync(process.execPath, ['-e', ''], { encoding: 'utf8' });
+  writePid(dir, runId, dead.pid);
+  const kept = { status: 'ok', found: 3, droppedOffAxis: 0 };
+  writeFileSync(reportsFile(dir, runId, 'codex-find-status.json'), JSON.stringify(kept));
+  const out = runWait(dir, runId, ['--max-s', '20']);
+  assert.deepEqual(out.codexFind, kept);
+  assert.deepEqual(out.semgrep, { status: 'unavailable', reason: 'worker-died' });
+});
+
+test('a bare --max-s is a broken run', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  writePid(dir, runId, process.pid);
+  const result = spawnSync(process.execPath, [CLI, 'finders', '--repo', dir, '--run', runId, '--wait', '--max-s'],
+    { encoding: 'utf8', env: { ...process.env, CRM_GLOBAL_CONFIG: join(dir, 'no-global.md') } });
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /--max-s needs a number/);
+});
+
+test('the worker deadline stops finders that are still running', () => {
+  const { dir, runId } = branchRun(CONFIG);
+  // 1 ms is far shorter than a child's node startup, so both are still running.
+  execFileSync(process.execPath, [CLI, 'finders-worker', '--run', runId, '--repo', dir, '--json'],
+    { encoding: 'utf8', env: { ...process.env, CRM_GLOBAL_CONFIG: join(dir, 'no-global.md'), CRM_FINDERS_DEADLINE_MS: '1' } });
+  const out = JSON.parse(readFileSync(reportsFile(dir, runId, 'finders.json'), 'utf8'));
+  for (const finder of [out.codexFind, out.semgrep]) {
+    assert.equal(finder.status, 'timeout');
+    assert.equal(finder.reason, 'worker-deadline');
+    assert.equal(typeof finder.startedAt, 'string');
+    assert.equal(typeof finder.durationMs, 'number');
+  }
+});
+
+test('assemble reads the finder side files and counts rejections per source', () => {
+  const dir = makeRepo({ 'a.ts': 'const course = findFirst({ where: { id } });\n' });
+  writeFiles(dir, { '.claude/review/config.md': CONFIG, 'a.ts': 'const course = findFirst({ where: { id } });\nchanged\n' });
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json']));
+  const raw = join(dir, `${plan.runId}-raw.json`);
+  writeFileSync(raw, JSON.stringify([{
+    axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking',
+    claim: 'query without tenant filter', evidence: 'const course = findFirst({ where: { id } });',
+  }]));
+  const reports = join(dir, '.claude', 'review', 'reports');
+  mkdirSync(reports, { recursive: true });
+  writeFileSync(join(reports, `${plan.runId}-codex-raw.json`), JSON.stringify([{
+    axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking',
+    claim: 'invented', evidence: 'this text is not in the file at all',
+  }]));
+  const out = JSON.parse(run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']));
+  assert.equal(out.findings.length, 1);
+  assert.deepEqual(out.rejectedBySource, { sonnet: 0, codex: 1, semgrep: 0 });
+  const written = JSON.parse(readFileSync(join(reports, `${plan.runId}-findings.json`), 'utf8'));
+  assert.deepEqual(written.rejectedForEvidence.map((r) => r.source), ['codex']);
+});
+
+test('assemble stamps source from the side file, ignoring what the finder wrote', () => {
+  const dir = makeRepo({ 'a.ts': 'const course = findFirst({ where: { id } });\nconst other = findMany({ where: { id } });\n' });
+  writeFiles(dir, { '.claude/review/config.md': CONFIG, 'a.ts': 'const course = findFirst({ where: { id } });\nconst other = findMany({ where: { id } });\nchanged\n' });
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json']));
+  const raw = join(dir, `${plan.runId}-raw.json`);
+  writeFileSync(raw, JSON.stringify([{
+    axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking',
+    claim: 'query without tenant filter', evidence: 'const course = findFirst({ where: { id } });',
+  }]));
+  const reports = join(dir, '.claude', 'review', 'reports');
+  mkdirSync(reports, { recursive: true });
+  writeFileSync(join(reports, `${plan.runId}-codex-raw.json`), JSON.stringify([{
+    axis: 'quality', file: 'a.ts', lines: [2, 2], severity: 'blocking', source: 'sonnet',
+    claim: 'unbounded query', evidence: 'const other = findMany({ where: { id } });',
+  }]));
+  run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']);
+  const written = JSON.parse(readFileSync(join(reports, `${plan.runId}-findings.json`), 'utf8'));
+  const codexOne = written.findings.find((f) => f.claim === 'unbounded query');
+  assert.deepEqual(codexOne.sources, ['codex']);
+  assert.equal(codexOne.keptFrom, 'codex');
+});
+
+test("the judge skips findings whose kept claim is codex's", () => {
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  writeFiles(dir, { '.claude/review/config.md': CONFIG });
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'branch', '--json']));
+  const reports = join(dir, '.claude', 'review', 'reports');
+  mkdirSync(reports, { recursive: true });
+  const file = join(reports, `${plan.runId}-findings.json`);
+  writeFileSync(file, JSON.stringify({ findings: [{
+    id: 'f-01', axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking', claim: 'c', evidence: 'x',
+    sources: ['codex'], keptFrom: 'codex', alsoClaimed: [], codex: null, fix: 'do x',
+  }] }));
+  const out = JSON.parse(run(['codex', '--repo', dir, '--run', plan.runId, '--json']));
+  assert.equal(out.status, 'nothing-to-judge');
+  const saved = JSON.parse(readFileSync(file, 'utf8'));
+  assert.equal(saved.findings[0].codex.verdict, 'own');
+  assert.equal(saved.findings[0].codex.fix, 'do x');
 });
