@@ -231,6 +231,14 @@ The one-time `docker pull <image>` is a command for Rafal to run; the report lin
   source.
 - Wave 2 is unchanged: findings are grouped by `axis` regardless of source, still one Haiku agent
   per entry. The verifier sees `alsoClaimed` as part of the finding.
+- **Amendment (plan 1 execution, 2026-11-12):** exact duplicates (same `fingerprint`) from
+  *different* sources are no longer merged by `dedupe` regardless of lines; they merge only through
+  the agreement rule above, i.e. when their lines overlap. Same-source duplicates merge as before.
+  Reason: keeps one finding per source per merge, and is more conservative for the `fix`
+  eligibility rule in §8. Assembled findings carry `sources`/`keptFrom`, not `source`.
+- **Open point for Rafal:** triage suppression runs on the merged finding, so when a rejected
+  Sonnet claim is the kept one, other sources' claims on the same lines (in `alsoClaimed`) go to
+  `suppressed` with it.
 
 ## 8. codex as judge (Step 7) and `fix`
 

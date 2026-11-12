@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 109283c8-2c7c-48dd-81f5-5f6ef3cfff2a
-  modified: 2026-10-22T12:47:09.248Z
+  modified: 2026-11-12T19:02:21.105Z
 ---
 
 Daily zespołu prowadzi Rafał: otwiera nagranie („Rozpoczynamy spotkanie daily…”), wywołuje kolejne osoby po imieniu i sam nie jest nazywany. Potwierdził to przy bramce /daily 2026-10-22 („Rafał prowadzi spotkanie”).
@@ -13,3 +13,5 @@ Daily zespołu prowadzi Rafał: otwiera nagranie („Rozpoczynamy spotkanie dail
 **Why:** reguła /daily zabrania zgadywania imion po wykluczeniu, więc status prowadzącego trafia do karty ⚠ — a odpowiedź jest prawie zawsze ta sama. W nagraniach 19.10 i 21.10 Rafała dało się zidentyfikować, bo ktoś zwrócił się do niego po imieniu; 22.10 nie.
 
 **How to apply:** nadal pytaj kartą ⚠ (to rozstrzygnięcie Rafała, nie moje), ale w treści karty wskaż, że prowadzący to zwykle Rafał. Po potwierdzeniu wpisz statusy pod „### Rafał” w notatce i w `statuses.json`, a `assignee` jego zadań ustaw na `RafalKielbasa`. Nie rozciągaj tego na innych nienazwanych mówców — np. 15.10 status o wdrożeniu subskrypcji (pewnie Wiktor) został ⚠. Powiązane: [[bramka-punkt-po-punkcie]].
+
+Potwierdzone ponownie 2026-11-12 przy daily 10.11 i 12.11 (opcja „To Rafał” na karcie tożsamości wybrana od razu). Diaryzacja bywa uboższa niż lista obecnych (12.11: 3 etykiety na 6 osób, etykieta zmienia osobę w środku zdania) — wtedy przypisuj osoby po fragmentach (wywołanie po imieniu + odpowiedź w 1. osobie, „zadanie dla Rafała … przypisz mi”), nie po etykiecie, i napisz to w `**Zakres:**` notatki.
