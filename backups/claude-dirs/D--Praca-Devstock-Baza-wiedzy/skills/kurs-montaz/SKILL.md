@@ -326,12 +326,17 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
         too, with `tStart` before `od`: the shared boundary moves back. If it cannot move, `sync` stops and says so.
       - Both values must increase. When the narration order differs from the recording order, use a
         `wstawka` as today.
-      Marker coverage is partial: `elementy` exist only for actions with a located element (the drag in
+      In a take with action windows (`actionWindows` in `znaczniki.json`) every action has a row in the sheet, an
+      element or a window, and you pin the action to that row's `tStart`: a window's start is where the action begins,
+      so a named `open_node` window counts as named only when the pin falls within [−0.05, +0.3] s of it, and a pin
+      read from frames lands later and misses it.
+      The frame rule below is for a take without `actionWindows`, where marker coverage is partial: `elementy` exist only for
+      actions with a located element (the drag in
       3:2, "Przeciągam do niego identyfikator", has none, so take it from the end of the previous element).
       When a sentence has no matching row, or the source has no markers (a human retake), read the second
       from frames (`klatka`, `indeks --od=S --do=S --co=1`) as above; for such a source decide each wait's kind
-      from frames too: `waitKind` says `still` for every wait there, so `sync` keeps them all and you remove a wait that is an execution. The step's `dzialania` in `video/nagrywanie.yaml` list what the rows leave out (`rename_node`,
-      `pick_resource`, `set_parameter`, `switch_tab`, `compose_prompt`), which tells you what to look for. A result
+      from frames too: `waitKind` says `still` for every wait there, so `sync` keeps them all and you remove a wait that is an execution. In a take without windows the step's `dzialania` in `video/nagrywanie.yaml` list what the rows leave out (`rename_node`,
+      `pick_resource`, `set_parameter`, `switch_tab`, `compose_prompt`), which tells you what to look for. There, a result
       that appears with a `switch_tab` or an `open_node` is pinned to the frame where it appears, not to the end of
       the action before it. A sentence naming a typed value is pinned to the pointer leaving for that field: the nearest
       row can be a `hover` of another field (2:5 "Limit dwadzieścia" in 3.2 sits after `hover returnAllField`), and
