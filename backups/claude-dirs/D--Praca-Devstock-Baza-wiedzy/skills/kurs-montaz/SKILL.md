@@ -251,8 +251,8 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
      `wyciecia` stay for mistakes and foreign screens.
    - Transit pace (spec `docs/superpowers/specs/2026-11-10-nagrywanie-transit-pace-design.md`). A lesson at or after
      `kurs.yaml` `montaz.transit_from` (`agenty-ai`: 3.4) plays transit at 3x: helper motion that shows no narrated
-     step - clicks of the helpers in `montaz.transit_helpers` (`chatToggleHide`, `chatToggleOpen`, `closeNodeView`),
-     hovers, scrolls and `wait_for` the narration does not name, and the stands and short gaps between them. `sync`
+     step - clicks of the helpers in `montaz.transit_helpers` (`chatToggleHide`, `chatToggleOpen`, `closeNodeView`) and
+     unnamed windows of the actions in `montaz.transit_helper_actions` (`open_node`), hovers, scrolls and `wait_for` the narration does not name, and the stands and short gaps between them. `sync`
      finds these chains and writes them to `transit_ranges` on every run (do not edit it); a `'break'` range is a chain
      that ends at a pinned sentence and plays in the break before that sentence. The agent only pairs sentences with
      actions. With transit, a break may be up to 7.5 s on an entry that has `transit_ranges` (6 s otherwise). A
@@ -294,8 +294,9 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
       second is the sentence's "cięcie pauzy" value from the sheet (`zdania`), because a break must sit
       in the narrator's silence.
       - Pin a sentence that names a visible action to the start of the pointer's travel: a marked element's
-        `tStart`; an unmarked action (opening a node by double-click, a rename) the frame where the pointer starts
-        toward the target, read with `klatka` and `indeks`, because in a 4K take a still range can hide the travel.
+        `tStart`; an action with a window the window's `tStart`; only an unmarked action in a take without windows
+        (opening a node by double-click, a rename) the frame where the pointer starts toward the target, read with
+        `klatka` and `indeks`, because in a 4K take a still range can hide the travel.
       - Never pin a sentence to a helper unless the narration names that motion. An element the narration names that
         no pin can carry (the second action of one sentence, a hover the narrator points with) goes to the paragraph's
         `named_actions` as its `tStart` (recording seconds); `named_actions` is kept across runs, and `sync` itself adds
@@ -315,10 +316,11 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
         6.3 s under a sentence about the panel). With transit the exception applies only when the sheet's `wejście`
         column for the first action says `krok dydaktyczny` (also when the screen changes at once between `od` and the
         action, such as the tab switch in 3:2 of 3.4). With `tylko ruch pomocniczy` write the lead-in: the chain
-        plays after the previous paragraph's narration. A `lead-in-didactic` flag in the report means a lead-in was
-        written over a didactic entry while the previous paragraph's last stretch has `R < N`: remove that lead-in pin
-        (restore `od`/`do` from the archive) and accept the no-anchor flag; an inner pin can still place the named
-        action (5:5 in 3.1).
+        plays after the previous paragraph's narration. `sync` refuses a lead-in written over a
+        didactic entry while the previous paragraph's last stretch has `R < N`: it returns an error naming the
+        paragraph and the `[t, 0]` pin and writes nothing (no `edl.json`, no archive, no report), so there is nothing to
+        restore. Remove that pin from the paragraph's anchors and accept the no-anchor flag, or pin the action to a
+        sentence inside the paragraph (5:5 in 3.1).
       - A first sentence can name an action recorded in the previous paragraph's range (a step with
         `bez_narracji: true` in `video/nagrywanie.yaml`, 9:8 "Uruchamiam jeszcze raz" in 3.2). Write `[tStart, 0]` here
         too, with `tStart` before `od`: the shared boundary moves back. If it cannot move, `sync` stops and says so.
@@ -363,7 +365,7 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
       by a hand-over (only on the run that makes the hand-over), and excluded paragraphs. With transit it adds a
       `- ruch pomocniczy:` scope line, a `ruch pomocniczy` column per stretch, `## Ruch pomocniczy` (chains and their
       total, recording time against film time), `## Długie akcje po zdaniu` and the flags `transit-tempo` (a chain above
-      6x), `lead-in-didactic` and `transit-body-dropped` (a break chain's body got no room, so its picture is
+      6x) and `transit-body-dropped` (a break chain's body got no room, so its picture is
       dropped: watch the place and check the pins). Read these after every `sync`. Paragraphs with `pomin`, `video_inserts` or `rozmycie` stay on the old rules
       and are listed; a `do: null` paragraph has nothing to sync. If an overlay of that kind is added
       to an already synced paragraph, `sync` stops naming it: remove the overlay, run `sync`, add it back
