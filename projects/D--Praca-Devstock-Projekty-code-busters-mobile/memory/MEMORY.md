@@ -1,1 +1,1 @@
-- [Android emulator setup](android-emulator-setup.md) — SDK in D:\Android\Sdk, AVD Medium_Phone_API_37.0, EAS dev client cc074e54 (local build fails on long paths), Metro --clear after pnpm install, JS/CSS task deep links, Android 17 local-network permission
+- [Android emulator setup](android-emulator-setup.md) — SDK in D:\Android\Sdk, AVD Medium_Phone_API_37.0, EAS dev client cc074e54 (local build fails on long paths), Metro --clear after pnpm install, JS/CSS task deep links, Android 17 local-network permission, PIN + fingerprint for biometric tests, seed logins

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: reference
   originSessionId: ae480ef9-2ffd-4802-adfe-92a129b4bfce
-  modified: 2026-11-12T19:38:55.368Z
+  modified: 2026-11-13T05:10:43.730Z
 ---
 
 Set up 2026-11-12 (WHPX enabled 09:41, reboot 13:07; Android Studio 2026.2.2.8 via winget).
@@ -18,6 +18,8 @@ Set up 2026-11-12 (WHPX enabled 09:41, reboot 13:07; Android Studio 2026.2.2.8 v
 - Local CMS data has no marketplace-visible products, coupons, promotions or loyalty missions; check pricing and reward chips in Storybook (`pnpm storybook:dev`, stories `Screens/Marketplace`, `Screens/LoyaltyProgram`).
 - Android 17 asks the dev client for the "nearby devices" (local network) permission on first launch; without "Allow" it cannot reach Metro at `192.168.0.190:8081`, and the screen stays on the launcher.
 - First run timings: Metro cold bundle ~330 s, then ~77 s until fonts and theme resolve (screen stays dark with the "Refreshing..." banner meanwhile). Not a hang.
+- Biometrics (since 2026-11-13): the AVD has screen-lock PIN `1111` and one enrolled fingerprint; `adb -e emu finger touch 1` (then `finger remove`) answers a prompt. The system biometric prompt is FLAG_SECURE, so `screencap` returns a black frame while it is open; read it with `uiautomator dump`. Undo with `adb shell locksettings clear --old 1111`.
+- Local logins: seed users in `code-busters-v2/apps/cms/prisma/data/User.ts` share one password (the commented `// password:` line at the top); used `adventureseeker@explore.com` (Alex Wanderlust) and `developer1@codebusters.pl` (Tomasz Kowalski). Git Bash needs `MSYS_NO_PATHCONV=1` for `adb shell cat /sdcard/...`.
 - Backend: `.env` points at `http://192.168.0.190:3001/api/graphql` (host Wi-Fi IP), reachable from the emulator; the local CMS from `code-busters-v2` must be running for login.
 
 Related: [[mobile-ui-testing-on-pc]]

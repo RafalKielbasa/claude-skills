@@ -1114,3 +1114,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: zamkniecie-issue-z-bramka-i-sladem-zamykajacym — zamknięcie #833 w czterech bramkach; wyszukanie przed kartą zamieniło nowe issue na komentarz w DT-24 #662.
 - Wzorce repo tej sesji: brak (skill repo `course-import` nieużyty).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: dlugi-lancuch-narzedzi-bez-linii-statusu (21 sesji) i git-worktree-remove-pada-na-dlugich-sciezkach-windows (4 sesje), oba ogólne, bez skilla do ewolucji. Nawrotów brak.
+
+## 2026-11-12 — sesja 62c8c4bb-8377-436d-a2b6-aea1aa8bd57b (id claude.ai niedostępny; Baza wiedzy, lekcja agenty-ai 4.1, DT-132 #908)
+- dopisano dowód: ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby — „automat pulpitu obsługuje wyłącznie Claude Desktop” wzięte z zakresu specu w raporcie subagenta; Rafał wskazał gałąź Grzegorza, kod pokazał silnik ogólny.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — osiem wtrąceń harnessu w jednej sesji redakcji lekcji.
+- dopisano dowód: regex-przez-node-e-traci-ukosniki — `sed -i` z `\\S` w Bashu nic nie zmienił i nie zgłosił błędu; ta sama zmiana przez Edit przeszła.
+- Wzorce repo tej sesji: założone lekcja-demo-z-krokami-poza-zasiegiem-automatu, przejscie-zgodnosci-lekcji-lista-twierdzen-do-subagenta, review-ai-bez-redakcji-kwestionuje-cudzyslowy-lektora; dowody do regex-walidatora-uzyty-jako-fixer-typografii, scenariusz-screencastu-pisany-bez-otwarcia-produktu, cytat-z-kodu-produktu-gdy-docs-milcza, recenzent-proponuje-dopisanie-faktu-jako-ruch-stylistyczny (patrz log repo).
+- Kandydaci do ewolucji wśród dotkniętych: ograniczenie-narzedzia-przyjete-z-podsumowania-bez-proby (4 sesje), dlugi-lancuch-narzedzi-bez-linii-statusu (22 sesje), regex-przez-node-e-traci-ukosniki - ogólne, bez skilla; w repo regex-walidatora-uzyty-jako-fixer-typografii i scenariusz-screencastu-pisany-bez-otwarcia-produktu (po 4 dowody) → `/evolve-skill kurs-lekcja`. Nawrotów brak.
