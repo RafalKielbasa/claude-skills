@@ -77,6 +77,10 @@ ta sama zmiana na Done przeszła.
   - Obsługa ze skilla zadziałała: bez ponawiania podałem linię `!`, Rafał ją uruchomił (`"state": "in_review"`).
   - Skill wymienia tylko `status --to done` i `close`, a odmowa dotyczy też `in_review`, jak 2026-11-04 `create`.
 - 2026-11-09, sesja f83b042b-5c80-43ff-8320-902beeeba944 (id claude.ai niedostępny; Baza wiedzy, DT-134 #910, zadanie 12 planu `weekly-sprints-card-links-plan-1`): bramka kończyła się markerem „Twoje „scal dzień” (push gałęzi dnia, PR i merge), po którym uruchamiam workflow `card-trail`”, a tabela kroków wymieniała `gh workflow run card-trail.yml`. Po „scal dzień” push, `gh pr create` i `gh pr merge --merge` przeszły. `gh workflow run card-trail.yml --repo … --ref main`, w łańcuchu z `sleep` i `gh run list`, odrzucone („[External System Writes]”). Nie ponawiałem, podałem linię `!`. Rafał uruchomił sam oba przebiegi, a odczyt (`gh run watch`, `gh run view --log`) robiłem ja. Wcześniej po „A” na wariant, który je nazywał, przeszły `gh api -X PUT …/environments/card-trail` i POST reguły gałęzi. Nowe: odmowa dotyczy też uruchomienia workflow wymienionego w bramce dosłownie. Komenda była łańcuchem z odczytem, więc nie wiadomo, czy zdecydowało samo uruchomienie.
+- 2026-11-13, sesja 7d286730-a904-4694-a25c-8e90c19e7273 (id claude.ai niedostępny; code-busters-mobile, DT-93 #834). Obsługa zadziałała. To nie nawrót zmiany skilla, bo `gh issue edit` nie jest komendą CLI tablicy.
+  - `gh issue edit 834 --body-file …` klasyfikator odrzucił dwa razy („[External System Writes]”): po scaleniu #436 i przy zamykaniu. Wariant [A] nazywał podmianę opisu słowami i z góry zapowiadał linię `!` przy odmowie. Rafał uruchomił linię `!` raz; drugie uruchomienie wciąż czeka na jego decyzję.
+  - Po tym samym „ok” przeszły: `create-task`, `ensure`, `link`, `bind`, `status --to backlog`, `status --to done` i oba `trail`.
+  - Nowe: odmowa dotyczy też edycji opisu issue przez `gh`, choć 2026-11-09 `gh issue edit --body-file` przeszło po „A dodaj otwórz PR”.
 
 ## Rozwiązanie
 Zapis zewnętrzny wykonuj w dokładnie takiej postaci, na jaką padła zgoda. Zmianę (np. powodu

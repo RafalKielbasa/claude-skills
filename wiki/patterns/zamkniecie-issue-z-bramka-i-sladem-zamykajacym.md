@@ -30,6 +30,12 @@ Zapisy, które w bramce mają pełną treść, przechodzą przez klasyfikator po
   (trzy issue, siedem kroków) czekała na odpowiedź.
 - 2026-11-05, sesja 78d1f9a8-a534-43a0-8215-3ee7c33255f6 (id claude.ai niedostępny; Baza wiedzy, DT-52 #741) (dowód ograniczający): kolejność ślad, `status`, commit indeksu zadziałała dla #741, a wcześniejsze `fa711a33` przed `status` dla #773 zostawiło w indeksie zamknięcie, które nie zaszło (odmowa klasyfikatora, potem zmiana zakresu). Patrz [[zamkniecie-na-slowo-mimo-sprzecznego-dowodu]].
 - 2026-11-12, sesja 0437af48-c40c-473a-a2a5-5d2bb978768c (id claude.ai niedostępny; code-busters-v2, DT-92 #833): zamknięcie w czterech bramkach zamiast jednej (zapis odpowiedzi Wiktora → karty trzech issue → oznaczenie reszty → poz. 46 i Done), każda przyjęta „ok” albo „zgodnie z propozycją”, bez poprawek treści. Tabelę „element | gdzie jest | stan” zastąpiły znaki ✅/↗ z notatką w każdym wierszu opisu issue i punkt w sekcji „Stan”; ślad dostał część 4. Wyszukanie na tablicy przed kartą dla poz. 46 znalazło DT-24 #662 (prawnicza weryfikacja regulaminu) i zamieniło nowe issue na komentarz. Każdy zapis osobnym wywołaniem; `status --to done` przeszedł bez odmowy klasyfikatora. Bramki rozbite na tury kosztowały trzy dodatkowe „ok”, ale każda zależała od wyniku poprzedniej (numery issue, znalezione #662).
+- 2026-11-13, sesja 7d286730-a904-4694-a25c-8e90c19e7273 (id claude.ai niedostępny; code-busters-mobile, DT-93 #834). Dwie bramki: najpierw „czy możemy zamknąć” z tabelą zrobione/otwarte i wariantami, potem zapisy (D1 issue z kartą, D2 opis, D3 Done).
+  - Opis #834 przygotowany przed założeniem issue, z 8 jawnymi `{{RESZTA}}`. Po założeniu wypełniony przez `sed` i sprawdzony `grep -c "{{RESZTA}}"` = 0.
+  - Wyszukanie na tablicy przed kartą („forum mobile restyl”, „forum”, „build sklepowy mobile”, „ankiety Tally”) nie znalazło pasującej karty, więc powstała nowa (#945).
+  - Ślad zamykający poszedł po `status --to done`, a `trail` zwrócił `closed: true`.
+  - Oba „ok” bez poprawek treści. Zgrzytnęły dwie rzeczy: `bind` z `next` przesunął nowe issue do „w toku” ([[create-task-przypina-issue-zakladane-na-pozniej]]), a podmianę opisu odrzucił klasyfikator ([[zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie]]).
+  - Tabela w bramce wymagała sprawdzenia pozycji w kodzie, bo opis issue był nieaktualny ([[lista-otwartych-pozycji-z-opisu-issue-nie-z-kodu]]).
 
 ## Rozwiązanie
 Przy zamykaniu issue z resztką:
