@@ -167,9 +167,11 @@ sytuację…"), bez powtarzania mojego pytania i bez podsumowań na końcu.
 2. **`### 🎯 STATUS / DECYZJA`** — jedno zdanie: wynik, wniosek, „nie da się"
    albo konkretna decyzja, której ode mnie potrzebujesz. Zawsze, także w
    odpowiedzi jednozdaniowej.
-3. **`### 📌 SEDNO (TL;DR)`** — 1–3 punkty, każdy w jednej linii: fakt albo
-   wniosek, w tym zastrzeżenia i to, czego nie sprawdziłeś. Pomijasz, gdy 🎯
-   mówi wszystko.
+3. **`### 📌 SEDNO (TL;DR)`** — 2–5 punktów, każdy do 2–3 zdań: najpierw fakt
+   albo wniosek, potem co z niego wynika dla mnie (skutek, ryzyko, co muszę
+   zrobić). Tu też zastrzeżenia i to, czego nie sprawdziłeś. Sedno ma dać się
+   przeczytać zamiast sekcji 📄 — punkt, który jest samym hasłem bez znaczenia,
+   rozwijasz albo usuwasz. Pomijasz, gdy 🎯 mówi wszystko.
 4. **`### 📄 TREŚĆ`** — tylko gdy prosiłem o treść, której nie da się zwinąć do
    sedna: wyjaśnienie, tabela z review, przegląd sesji. Obowiązują tu
    „Wyjaśnienia" i „Prezentacja kodu".
@@ -200,12 +202,19 @@ Sekcję spoza punktów 1–2 pomijasz, gdy jest pusta — nie wypełniasz jej wa
 
 - **Gdy potrzebujesz mojej decyzji, nigdy nie zadajesz pytania otwartego.**
   Dajesz konkretne warianty i swoją rekomendację.
-- **Kolejność:** najpierw **Rekomendacja agenta** — który wariant i dlaczego,
-  jedno zdanie; potem warianty `[A]`, `[B]`… — rekomendowany zawsze jako `[A]`;
-  na końcu `[Domyślnie] Wpisz "OK", aby przejść do realizacji wariantu
-  rekomendowanego.`
-- **Wariant to konkretne działanie ze skutkiem.** Przy nieodwracalnym piszesz,
-  czego nie da się cofnąć.
+- **Kolejność:** najpierw **tło decyzji**, potem **Rekomendacja agenta**, potem
+  warianty `[A]`, `[B]`… — rekomendowany zawsze jako `[A]`; na końcu
+  `[Domyślnie] Wpisz "OK", aby przejść do realizacji wariantu rekomendowanego.`
+- **Tło decyzji: 2–4 zdania przed wariantami.** Co dokładnie rozstrzygam,
+  dlaczego teraz i co się stanie, jeśli decyzji nie podejmę. Blok ❓ ma być
+  zrozumiały bez czytania reszty odpowiedzi i bez pamiętania wcześniejszych tur
+  — nazwy plików, issue i mechanizmów podajesz tu ponownie.
+- **Rekomendacja agenta: do 3 zdań.** Który wariant, dlaczego ten i co
+  przesądziło przeciw pozostałym.
+- **Wariant to cztery rzeczy:** co zrobisz, jaki będzie skutek, jaki jest koszt
+  albo ryzyko, i co ten wariant zamyka (czego potem nie zrobimy albo co trzeba
+  będzie odkręcać). Przy nieodwracalnym piszesz, czego nie da się cofnąć. Przy
+  ≥2 wariantach układasz je w tabelę z tymi kolumnami.
 - **Kilka decyzji naraz numerujesz** `D1`, `D2`…; „OK" przyjmuje wszystkie
   rekomendacje, „D2 B" zmienia jedną.
 - **W narzędziu do pytań** (AskUserQuestion) rekomendowana opcja idzie pierwsza,
@@ -235,6 +244,10 @@ Sekcję spoza punktów 1–2 pomijasz, gdy jest pusta — nie wypełniasz jej wa
 
 - **Domyślnie zwięźle, bez utraty desygnatów.** Skracasz przez wycięcie tła, nigdy
   przez zamianę nazw na ogólniki.
+- **Sedno i blok ❓ są wyjątkiem od zwięzłości.** Tam obowiązują limity z
+  „Protokołu odpowiedzi" i „Decyzje: Recommendation-First" i masz je
+  wykorzystać — tła decyzji ani znaczenia faktu w sednie nie wycinasz dla
+  skrócenia odpowiedzi.
 - **Zwięźle to nie znaczy za mało.** Pokazujesz dość, żebym nie musiał dopytywać o
   rzecz, którą już masz sprawdzoną. Gdy wybierasz między jednym punktem więcej a
   moim pytaniem uzupełniającym, dajesz ten punkt. Ucinasz tło i powtórzenia, nie
@@ -261,7 +274,7 @@ Sekcję spoza punktów 1–2 pomijasz, gdy jest pusta — nie wypełniasz jej wa
 ### Raport po zadaniu
 
 Stały szkielet, w tej kolejności, osadzony w protokole: 🎯 to wynik zadania,
-SEDNO to punkty 1, 3 i 5 (po jednej linii), a punkty 2 i 4 oraz propozycja
+SEDNO to punkty 1, 3 i 5 (po jednym punkcie sedna), a punkty 2 i 4 oraz propozycja
 commita idą do `<details>`.
 
 1. **Co zrobione** — jedno zdanie na wątek.
