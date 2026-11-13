@@ -463,6 +463,13 @@ claim of its own. If `kursy/_wspolne/dzwieki/` is empty, use no sounds and do no
    nothing to wait for; the avatar engine comes from `kurs.yaml` `video.avatar_engine`, so its gate asks
    nothing. The one gate is "film z kartą lekcji (G5)" of `/kurs-video` step 5, where Rafał judges
    `final.mp4` with `video/lesson-card.md`; remarks about the montage come back here as above.
+   **Article screenshots** (with or without a ticket): when the lesson has screenshot orders (`kind: screenshot`
+   in `artykul-grafiki/zrodla/*.yaml`), they waited for this montage. After the last `render` run
+   `npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --rodzaj screenshot` (ffmpeg and Chrome, no
+   paid call): it replaces the placeholders with frames of the takes in `video/montaz/zrodla.json`, blurred as
+   `edl.json` blurs the film. Quote any `BŁĄD:` line verbatim; `/kurs-video` resolves it before the film gate.
+   Say in the turn that the privacy review of the screenshots (a paid Gemini call) follows in `/kurs-video`
+   before the film gate. Reference: `.claude/skills/kurs-lekcja/ilustracje.md`.
 8. **Close.** Without a ticket changes stay uncommitted — Rafał commits. Montage leaves nothing to commit in the
    lesson: `video/montaz/` (EDL included) and the media are git-ignored. List what was produced
    and where it lies on disk. In a lesson with a ticket the card entries you wrote

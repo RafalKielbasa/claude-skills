@@ -34,6 +34,18 @@ przedstawione Rafałowi do bramki review.
 3. **Generowanie** (kolejność obowiązkowa, wg struktura-lekcji.md):
    a. `artykul.md` — pełna treść lekcji, orientacyjnie 1200–2000 słów
       (sugestia, nie limit: styleguide → Długość treści),
+
+      **Ilustracje** rozmieszczasz w trakcie pisania - zasady wyboru rodzaju, schemat zamówienia, przykłady
+      i komendy są w `.claude/skills/kurs-lekcja/ilustracje.md` (przeczytaj W CAŁOŚCI przed pierwszą grafiką).
+      Każda grafika to osobna linia `![alt](artykul-grafiki/NN-slug.png)` z pustą linią przed i po, **bez
+      podpisu**: podpisy `**Ilustracja N.**` dopisuje `/kurs-redakcja`, więc ostrzeżenie `npm run validate`
+      „bez podpisu” jest tu oczekiwane. Do każdej grafiki jedno zamówienie `artykul-grafiki/zrodla/NN-slug.yaml`
+      (ta sama nazwa co PNG): `kind`, `reason` (jaka korzyść dla kursanta i dlaczego ten rodzaj - Rafał widzi
+      je w bramce), `anchor` (zdanie akapitu nad grafiką) i blok rodzaju; zrzut dostaje teraz `screen` (co ma
+      być na ekranie), cytat kroku konspektu dopiero po punkcie d. Grafik z modelu najwyżej
+      `illustrations.modelImagesPerArticle` z `kurs.yaml` (obraz w slocie planszy się nie liczy; kurs bez bloku
+      `illustrations` - żadnej), plansz i zrzutów tyle, ile daje wymierną korzyść dydaktyczną, zrzut tylko
+      w lekcji `demo`. PNG powstają w punkcie g, nie tutaj.
    b. `video/scenariusz.md` — TA SAMA treść w formie mówionej; frontmatter
       `typ:` musi być równy `typ_video` z lekcja.yaml; segmenty
       `## [ekran: slajd|screencast|avatar] Segment N - Tytuł`, gdzie N to
@@ -144,6 +156,13 @@ przedstawione Rafałowi do bramki review.
       wzór gotowego pliku:
       `kursy/misja-ai-start/modul-08-agenci/lekcja-08-agenci/video/plansze.yaml`.
       Plansze nakłada sam `/kurs-montaz`; ta procedura tylko pisze plik.
+
+      **Zrzuty w zamówieniach** (zaraz po konspekcie): każde zamówienie `kind: screenshot` dostaje
+      `screenshot.konspekt` - dosłowny fragment tekstu tego jednego kroku konspektu, który pokazuje ekran.
+      Cytat, nie numer: numery kroków przesuwają się przy `/kurs-uwagi` i `/kurs-redakcja`, a cytat przeżywa
+      przenumerowanie. Fragment ma pasować do dokładnie jednego kroku - `npm run validate` odrzuca cytat bez
+      trafienia albo z kilkoma (podaje ich numery; zacytuj dłuższy fragment). Ekranu, którego konspekt nie
+      pokazuje, nie zamawiasz jako zrzutu: zamówienie staje się planszą albo znika razem z linią obrazka.
    e. Oznaczenie pokrycia wideo w `artykul.md` (po napisaniu scenariusza):
       przed każdym blokiem artykułu (jeden lub kilka sąsiednich akapitów o tym
       samym wątku), którego meritum pada też w scenariuszu, wstaw callout —
@@ -164,6 +183,22 @@ przedstawione Rafałowi do bramki review.
       inny — w obu wypadkach przeczytaj plik, zanim cokolwiek z tego wyniku
       wywnioskujesz. Reguła obowiązuje także wtedy, gdy przebieg wstawiający
       puściłeś ręcznie, poza jakąkolwiek komendą `course-pipeline`.
+      Przebieg obejmuje też zamówienia `artykul-grafiki/zrodla/*.yaml`: twarda spacja po `a i o u w z` we
+      wszystkich ich polskich polach tekstowych (`reason`, `anchor`, `screen`, `alt`, `caption`, teksty
+      planszy i etykiet, `privacyAccepted.note`), jak w artykule. `npm run validate` odrzuca jej brak
+      w `screen`, `alt`, `caption`, tekstach planszy i etykietach; `anchor` trafia w akapit także po
+      przebiegu, bo narzędzie porównuje go bez względu na rodzaj spacji. Prompty modelu są po angielsku
+      i reguły nie mają.
+   g. **Ilustracje** (po punkcie f, przed samokontrolą; obsługa błędów: `ilustracje.md`, sekcja
+      „Failures”). Najpierw
+      `cd tools/course-pipeline && npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --dry-run`
+      (lista zamówień `do zrobienia` / `pominięta`, `wywołania modelu: N` i linia `koszt: …`, bez
+      wywołań sieci; `BŁĄD:` przy zamówieniu poprawiasz przed prawdziwym przebiegiem), potem
+      `npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`: grafiki z modelu (płatne,
+      w limicie kursu), plansze i zaślepki zrzutów (prawdziwy zrzut powstaje po montażu, w `/kurs-video`).
+      Linię `koszt: …` zachowaj do bramki (krok 7). Grafika z modelu, która nie powstała po 3 próbach
+      (`model nie zwrócił obrazu po 3 próbach`), nie idzie w pętlę: zaproponuj w jej miejsce planszę (ta
+      sama nazwa i linia obrazka, `kind: board`, potem `--tylko <nazwa>`) i powiedz o tym w bramce.
 4. **Samokontrola.** Sprawdź checklistę:
    - artykuł realizuje cel z lekcja.yaml i strukturę z struktura-lekcji.md,
    - artykuł pokrywa całą treść scenariusza; scenariusz jest nadrzędny, więc
@@ -242,8 +277,17 @@ przedstawione Rafałowi do bramki review.
    linię `POMINIĘTO`. Wysyłka nie jest bramką i niczego nie blokuje. Pokaż: ścieżki plików, streszczenie
    lekcji (3–5 zdań), werdykt z review-ai.md + co poprawiono, tabelę uwag
    Codexa (nr | segment | uwaga | zasadna? | naniesiona / po korekcie / dlaczego nie) i osobno
-   uwagi `Typ: treść` do decyzji, liczbę segmentów avatar. Uwagi Rafała nanoś od ręki i iteruj;
-   po każdej rundzie uwag, która zmieniła `artykul.md`, powtórz wysyłkę na staging (ta sama
+   uwagi `Typ: treść` do decyzji, liczbę segmentów avatar. Ilustracje: tabela
+   `nr | rodzaj | powód | plik` - jeden wiersz na zamówienie, rodzaj `model` / `plansza` / `zrzut`, powód =
+   `reason`, plik = pełna ścieżka PNG; zaślepkę oznacz w kolumnie rodzaju („zrzut - zaślepka, powstanie po
+   montażu”), pod tabelą linia `koszt: …` z przebiegu 3g, grafika z modelu zamieniona na planszę po 3 próbach
+   i kurs bez bloku `illustrations` (bez grafik z modelu). Uwaga Rafała do grafiki zmienia jej zamówienie
+   (tekst planszy, prompt, kadr, etykiety), potem
+   `npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --tylko <nazwa>`; zmieniony prompt sam
+   generuje nowy obraz (płatne). Nowy obraz z modelu przy niezmienionym zamówieniu tylko na prośbę Rafała:
+   `npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --nowa-wersja <nazwa>`.
+   Uwagi Rafała nanoś od ręki i iteruj;
+   po każdej rundzie uwag, która zmieniła `artykul.md` albo jego grafikę, powtórz wysyłkę na staging (ta sama
    sekcja). Rafał może też
    wpisać je wprost do `video/scenariusz.md` jako linie `[UWAGA: ...]` — wtedy
    nanosi je `/kurs-uwagi`, a nie ta procedura.

@@ -116,7 +116,11 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
    w komendzie, powiedz o tym jednym zdaniem i czekaj na odpowiedź - także
    wtedy, gdy pytanie o silnik było bezprzedmiotowe. „Bez kontroli lektora”
    = pomijasz krok 4b; rozpoznanie mowy slajdów wyłącza się tylko kluczem
-   `slajdy.odslanianie` w `kurs.yaml`.
+   `slajdy.odslanianie` w `kurs.yaml`. Lekcja ze zrzutami do artykułu (zamówienia `kind: screenshot`
+   w `artykul-grafiki/zrodla/`) ma w tej samej zgodzie przegląd prywatności zrzutów (Gemini, kilka groszy,
+   jedno wywołanie na wszystkie zmienione zrzuty, przed bramką 5) - wymień go w tym samym zdaniu. „Bez
+   przeglądu zrzutów” = pomijasz `prywatnosc` w bloku „Zrzuty do artykułu” przed bramką 5, a bramka mówi,
+   że zrzuty nie przeszły przeglądu.
    **Lekcja z biletem** (`video/ticket.yaml`, bilet produkcyjny (G1)): bramka silnika i zgody schodzi do ustawień
    kursu, a bilet jest zgodą na koszt. Oba klucze `video.avatar_engine` i `video.narrator_control` ustala karta
    bilet produkcyjny (G1) w `/kurs-nagrywanie` (pozycja (b)), zanim bilet powstanie - tu nie pytasz o żaden z nich.
@@ -129,6 +133,13 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
    - Brak klucza `video.avatar_engine` albo `video.narrator_control` (albo wartość spoza `api`/`mcp`,
      `true`/`false`) oznacza, że bilet zapisano błędnie: zatrzymaj się z komunikatem nazywającym brakujący klucz
      (to dopłata do bilet produkcyjny (G1), nie nowe pytanie). Brak klucza nie jest zgodą i nie jest `api`.
+   - Przegląd prywatności zrzutów (lekcja z zamówieniami `kind: screenshot`) jak `budget.stt`:
+     `budget.screenshot_review: true` w bilecie → zgoda dana, **bez pytania**; `false` wyłącza przegląd
+     (`prywatnosc` odmawia przed żądaniem): pomijasz go i mówisz o tym jednym zdaniem w turze bramki G5. Bilet
+     z `approved` od 2026-11-13 (od tego dnia `/kurs-nagrywanie` proponuje ten klucz) bez `budget.screenshot_review`
+     oznacza, że bilet zapisano błędnie: zatrzymaj się z komunikatem nazywającym klucz, jak wyżej. Bilet
+     zatwierdzony wcześniej klucza nie ma, a narzędzie traktuje jego brak jako zgodę: przegląd idzie, jedno
+     zdanie w turze.
    Lekcja bez biletu: bramka silnika i zgoda na kontrole dokładnie jak wyżej.
 3. **Sprawdź konfigurację** przed uruchomieniem, żeby nie wywalić się w
    połowie. Wspólne dla obu silników: `tools/course-pipeline/.env` ma
@@ -286,6 +297,29 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
    d. `doKarty` i powtórzenia `buduj` czyta sam, więc niczego nie dopisujesz. Odsłuch miejsc z raportu robi
       Rafał na karcie w bramce film z kartą lekcji (G5).
    Lekcja bez biletu: kontrola jak wyżej w tym kroku, a miejsca z raportu idą do Rafała w bramce 5.
+
+**Zrzuty do artykułu (przed bramką 5, w lekcji z biletem przed G5).** Tylko lekcja z zamówieniami
+`kind: screenshot` w `artykul-grafiki/zrodla/` (schemat, komendy, komunikaty:
+`.claude/skills/kurs-lekcja/ilustracje.md`); reszta pomija ten blok. Po ostatnim renderze, gdy
+`video/montaz/zrodla.json` i `edl.json` istnieją (bez nich, przy filmie zmontowanym w edytorze, zrzut nie
+powstanie - zaproponuj plansze w miejsce zaślepek):
+   a. `cd tools/course-pipeline && npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --rodzaj screenshot`
+      (bez płatnych wywołań; zaślepki zamieniają się w zrzuty z ujęć montażu, niezmienione to `POMINIĘTO`).
+      Zrzut, którego kroku nie da się rozstrzygnąć (brak ujęcia, brak kroku albo znaczników, film nie pokazał
+      kroku, okno podręczne bez własnych znaczników), kończy się `BŁĄD:` z przyczyną: cytujesz ją dosłownie
+      i proponujesz w jego miejsce planszę (zamówienie `kind: board` pod tą samą nazwą, potem
+      `npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --tylko <nazwa>`; linia obrazka
+      w artykule zostaje). Innej klatki ani innego kroku nie bierzesz po cichu.
+   b. `npm run ilustracje -- prywatnosc ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (objęte zgodą z bramki 2,
+      w lekcji z biletem `budget.screenshot_review`; przy „bez przeglądu zrzutów” albo `false` pomijasz) -
+      jedno wywołanie Gemini, raport `review-zrzutow.md` w folderze lekcji z sha256 każdego PNG.
+   Bramka (5 albo G5, w turze obok ścieżek filmu i karty) wymienia każdy zrzut: pełna ścieżka PNG w bloku kodu
+   i werdykt (`OK`, `POMINIĘTO`, `OSTRZEŻENIE` - uwaga zaakceptowana, `BŁĄD` - uwagi bez akceptacji, cytowane
+   dosłownie). `BŁĄD` blokuje ten zrzut, dopóki go nie poprawisz (prostokąt `screenshot.blur` albo inny `crop`
+   w zamówieniu, potem `--tylko <nazwa>` i `prywatnosc` ponownie) albo Rafał wprost nie zaakceptuje uwagi.
+   Akceptację zapisujesz w zamówieniu jako `privacyAccepted: { hash: <sha256 z linii BŁĄD>, note:
+   "<RRRR-MM-DD>: <słowa Rafała>" }`; ponownie wyrenderowany PNG ma inny sha256 i potrzebuje nowej
+   akceptacji. Bez jego słów `privacyAccepted` nie powstaje.
 5. **BRAMKA: Rafał ogląda `video/final.mp4`** (lokalnie — plik nie trafia do
    git, patrz Zasady). Uwagi Rafała: jeśli dotyczą treści segmentu
    (scenariusz/slajdy), wróć do `/kurs-lekcja`, popraw treść, usuń
@@ -335,6 +369,9 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
      wyślij tę lekcję na staging według sekcji „Wysyłka na staging (wołają ją inne skille)” w pliku `.claude/skills/kurs-publikuj/SKILL.md`
      (przeczytaj tę sekcję; nie wołaj skilla `/kurs-publikuj`, bo ten jest tylko na prod)
      (aktywność wideo powstaje, bo `lekcja.yaml` ma już `vimeo`). Przy błędzie wgrania nic nie wysyłasz.
+     Wysyłka niesie też zrzuty do artykułu (PNG z `artykul-grafiki/`, w miejscu zaślepek), bez osobnego kroku;
+     zrzut z `BŁĄD` przeglądu prywatności bez `privacyAccepted` wstrzymuje ją, dopóki go nie rozstrzygniesz
+     (blok „Zrzuty do artykułu” przed bramką 5).
      Wysyłka nie jest bramką: jej błąd pokazujesz dosłownie z komendą ponowienia, a akceptacja i wgranie
      zostają. `platformIds` zapisane przez wysyłkę leżą w `lekcja.yaml` i `kurs.yaml` — dochodzą do reguły
      commitu z tego kroku jak klucz `vimeo`.

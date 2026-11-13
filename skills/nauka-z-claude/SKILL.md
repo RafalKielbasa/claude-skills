@@ -1,6 +1,6 @@
 ---
 name: nauka-z-claude
-description: Use when the user wants to be taught a topic step by step, to resume such learning, or to run spaced-repetition reviews — triggers like "naucz mnie X", "chcę się nauczyć X", "przerabiajmy X", "wróćmy do nauki X", "kontynuujmy naukę", "zrób powtórki", "przepytaj mnie", explicit /nauka-z-claude, explicit /nauka-z-claude wyjaśnij <koncept> for the exposition mode, or a SessionStart hook reporting overdue review items. NOT for one-off questions ("co to jest X?", "wyjaśnij mi X") without intent to study the topic over multiple sessions — the exposition mode requires the explicit command, a phrase like "wyjaśnij mi X" alone does NOT trigger it.
+description: Use when the user wants to be taught a topic step by step, to resume such learning, or to run spaced-repetition reviews — triggers like "naucz mnie X", "chcę się nauczyć X", "przerabiajmy X", "wróćmy do nauki X", "kontynuujmy naukę", "zrób powtórki", "przepytaj mnie", explicit /nauka-z-claude, or explicit /nauka-z-claude wyjaśnij <koncept> for the exposition mode. NOT for one-off questions ("co to jest X?", "wyjaśnij mi X") without intent to study the topic over multiple sessions — the exposition mode requires the explicit command, a phrase like "wyjaśnij mi X" alone does NOT trigger it.
 ---
 
 # Nauka z Claude
@@ -35,9 +35,9 @@ Zawsze zacznij od przeczytania `D:\Notatki\notatki\nauka-z-claude.md`:
 - Tematu nie ma → ścieżka „Nowy temat".
 - Prośba bez nazwy tematu („kontynuujmy naukę") → wypisz tematy „w trakcie"
   i zapytaj, który; gdy jest tylko jeden — zaproponuj go wprost.
-- Prośba o powtórki albo kontekst hooka o zaległych pozycjach → sekcja
+- Prośba o powtórki → sekcja
   „Powtórki". To jeden tryb obsługujący trzy pule; prośba może go zawęzić:
-  - „zrób powtórki", „przepytaj mnie", kontekst hooka → **bez zawężenia**,
+  - „zrób powtórki", „przepytaj mnie" → **bez zawężenia**,
     wszystkie trzy pule wg budżetu,
   - „powtórka z notatek", „przepytaj mnie z <obszar>" (np. „z Google Cloud"),
     wskazany folder → **zawężenie do puli notatek**, dodatkowo do wskazanego
@@ -206,10 +206,7 @@ Bez odpowiedzi linii nie dopisujesz.
 
 ## Powtórki
 
-Uruchamiane ręcznie („zrób powtórki", „przepytaj mnie") albo propozycją przy
-pierwszej sesji dnia: hook SessionStart zgłasza liczbę zaległych — wtedy
-zaproponuj powtórkę **jednym zdaniem** i czekaj na decyzję. Brak odpowiedzi
-to nie zgoda; bez „tak" wracasz do właściwego zadania sesji.
+Uruchamiane wyłącznie na prośbę użytkownika („zrób powtórki", „przepytaj mnie").
 
 Sesja ma budżet **~12 pytań** i trzy pule, obsługiwane w tej kolejności, każda
 z sufitem **4 pytań**:
@@ -396,8 +393,8 @@ wartości: `zaległy`, `niezaliczony YYYY-MM-DD` (data ostatniego podejścia)
 i `zaliczony YYYY-MM-DD`. Krok bez linii `Stan:` ma materiał przed sobą albo
 w toku.
 
-Format `[następna: YYYY-MM-DD, interwał: Nd]` czyta regexem hook powtórek
-(`~\.claude\hooks\powtorki-check.ps1`) — nie zmieniaj go.
+Format `[następna: YYYY-MM-DD, interwał: Nd]` jest wspólny dla wszystkich pul
+i zapisuje go też skill `tidy-journal` — nie zmieniaj go.
 
 Poza sekcjami tematów plik trzyma jedną sekcję o stałej nazwie, **na samym
 końcu**:
@@ -411,7 +408,7 @@ końcu**:
 ```
 
 Budowa pozycji, w kolejności: człon `[następna: …, interwał: …]` (ten sam format
-co w pozycjach tematycznych, czytany przez hook), opcjonalny znacznik
+co w pozycjach tematycznych), opcjonalny znacznik
 `(diagnoza)` dla notatki jeszcze nigdy nieprzepytanej, wikilink do notatki
 (ze ścieżką, gdy nazwa pliku nie jest unikalna) i opcjonalna wskazówka po ` — `.
 Wskazówkę **zastępujesz**, nie doklejasz — trzyma stan „od czego zacząć następnym
@@ -481,8 +478,6 @@ materiał wykładasz; dialog sokratejski zostaje na sprawdzian i powtórki:
 - „Zadam pytanie w sprawdzianie, ale od razu dopiszę pełne wyjaśnienie"
 - „Plik sprawdzę po rozmowie, najpierw zacznę uczyć"
 - „Dużo zaległych powtórek, streszczę je wykładem" (powtórka to nadal pytania)
-- „Hook zgłosił zaległe, więc od razu zaczynam przepytywać" (najpierw
-  jednozdaniowa propozycja i decyzja użytkownika)
 - „Notatka jest długa, przepytam dziś połowę, resztę następnym razem"
   (notatka jest niepodzielna — odłóż ją w całości)
 - „Przy powtórce notatki wyszła luka, założę na nią pozycję tematyczną"
@@ -523,7 +518,7 @@ materiał wykładasz; dialog sokratejski zostaje na sprawdzian i powtórki:
 | Diagnoza w tonie egzaminu | Rozmowa o tym, z czym użytkownik pracował |
 | Powtórka zadana słowami zapisu pozycji | Inne ujęcie — zapis to notatka dla Ciebie, nie gotowe pytanie |
 | Reset interwału i od razu następna pozycja | Najpierw „Pomoc w dialogu sokratejskim"; reset dopiero przy zapisie |
-| Zmiana formatu `[następna: …, interwał: …]` | Ten format czyta hook — zostaw jak jest |
+| Zmiana formatu `[następna: …, interwał: …]` | Format wspólny dla wszystkich pul i `tidy-journal` — zostaw jak jest |
 | Pytanie zadane zdaniem z notatki | Inne ujęcie — notatka to materiał, nie gotowy quiz |
 | Reset notatki po pierwszej, diagnostycznej powtórce | Diagnoza bez kary: zostaje `7d` i wskazówka z lukami |
 | Notatka urwana w połowie z braku budżetu | Notatka niepodzielna — odłóż w całości, data `następna` zostaje |

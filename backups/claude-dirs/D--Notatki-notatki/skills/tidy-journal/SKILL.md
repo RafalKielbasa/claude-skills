@@ -75,7 +75,7 @@ tags: [nauka/tech/devops]
 8. **Nauka z Claude.** Przeczytaj `nauka-z-claude.md` (żywy plik postępu nauki w korzeniu vaulta):
    - Tematy w trakcie (status „w trakcie", nieodhaczone kroki roadmapy) zostawiaj nietknięte — to warsztat skilla `nauka-z-claude`.
    - Temat ukończony (wszystkie kroki roadmapy `[x]` albo status „ukończony"): wydestyluj wiedzę z sekcji `### Notatki` (w tym pozycje „Utrwalone:") i przerobionych kroków do notatek wiedzowych w `nauka/` według punktów 2–3 (klasyfikacja, ziarno, weryfikacja) — te propozycje trafiają do planu jak każdy wpis z dziennika. Sekcję tematu przenieś w całości do zbiorczego `archiwum/nauka-z-claude.md` jako kolejną sekcję `## <Temat>` (plik utwórz z nagłówkiem `# Nauka z Claude — archiwum`, jeśli nie istnieje).
-   - Jeśli temat ma aktywne pozycje w `### Powtórki`, zostaw w żywym pliku kikut: nagłówek `## <Temat>`, linia `- **Status:** ukończony (w archiwum)` i podsekcja `### Powtórki` z tymi pozycjami. Formatu `[następna: RRRR-MM-DD, interwał: Nd]` nie zmieniaj — czyta go hook powtórek.
+   - Jeśli temat ma aktywne pozycje w `### Powtórki`, zostaw w żywym pliku kikut: nagłówek `## <Temat>`, linia `- **Status:** ukończony (w archiwum)` i podsekcja `### Powtórki` z tymi pozycjami. Formatu `[następna: RRRR-MM-DD, interwał: Nd]` nie zmieniaj — to format wspólny z `nauka-z-claude`.
    - Kikut bez aktywnych pozycji powtórek (wszystkie utrwalone) → dołącz jego pozostałości (np. wpisy „Utrwalone:") do sekcji tematu w `archiwum/nauka-z-claude.md` i usuń kikut z żywego pliku; świeżo utrwalone pozycje, których nie ma jeszcze w bazie wiedzy, wydestyluj jak wyżej.
 
 9. **Powtórki z notatek.** Dla notatek wiedzowych z `nauka/tech/` objętych tym
@@ -94,8 +94,8 @@ tags: [nauka/tech/devops]
    - **notatka bez pozycji**, do której dopisujesz treść → nowa pozycja jak wyżej.
 
    Notatki wydestylowane z ukończonego tematu nauki (punkt 8) traktuj jak nowe
-   notatki. Formatu `[następna: …, interwał: …]` nie zmieniaj — czyta go hook
-   powtórek. Samych powtórek nie prowadzisz: to warsztat skilla `nauka-z-claude`,
+   notatki. Formatu `[następna: …, interwał: …]` nie zmieniaj — to format
+   wspólny z `nauka-z-claude`. Samych powtórek nie prowadzisz: to warsztat skilla `nauka-z-claude`,
    Ty wyłącznie rejestrujesz pozycje.
 
 10. **Pokaż plan i STOP.** Tabela: wpis (skrót) → notatka docelowa (nowa / dopisanie) → pełny podgląd treści: cała nowa notatka albo cała zmieniana sekcja dokładnie tak, jak zostanie zapisana (z uzupełnieniami i sprostowaniami z punktu 3 — sprostowania wyraźnie oznaczone — oraz kondensacją z punktu 4, jeśli dotyczy) → czy wymaga aktualizacji huba. Pod tabelą: zadania do przeniesienia do `zadania.md` (z proponowanym kontekstem), aktualizacje notatek stanu projektów, proponowane notatki spotkań, zmiany w `nauka-z-claude.md` (tematy do archiwizacji, kikuty powtórek), nowe i odświeżone pozycje w sekcji `## Powtórki z notatek` (notatka → data i interwał), pliki do archiwum, puste notatki do usunięcia. **Czekaj na akceptację użytkownika — do tego momentu nie wykonuj żadnego zapisu, przeniesienia ani usunięcia.** Poprawki użytkownika nanieś i pokaż zaktualizowany plan.

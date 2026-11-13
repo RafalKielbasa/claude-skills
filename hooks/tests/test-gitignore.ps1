@@ -89,7 +89,6 @@ try {
         'backups/.sync.lock',
         'backups/.last-sync',
         'docs/loose-note.md',
-        'hooks/powtorki-last-check.txt',
         'some-future-claude-dir/state.json',
         'cache/changelog.md',
         'daemon/roster.json',

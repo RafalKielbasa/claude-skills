@@ -38,6 +38,13 @@ phrase) in this conversation. A request to put something on staging gets one sen
    the run would upload. After the usual order (staging first) `<n>` is 0; a non-zero `<n>` on
    prod means an image changed after its last staging send, or the course has no staging sends.
    Point it out to Rafał with the plan before the gate in step 3.
+   A `BŁĄD: <lekcja>/artykul.md: grafika <plik> to zaślepka zrzutu (pending) …` line names a screenshot
+   placeholder (`produced.pending: true` in `artykul-grafiki/zrodla/`): the lesson's montage is missing, or
+   `/kurs-video` has not made its screenshots yet. It is a validation error like the others (the whole run stops
+   before any request), also with `--only=article`. No prod for that lesson until `/kurs-video` replaced the
+   placeholder (`npm run ilustracje -- <lekcja> --rodzaj screenshot` after the montage, then its privacy review);
+   tell Rafał which lesson and which image. The other lessons go to prod only by their own paths, with their
+   own plan and gate.
 3. **GATE: Rafał approves the plan.** Wait for an explicit yes. No answer is not approval. A
    timeout of the question tool is not approval either — say you are waiting and ask again.
 4. **Publish.** The same command without `--dry-run`. Show the output verbatim. After `OK`, list
