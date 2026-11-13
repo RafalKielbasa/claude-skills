@@ -125,6 +125,7 @@ Krok 1 — ścieżka zmiany w tym repo → miejsce w bazie wiedzy:
 |---|---|---|
 | `kursy/` | `knowledge-base/product/` | `product` |
 | `live-events/` | `knowledge-base/marketing/` | `marketing` |
+| `marketing/` — tylko utrwalone wnioski, bez surowej pracy | `knowledge-base/marketing/` | `marketing` |
 | `tools/` | `knowledge-base/dev/` | `dev` |
 | `.claude/skills/`, `.claude/agents/`, `docs/superpowers/` | `knowledge-base/dev/baza-wiedzy-repo/` | `dev` |
 | `planning/` | **pomijasz** — obsługuje `/spotkanie` | — |
@@ -194,6 +195,7 @@ korzeń bazy wiedzy: <korzeń tego repo>
 mapa:
 - kursy/ -> knowledge-base/product/
 - live-events/ -> knowledge-base/marketing/
+- marketing/ -> knowledge-base/marketing/ (tylko utrwalone wnioski, bez surowej pracy)
 - tools/ -> knowledge-base/dev/
 - .claude/skills/, .claude/agents/, docs/superpowers/ -> knowledge-base/dev/baza-wiedzy-repo/
 kontekst: <jedno zdanie o tym, czego szukamy w tym przebiegu>

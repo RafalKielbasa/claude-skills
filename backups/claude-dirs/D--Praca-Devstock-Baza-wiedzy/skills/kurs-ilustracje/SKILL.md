@@ -54,11 +54,14 @@ CLI's `OK:` / `BŁĄD:` lines stay as printed. All commands run from `tools/cour
    list item splits the list. The anchor must match exactly one paragraph.
    **Markers.** Every `[ZRZUT: …]` line of the article either gets an order with `replaces` — the whole line exactly
    as it stands, anchor = a sentence of the paragraph directly above it (any paragraph: the image takes the
-   marker's place, so nothing is split), kind by the table "What the lesson gets": a screenshot where allowed,
-   otherwise a board or model image that fits the marker's description — or stays visible and is named at the gate
-   (step 8). Never delete or edit a marker by hand.
+   marker's place, so nothing is split; when the block directly above is a table or a list, the anchor quotes text
+   of one cell or one item of that block, because the tool sees the whole block as that paragraph), kind by the
+   table "What the lesson gets": a screenshot where allowed, otherwise a board or model image that fits the
+   marker's description — or stays visible and is named at the gate (step 8). Never delete or edit a marker by hand.
    Then `npm run validate -- <lekcja>`: fix every error in the orders. The warning `zamówienie bez linii obrazka`
-   is expected until step 4; the warning `znacznik [ZRZUT: …] bez grafiki` names a marker no order replaces.
+   is expected until step 4. `znacznik "…" bez grafiki` names a marker no order replaces; `znacznik "…" nadal
+   stoi, choć zamówienie <nazwa> (replaces) ma już linię obrazka` means the image went in before the order named
+   the marker: delete that image line and its caption line, then run `wstaw` again.
 3. **Dry runs and consent, once per run.** `npm run ilustracje -- wstaw <lekcja> --dry-run` prints each image and
    caption line and the paragraph it goes under, and `zastępuje znacznik w linii <n>` for an order with `replaces`:
    check every placement. A refusal (anchor not found or found twice, a marker not found or not directly under its
