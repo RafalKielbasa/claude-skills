@@ -14,7 +14,8 @@ przedstawione Rafałowi do bramki review.
 1. **Kontekst.** Przeczytaj W CAŁOŚCI:
    - `kursy/_wspolne/styleguide.md`, `kursy/_wspolne/szablony/struktura-lekcji.md` i `kursy/_wspolne/profil-wypowiedzi.md` (profil czytasz przed pisaniem scenariusza; dotyczy wyłącznie tekstu lektora),
    - `kurs.yaml` kursu (miejsce lekcji w programie, cel modułu),
-   - `lekcja.yaml` (cel, typ_video),
+   - `lekcja.yaml` (cel, typ_video, a gdy są - `przejmuje` i `oddaje`: co lekcja
+     bierze z wcześniejszych lekcji i co zostawia kolejnym, w fabule i w U Ciebie),
    - `zrodla.md` kursu,
    - artykuły WSZYSTKICH wcześniejszych lekcji ze statusem `tresc: zatwierdzona`
      (spójność narracji; odwołuj się do nich: "jak pamiętasz z lekcji...").
@@ -202,6 +203,11 @@ przedstawione Rafałowi do bramki review.
       sama nazwa i linia obrazka, `kind: board`, potem `--tylko <nazwa>`) i powiedz o tym w bramce.
 4. **Samokontrola.** Sprawdź checklistę:
    - artykuł realizuje cel z lekcja.yaml i strukturę z struktura-lekcji.md,
+   - lekcja z polami ciągłości je realizuje: korzysta z tego, co `przejmuje`
+     (z odwołaniem "jak w lekcji N.M", bez budowania tego od nowa), a kursant
+     kończy praktykę i blok U Ciebie z tym, co `oddaje`. Gdy pisanie wymusza
+     inny plan, popraw pola tej lekcji i lekcji, które się do niej odwołują -
+     rozjazd treści z polami to błąd, nie wariant,
    - artykuł pokrywa całą treść scenariusza; scenariusz jest nadrzędny, więc
      rozjazd naprawiasz DOPISANIEM wątku do artykułu, nigdy wycięciem go ze
      scenariusza (struktura-lekcji.md → nadrzędność scenariusza),
@@ -240,6 +246,9 @@ przedstawione Rafałowi do bramki review.
    `cd tools/course-pipeline && npm run validate --
    ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (katalog lekcji, nie kursu —
    błędy z innych lekcji nie wchodzą do tej bramki) — napraw wszystkie BŁĘDY.
+   Jeśli zmieniłeś `przejmuje`/`oddaje`, uruchom też validate na katalogu kursu
+   i rozstrzygnij komunikaty o ciągłości - odwołania między lekcjami sprawdza
+   tylko walidacja kursu.
    Dla `typ_video: prezentacja` od razu potem
    `npm run kontrola-ukladu -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y`
    (render slajdów w Chrome, bez kosztów). Każdy zgłoszony problem - tekst

@@ -23,6 +23,9 @@ Rafał's choice rules (spec 5, "Choice rules"), applied with judgement:
   concrete gain (a structure to remember, a screen to recognise, a comparison to hold), and its `reason` names that
   gain. A board or screenshot that does not help its paragraph is worse than none.
 - **`reason`:** one Polish sentence, shown at the gate: what the learner gains and why this kind.
+- **No new `[ZRZUT: …]` markers:** in a course with the `illustrations` block in `kurs.yaml` the article never gets a
+  new `[ZRZUT: …]` line; a place that needs a picture gets an order. An existing marker of an approved article is
+  replaced through `replaces` (backfill, `/kurs-ilustracje`).
 
 ## Files
 
@@ -48,6 +51,7 @@ Common keys:
 | `kind` | yes | `board`, `model` or `screenshot` |
 | `reason` | yes | Polish sentence: the gain and why this kind |
 | `anchor` | yes | the sentence of the paragraph the image stands under, quoted from the article (whitespace and U+00A0 may differ) |
+| `replaces` | no, backfill only | the `[ZRZUT: …]` marker line the image takes the place of, the whole line as it stands in the article, e.g. `"[ZRZUT: konfiguracja węzła Anthropic Chat Model z wybranym credentialem i listą modeli]"`; the marker must be a paragraph of its own, and `anchor` then quotes the paragraph directly above it; `wstaw` replaces that line with the image and caption lines |
 | `alt` | for `wstaw` | Polish alt text; in a new lesson the alt lives in the image line, so the order may leave it out |
 | `caption` | for `wstaw` | Polish caption, a full sentence ending with a period, without `**Ilustracja N.**` (the tool adds and numbers it) |
 | `privacyAccepted` | no, screenshot only | `{ hash: <64-hex sha256 printed by prywatnosc>, note: "<RRRR-MM-DD>: <słowa Rafała>" }`, written only on Rafał's explicit acceptance of a privacy finding, never for an e-mail address; a re-rendered PNG has another sha256 and needs a new acceptance |
@@ -144,8 +148,8 @@ From `tools/course-pipeline`; `<lekcja>` is `../../kursy/<slug>/modul-NN-x/lekcj
 | `npm run ilustracje -- <lekcja> --nowa-wersja <nazwa>` | a new picture for an unchanged model order or slot image (paid); only on Rafał's request — a changed prompt regenerates without it |
 | `npm run ilustracje -- <lekcja> --rodzaj screenshot` | screenshots only (also `board`, `model`); ffmpeg and Chrome, no paid call |
 | `npm run ilustracje -- prywatnosc <lekcja>` | privacy review of every produced screenshot whose PNG changed since its last review: one Gemini call (a few cents), report `review-zrzutow.md`; `--dry-run` lists what would go, no call |
-| `npm run ilustracje -- wstaw <lekcja>` | backfill only: inserts the image and caption lines of every order not yet referenced, renumbers captions; `--dry-run` prints the lines |
-| `npm run validate -- <lekcja>` | checks the orders: schema, typography, model-image limit, no screenshot in `prezentacja`, konspekt quote matching exactly one step; warns about an order without an image line and an image without an order |
+| `npm run ilustracje -- wstaw <lekcja>` | backfill only: inserts the image and caption lines of every order not yet referenced, in place of the `[ZRZUT: …]` line its `replaces` names, renumbers captions; prints `OK: wstawiono <n> grafik` and `OK: zastąpiono znaczniki [ZRZUT]: <k>`; `--dry-run` prints the lines, with `zastępuje znacznik w linii <n>` for an order with `replaces` |
+| `npm run validate -- <lekcja>` | checks the orders: schema, typography, model-image limit, no screenshot in `prezentacja`, konspekt quote matching exactly one step; warns about an order without an image line, an image without an order and, in a lesson with orders, a `[ZRZUT: …]` line no order replaces |
 
 ## Placeholders and screenshot production
 
@@ -204,4 +208,5 @@ on any `BŁĄD`.
 | `BŁĄD: plansza "…": …` (text overflows or too small) | shorten the text or change the shape; never edit the theme |
 | `lekcja bez motywu` | the lesson has neither `video/plansze.yaml` nor `video/prezentacja.yaml`; boards wait for one |
 | `zamówienie zrzutu nie wskazuje kroku` | add `konspekt` |
+| `znacznik nie występuje w artykule jako osobny akapit`, `kotwica nie stoi w akapicie bezpośrednio nad znacznikiem` | copy the marker line into `replaces` as it stands; quote the paragraph directly above the marker in `anchor`; never edit the article |
 | `samodzielnych obrazów modelu …` | too many standalone model orders for the course limit: turn one into a board or drop it |

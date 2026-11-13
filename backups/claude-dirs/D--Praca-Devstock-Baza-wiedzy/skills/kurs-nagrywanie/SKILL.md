@@ -1,6 +1,6 @@
 ---
 name: kurs-nagrywanie
-description: Automatyczne nagrywanie ekranu lekcji demo Playwrightem (tools/nagrywanie) - automat sam klika w przeglądarce według planu nagrania, zapisuje znaczniki kroków i oddaje gotowy EDL montażowi automatycznemu. Przy pierwszej lekcji z nową usługą (np. n8n) prowadzi przez jednorazowe przygotowanie - warunki bezpieczeństwa konta, logowanie w osobnym profilu, sonda interfejsu i obsługa usługi sprawdzona na koncie zespołu. Używaj, gdy kurs ma `nagrywanie: { automat: true }` w kurs.yaml i lekcja demo ma zatwierdzoną treść i plan nagrania - najpierw przed lektorem (przebieg próbny ze zrzutami ekranu i raport rozjazdów scenariusza z aplikacją), potem po paczce lektora (nagranie); w lekcji z biletem produkcyjnym jedna pętla przed lektorem (przebiegi uczą automat, zaraz po nich finalne nagranie, potem dopasowanie scenariusza do nagrania); woła go /kurs-video zamiast ręcznego nagrania. NIE do pracy poza przeglądarką (terminal, aplikacje desktopowe) - te kroki nagrywa się ręcznie jako dogrywki.
+description: Automatyczne nagrywanie ekranu lekcji demo Playwrightem (tools/nagrywanie) - automat sam klika w przeglądarce według planu nagrania, zapisuje znaczniki kroków i oddaje gotowy EDL montażowi automatycznemu. Przy pierwszej lekcji z nową usługą (np. n8n) prowadzi przez jednorazowe przygotowanie - warunki bezpieczeństwa konta, logowanie w osobnym profilu, sonda interfejsu i obsługa usługi sprawdzona na koncie zespołu. Używaj, gdy kurs ma `nagrywanie: { automat: true }` w kurs.yaml i lekcja demo ma zatwierdzoną treść i plan nagrania - najpierw przed lektorem (przebieg próbny ze zrzutami ekranu i raport rozjazdów scenariusza z aplikacją), potem po paczce lektora (nagranie); w lekcji z biletem produkcyjnym jedna pętla przed lektorem (przebiegi uczą automat, zaraz po nich finalne nagranie, potem dopasowanie scenariusza do nagrania); woła go /kurs-video zamiast ręcznego nagrania. Aplikację Claude Desktop i dowolny program Windows zadeklarowany w kursie (usługa `pulpit-windows`: Notatnik, Excel, Winamp, terminal) nagrywa ujęcie pulpitu (`wykonawca: pulpit`, UI Automation, OCR albo punkt kadru + ffmpeg, te same bramki i wyniki); tor każdego kroku skill proponuje sam po sondzie programu, dogrywka ręczna tylko bez stabilnego celu.
 ---
 
 # /kurs-nagrywanie - automat nagrywa ekran lekcji demo
@@ -89,8 +89,28 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    (np. n8n). Każda usługa musi mieć obsługę w `<kurs>/_nagrywanie/uslugi/` (ma pierwszeństwo) albo
    `tools/nagrywanie/uslugi/` i swoją konfigurację bezpieczeństwa w
    `kurs.yaml` (format: `tools/nagrywanie/README.md`). Brak którejś = **sekcja "Pierwsza lekcja z nową usługą"**, potem
-   wracasz tutaj. Krok poza przeglądarką (terminal, aplikacja desktopowa) = dogrywka ręczna tego kroku - powiedz o tym
-   od razu.
+   wracasz tutaj. **Tor każdego kroku proponujesz Ty**, z uzasadnieniem w odpowiedzi do właściciela kursu przed
+   napisaniem `nagrywanie.yaml` (spec `docs/superpowers/specs/2026-11-12-nagrywanie-pulpit-ogolny-design.md`):
+   - strona w przeglądarce = ujęcie przeglądarki (domyślne);
+   - aplikacja Claude Desktop = ujęcie pulpitu (`wykonawca: pulpit`, wbudowana usługa `claude-desktop`; zamiast `login`
+     i `sonda`: `pulpit-login` i `pulpit-sonda`; README, sekcja „Ujęcia pulpitu”);
+   - inny program Windows (Notatnik, Excel, Winamp, terminal, Eksplorator) = ujęcie pulpitu usługi `pulpit-windows`
+     (README, sekcja „Dowolna aplikacja Windows”): program w `kurs.yaml nagrywanie.uslugi.pulpit-windows.aplikacje`,
+     potem `npm run nagrywanie -- pulpit-sonda <lekcja> --usluga pulpit-windows --aplikacja <klucz>` i z jej plików cel
+     każdego kliknięcia: nazwa z drzewa UI Automation, a gdy jej nie ma - tekst z `-ocr.txt` (`ocr`), a gdy i jego nie
+     ma - punkt z `-kadr.png` (`punkt`) w oknie, które się nie przesuwa. Program obok Claude Desktop w tym samym kadrze:
+     `aplikacje` pod `claude-desktop` i `pulpit_uruchom` w ujęciu Claude;
+   - dogrywka ręczna tylko wtedy, gdy sonda nie daje stabilnego celu, program wymaga uprawnień administratora (UAC),
+     to gra albo aplikacja pełnoekranowa na wyłączność - powiedz o tym od razu, z powodem.
+   Segment przeglądarki i segment pulpitu to osobne ujęcia. Ujęcie Claude Desktop wymaga fikcyjnych danych konta w
+   `kurs.yaml nagrywanie.uslugi.claude-desktop.podmiana` (`diagnoza`, wiersz „podmiana danych”); w `pulpit-windows`
+   dane poufne programów (adres e-mail, nazwa konta) wskazuje kurs w `podmiana` tej usługi. Dane poufne są
+   podmieniane, nigdy rozmywane (spec `docs/superpowers/specs/2026-11-04-podmiana-danych-pulpit-design.md`). Po każdym
+   nagraniu ujęcia pulpitu sprawdź w `znaczniki.json` pole `podmiana.stan` i pokaż właścicielowi kursu
+   `podmiana/raport.md` z katalogu ujęcia (wycinki, wycieki, uwagi), zanim ujęcie pójdzie do `edl` i montażu.
+   `wstrzymane` to nie powtórka: nagranie zostaje ważne, popraw przyczynę z raportu albo `podmiana.powod` (krótszy
+   zamiennik w `kurs.yaml`, próg w `tools/nagrywanie/src/pulpit/progi.js`) i uruchom
+   `npm run nagrywanie -- podmien <lekcja> <katalog ujęcia>` - bez nowego nagrania i bez licznika powtórek.
 3. **Konfiguracja lekcji.** Napisz `video/nagrywanie.yaml` z planu nagrania: każdy krok planu jako działania usługi
    w kolejności planu, akapit lektora, warunek przyjęcia (`sprawdz`: nazwany predykat - to on rozstrzyga, nie opis),
    grupy prób z budżetem, warianty narracji, ujęcia, dogrywki. Dwie usługi w jednym ujęciu (np. n8n i arkusz) to dwie karty ujęcia (`karta` + `karty`) i przejścia między nimi
@@ -1196,7 +1216,7 @@ Przykład: `--json '{"rodzaj":"triage","ujecie":"lekcja","klasa":"LIMIT_SIEC","d
 
 ## Zasady
 
-- Nic poza przeglądarką. Pod `restricted`: nic poza projektem testowym i listą dozwolonych workflow; pod `full`: nic poza hostami kursu. Zasady wykonań i kosztów poniżej bez zmian.
+- Nic poza przeglądarką - z jednym wyjątkiem: ujęcie pulpitu działa w oknach kopii aplikacji Claude Desktop, programów, które samo uruchomiło z `kurs.yaml nagrywanie.uslugi.<usługa>.aplikacje` (tylko ich nowe procesy), i procesów z `procesy` tej usługi; zamyka tylko to, co uruchomiło. Pod `restricted`: nic poza projektem testowym i listą dozwolonych workflow; pod `full`: nic poza hostami kursu. Zasady wykonań i kosztów poniżej bez zmian.
 - Żadnego obchodzenia zabezpieczeń usługi (CAPTCHA, wykrycie automatu, wylogowanie) - zatrzymanie i komunikat.
 - Koszty: wykonania workflow z węzłami AI zużywają tokeny przy każdej próbie. **Zgoda Rafała na koszt i limit wykonań
   PRZED pierwszym prawdziwym wykonaniem** - także w sondzie, próbie obsługi usługi, przygotowaniu i resecie, nie

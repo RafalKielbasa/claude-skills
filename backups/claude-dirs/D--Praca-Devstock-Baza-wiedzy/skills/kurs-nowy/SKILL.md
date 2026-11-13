@@ -58,8 +58,15 @@ szkieletem folderów. NIE generuje treści lekcji — to robi `/kurs-lekcja`.
    JEDNYM folderze - formuła godziny/2 liczy bloki zajecia; liczba bloków
    modułu = godziny lekcyjne modułu / 2; wymóg 2 projektów biznesowych na
    moduł nie dotyczy tego formatu - praktykę niesie rytm bloku (live coding
-   i zadania w każdym bloku) i hackathon na koniec. Przedstaw i iteruj z
-   Rafałem.
+   i zadania w każdym bloku) i hackathon na koniec. Kurs online: przy każdej
+   lekcji rozpisz też ciągłość - co lekcja przejmuje z wcześniejszych i co
+   oddaje kolejnym, osobno w wątku firmy fabularnej i w wariancie U Ciebie
+   (odwołania "N.M"; przejmować wolno tylko z lekcji wcześniejszych). Projekt
+   końcowy składa się wyłącznie z elementów zbudowanych wcześniej, a każdy
+   projekt modułu zamyka się w swoim module. Kurs z Kartą ROI: pomiar bazowy
+   (zadanie, powtórzenia w tygodniu, czas w tygodniu) pada w pierwszej lekcji,
+   każdy moduł kończy się wpisem w tej samej jednostce, finał je rozlicza.
+   Przedstaw i iteruj z Rafałem.
 5. **BRAMKA: Rafał zatwierdza program.** Bez wyraźnego zatwierdzenia nie
    twórz żadnych plików.
 6. **Materializacja.**
@@ -77,8 +84,9 @@ szkieletem folderów. NIE generuje treści lekcji — to robi `/kurs-lekcja`.
    - `kursy/<slug>/zrodla.md` — źródła z kroku 3 z datami,
    - folder `modul-NN-<slug>/lekcja-NN-<slug>/` dla KAŻDEJ lekcji programu
      (NN dwucyfrowe), w każdym `lekcja.yaml` wg szablonu — wypełnij tytul,
-     numer, modul, cel i typ_video (kurs stacjonarny: typ_bloku zamiast
-     typ_video); statusy zostaw domyślne (tresc: szkic).
+     numer, modul, cel, typ_video i ciągłość z kroku 4 (odkomentowane
+     `przejmuje`/`oddaje`, każde z `fabula` i `u_ciebie`) (kurs stacjonarny: typ_bloku zamiast
+     typ_video, bez pól ciągłości); statusy zostaw domyślne (tresc: szkic).
      Kurs stacjonarny: szablon `kursy/_wspolne/szablony/lekcja-stacjonarna.yaml`
      (pola `format`, `typ_bloku`, bez `status.video`).
 7. **Walidacja.** `cd tools/course-pipeline && npm run validate -- ../../kursy/<slug>`

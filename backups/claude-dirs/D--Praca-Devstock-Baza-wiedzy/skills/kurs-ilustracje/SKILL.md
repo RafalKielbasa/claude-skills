@@ -7,7 +7,8 @@ description: 'Backfill of article illustrations into one lesson whose content is
 
 Approved lessons written before the illustration tool have no images. This skill adds them without
 rewriting a word of approved prose: only image lines, caption lines and the blank lines around them change in
-`artykul.md`. Spec: `docs/superpowers/specs/2026-11-12-article-illustrations-automation-design.md`, section 7.8.
+`artykul.md`, plus the `[ZRZUT: …]` marker lines an image takes the place of. Spec:
+`docs/superpowers/specs/2026-11-12-article-illustrations-automation-design.md`, section 7.8.
 Reference for choice rules, the order schema, commands and messages: `.claude/skills/kurs-lekcja/ilustracje.md`
 — read it whole before the first order.
 
@@ -51,17 +52,24 @@ CLI's `OK:` / `BŁĄD:` lines stay as printed. All commands run from `tools/cour
    **Anchor** on a sentence of a plain paragraph, quoted from the article: never inside a list, a table, a
    blockquote (the `> 🎬 **Też w wideo**` callout included), a heading or a code block — an image inserted after a
    list item splits the list. The anchor must match exactly one paragraph.
+   **Markers.** Every `[ZRZUT: …]` line of the article either gets an order with `replaces` — the whole line exactly
+   as it stands, anchor = a sentence of the paragraph directly above it (any paragraph: the image takes the
+   marker's place, so nothing is split), kind by the table "What the lesson gets": a screenshot where allowed,
+   otherwise a board or model image that fits the marker's description — or stays visible and is named at the gate
+   (step 8). Never delete or edit a marker by hand.
    Then `npm run validate -- <lekcja>`: fix every error in the orders. The warning `zamówienie bez linii obrazka`
-   is expected until step 4.
+   is expected until step 4; the warning `znacznik [ZRZUT: …] bez grafiki` names a marker no order replaces.
 3. **Dry runs and consent, once per run.** `npm run ilustracje -- wstaw <lekcja> --dry-run` prints each image and
-   caption line and the paragraph it goes under: check every placement. A refusal (anchor not found or found
-   twice, `wstawienie zmieniłoby zatwierdzony tekst`) means: fix the order's anchor, never the article.
+   caption line and the paragraph it goes under, and `zastępuje znacznik w linii <n>` for an order with `replaces`:
+   check every placement. A refusal (anchor not found or found twice, a marker not found or not directly under its
+   anchor, `wstawienie zmieniłoby zatwierdzony tekst`) means: fix the order, never the article.
    `npm run ilustracje -- <lekcja> --dry-run` gives `wywołania modelu: N` and the cost line `koszt: …`. Ask Rafał
    once for the paid calls of this run: that cost line plus, when the lesson gets screenshots, the privacy review
    (Gemini, a few cents, one call). Wait for his answer; no answer and a timeout are not consent, and without
    consent the run stops here with `artykul.md` untouched. "Bez przeglądu zrzutów" skips the paid call of step 6;
    the stills are then unreviewed (step 6).
-4. **Insert:** `npm run ilustracje -- wstaw <lekcja>`, which prints `OK: wstawiono <n> grafik`.
+4. **Insert:** `npm run ilustracje -- wstaw <lekcja>`, which prints `OK: wstawiono <n> grafik` and, when it
+   replaced markers, `OK: zastąpiono znaczniki [ZRZUT]: <k>`.
 5. **Produce.** `npm run ilustracje -- <lekcja>`: every image at once, screenshots straight from the takes in
    `video/montaz/zrodla.json`. On a failure follow the table "Failures" of `ilustracje.md`: a model image that
    failed 3 attempts or a screenshot whose step cannot be resolved becomes a proposed board (same name, same image
@@ -83,8 +91,10 @@ CLI's `OK:` / `BŁĄD:` lines stay as printed. All commands run from `tools/cour
    before prod.
 7. **Validate:** `npm run validate -- <lekcja>`, zero errors; read every warning.
 8. **GATE per lesson.** Show:
-   - the article diff, `git diff -- <path of artykul.md>`, verbatim: image and caption lines only; anything else
-     means the run broke the rule — stop and say so;
+   - the article diff, `git diff -- <path of artykul.md>`, verbatim: added image and caption lines; the only
+     removed lines allowed are the `[ZRZUT: …]` markers replaced through `replaces`; anything else means the run
+     broke the rule — stop and say so;
+   - the `[ZRZUT: …]` markers that stay visible (no order replaces them), with their line numbers and why;
    - a table `nr | rodzaj | powód | plik | prywatność`: kind, `reason`, the full PNG path, the privacy verdict of
      a screenshot (`nieprzejrzany` without the review, `-` for the rest); placeholders marked; for unreviewed
      stills ask Rafał to look at each PNG and quote his answer in the gate report; next to a screenshot's kind the
