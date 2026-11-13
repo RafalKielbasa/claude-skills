@@ -117,10 +117,10 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
    wtedy, gdy pytanie o silnik było bezprzedmiotowe. „Bez kontroli lektora”
    = pomijasz krok 4b; rozpoznanie mowy slajdów wyłącza się tylko kluczem
    `slajdy.odslanianie` w `kurs.yaml`. Lekcja ze zrzutami do artykułu (zamówienia `kind: screenshot`
-   w `artykul-grafiki/zrodla/`) ma w tej samej zgodzie przegląd prywatności zrzutów (Gemini, kilka groszy,
-   jedno wywołanie na wszystkie zmienione zrzuty, przed bramką 5) - wymień go w tym samym zdaniu. „Bez
-   przeglądu zrzutów” = pomijasz `prywatnosc` w bloku „Zrzuty do artykułu” przed bramką 5, a bramka mówi,
-   że zrzuty nie przeszły przeglądu.
+   w `artykul-grafiki/zrodla/`) ma w tej samej zgodzie przegląd prywatności zrzutów
+   (`npm run ilustracje -- prywatnosc <lekcja>`: Gemini, kilka groszy, jedno wywołanie na wszystkie zmienione
+   zrzuty, przed bramką 5) - wymień go w tym samym zdaniu. „Bez przeglądu zrzutów” = pomijasz go w bloku
+   „Zrzuty do artykułu” przed bramką 5; zrzuty są wtedy nieprzejrzane (zasady w tym bloku).
    **Lekcja z biletem** (`video/ticket.yaml`, bilet produkcyjny (G1)): bramka silnika i zgody schodzi do ustawień
    kursu, a bilet jest zgodą na koszt. Oba klucze `video.avatar_engine` i `video.narrator_control` ustala karta
    bilet produkcyjny (G1) w `/kurs-nagrywanie` (pozycja (b)), zanim bilet powstanie - tu nie pytasz o żaden z nich.
@@ -135,11 +135,11 @@ wszystkimi dotychczasowymi bramkami** - tam stosuj sam tekst bez tych akapitów.
      (to dopłata do bilet produkcyjny (G1), nie nowe pytanie). Brak klucza nie jest zgodą i nie jest `api`.
    - Przegląd prywatności zrzutów (lekcja z zamówieniami `kind: screenshot`) jak `budget.stt`:
      `budget.screenshot_review: true` w bilecie → zgoda dana, **bez pytania**; `false` wyłącza przegląd
-     (`prywatnosc` odmawia przed żądaniem): pomijasz go i mówisz o tym jednym zdaniem w turze bramki G5. Bilet
-     z `approved` od 2026-11-13 (od tego dnia `/kurs-nagrywanie` proponuje ten klucz) bez `budget.screenshot_review`
-     oznacza, że bilet zapisano błędnie: zatrzymaj się z komunikatem nazywającym klucz, jak wyżej. Bilet
-     zatwierdzony wcześniej klucza nie ma, a narzędzie traktuje jego brak jako zgodę: przegląd idzie, jedno
-     zdanie w turze.
+     (`npm run ilustracje -- prywatnosc <lekcja>` odmawia przed żądaniem): pomijasz go, a zrzuty są
+     nieprzejrzane (blok „Zrzuty do artykułu” przed bramką 5). Bilet z `approved` od 2026-11-13 (od tego dnia
+     `/kurs-nagrywanie` proponuje ten klucz) bez `budget.screenshot_review` oznacza, że bilet zapisano błędnie:
+     zatrzymaj się z komunikatem nazywającym klucz, jak wyżej. Bilet zatwierdzony wcześniej klucza nie ma, a narzędzie traktuje jego brak
+     jako zgodę: przegląd idzie, jedno zdanie w turze.
    Lekcja bez biletu: bramka silnika i zgoda na kontrole dokładnie jak wyżej.
 3. **Sprawdź konfigurację** przed uruchomieniem, żeby nie wywalić się w
    połowie. Wspólne dla obu silników: `tools/course-pipeline/.env` ma
@@ -310,16 +310,37 @@ powstanie - zaproponuj plansze w miejsce zaślepek):
       i proponujesz w jego miejsce planszę (zamówienie `kind: board` pod tą samą nazwą, potem
       `npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --tylko <nazwa>`; linia obrazka
       w artykule zostaje). Innej klatki ani innego kroku nie bierzesz po cichu.
-   b. `npm run ilustracje -- prywatnosc ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (objęte zgodą z bramki 2,
+   b. **Adresy e-mail.** Narzędzie rozmywa w zrzucie tylko to, co rozmył film (`rozmycie` z `edl.json`), i
+      prostokąty `screenshot.blur` z zamówienia; samo adresów nie wykrywa, więc adres zostawiony w filmie (konto
+      kursu w lekcji 3.1) trafia do zrzutu. Zrzut nie pokazuje żadnego adresu e-mail, także konta kursu: otwórz
+      każdy zrzut sam i każdy adres, który widzisz albo który wskaże przegląd, zakryj prostokątem
+      `screenshot.blur` (albo innym `crop`), potem `--tylko <nazwa>` i otwórz nowy PNG. Prostokąt jest
+      w pikselach nagrania, nie PNG: wyciągnij pełną klatkę z `produced.take` (ścieżka względem `kursy/<slug>/`)
+      w sekundzie `produced.second` zamówienia, odczytaj na niej ramkę adresu i dodaj ok. 10 px z każdej
+      strony (kroki i komenda: `ilustracje.md`, sekcja „Privacy review”). Adresu e-mail nigdy nie zostawiasz
+      przez `privacyAccepted`.
+   c. `npm run ilustracje -- prywatnosc ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` (objęte zgodą z bramki 2,
       w lekcji z biletem `budget.screenshot_review`; przy „bez przeglądu zrzutów” albo `false` pomijasz) -
       jedno wywołanie Gemini, raport `review-zrzutow.md` w folderze lekcji z sha256 każdego PNG.
    Bramka (5 albo G5, w turze obok ścieżek filmu i karty) wymienia każdy zrzut: pełna ścieżka PNG w bloku kodu
    i werdykt (`OK`, `POMINIĘTO`, `OSTRZEŻENIE` - uwaga zaakceptowana, `BŁĄD` - uwagi bez akceptacji, cytowane
    dosłownie). `BŁĄD` blokuje ten zrzut, dopóki go nie poprawisz (prostokąt `screenshot.blur` albo inny `crop`
-   w zamówieniu, potem `--tylko <nazwa>` i `prywatnosc` ponownie) albo Rafał wprost nie zaakceptuje uwagi.
-   Akceptację zapisujesz w zamówieniu jako `privacyAccepted: { hash: <sha256 z linii BŁĄD>, note:
-   "<RRRR-MM-DD>: <słowa Rafała>" }`; ponownie wyrenderowany PNG ma inny sha256 i potrzebuje nowej
-   akceptacji. Bez jego słów `privacyAccepted` nie powstaje.
+   w zamówieniu, potem `--tylko <nazwa>` i `prywatnosc` ponownie). Uwagę inną niż adres e-mail (imię, nazwa
+   konta, drugie konto Google, klucz, saldo, tekst etykiety) Rafał może też wprost zaakceptować; akceptację
+   zapisujesz w zamówieniu jako
+   `privacyAccepted: { hash: <sha256 z linii BŁĄD>, note: "<RRRR-MM-DD>: <słowa Rafała>" }`; ponownie
+   wyrenderowany PNG ma inny sha256 i potrzebuje nowej akceptacji. Bez jego słów `privacyAccepted` nie powstaje.
+   Po zapisaniu akceptacji uruchom jeszcze raz
+   `npm run ilustracje -- prywatnosc ../../kursy/<slug>/modul-NN-x/lekcja-NN-y` przed commitem: PNG nie zmienił
+   się od przeglądu, więc nie ma wywołania modelu, a przebieg wypisze dla tego zrzutu `OSTRZEŻENIE` i zapisze
+   akceptację w `review-zrzutow.md` (`zaakceptowany: tak`). Prod (`/kurs-publikuj`) odmawia każdego zrzutu,
+   którego obecny PNG nie ma ani przeglądu z werdyktem `ok`, ani akceptacji Rafała tego PNG (`privacyAccepted`
+   z jego sha256).
+   **Bez przeglądu** („bez przeglądu zrzutów” albo `budget.screenshot_review: false`) zrzuty są nieprzejrzane:
+   bramka wymienia je z werdyktem „nieprzejrzany”, a na staging idą dopiero, gdy Rafał obejrzy każdy PNG
+   i powie to wprost (jego słowa cytujesz w turze bramki) albo gdy przegląd przejdzie później. Na prod taki zrzut
+   potrzebuje przeglądu albo akceptacji Rafała tego PNG (jak wyżej). Adresy e-mail zakrywasz i tak, jak
+   w punkcie b.
 5. **BRAMKA: Rafał ogląda `video/final.mp4`** (lokalnie — plik nie trafia do
    git, patrz Zasady). Uwagi Rafała: jeśli dotyczą treści segmentu
    (scenariusz/slajdy), wróć do `/kurs-lekcja`, popraw treść, usuń
@@ -369,9 +390,10 @@ powstanie - zaproponuj plansze w miejsce zaślepek):
      wyślij tę lekcję na staging według sekcji „Wysyłka na staging (wołają ją inne skille)” w pliku `.claude/skills/kurs-publikuj/SKILL.md`
      (przeczytaj tę sekcję; nie wołaj skilla `/kurs-publikuj`, bo ten jest tylko na prod)
      (aktywność wideo powstaje, bo `lekcja.yaml` ma już `vimeo`). Przy błędzie wgrania nic nie wysyłasz.
-     Wysyłka niesie też zrzuty do artykułu (PNG z `artykul-grafiki/`, w miejscu zaślepek), bez osobnego kroku;
-     zrzut z `BŁĄD` przeglądu prywatności bez `privacyAccepted` wstrzymuje ją, dopóki go nie rozstrzygniesz
-     (blok „Zrzuty do artykułu” przed bramką 5).
+     Wysyłka niesie też zrzuty do artykułu (PNG z `artykul-grafiki/`, które `npm run ilustracje` zrobił
+     w miejscu zaślepek), bez osobnego kroku. Zrzut z `BŁĄD` przeglądu prywatności bez `privacyAccepted` albo
+     zrzut nieprzejrzany bez słów Rafała wstrzymuje ją (blok „Zrzuty do artykułu” przed bramką 5); wysyłka
+     idzie w tej turze, w której rozstrzygniesz ostatni taki zrzut.
      Wysyłka nie jest bramką: jej błąd pokazujesz dosłownie z komendą ponowienia, a akceptacja i wgranie
      zostają. `platformIds` zapisane przez wysyłkę leżą w `lekcja.yaml` i `kurs.yaml` — dochodzą do reguły
      commitu z tego kroku jak klucz `vimeo`.

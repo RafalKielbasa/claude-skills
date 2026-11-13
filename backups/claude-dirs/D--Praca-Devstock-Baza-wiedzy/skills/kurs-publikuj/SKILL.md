@@ -45,6 +45,13 @@ phrase) in this conversation. A request to put something on staging gets one sen
    placeholder (`npm run ilustracje -- <lekcja> --rodzaj screenshot` after the montage, then its privacy review);
    tell Rafał which lesson and which image. The other lessons go to prod only by their own paths, with their
    own plan and gate.
+   A `BŁĄD: <lekcja>/artykul.md: grafika <plik> to zrzut, który …` line names a screenshot whose current PNG has
+   neither a privacy review with verdict `ok` nor Rafał's acceptance of that PNG (`privacyAccepted` with its
+   sha256): never reviewed, changed since the review, or a finding without acceptance. A `… nie da się sprawdzić …`
+   line names an order file (`artykul-grafiki/zrodla/`) that does not parse or has no known `kind`. Both are
+   validation errors like the placeholder, and both stop prod for that lesson; quote the line to Rafał. The way
+   out is the review (`npm run ilustracje -- prywatnosc <lekcja>`, paid: ask first), a fixed order, or his
+   explicit acceptance written as the line says, never without his words and never for an e-mail address.
 3. **GATE: Rafał approves the plan.** Wait for an explicit yes. No answer is not approval. A
    timeout of the question tool is not approval either — say you are waiting and ask again.
 4. **Publish.** The same command without `--dry-run`. Show the output verbatim. After `OK`, list

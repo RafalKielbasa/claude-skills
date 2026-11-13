@@ -157,12 +157,13 @@ przedstawione Rafałowi do bramki review.
       `kursy/misja-ai-start/modul-08-agenci/lekcja-08-agenci/video/plansze.yaml`.
       Plansze nakłada sam `/kurs-montaz`; ta procedura tylko pisze plik.
 
-      **Zrzuty w zamówieniach** (zaraz po konspekcie): każde zamówienie `kind: screenshot` dostaje
-      `screenshot.konspekt` - dosłowny fragment tekstu tego jednego kroku konspektu, który pokazuje ekran.
-      Cytat, nie numer: numery kroków przesuwają się przy `/kurs-uwagi` i `/kurs-redakcja`, a cytat przeżywa
-      przenumerowanie. Fragment ma pasować do dokładnie jednego kroku - `npm run validate` odrzuca cytat bez
-      trafienia albo z kilkoma (podaje ich numery; zacytuj dłuższy fragment). Ekranu, którego konspekt nie
-      pokazuje, nie zamawiasz jako zrzutu: zamówienie staje się planszą albo znika razem z linią obrazka.
+      **Zrzuty w zamówieniach** (zaraz po konspekcie; pola zrzutu: `ilustracje.md`, „Order v2”): każde
+      zamówienie `kind: screenshot` dostaje `screenshot.konspekt` - dosłowny fragment tekstu tego jednego
+      kroku konspektu, który pokazuje ekran. Cytat, nie numer: numery kroków przesuwają się przy
+      `/kurs-uwagi` i `/kurs-redakcja`, a cytat przeżywa przenumerowanie. Fragment ma pasować do dokładnie
+      jednego kroku - `npm run validate` odrzuca cytat bez trafienia albo z kilkoma (podaje ich numery;
+      zacytuj dłuższy fragment). Ekranu, którego konspekt nie pokazuje, nie zamawiasz jako zrzutu:
+      zamówienie staje się planszą albo znika razem z linią obrazka.
    e. Oznaczenie pokrycia wideo w `artykul.md` (po napisaniu scenariusza):
       przed każdym blokiem artykułu (jeden lub kilka sąsiednich akapitów o tym
       samym wątku), którego meritum pada też w scenariuszu, wstaw callout —
@@ -183,12 +184,12 @@ przedstawione Rafałowi do bramki review.
       inny — w obu wypadkach przeczytaj plik, zanim cokolwiek z tego wyniku
       wywnioskujesz. Reguła obowiązuje także wtedy, gdy przebieg wstawiający
       puściłeś ręcznie, poza jakąkolwiek komendą `course-pipeline`.
-      Przebieg obejmuje też zamówienia `artykul-grafiki/zrodla/*.yaml`: twarda spacja po `a i o u w z` we
-      wszystkich ich polskich polach tekstowych (`reason`, `anchor`, `screen`, `alt`, `caption`, teksty
-      planszy i etykiet, `privacyAccepted.note`), jak w artykule. `npm run validate` odrzuca jej brak
-      w `screen`, `alt`, `caption`, tekstach planszy i etykietach; `anchor` trafia w akapit także po
-      przebiegu, bo narzędzie porównuje go bez względu na rodzaj spacji. Prompty modelu są po angielsku
-      i reguły nie mają.
+      Przebieg obejmuje też zamówienia `artykul-grafiki/zrodla/*.yaml` (`ilustracje.md`, „Typography”):
+      twarda spacja po `a i o u w z` we wszystkich ich polskich polach tekstowych (`reason`, `anchor`,
+      `screen`, `alt`, `caption`, teksty planszy i etykiet, `privacyAccepted.note`), jak w artykule.
+      `npm run validate` odrzuca jej brak w `screen`, `alt`, `caption`, tekstach planszy i etykietach;
+      `anchor` trafia w akapit także po przebiegu, bo narzędzie porównuje go bez względu na rodzaj spacji.
+      Prompty modelu są po angielsku i reguły nie mają.
    g. **Ilustracje** (po punkcie f, przed samokontrolą; obsługa błędów: `ilustracje.md`, sekcja
       „Failures”). Najpierw
       `cd tools/course-pipeline && npm run ilustracje -- ../../kursy/<slug>/modul-NN-x/lekcja-NN-y --dry-run`
