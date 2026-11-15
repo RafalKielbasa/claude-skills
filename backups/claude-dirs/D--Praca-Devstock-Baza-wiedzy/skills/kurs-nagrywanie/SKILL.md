@@ -102,7 +102,15 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
      `aplikacje` pod `claude-desktop` i `pulpit_uruchom` w ujęciu Claude;
    - dogrywka ręczna tylko wtedy, gdy sonda nie daje stabilnego celu, program wymaga uprawnień administratora (UAC),
      to gra albo aplikacja pełnoekranowa na wyłączność - powiedz o tym od razu, z powodem.
-   Segment przeglądarki i segment pulpitu to osobne ujęcia. Ujęcie Claude Desktop wymaga fikcyjnych danych konta w
+   Segment przeglądarki i segment pulpitu to osobne ujęcia. Segment, który zmienia miejsce w środku (n8n, edytor, Claude),
+   dzielisz na ujęcia po zakresach kroków (`ujecia[].kroki: { od, do }`; montaż tnie między ujęciami). Akapit, którego
+   akcja przechodzi do następnego ujęcia, dostaje tam pierwszy krok `ciag_dalszy: true` z tym samym `akapit` i
+   `krok_planu` (w montażu wstawka wideo; krok przed nim trzymaj krótki); w ujęciu przeglądarki krok ciągu dalszego
+   nie otwiera widoku sam - widok otwiera `przed_zerem` ujęcia (tylko `goto`, `open_workflow`, `wait_for`, `hover`, `scroll`). Każde ujęcie musi dać się nagrać osobno, więc
+   stan startu deklarujesz: `schowek: <wcześniejsze ujęcie>` (też jako źródło tekstu wklejenia), w ujęciu pulpitu
+   `przed_zerem` (dokumenty programu poza kamerą, `plik_ze_schowka` do `foldery_zapisu`), a ujęcie przeglądarki z oknem
+   w lekcji 4K - `rozdzielczosc: 1080p` (README: „Schemat”, „Schowek między ujęciami”, „Dowolna aplikacja Windows”,
+   „Nagrywanie w 4K”; wzór: lekcja 4.1 agenty-ai). Ujęcie Claude Desktop wymaga fikcyjnych danych konta w
    `kurs.yaml nagrywanie.uslugi.claude-desktop.podmiana` (`diagnoza`, wiersz „podmiana danych”); w `pulpit-windows`
    dane poufne programów (adres e-mail, nazwa konta) wskazuje kurs w `podmiana` tej usługi. Dane poufne są
    podmieniane, nigdy rozmywane (spec `docs/superpowers/specs/2026-11-04-podmiana-danych-pulpit-design.md`). Po każdym
@@ -121,6 +129,8 @@ z `kurs.yaml`, liczone względem folderu kursu, domyślnie `<kurs>/_nagrywanie` 
    Krok z formularzem n8n (wyzwalacz formularza z plikiem) to działanie `submit_form { plik: materialy/<plik> }` -
    okno formularza przyjmuje rdzeń (`okno: usluga`), plik bierze z katalogu lekcji; „Execute workflow” otwiera
    formularz przy każdym uruchomieniu, „Execute step” na węźle dalej w przepływie - nie (README, „Okno formularza”).
+   Krok, który tylko pokazuje okno formularza i niczego nie wysyła (przewinięcie do końca), to działanie `show_form`
+   (bez `plik`; kończy się stanem `bez-wykonania`, README, „Kontrakt działania”).
    Nowa lekcja z n8n dostaje `service_options: { n8n: { tidy_up: true } }`: automat sam wciska Tidy up (skrót
    `Shift+Alt+T`) po każdym nowym węźle, kiedy kanwa jest odsłonięta, więc w planie nie dopisujesz ręcznych kroków
    `tidyUp`. Kliknięcia liczone od położenia węzła (`click_canvas: { near, dx, dy }`) ustawiasz pod układ po Tidy up.
