@@ -1132,3 +1132,12 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — sześć wtrąceń harnessu, linia statusu dopiero po wtrąceniu.
 - Wzorce repo tej sesji: brak (repo `code-busters-mobile` nie ma własnych skilli ani wiki).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje, albo nawrót) wśród dotkniętych: board-tracker-cli-fails-whole-op-on-board-step (4 sesje) i zapis-zewnetrzny-zablokowany-przy-niejasnej-zgodzie (nawrót 2026-11-09) → `/evolve-skill board-tracker`; taskstop-nie-zabija-procesu-potomnego-na-windows (9 sesji) i dlugi-lancuch-narzedzi-bez-linii-statusu (23 sesje), oba ogólne, bez skilla do ewolucji. Nowych nawrotów brak.
+
+## 2026-11-16 — sesja 2d5dd650-9993-45bf-81bd-666b43be12e5 (id claude.ai niedostępny; Baza wiedzy z katalogu code-busters-mobile, plan 1 `nagrywanie-mixed-segments`, lekcja 4.1, DT-132 #908)
+- dopisano dowód: wynik-komendy-uzytkownika-w-tle-niewidoczny — instrukcja `pulpit-login` dla człowieka (Anuluj, link `claude://` ze schowka) została w logu tła; logowanie trafiło do codziennej aplikacji, drugie podejście z przekazaną instrukcją przeszło; Rozwiązanie rozszerzone o komendy uruchamiane przeze mnie.
+- dopisano dowód: ruling-z-nieweryfikowana-przeslanka — ruling zadania 5 o przebiegu Chrome lekcji przykładowej miał fałszywą przesłankę (żadna lekcja przykładowa nie używa schowka ujęcia); trafił do wariantu [A] przyjętego przez Rafała, wykryty przed uruchomieniem, decyzja zadana ponownie.
+- dopisano dowód: commit-bez-pathspec-wciaga-cudzy-indeks — sukces częściowy: do indeksu poszedł tylko mój fragment `kurs.yaml` (`git apply --cached`), mimo cudzej zmiany w tym samym pliku; commit bez pathspec, ale stage sprawdzony.
+- dopisano dowód: subagent-staguje-wildcardem-w-dzielonym-drzewie — sukces po regule: klauzula stagowania w dispatchu, commity implementera tylko z plikami zadania.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — pięć wtrąceń harnessu w łańcuchach odczytów i przy czekaniu na subagentów.
+- Wzorce repo tej sesji: brak (katalog roboczy `code-busters-mobile` nie ma własnych skilli ani wiki; praca szła w Baza wiedzy, ale wyłącznie skillami globalnymi).
+- Kandydaci do ewolucji (porażka, otwarty, > 2 sesje, albo nawrót) wśród dotkniętych: ruling-z-nieweryfikowana-przeslanka (superpowers:subagent-driven-development), commit-bez-pathspec-wciaga-cudzy-indeks (ogólny), subagent-staguje-wildcardem-w-dzielonym-drzewie (superpowers:subagent-driven-development), dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny).

@@ -50,6 +50,7 @@ już w nim jest.
   niezacommitowane, więc w historii log wskazuje strony, których w niej nie ma. Przyczyna: przed commitem nie
   uruchomiłem `git diff --stat -- <ścieżka>`, choć ten sam plik i ten sam krok są opisane wyżej. Wyszło dopiero
   z liczby linii w wyniku commita. Historia zostaje (bez `revert` bez prośby Rafała).
+- 2026-11-16, sesja 2d5dd650-9993-45bf-81bd-666b43be12e5 (id claude.ai niedostępny; Baza wiedzy z katalogu code-busters-mobile, plan 1 `nagrywanie-mixed-segments`, lekcja 4.1, DT-132 #908), sukces częściowy: inna sesja zmieniła `kurs.yaml` (linia `platformIds`) w tym samym pliku, w którym była moja zmiana `podmiana`. Moją część wziąłem do indeksu łatką z jednym fragmentem: `git diff` do pliku, wycięty fragment z `podmiana:` (asercja: bez `platformIds`), potem `git apply --cached`. Przed commitem sprawdziłem `git diff --cached --stat`. Commit był bez pathspec, wbrew Rozwiązaniu; obyło się bez szkody, bo stage był sprawdzony, a druga sesja w międzyczasie zacommitowała swoją linię (`4528bba1`).
 
 ## Rozwiązanie
 W checkoucie dzielonym z innymi sesjami commituj zawsze z pathspec: `git commit -m "…" -- <ścieżka>
