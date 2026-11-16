@@ -38,6 +38,12 @@ phrase) in this conversation. A request to put something on staging gets one sen
    the run would upload. After the usual order (staging first) `<n>` is 0; a non-zero `<n>` on
    prod means an image changed after its last staging send, or the course has no staging sends.
    Point it out to Rafał with the plan before the gate in step 3.
+   The prod dry run also reads the live course and refuses a create that would duplicate a Lesson or
+   an activity made by hand in the CMS (`BŁĄD: … create zrobiłby duplikat`, then
+   `prod: możliwe duplikaty: <n> — …`). Never treat the YAML as the picture of prod: a module with no
+   `platformIds.prod.lessonIds` entry may still exist on prod, with learners on it. The way out is
+   writing the live ids into the YAML, which is an exception to the rule below and needs Rafał's yes;
+   a dry run that warns it did not check the live course (no prod secret) is not a plan to approve.
    A `BŁĄD: <lekcja>/artykul.md: grafika <plik> to zaślepka zrzutu (pending) …` line names a screenshot
    placeholder (`produced.pending: true` in `artykul-grafiki/zrodla/`): the lesson's montage is missing, or
    `/kurs-video` has not made its screenshots yet. It is a validation error like the others (the whole run stops
