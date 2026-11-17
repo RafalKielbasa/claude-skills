@@ -1141,3 +1141,20 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — pięć wtrąceń harnessu w łańcuchach odczytów i przy czekaniu na subagentów.
 - Wzorce repo tej sesji: brak (katalog roboczy `code-busters-mobile` nie ma własnych skilli ani wiki; praca szła w Baza wiedzy, ale wyłącznie skillami globalnymi).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje, albo nawrót) wśród dotkniętych: ruling-z-nieweryfikowana-przeslanka (superpowers:subagent-driven-development), commit-bez-pathspec-wciaga-cudzy-indeks (ogólny), subagent-staguje-wildcardem-w-dzielonym-drzewie (superpowers:subagent-driven-development), dlugi-lancuch-narzedzi-bez-linii-statusu (ogólny).
+
+## 2026-11-17 — sesja d3dca57e-92f2-418a-b0e5-a28120ba9cf3 (id claude.ai niedostępny; code-busters-v2, worktree `landing-redesign`, przebudowa landingu DT-182 #1021)
+- założono: porownanie-wezlow-dom-w-czerwonym-tescie-zawiesza-vitest (skill: superpowers:test-driven-development, typ: porażka) — czerwony test z `toBe(node)` wiesza worker Vitest do braku pamięci; asercje na wartościach prostych.
+- założono: import-z-beczki-w-komponencie-klienckim-puchnie-bundle (skill: ogólny, typ: porażka) — hook z `~/hooks` w komponencie klienckim landingu: 249 → 379 kB; import wprost i porównanie „First Load JS”.
+- założono: animacja-sprawdzona-stanami-dom-nie-tym-co-widac (skill: ogólny, typ: porażka) — wjazd sekcji zmierzony stanami DOM, a dla Rafała „mało widoczny”; liczyć treść w oknie w chwili wyzwolenia.
+- założono: odtwarzacz-vimeo-odmawia-chromium-bez-okna (skill: ogólny, typ: sukces) — 401 z automatu to kontrola botów; odtwarzanie potwierdzone w widocznym Chrome, tożsamość filmu z oEmbed.
+- założono: marker-bramki-przy-czekaniu-na-zadanie-w-tle (skill: ogólny, typ: porażka) — dwie tury z „⏸ Czeka na decyzję: nic od Ciebie” przy zadaniu w tle; marker tylko przy decyzji użytkownika.
+- założono: stan-przegladu-w-sledzonym-pliku-blokuje-scalenie (skill: code-review-master, typ: porażka) — zmieniony, śledzony `state.json` zablokował scalenie `main`; wątpliwe jako wzorzec skilla, bo zależy od tego, że to repo trzyma plik w gicie.
+- dopisano dowód: board-tracker-cli-fails-whole-op-on-board-step — `status --to done` na #1021: `closeIssue` z błędem, issue i tak zamknięte i „Done”.
+- dopisano dowód: create-task-przypina-issue-zakladane-na-pozniej — `create --status backlog` przypiął DT-180 i DT-181 założone na później.
+- dopisano dowód: regex-przez-node-e-traci-ukosniki — heredok `node -` wpisał do testu regexy bez ukośników.
+- dopisano dowód: windows-path-w-literale-skryptu — `node -e` z długim skryptem padł na cudzysłowach; plik `.cjs` przeszedł.
+- dopisano dowód: straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac — trzy odmowy dla komend bez gita.
+- dopisano dowód: dlugi-lancuch-narzedzi-bez-linii-statusu — ponad dwadzieścia wtrąceń harnessu po kompakcji.
+- dopisano dowód: potok-z-tail-maskuje-ubity-proces — `vitest | tail -40` w tle z pustym wyjściem przy wiszącym workerze.
+- Wzorce repo tej sesji: brak (skill repo `course-import` nieużyty).
+- Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: board-tracker-cli-fails-whole-op-on-board-step (5 sesji) i create-task-przypina-issue-zakladane-na-pozniej (3 sesje) → `/evolve-skill board-tracker`; ogólne bez skilla do ewolucji: regex-przez-node-e-traci-ukosniki, windows-path-w-literale-skryptu, straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, dlugi-lancuch-narzedzi-bez-linii-statusu (potok-z-tail-maskuje-ubity-proces ma dowody z 2 sesji, jeszcze poniżej progu). Nowych nawrotów brak.

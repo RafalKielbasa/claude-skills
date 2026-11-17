@@ -30,6 +30,7 @@ przypięte. Skill nie ma ścieżki dla issue zakładanych na później. Obejści
   - `bind` zwrócił `moved: true, state: in_progress`: issue, które Rafał zatwierdził do Backlogu, trafiło do „w toku”.
   - Cofnąłem to przez `status --to backlog`, w granicach zgody na Backlog, i zgłosiłem w raporcie.
   - Strony tego wzorca nie przeczytałem przed zakładaniem, choć jego rozwiązanie (`gh issue create` + `ensure` + `link`) ominęłoby i przypięcie, i zmianę statusu.
+- 2026-11-17, sesja d3dca57e-92f2-418a-b0e5-a28120ba9cf3 (id claude.ai niedostępny; code-busters-v2, worktree `landing-redesign`, przebudowa landingu DT-182 #1021): ten sam skutek przy `create`, nie tylko `create-task`: dwa zadania założone na polecenie Rafała na później (`create --status backlog`: DT-180 #1019, DT-181 #1020) zostały przypięte do sesji (`"done": […, "bound"]`). Po kompakcji brief podawał #1019 jako jedyne przypięcie sesji, której właściwa praca (landing) nie miała jeszcze karty. Śladu na #1019 i #1020 nie zapisałem i w trzech raportach tłumaczyłem dlaczego.
 
 ## Rozwiązanie
 Follow-up, nad którym sesja nie pracuje, zakładaj bez przypięcia:

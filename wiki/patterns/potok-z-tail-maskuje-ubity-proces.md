@@ -24,6 +24,7 @@ widać same nagłówki. Odruch „exit 0 = zielone” daje wtedy fałszywe „te
   - Drugie uruchomienie: `npx vitest run --reporter=dot > <log> 2>&1; echo "exit $?" >> <log>` w tle.
     Dało podsumowanie i prawdziwy kod 0 po 2520 s.
   - Szczegóły pełnego zestawu: wzorzec repo `pelny-suite-nagrywanie-dwa-naraz-zawiesza-sie`.
+- 2026-11-17, sesja d3dca57e-92f2-418a-b0e5-a28120ba9cf3 (id claude.ai niedostępny; code-busters-v2, worktree `landing-redesign`, przebudowa landingu DT-182 #1021): `npx vitest run <3 pliki> 2>&1 | tail -40` przeszło do tła po 120 s z pustym plikiem wyjścia; jeden worker wisiał 142 s i skończył na `ERR_WORKER_OUT_OF_MEMORY`, a `tail` nie pokazał nic do końca i uciął początek z nazwą wiszącego testu. Kolejne przebiegi szły z przekierowaniem do pliku w scratchpadzie i `grep` po liniach podsumowania.
 
 ## Rozwiązanie
 Wynik testów oceniaj po linii podsumowania narzędzia testów, nigdy po kodzie wyjścia potoku z `tail`, `grep`

@@ -200,6 +200,7 @@ objaw i obejście są te same. Komendy w innym repo z prostym `cd … && git sta
     remove` w innym repo. Stanu cudzego worktree nie dało się sprawdzić `git status`, więc zastąpiło go porównanie
     hashy blobów z `git ls-tree -r -z` (zob. `usuniecie-worktree-poprzedzone-porownaniem-plikow-ignorowanych`).
   - Szósty raz z rzędu bez zajrzenia tu przed pierwszą komendą; pętlę rozbiłem dopiero po odmowie.
+- 2026-11-17, sesja d3dca57e-92f2-418a-b0e5-a28120ba9cf3 (id claude.ai niedostępny; code-busters-v2, worktree `landing-redesign`, przebudowa landingu DT-182 #1021): trzy odmowy „too complex to verify that it stays inside the worktree” dla komend bez gita: `cat > "$TEMP/…" <<'EOF'` z `PROBE_OUT=… npx vitest`, pętla `for ref in …; do curl … ${ref:+-H "Referer: $ref"}` oraz wcześniej `git -C . diff`. Obejście za każdym razem to samo: skrypt w pliku w scratchpadzie albo rozbicie na proste wywołania; `git -C "<Baza wiedzy>" <cmd>` jako pojedyncza komenda przechodzi.
 
 ## Rozwiązanie
 W sesji izolowanej w worktree każda komenda git to osobne, proste wywołanie bez pętli, zmiennych

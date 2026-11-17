@@ -43,6 +43,7 @@ poprawiania wzorca zamiast sposobu jego uruchomienia.
   wykryte dopiero `cat -A`. Wniosek rozszerza tę stronę: samo zapisanie skryptu do pliku nie
   wystarcza, jeśli **plik powstaje heredokiem** — transport psuje treść, zanim node ją zobaczy.
 - 2026-11-12, sesja 62c8c4bb-8377-436d-a2b6-aea1aa8bd57b: `sed -i 's/ (?=\\S)\/gu;/ (?=\\S|$)\/gu;/'` w narzędziu Bash nie zmienił skryptu i nie zgłosił błędu - wzorzec z okrojonymi ukośnikami nic nie dopasował, a skrypt dalej pomijał sierotki przed kodem inline. Ta sama zmiana przez Edit przeszła od razu. Ten sam mechanizm co pamięć `bash-heredoc-backslash-halved`: tekst z ukośnikiem idzie przez Edit/Write, nie przez sed w Bashu.
+- 2026-11-17, sesja d3dca57e-92f2-418a-b0e5-a28120ba9cf3 (id claude.ai niedostępny; code-busters-v2, worktree `landing-redesign`, przebudowa landingu DT-182 #1021): skrypt Node podany heredokiem `node - <<'EOF'` w komendzie zaczynającej się od `cd … &&` wpisał do `tailwindWorkspace.test.ts` regexy bez ukośników (`/--tw-translate-y:s*1.5rem/`); test padł z mylącym komunikatem, a przyczynę znalazłem dopiero po sondzie CSS. Naprawione narzędziem Edit. Później w tej samej sesji `node -e` z `\\s` w szukanym ciągu nie znalazł wzorca („no single match”).
 
 ## Rozwiązanie
 

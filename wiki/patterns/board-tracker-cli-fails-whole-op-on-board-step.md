@@ -34,6 +34,7 @@ step of the CLI races with it or hits an archived item.
 - 2026-11-13, sesja 7d286730-a904-4694-a25c-8e90c19e7273 (id claude.ai niedostępny; code-busters-mobile, zamknięcie DT-93 #834). Dwa przypadki w jednej sesji, w tym nowa komenda:
   - `create-task --status backlog` z nową kartą zwrócił `ok: false`, `failed: "card devstock-org/devstock-team#945: gh: Content already exists in this project"`, a `done` wymieniało już `card:…#945`. Następne z `next` `ensure --ref …#945 --status backlog` zwróciło `steps: []`, czyli karta była na tablicy w docelowym stanie; prawdopodobnie CLI dodawał ją drugi raz. Tej przyczyny nie sprawdzałem.
   - `status --ref …#834 --to done` zwrócił `"GraphQL: Could not close the issue. (closeIssue)"`, exit 1. `gh issue view` i zapytanie GraphQL pokazały `CLOSED`/`COMPLETED` o 10:29:21Z oraz Status `Done`. Bez ponawiania.
+- 2026-11-17, sesja d3dca57e-92f2-418a-b0e5-a28120ba9cf3 (id claude.ai niedostępny; code-busters-v2, worktree `landing-redesign`, przebudowa landingu DT-182 #1021): `status --ref devstock-org/devstock-team#1021 --to done` po „ok” (D1 A) zwróciło `ok:false`, „GraphQL: Could not close the issue. (closeIssue)”, a `gh issue view 1021` pokazało `CLOSED` / `COMPLETED` i status „Done” na tablicy. Komendy nie ponawiałem; stan potwierdzony odczytem i tak podany w raporcie. Hipoteza, niesprawdzona: automatyzacja tablicy zamknęła issue po zmianie statusu, zanim CLI wywołało `closeIssue`.
 
 ## Rozwiązanie
 In the CLI: after a failing step, read the issue state and board status and return `ok: true` with a
