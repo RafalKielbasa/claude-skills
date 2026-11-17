@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 317d7952-a172-4542-ada8-af793e2c9f74
-  modified: 2026-11-10T19:18:17.125Z
+  modified: 2026-11-17T17:00:36.486Z
 ---
 
 W2 needed three gate runs and W3 two; the failures were real or harness gaps, not flakes:
@@ -27,5 +27,6 @@ W2 needed three gate runs and W3 two; the failures were real or harness gaps, no
 - Added 2026-11-04 (live quiz host stage on ds): on web `/live/<code>` only bounces to the mobile app, so a local game needs players added through the `liveGameJoin` and `liveGameAnswer` mutations on `:3001`. The seed password in `apps/cms/prisma/data/User.ts` is a quoted comment; a parser that keeps the quotes fails the login, and repeated failures lock the account for about a minute (`accountLocked`). On `next dev` the React Query Devtools panel opens over the bottom half of the 1920×1080 stage; set `localStorage.reactQueryDevtoolsOpen` to `'false'`.
 
 - Added 2026-11-10 (DT-83 local acceptance): every local seed user is already a `CourseParticipant` of „Wprowadzenie do Sztucznej Inteligencji” (the only published course with a free lesson), so a „not joined, no access” check needs a fresh user from admin `createUser` (requires `storedDisplayName`; `mustAcceptTerms` is not settable through GraphQL; the onboarding survey shows „Pomiń”); delete it afterwards. PROMPT activities never complete locally (CMS hook → OpenAI `404 model gpt-3.5-turbo`). `deleteActivitySolution` reports an `afterOperation` error (`reading 'activityId'`) yet deletes the row; `Activity.allSolutions` counters stay incremented. The seeded free lesson also sits in sprint „JavaScript”, so any edit of it adds „Darmowa próbka nie może być lekcją sprintu”. Seed password for all seed accounts is the commented one in `prisma/data/User.ts`. Block PostHog hosts in Playwright contexts (the build carries a real `NEXT_PUBLIC_POSTHOG_KEY`). Servers started from the worktree on :3000/:3001 as direct node background tasks stop cleanly with TaskStop.
+- Added 2026-11-17 (DT-176 PR 2 after merging `main` with DT-118): check the shared DB read-only first with `pnpm -C <worktree>/apps/cms exec keystone prisma migrate diff --from-schema-datasource schema.prisma --to-schema-datamodel schema.prisma --script` (empty = in sync; no `DROP` = push needs no `--accept-data-loss`). A missing column shows as `P2022` in the CMS log while resolvers with fallbacks (e.g. `courseLastUpdatedAt`) still return data. `keystone prisma db push` run while that worktree's Keystone is up syncs the DB, then fails in generate with `EPERM … rename query_engine-windows.dll.node` (the running server holds the engine); harmless, or pass `--skip-generate`. Local course `catalogStatus` values are `hidden`/`planned`/`published` and the seed has no `courseUpdate` timeline entries, so `lastUpdatedAt` equals the launch date. Rafał's `! cd …` moves the session's shell cwd: use absolute paths afterwards.
 
 **Why:** each item cost a gate run or a stall in W2/W3. **How to apply:** before the W4 gate, check these first. Related: [[worktree-session-git-guard]].
