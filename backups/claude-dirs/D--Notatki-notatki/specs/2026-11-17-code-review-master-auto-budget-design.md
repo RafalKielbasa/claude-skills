@@ -123,10 +123,13 @@ Each `selection.selected` entry keeps every current field (`axisId`, `group`, `a
    today), else `settings.budget.max_files_per_part`. The per-axis `max_files` and
    `budget.max_files_per_axis` are fixed-mode settings and are ignored in auto mode (G3).
 4. Number of parts for an entry = `ceil(files / size)`.
-5. Partition files into that many parts, **balanced by churn** (`added + removed`): sort by the
-   existing `rank()` order, then assign each file to the part with the lowest churn total so far
-   (ties → lower index). Carried files (`carried: true`, churn 0) spread by count. Parts are
-   then re-sorted internally in `rank()` order for a stable prompt.
+5. Partition files into that many parts, **balanced by churn** (`added + removed`) **under a file
+   cap**: each part holds at most `ceil(files / parts)` files (never more than the part size).
+   Walk files in the existing `rank()` order and assign each to the non-full part with the lowest
+   churn total so far (ties → fewer files, ties → lower index). Carried files (`carried: true`,
+   churn 0) spread by count. Each part keeps `rank()` order. Amended 2026-11-17 after the final
+   review: churn balancing without the cap handed one part 23–34 files whenever one file carried
+   most of the churn, which defeated G2.
 6. `nextAxisCursor` is computed as today (all units are "taken").
 
 ### 5.3 The hard ceiling
@@ -146,6 +149,13 @@ mode, interactive or not. When `1 + 2 × partCount` exceeds it:
 
 The floor goes into `selection.partSizeFloor`, so the budget line can say parts were enlarged.
 
+As built (2026-11-17): step 2's cut is applied first — keep `floor((max_agents − 1) / 2)` units
+in `rank` / cursor order — and step 1's floor then rises over the kept units only. When the cut
+bites, every kept entry ends at one part in either order, so `selected`, `deferred`, the parts and
+`nextAxisCursor` are identical; only `partSizeFloor` differs, and it now reflects files that are
+actually reviewed. An invalid `max_agents` falls back to the default 41 (fails closed);
+`validateConfig` requires `max_agents >= 3`.
+
 ### 5.4 `fixed` mode
 
 `since` and `full` always; `working`, `branch`, `pr` only after a rejection (§6.2). Exactly
@@ -162,7 +172,8 @@ The Polish line names parts when any entry has more than one:
 
 and, when §5.3 enlarged parts, a line saying the part size was raised from 12 to N to fit the
 ceiling of `max_agents`. Plural forms follow `lib/report.mjs`'s `plural()` (three forms).
-Unchanged when there is no split.
+Without a split the line keeps today's content, now with every count inflected (`3 agenty`,
+`1 oś`) instead of the old fixed `agentów` / `osi` (as built, 2026-11-17).
 
 ### 6.2 Gate (interactive only)
 
@@ -301,6 +312,10 @@ Rollout touches files outside `<skill>`:
   - `20260908-065549-dmpn` (11 files): 9 units, none above 12 files → 9 parts, **19 agents**
     (no question); today it ran 11 agents and deferred 4 axes.
   A difference from these numbers must be explained by a configuration change or it is a bug.
+  Replay result (2026-11-17, `templates/global.md` + current `saas app` config): `jkgf` 12 parts,
+  25 agents, asks; `dmpn` 8 parts, 17 agents, no question — the current config groups
+  `rate-limiting` and `landing-visibility` (`group: api-invariants`) into one unit, which the
+  2026-09-08 configuration did not.
 
 ## 10. Acceptance
 
