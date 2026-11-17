@@ -47,6 +47,16 @@ test('the axis prompt tells the agent to default to the axis\'s configured sever
   assert.match(text, /axis's configured default/i);
 });
 
+// A part agent needs to know its files are a slice of the axis; the note sits
+// with the file list it qualifies.
+test('the axis prompt carries the part note right after the file list', () => {
+  const text = read('axis.md');
+  const files = text.indexOf('{{FILES}}');
+  const note = text.indexOf('{{PART_NOTE}}');
+  assert.ok(note > files, '{{PART_NOTE}} must follow {{FILES}}');
+  assert.ok(note < text.indexOf('## What to return'), '{{PART_NOTE}} must stay under ## Files');
+});
+
 test('the verify prompt carries the 0-100 rubric and is batched', () => {
   const text = read('verify.md');
   assert.match(text, /\b0\b[\s\S]*\b100\b/);

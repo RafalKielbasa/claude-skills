@@ -148,6 +148,11 @@ export function validateConfig({ settings, axes }) {
       problems.push(`budget.${key} must be a positive integer`);
     }
   }
+  // One brief, one axis and one verifier is the smallest useful run; with
+  // fewer an auto run would select nothing.
+  if (Number.isInteger(settings.budget.max_agents) && settings.budget.max_agents > 0 && settings.budget.max_agents < 3) {
+    problems.push('budget.max_agents must be at least 3 (one brief, one axis, one verifier)');
+  }
   // At or above the ceiling every run would ask for confirmation it cannot get.
   if (Number.isInteger(settings.budget.confirm_above) && Number.isInteger(settings.budget.max_agents)
       && settings.budget.confirm_above >= settings.budget.max_agents) {

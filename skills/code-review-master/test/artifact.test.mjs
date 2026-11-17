@@ -225,3 +225,8 @@ test('the page names scan errors Semgrep reported on an ok run', () => {
   assert.ok(line(4).endsWith(' Semgrep reported 4 scan errors — some files may not have been scanned.'), line(4));
   assert.equal(line(0).includes('scan error'), false);
 });
+
+test('the page counts parts in the spend line', () => {
+  assert.match(TEXT, /partCount/);
+  assert.match(TEXT, /axis parts across/);
+});

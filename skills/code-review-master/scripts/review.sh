@@ -120,7 +120,9 @@ CLAUDE_EXIT=0
 # `crm fixable` both refuse to do either without --interactive anyway
 # (bin/crm.mjs's readSlots and its `fixable` command), but this script not
 # passing the flag in the first place is the actual enforcement, not a
-# courtesy on top of it.
+# courtesy on top of it. CRM_UNATTENDED=1 is what makes `crm plan` skip its
+# confirmation gate: there is nobody to answer it.
+export CRM_UNATTENDED=1
 (
   cd "$REPO" && "$CLAUDE_BIN" -p "$PROMPT" \
     --model "$MODEL" \

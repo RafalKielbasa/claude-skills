@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { selectAxes } from '../lib/axes.mjs';
+import { selectAxes, budgetModeFor, emptySelection } from '../lib/axes.mjs';
 import { DEFAULT_SETTINGS } from '../lib/config.mjs';
 
 const axis = (id, when, rank = 'rotate', extra = {}) => ({
@@ -304,6 +304,8 @@ test('the ceiling raises a floor before deferring', () => {
   assert.deepEqual(out.deferred, []);
   assert.equal(out.selected.length, 3);
   assert.ok(out.partSizeFloor > 12, `floor ${out.partSizeFloor}`);
+  // 38 files in 2 parts need 19 each; at 18 every axis keeps 3 parts (19 agents).
+  assert.equal(out.partSizeFloor, 19);
   assert.ok(out.agents <= 13, `agents ${out.agents}`);
   for (const entry of out.selected) {
     assert.equal(entry.files.length, 38);
@@ -368,15 +370,45 @@ test('needsConfirmation follows confirm_above and unattended', () => {
 });
 
 test('no auto configuration of axes and files can exceed max_agents', () => {
-  for (const maxAgents of [3, 7, 13, 41]) {
+  // A skewed file list too: one dominant file must not crowd a part past partSize.
+  const fileSets = [many(60), [file('big0.ts', 900), file('big1.ts', 400), ...many(58)]];
+  for (const files of fileSets) for (const maxAgents of [3, 7, 13, 41]) {
     for (let count = 1; count <= 25; count += 4) {
       const axes = Array.from({ length: count }, (_, i) => axis(`ax${i}`, 'always'));
       const out = selectAxes({
-        axes, files: many(60), settings: settings({ budget: { max_agents: maxAgents } }), state: state(), budgetMode: 'auto',
+        axes, files, settings: settings({ budget: { max_agents: maxAgents } }), state: state(), budgetMode: 'auto',
       });
       assert.ok(out.agents <= maxAgents, `${out.agents} agents with max ${maxAgents} and ${count} axes`);
       assert.equal(out.agents, 1 + 2 * out.partCount);
       assert.equal(out.selected.length + out.deferred.length, count);
+      for (const entry of out.selected) {
+        assert.deepEqual(allFiles(entry), entry.files.map((f) => f.path).sort(), `${entry.axisId} parts partition its files`);
+        assert.ok(entry.parts.every((p) => p.of === entry.parts.length), `${entry.axisId} parts agree on their count`);
+        assert.ok(entry.parts.every((p) => p.files.length <= entry.partSize),
+          `${entry.axisId} part sizes ${entry.parts.map((p) => p.files.length)} over ${entry.partSize}`);
+      }
     }
   }
+});
+
+test('an invalid max_agents fails closed to the default ceiling', () => {
+  const axes = Array.from({ length: 30 }, (_, i) => axis(`ax${i}`, 'always'));
+  const out = selectAxes({
+    axes, files: many(60), settings: settings({ budget: { max_agents: null } }), state: state(), budgetMode: 'auto',
+  });
+  assert.equal(out.maxAgents, 41);
+  assert.ok(out.agents > 0 && out.agents <= 41, `agents ${out.agents}`);
+  assert.ok(out.deferred.length > 0, '30 axes cannot all fit under 41 agents');
+});
+
+test('the budget mode follows the mode and the --budget flag', () => {
+  for (const mode of ['working', 'branch', 'pr']) assert.equal(budgetModeFor(mode, undefined), 'auto');
+  for (const mode of ['since', 'full']) assert.equal(budgetModeFor(mode, undefined), 'fixed');
+  for (const mode of ['working', 'branch', 'pr', 'since', 'full']) assert.equal(budgetModeFor(mode, 'fixed'), 'fixed');
+});
+
+test('an empty selection has the same shape as a real one', () => {
+  const real = selectAxes({ axes: [axis('a', 'always')], files: [file('x.ts')], settings: settings(), state: state(), budgetMode: 'auto' });
+  assert.deepEqual(Object.keys(emptySelection(settings(), 'auto')).sort(), Object.keys(real).sort());
+  assert.equal(emptySelection(settings(), 'fixed').slots, DEFAULT_SETTINGS.budget.slots);
 });

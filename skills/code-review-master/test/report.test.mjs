@@ -285,3 +285,40 @@ test('a pr report whose finders never ran says so', () => {
   const md = renderPr(null);
   assert.match(md, /\*\*krok szukających nie został wykonany\*\* — uwagi pochodzą tylko od agentów Sonnet\./);
 });
+
+test('the spend line counts parts when an axis was split', () => {
+  const split = {
+    ...selection,
+    selected: [selection.selected[0], { axisId: 'quality', group: null, axes: [{ id: 'quality', heading: 'Quality' }], files: [] }],
+    partCount: 4, agents: 9,
+  };
+  const md = renderReport({
+    run: { id: 'r1', mode: 'working', base: 'x', head: 'y' },
+    selection: split, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  });
+  assert.match(md, /Zużycie: 9 agentów \(1 brief \+ 4 części w 2 osiach \+ 4 weryfikacje\)\./);
+});
+
+test('the spend line is unchanged without a split', () => {
+  const md = renderReport({
+    run: { id: 'r1', mode: 'since', base: 'x', head: 'y' },
+    selection: { ...selection, partCount: 1 }, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  });
+  assert.match(md, /\(1 brief \+ 1 oś \+ 1 weryfikacja\)/);
+});
+
+test('one axis split into three parts reads "w 1 osi"', () => {
+  const md = renderReport({
+    run: { id: 'r1', mode: 'working', base: 'x', head: 'y' },
+    selection: { ...selection, partCount: 3, agents: 7 }, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  });
+  assert.match(md, /Zużycie: 7 agentów \(1 brief \+ 3 części w 1 osi \+ 3 weryfikacje\)\./);
+});
+
+test('the spend line keeps the old wording when partCount is omitted', () => {
+  const md = renderReport({
+    run: { id: 'r1', mode: 'since', base: 'x', head: 'y' },
+    selection, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  });
+  assert.match(md, /Zużycie: 3 agenty \(1 brief \+ 1 oś \+ 1 weryfikacja\)/);
+});

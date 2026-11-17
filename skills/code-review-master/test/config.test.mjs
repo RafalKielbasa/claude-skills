@@ -185,5 +185,6 @@ test('bad auto-budget values are refused', () => {
     axes: [],
   });
   assert.match(withBudget({ max_agents: 0 }).join('\n'), /budget\.max_agents/);
+  assert.match(withBudget({ max_agents: 2, confirm_above: 1 }).join('\n'), /budget\.max_agents/);
   assert.match(withBudget({ confirm_above: 41, max_agents: 41 }).join('\n'), /confirm_above.*max_agents/);
 });

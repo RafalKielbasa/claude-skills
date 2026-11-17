@@ -12,17 +12,22 @@ const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '..', 'scripts', 'r
 // rather than one that died on the way: the real `finish` removes `.running`,
 // so a stub that leaves it behind is exactly a crashed run — the case the
 // sentinel exists to catch.
-function stub(dir, exitCode, { clearsSentinel = true } = {}) {
+function stub(dir, exitCode, { clearsSentinel = true, dumpsEnv = false } = {}) {
   const path = join(dir, 'claude-stub');
+  const env = dumpsEnv ? `printf '%s' "$CRM_UNATTENDED" > "${dir}/env.txt"\n` : '';
   const clear = clearsSentinel ? `rm -f "${dir}/.claude/review/.running"\n` : '';
-  writeFileSync(path, `#!/bin/sh\nprintf '%s\\n' "$@" > "${dir}/argv.txt"\n${clear}exit ${exitCode}\n`);
+  writeFileSync(path, `#!/bin/sh\nprintf '%s\\n' "$@" > "${dir}/argv.txt"\n${env}${clear}exit ${exitCode}\n`);
   chmodSync(path, 0o755);
   return path;
 }
 
+// `cleanEnv` drops a CRM_UNATTENDED the runner itself may carry, so a test that
+// asserts the wrapper sets it cannot pass on the inherited value.
 const runWrapper = (dir, code, args, opts = {}) => {
+  const env = { ...process.env };
+  if (opts.cleanEnv) delete env.CRM_UNATTENDED;
   try {
-    execFileSync('sh', [SCRIPT, ...args], { env: { ...process.env, CRM_CLAUDE_BIN: stub(dir, code, opts) }, encoding: 'utf8' });
+    execFileSync('sh', [SCRIPT, ...args], { env: { ...env, CRM_CLAUDE_BIN: stub(dir, code, opts) }, encoding: 'utf8' });
     return 0;
   } catch (err) {
     return err.status;
@@ -75,4 +80,12 @@ test('the wrapper never passes --slots and passes the mode through', () => {
   const argv = readFileSync(join(dir, 'argv.txt'), 'utf8');
   assert.equal(argv.includes('--slots'), false, 'an unattended run must not be able to raise the budget');
   assert.match(argv, /code-review-master pr 42/);
+});
+
+// `crm plan` drops its confirmation gate on this variable, so a wrapper that
+// forgot to export it would leave an unattended run waiting for a human.
+test('the wrapper marks the session as unattended', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'crm-wrap-'));
+  runWrapper(dir, 0, ['--repo', dir, '--mode', 'since'], { dumpsEnv: true, cleanEnv: true });
+  assert.equal(readFileSync(join(dir, 'env.txt'), 'utf8'), '1');
 });

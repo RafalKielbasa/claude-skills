@@ -5,7 +5,7 @@ const CODEX_LABEL = { confirms: 'codex: potwierdza', rejects: 'codex: odrzuca (s
   own: 'codex: własne znalezisko' };
 
 // Polish plural for counts, so the header does not read like machine output.
-function plural(n, one, few, many) {
+export function plural(n, one, few, many) {
   if (n === 1) return one;
   const last = n % 10;
   const lastTwo = n % 100;
@@ -126,9 +126,15 @@ function header({ run, selection, codexStatus, incomplete, findings, finders }) 
   // Three forms per noun, because Polish needs all three: 1 agent, 3 agenty,
   // 5 agentów. Collapsing "few" into "many" is the mistake that makes generated
   // Polish read like a machine wrote it.
-  lines.push(`Zużycie: ${selection.agents} ${plural(selection.agents, 'agent', 'agenty', 'agentów')} `
-    + `(1 brief + ${chosen.length} ${plural(chosen.length, 'oś', 'osie', 'osi')} `
-    + `+ ${chosen.length} ${plural(chosen.length, 'weryfikacja', 'weryfikacje', 'weryfikacji')}).`);
+  // A split axis costs one finder pair per part, so the line counts parts.
+  const partCount = selection.partCount ?? chosen.length;
+  const agentsText = `${selection.agents} ${plural(selection.agents, 'agent', 'agenty', 'agentów')}`;
+  const verifyText = `${partCount} ${plural(partCount, 'weryfikacja', 'weryfikacje', 'weryfikacji')}`;
+  lines.push(partCount !== chosen.length
+    ? `Zużycie: ${agentsText} (1 brief + ${partCount} ${plural(partCount, 'część', 'części', 'części')} `
+      + `w ${chosen.length === 1 ? '1 osi' : `${chosen.length} osiach`} + ${verifyText}).`
+    : `Zużycie: ${agentsText} (1 brief + ${chosen.length} ${plural(chosen.length, 'oś', 'osie', 'osi')} `
+      + `+ ${verifyText}).`);
   // An axis whose agent hung, crashed, or returned garbage was still paid for
   // — it must never read as covered just because nothing else went wrong.
   if (incomplete.length > 0) lines.push(`**Nie przejrzano** (agent nie zwrócił wyniku): ${incomplete.join(', ')}.`);

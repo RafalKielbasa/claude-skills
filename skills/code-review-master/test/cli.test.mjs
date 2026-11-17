@@ -195,13 +195,13 @@ test('a bare `--slots` without --interactive is refused, and accepted with it', 
   const dir = makeRepo({ 'a.ts': 'x\n' });
   writeFiles(dir, { '.claude/review/config.md': CONFIG, 'a.ts': 'x\ny\n' });
   try {
-    run(['plan', '--repo', dir, '--mode', 'working', '--slots', '3', '--json']);
+    run(['plan', '--repo', dir, '--mode', 'full', '--slots', '3', '--json']);
     assert.fail('should have exited non-zero');
   } catch (err) {
     assert.equal(err.status, 2);
     assert.match(String(err.stderr), /--slots needs --interactive/);
   }
-  const out = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--slots', '3', '--interactive', '--json']));
+  const out = JSON.parse(run(['plan', '--repo', dir, '--mode', 'full', '--slots', '3', '--interactive', '--json']));
   assert.equal(out.selection.slots, 3);
 });
 
@@ -849,4 +849,126 @@ test('finders --start leaves side files alone when it does not start a worker', 
   const out = JSON.parse(run(['finders', '--repo', other, '--run', plan.runId, '--start', '--json']));
   assert.deepEqual(out, { started: false, reason: 'not-in-mode' });
   for (const name of [...STALE_SIDE_FILES, 'finders.json']) assert.ok(existsSync(reportsFile(other, plan.runId, name)), name);
+});
+
+const planOut = (dir, ...extra) => JSON.parse(run(['plan', '--repo', dir, ...extra, '--json']));
+
+test('working and branch plan with the auto budget', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  const base = git(dir, 'rev-parse', 'HEAD');
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  assert.equal(planOut(dir, '--mode', 'working').selection.budgetMode, 'auto');
+  commitAll(dir, 'change');
+  assert.equal(planOut(dir, '--mode', 'branch', '--base', base).selection.budgetMode, 'auto');
+});
+
+test('full plans with the fixed budget', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  assert.equal(planOut(dir, '--mode', 'full').selection.budgetMode, 'fixed');
+});
+
+test('an empty target still carries the auto-budget fields', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  const out = planOut(dir, '--mode', 'working');
+  assert.equal(out.empty, true);
+  assert.equal(out.selection.budgetMode, 'auto');
+  assert.equal(out.selection.needsConfirmation, false);
+  assert.equal(out.selection.partCount, 0);
+});
+
+test('--budget fixed returns the old algorithm in an auto mode', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  assert.equal(planOut(dir, '--mode', 'working', '--budget', 'fixed').selection.budgetMode, 'fixed');
+});
+
+test('--budget accepts only "fixed"', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  assert.throws(() => run(['plan', '--repo', dir, '--budget', 'auto', '--json'], { stdio: 'pipe' }),
+    (err) => err.status === 2 && /--budget accepts only "fixed"/.test(String(err.stderr)));
+});
+
+test('--slots is refused in an auto mode', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  assert.throws(() => run(['plan', '--repo', dir, '--mode', 'working', '--slots', '3', '--interactive', '--json'], { stdio: 'pipe' }),
+    (err) => err.status === 2 && /--slots applies to since and full/.test(String(err.stderr)));
+  const out = planOut(dir, '--mode', 'working', '--budget', 'fixed', '--slots', '3', '--interactive');
+  assert.equal(out.selection.slots, 3);
+});
+
+test('CRM_UNATTENDED=1 turns off the confirmation gate', () => {
+  const config = CONFIG.replace('budget: { slots: 2, max_files_per_axis: 5 }', 'budget: { confirm_above: 2, max_agents: 41 }')
+    + ['', '## Second', '', '```yaml', 'id: second', 'when: always', 'rank: always', '```', '', '- Check.', ''].join('\n');
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': config });
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  // Explicitly empty, so an outer CRM_UNATTENDED cannot turn the gate off here.
+  const gated = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json'],
+    { env: { ...process.env, CRM_GLOBAL_CONFIG: join(dir, 'no-global.md'), CRM_UNATTENDED: '' } }));
+  assert.equal(gated.selection.needsConfirmation, true);
+  const env = { ...process.env, CRM_GLOBAL_CONFIG: join(dir, 'no-global.md'), CRM_UNATTENDED: '1' };
+  const out = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json'], { env }));
+  assert.equal(out.selection.needsConfirmation, false);
+});
+
+test('--slots without --interactive in an auto mode hits the auto-mode refusal first', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  assert.throws(() => run(['plan', '--repo', dir, '--mode', 'working', '--slots', '3', '--json'], { stdio: 'pipe' }),
+    (err) => err.status === 2 && /--slots applies to since and full/.test(String(err.stderr)));
+});
+
+const PARTS_CONFIG = CONFIG.replace('budget: { slots: 2, max_files_per_axis: 5 }', 'budget: { max_files_per_part: 1 }');
+
+function partsRun(labels) {
+  const dir = makeRepo({ 'a.ts': 'x\n', 'b.ts': 'x\n', '.claude/review/config.md': PARTS_CONFIG });
+  writeFiles(dir, { 'a.ts': 'x\ny\n', 'b.ts': 'x\ny\n' });
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json']));
+  for (const [wave, label] of labels(plan)) {
+    run(['dispatched', '--repo', dir, '--run', plan.runId, '--wave', wave, ...(label ? ['--label', label] : [])]);
+  }
+  return { dir, plan };
+}
+
+test('finish accepts part labels and refuses an unknown part', () => {
+  const ok = partsRun(() => [['brief'], ['axis', 'quality#1'], ['axis', 'quality#2'], ['verify', 'quality#1'], ['verify', 'quality#2']]);
+  assert.deepEqual(ok.plan.selection.selected[0].parts.map((p) => p.label), ['quality#1', 'quality#2']);
+  assert.equal(ok.plan.selection.agents, 5);
+  finishEmptyRun(ok.dir, ok.plan.runId);
+
+  const bad = partsRun(() => [['brief'], ['axis', 'quality#3']]);
+  const raw = join(bad.dir, 'raw.json');
+  writeFileSync(raw, '[]');
+  run(['assemble', '--repo', bad.dir, '--run', bad.plan.runId, '--raw', raw, '--json']);
+  assert.throws(() => run(['finish', '--repo', bad.dir, '--run', bad.plan.runId, '--json'], { stdio: 'pipe' }),
+    (err) => err.status === 2 && /did not select: quality#3/.test(String(err.stderr)));
+});
+
+test('crm parts lists finding ids per part label', () => {
+  const { dir, plan } = partsRun(() => []);
+  const raw = join(dir, 'raw.json');
+  writeFileSync(raw, '[]');
+  run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']);
+  const out = JSON.parse(run(['parts', '--repo', dir, '--run', plan.runId, '--json']));
+  assert.deepEqual(out, { parts: { 'quality#1': [], 'quality#2': [] }, unassigned: [] });
+});
+
+test('render and artifact describe an incomplete part', () => {
+  const { dir, plan } = partsRun(() => []);
+  const raw = join(dir, 'raw.json');
+  writeFileSync(raw, '[]');
+  run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']);
+  const scores = join(dir, 'scores.json');
+  writeFileSync(scores, '[]');
+  run(['score', '--repo', dir, '--run', plan.runId, '--scores', scores, '--json']);
+
+  run(['render', '--repo', dir, '--run', plan.runId, '--incomplete', 'quality#2', '--json']);
+  const md = readFileSync(join(dir, '.claude', 'review', 'reports', `${plan.runId}-raport.md`), 'utf8');
+  assert.match(md, /quality \(część 2 z 2, 1 plik\)/);
+
+  const out = join(dir, 'page.html');
+  run(['artifact', '--repo', dir, '--run', plan.runId, '--incomplete', 'quality#2', '--out', out]);
+  const page = readFileSync(out, 'utf8');
+  const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(page)[1]);
+  assert.deepEqual(payload.incomplete, ['quality (part 2 of 2, 1 file)']);
 });

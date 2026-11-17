@@ -407,10 +407,14 @@
       truncatedLine.hidden = false;
     }
 
-    document.getElementById('spend-line').textContent =
-      'Budget spent: ' + selection.agents + ' agents (1 brief + ' + chosen.length + ' axis pass'
-      + (chosen.length === 1 ? '' : 'es') + ' + ' + chosen.length + ' verification'
-      + (chosen.length === 1 ? '' : 's') + ').';
+    // A split axis costs one finder pair per part, so the line counts parts.
+    var partCount = selection.partCount != null ? selection.partCount : chosen.length;
+    document.getElementById('spend-line').textContent = partCount !== chosen.length
+      ? 'Budget spent: ' + selection.agents + ' agents (1 brief + ' + partCount + ' axis parts across '
+        + (chosen.length === 1 ? '1 axis' : chosen.length + ' axes') + ' + ' + partCount + ' verifications).'
+      : 'Budget spent: ' + selection.agents + ' agents (1 brief + ' + chosen.length + ' axis pass'
+        + (chosen.length === 1 ? '' : 'es') + ' + ' + chosen.length + ' verification'
+        + (chosen.length === 1 ? '' : 's') + ').';
 
     // An axis whose agent hung, crashed, or returned garbage was still paid
     // for — it must never read as covered just because nothing else went

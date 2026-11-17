@@ -1,5 +1,6 @@
 import { matchGlob, globSpecificity } from './glob.mjs';
 import { buildParts } from './parts.mjs';
+import { DEFAULT_SETTINGS } from './config.mjs';
 
 function wakes(axis, files) {
   if (axis.when === 'always') return true;
@@ -105,8 +106,13 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null,
     return units.indexOf(a) - units.indexOf(b);
   });
 
+  // The ceiling is the budget guarantee, so unlike the file caps it fails
+  // closed: a misconfigured value means the default ceiling, never none.
+  const maxAgents = positiveInteger(settings.budget.max_agents)
+    ? settings.budget.max_agents
+    : DEFAULT_SETTINGS.budget.max_agents;
   const plan = auto
-    ? planParts(ordered, settings.budget)
+    ? planParts(ordered, settings.budget, maxAgents)
     : planSlots(ordered, slots, maxFilesDefault);
   const { taken, left, selected } = plan;
 
@@ -139,7 +145,7 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null,
     budgetMode: auto ? 'auto' : 'fixed',
     partCount,
     confirmAbove,
-    maxAgents: settings.budget.max_agents,
+    maxAgents,
     partSizeFloor: plan.partSizeFloor,
     // A fixed budget was already sized by the user; only an auto-sized run
     // over the threshold asks, and an unattended run has no one to ask.
@@ -191,11 +197,10 @@ function planSlots(ordered, slots, maxFilesDefault) {
 // Auto budget (spec §5.2–§5.3): every unit, no truncation, files split into
 // parts. Over `max_agents`, parts grow under a rising global floor before any
 // unit is deferred, so coverage is traded for depth only as a last resort.
-function planParts(ordered, budget) {
-  // Fail open on a misconfigured value, as `max_files_per_axis` does: one part
-  // per entry, or no ceiling, rather than a division by null or an empty run.
+function planParts(ordered, budget, ceiling) {
+  // A misconfigured part size fails open, as `max_files_per_axis` does: one
+  // part per entry rather than a division by null. The ceiling never does.
   const baseSize = positiveInteger(budget.max_files_per_part) ? budget.max_files_per_part : Infinity;
-  const ceiling = positiveInteger(budget.max_agents) ? budget.max_agents : Infinity;
 
   // Units beyond what one part each can afford are deferred in `ordered`
   // order, exactly where fixed mode would cut with `slots = room`. Cutting
@@ -227,4 +232,34 @@ function planParts(ordered, budget) {
     return { ...entry, files, skippedFiles: [], parts: buildParts(entry.axisId, files, partSize), partSize };
   });
   return { taken, left, selected, partSizeFloor: floor };
+}
+
+// Fixed modes are the ones whose size is chosen by a person (`since`, `full`) or
+// explicitly by `--budget fixed`; the rest size themselves from the target.
+export function budgetModeFor(mode, budgetFlag) {
+  return budgetFlag === 'fixed' || mode === 'since' || mode === 'full' ? 'fixed' : 'auto';
+}
+
+// Same key set as a real selection, so a consumer never branches on an empty
+// target; the keys are pinned against `selectAxes` by a test.
+export function emptySelection(settings, budgetMode) {
+  const maxAgents = positiveInteger(settings.budget.max_agents)
+    ? settings.budget.max_agents
+    : DEFAULT_SETTINGS.budget.max_agents;
+  return {
+    selected: [],
+    skippedOnTouch: [],
+    emptyAfterAssignment: [],
+    deferred: [],
+    slots: budgetMode === 'fixed' ? settings.budget.slots : null,
+    agents: 0,
+    truncated: false,
+    nextAxisCursor: [],
+    budgetMode,
+    partCount: 0,
+    confirmAbove: settings.budget.confirm_above,
+    maxAgents,
+    partSizeFloor: null,
+    needsConfirmation: false,
+  };
 }

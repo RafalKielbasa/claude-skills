@@ -15,6 +15,8 @@ covers the other axes; a finding outside your checklist is noise.
 
 {{FILES}}
 
+{{PART_NOTE}}
+
 ## What to return
 
 Your whole reply is the JSON array: no explanation, no summary, no preamble.

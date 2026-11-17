@@ -66,11 +66,64 @@ test('assemble is documented before verification, so ids exist to score by', () 
   assert.match(TEXT, /scores by id/i);
 });
 
+// Auto budget (spec §6): the number comes from `crm plan`, a person may only
+// lower it (`--budget fixed`), and `--slots` survives only where the budget is
+// fixed by design.
 test('the budget is announced before dispatch and never raised silently', () => {
   assert.match(TEXT, /crm plan/);
   assert.match(TEXT, /before dispatching/i);
-  assert.match(TEXT, /--slots/);
+  assert.match(TEXT, /needsConfirmation/);
+  assert.match(TEXT, /--budget fixed/);
+  assert.match(TEXT, /--slots[\s\S]{0,200}since[\s\S]{0,40}full/);
   assert.match(TEXT, /never pass `--slots`/i);
+});
+
+// Step 2 alone, so a phrase elsewhere in the document cannot satisfy a gate pin.
+const gateSection = () => {
+  const at = TEXT.indexOf('## Step 2 — confirm');
+  const end = TEXT.indexOf('## Step 3 — wave 0');
+  assert.ok(at > 0 && end > at, 'Step 2 must be documented before Step 3');
+  return TEXT.slice(at, end);
+};
+
+// The gate is decided by `crm plan`, not by the session's guess about who is
+// watching, and silence is never consent (Rafal's global rule).
+test('the gate asks only when needsConfirmation is true and treats silence as no answer', () => {
+  const step2 = gateSection();
+  assert.match(step2, /needsConfirmation[\s\S]{0,600}AskUserQuestion/);
+  assert.match(step2, /timeout[\s\S]{0,200}(not (an )?answer|ask again)/i);
+  assert.match(step2, /`Uruchom \(Rekomendowane\)`/);
+  assert.match(step2, /`Odrzuć — stary budżet`/);
+});
+
+test('rejecting the budget re-plans under --budget fixed with a new runId', () => {
+  assert.match(gateSection(), /`--budget fixed`[\s\S]{0,200}new `runId`/);
+});
+
+// Without an exit, a user who refuses the run outright would be asked forever.
+test('an explicit cancel at the gate ends the run without dispatching', () => {
+  const step2 = gateSection();
+  assert.match(step2, /explicit cancel[\s\S]{0,300}ends the run/i);
+  assert.match(step2, /dispatch nothing and run no further `crm` command/i);
+});
+
+test('waves 1 and 2 dispatch one agent per part, logged with the part label', () => {
+  assert.match(TEXT, /one Sonnet agent per part/i);
+  assert.match(TEXT, /one Haiku agent per part/i);
+  assert.match(TEXT, /crm dispatched --run <runId> --wave axis --label <part label>/);
+  assert.match(TEXT, /crm dispatched --run <runId> --wave verify --label <part label>/);
+  assert.match(TEXT, /crm parts --run <runId>/);
+  assert.match(TEXT, /one agent per part, never one (agent )?per finding/i);
+});
+
+// Anti-goal A1: triage fingerprints are built from `finding.axis`, so a part
+// label there would silently resurrect every recorded suppression.
+test('a part agent echoes the axis id, never the part label', () => {
+  assert.match(TEXT, /\{\{AXIS_ID\}\}[\s\S]{0,200}never the part label/i);
+});
+
+test('Step 3b marks a failed part, not the whole axis', () => {
+  assert.match(TEXT, /--incomplete[\s\S]{0,300}part label/i);
 });
 
 test('every subagent is denied the dispatch tool, stated as a property of its tools', () => {
@@ -152,7 +205,7 @@ test('the judge skips codex\'s own findings', () => {
 });
 
 test('the budget line names the extra finders outside the agent budget', () => {
-  const step1 = section('## Step 1 — plan', '## Step 2 — raise');
+  const step1 = section('## Step 1 — plan', '## Step 2 — confirm');
   assert.match(step1, /Dodatkowo \(poza budżetem agentów\)/);
 });
 
@@ -187,7 +240,7 @@ test('send never names the finder in a GitHub comment', () => {
 });
 
 test('the extra-finders budget line follows the switches and the axes that will scan', () => {
-  const step1 = section('## Step 1 — plan', '## Step 2 — raise');
+  const step1 = section('## Step 1 — plan', '## Step 2 — confirm');
   assert.match(step1, /settings\.codex\.enabled && settings\.codex\.find/);
   assert.match(step1, /settings\.semgrep\.enabled/);
   assert.match(step1, /`when` matches at least one file of (its|their) slot/);

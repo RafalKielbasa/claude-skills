@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { parseConfigDoc, mergeConfig, validateConfig } from '../lib/config.mjs';
 import { collectTarget, isEmpty } from '../lib/target.mjs';
-import { selectAxes } from '../lib/axes.mjs';
+import { selectAxes, budgetModeFor, emptySelection } from '../lib/axes.mjs';
 import { assemble, validateFinding, applyThresholds } from '../lib/findings.mjs';
 import { recordTriage } from '../lib/triage.mjs';
 import { renderReport } from '../lib/report.mjs';
@@ -19,6 +19,7 @@ import { embedJson } from '../lib/embed.mjs';
 import { exitCode } from '../lib/gate.mjs';
 import { readState, writeState } from '../lib/state.mjs';
 import { selectFixable } from '../lib/fixable.mjs';
+import { assignFindings, describeIncomplete } from '../lib/parts.mjs';
 
 // This skill's own directory, needed to locate `templates/artifact.html`
 // regardless of which repository `--repo` names — the template ships with
@@ -48,11 +49,14 @@ function parseArgs(argv) {
 // with a sane number. Wrapper discipline is not enough: any CI step could call
 // this — and TTY detection could not either, since stdout is piped for --json
 // on every call this skill makes, interactive session or not.
-function readSlots(args) {
+function readSlots(args, budgetMode) {
   if (args.slots === undefined) return null;
   // A bare `--slots` parses as `true`, and `Number(true)` is 1 — so forgetting
   // the number would silently *lower* the budget instead of raising it.
   if (args.slots === true) fail('--slots needs a number, for example --slots 8');
+  // Before the --interactive check: in an auto mode the flag is meaningless,
+  // so asking for --interactive too would send the user down the wrong path.
+  if (budgetMode === 'auto') fail('--slots applies to since and full; working, branch and pr size their own budget');
   if (!args.interactive) fail('--slots needs --interactive: an unattended run may not raise the agent budget');
   const value = Number(args.slots);
   if (!Number.isInteger(value) || value < 1 || value > 20) fail(`--slots must be an integer between 1 and 20, got "${args.slots}"`);
@@ -224,7 +228,9 @@ const COMMANDS = {
     const config = loadConfig(repo);
     const state = readState(repo);
     const mode = args.mode ?? 'working';
-    const slotsOverride = readSlots(args);
+    if (args.budget !== undefined && args.budget !== 'fixed') fail('--budget accepts only "fixed"');
+    const budgetMode = budgetModeFor(mode, args.budget);
+    const slotsOverride = readSlots(args, budgetMode);
     const target = collectTarget(repo, mode, {
       base: mode === 'since' ? state.last_reviewed_sha : args.base,
       pr: args.pr, path: args.path, cursor: state.file_cursor[mode],
@@ -237,7 +243,7 @@ const COMMANDS = {
     const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
     const runId = `${stamp.slice(0, 8)}-${stamp.slice(8)}-${Math.random().toString(36).slice(2, 6)}`;
     if (isEmpty(target)) {
-      return { runId, mode, target, empty: true, selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 } };
+      return { runId, mode, target, empty: true, selection: emptySelection(config.settings, budgetMode) };
     }
     // Files a truncated earlier run of THIS mode gave up come back at the head
     // of the queue, otherwise the same low-churn files lose every ranking
@@ -254,6 +260,7 @@ const COMMANDS = {
     }
     const selection = selectAxes({
       axes: config.axes, files: target.files, settings: config.settings, state, slotsOverride,
+      budgetMode, unattended: process.env.CRM_UNATTENDED === '1',
     });
     return { runId, mode, target, empty: false, selection, settings: config.settings, axes: config.axes };
   },
@@ -565,7 +572,8 @@ const COMMANDS = {
       run: { id: args.run, mode: plan.mode, base: plan.target.base, head: plan.target.head },
       selection: plan.selection, findings: data.findings, suppressed: data.suppressed,
       prose: args.prose ? readInputFile(args.prose, '--prose') : {},
-      codexStatus: data.codexStatus ?? 'skipped', remote: gitRemote(repo), incomplete,
+      codexStatus: data.codexStatus ?? 'skipped', remote: gitRemote(repo),
+      incomplete: describeIncomplete(plan.selection.selected, incomplete, 'pl'),
       finders: readFinders(repo, args.run),
     });
     const out = reportPath(repo, args.run, 'raport.md');
@@ -633,12 +641,20 @@ const COMMANDS = {
         // page the user may hand someone else — matched wording, in
         // templates/artifact.html, against lib/report.mjs's, so the two
         // renderings of one run cannot disagree.
-        incomplete, codexStatus: data.codexStatus ?? 'skipped',
+        incomplete: describeIncomplete(plan.selection.selected, incomplete, 'en'),
+        codexStatus: data.codexStatus ?? 'skipped',
         finders: readFinders(repo, args.run),
       }));
     mkdirSync(dirname(args.out), { recursive: true });
     writeFileSync(args.out, page, 'utf8');
     return { page: args.out, findings: data.findings.length };
+  },
+
+  parts(args) {
+    const repo = args.repo ?? process.cwd();
+    const data = readRunFile(repo, args.run, 'findings.json');
+    const plan = readRunFile(repo, args.run, 'plan.json');
+    return assignFindings(plan.selection.selected, data.findings);
   },
 
   finish(args) {
@@ -650,7 +666,9 @@ const COMMANDS = {
     // what may run, this says what did, and a mismatch fails the run.
     const ledgerPath = reportPath(repo, args.run, 'dispatch.json');
     const ledger = existsSync(ledgerPath) ? readJson(ledgerPath) : [];
-    const allowedLabels = new Set(plan.selection.selected.map((s) => s.axisId));
+    // The `?? ` fallback keeps plan.json files written before parts existed finishable.
+    const allowedLabels = new Set(plan.selection.selected
+      .flatMap((s) => (s.parts ?? [{ label: s.axisId }]).map((p) => p.label)));
     const stray = ledger.filter((entry) => entry.wave !== 'brief' && !allowedLabels.has(entry.label));
     if (ledger.length > plan.selection.agents) {
       fail(`dispatch ledger holds ${ledger.length} agents, the announced budget was ${plan.selection.agents}`);

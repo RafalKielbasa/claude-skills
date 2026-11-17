@@ -14,7 +14,7 @@ Throughout this document:
 
 ## Overview
 
-This skill runs a fixed-axis code review of `<repo>` by dispatching Sonnet agents to find issues and Haiku agents to verify and summarize them, then hands the survivors to `codex` for a second opinion before writing a Polish report. The subagent budget for a run is `selection.agents` — always `1 + 2 × selection.selected.length` — computed once by `bin/crm.mjs` before a single agent runs, and it is not negotiable by this document or by the user mid-run; the only way to change it is `--slots`, applied before dispatch in Step 2 and never after. This document, `findings.json`, `state.json`, and every prompt filled in below are English; `raport.md` and whatever this skill says to the user in conversation are the only two things that are Polish.
+This skill runs a fixed-axis code review of `<repo>` by dispatching Sonnet agents to find issues and Haiku agents to verify and summarize them, then hands the survivors to `codex` for a second opinion before writing a Polish report. The subagent budget for a run is `selection.agents` — always `1 + 2 × selection.partCount` — computed once by `crm plan` before a single agent runs, and it is not negotiable by this document or by the user mid-run. Each entry of `selection.selected` is one axis (or one group of axes) split into one or more parts; every part gets one Sonnet agent in wave 1 and one Haiku agent in wave 2, plus one brief agent for the run. In `working`, `branch` and `pr` the budget is automatic (`selection.budgetMode: 'auto'`): every axis the change wakes is selected and its files are split into parts of at most `max_files_per_part` files (the axis's own value, else `budget.max_files_per_part`), and the whole run is capped at `budget.max_agents` — above it parts grow before any axis is deferred. In `since` and `full` it is fixed (`'fixed'`): the configured number of axis slots, each entry one part, so `partCount` equals `selection.selected.length`. The budget changes only before dispatch, in Step 2, and never after: a person may reject an automatic budget in favour of the fixed one (`--budget fixed`), and may raise a fixed budget with `--slots`. This document, `findings.json`, `state.json`, and every prompt filled in below are English; `raport.md` and whatever this skill says to the user in conversation are the only two things that are Polish.
 
 ## Invocation
 
@@ -31,7 +31,7 @@ This skill runs a fixed-axis code review of `<repo>` by dispatching Sonnet agent
 | `/code-review-master fix [ids]` | Applies codex-confirmed fixes from the latest run. Interactive only — see "Mode `fix`" below. |
 | `/code-review-master init` | Drafts `.claude/review/config.md` for a repository that has none — see "Mode `init`" below. |
 
-Any command may end with `--slots <n>`, honoured only as described in Step 2.
+A review command (`working`, `branch`, `pr`, `since`, `full`) may end with `--budget fixed`, and `since` and `full` — or `working`, `branch` and `pr` together with `--budget fixed` — may end with `--slots <n>`. Both are honoured only as described in Step 2.
 
 ## Step 0 — check the main model
 
@@ -49,18 +49,30 @@ Run `crm plan --mode <mode> ...` with exactly the extra flags the mode needs, no
 - `since` — no extra flags; `crm plan` reads the base from `state.json` itself.
 - `full [path]` — `--path <p>` only when the user named a subpath.
 
+Add `--budget fixed`, `--slots <n>` and `--interactive` only on the terms of Step 2.
+
 Read the result:
 
-- **Exit code 2** — `crm plan` refused to run in a way it recognized: no `.claude/review/config.md` in `<repo>`, a `config.md` that fails validation, or a `--slots` value that is not a positive integer between 1 and 20 (including one passed without `--interactive`). Stop, and show the user the process's stderr message verbatim. Do not guess a fix and retry.
+- **Exit code 2** — `crm plan` refused to run in a way it recognized: no `.claude/review/config.md` in `<repo>`, a `config.md` that fails validation, a `--slots` value that is not a positive integer between 1 and 20 (including one passed without `--interactive`), `--slots` in a `working`, `branch` or `pr` run without `--budget fixed`, or `--budget` with any value other than `fixed`. Stop, and show the user the process's stderr message verbatim. Do not guess a fix and retry.
 - **Any other non-zero exit** — something broke that `crm plan` did not anticipate (a bad git ref, a `since` run with no prior `last_reviewed_sha`, and so on). Stop, show the user the raw error, and do not proceed to Step 3 with a run that produced no `plan.json`.
 - **`empty: true`** — there is nothing in scope to review. Tell the user so, in one line, and stop. Dispatch nothing.
-- **Otherwise** — before dispatching a single agent, print the budget to the user in Polish:
+- **Otherwise** — before dispatching a single agent, print the budget to the user in Polish. When every entry in `selection.selected` has exactly one part (always so in `since` and `full`), the line is:
 
   `Budżet: {selection.agents} agentów (1 brief + {selection.selected.length} osi + {selection.selected.length} weryfikacji). Wybrane osie: {axisId, axisId, ...}. Pominięte (on-touch): {selection.skippedOnTouch.join(', ') || '—'}. W kolejce: {selection.deferred.join(', ') || '—'}.`
 
-  This is the number the whole run is held to. `crm finish` (Step 10) checks the dispatch ledger against exactly this figure.
+  When at least one entry has more than one part, name the parts instead:
 
-  In `pr` and `branch` runs only, print a second line right after it — the two extra finders (Step 4) are not agents and sit outside that number, so the user must be told which of them will run. Build it from the plan's `settings` and `selection.selected`, so it never announces a finder the configuration switched off:
+  `Budżet: {selection.agents} agentów (1 brief + {selection.partCount} części w {selection.selected.length} osiach + {selection.partCount} weryfikacji). Osie: {per entry: axisId (N części) when parts.length > 1, the bare axisId otherwise, joined with ', '}. Pominięte (on-touch): {selection.skippedOnTouch.join(', ') || '—'}. W kolejce: {selection.deferred.join(', ') || '—'}.`
+
+  In both lines, inflect every counted noun by its number with the three Polish forms `plural()` in `<skill>/lib/report.mjs` uses — `agent`/`agenty`/`agentów`, `oś`/`osie`/`osi`, `część`/`części`/`części`, `weryfikacja`/`weryfikacje`/`weryfikacji` (so `3 agenty`, `23 agenty`, `21 agentów`) — and write `w 1 osi` for a single entry, `w {n} osiach` otherwise.
+
+  When `selection.partSizeFloor` is not `null`, the `budget.max_agents` ceiling forced larger parts; print one more line right after the budget line:
+
+  `Rozmiar części podniesiony z {settings.budget.max_files_per_part} do {selection.partSizeFloor} plików, żeby zmieścić się w limicie {selection.maxAgents} agentów.`
+
+  `selection.agents` is the number the whole run is held to: wave 1 and wave 2 each dispatch exactly `selection.partCount` agents. `crm finish` (Step 10) checks the dispatch ledger against exactly this figure.
+
+  In `pr` and `branch` runs only, print one more line right after those — the two extra finders (Step 4) are not agents and sit outside that number, so the user must be told which of them will run. Build it from the plan's `settings` and `selection.selected`, so it never announces a finder the configuration switched off:
 
   - the codex part, `codex jako szukający`, only when `settings.codex.enabled && settings.codex.find`;
   - the Semgrep part, `Semgrep dla osi: {axis ids}`, only when `settings.semgrep.enabled`. Fill `{axis ids}` with the ids of the member axes (the `axes[]` of each entry in `selection.selected`) whose `semgrep` list is non-empty **and** whose `when` matches at least one file of their slot (`when: always` matches every file; otherwise compare its globs with that entry's `files`) — an axis with rules but no file of its own in the slot is not scanned. Comma-separated, or `—` when there are none.
@@ -69,11 +81,33 @@ Read the result:
 
   Print nothing of the kind in `working`, `since` and `full` runs: the finders do not run there.
 
-## Step 2 — raise the budget only on request
+## Step 2 — confirm or reject the budget
 
-Pass `--slots <n>` to the `crm plan` call in Step 1 only when the user typed a number in their own invocation of this skill (e.g. `/code-review-master branch main --slots 8`). Never infer a value, never suggest one, never default one yourself — the budget line in Step 1 already tells the user what the default would review, and raising it is their call alone. When you do pass `--slots`, pass `--interactive` alongside it too — but **only** when the user typed the flag themselves in an interactive session, i.e. someone is at the keyboard to have typed `--slots` in the first place. `crm plan` refuses `--slots` without `--interactive` (exit 2), so a bare `--slots` with no flag never silently no-ops — it fails loudly instead.
+**The gate.** Whether to ask is decided by `crm plan`, not by you: ask if and only if `selection.needsConfirmation` is `true`. `crm plan` sets it only for an automatic budget (`budgetMode: 'auto'`) whose `selection.agents` exceeds `selection.confirmAbove`, and never when the environment variable `CRM_UNATTENDED=1` is set — the wrapper scripts export it, so an unattended run never reaches a question it has no one to answer. Do not skip the question because you believe nobody is watching, and do not ask when `needsConfirmation` is `false`: then go straight to Step 3.
 
-In a non-interactive run (nightly, CI, any invocation with no one at the keyboard to answer a prompt), never pass `--slots` or `--interactive` (the Step 4 finders are the one exception to "nothing extra runs unattended": they start in non-interactive `pr`/`branch` runs exactly as in interactive ones, because they are not agents and this restriction does not cover them), regardless of what a config file or environment variable might suggest. `crm plan` enforces the same rule independently — it exits 2 without `--interactive` — so this is belt and suspenders, not the only guard, but the instruction on this side must hold too: an unattended run must not be able to raise its own agent budget. The wrapper scripts (`scripts/review.sh`, `scripts/review.ps1`) never pass `--slots` or `--interactive` at all — that omission, not any TTY detection, is what actually keeps an unattended run from raising its own budget.
+When `needsConfirmation` is `true`, dispatch nothing yet — not the brief, not the extra finders. After the Step 1 lines, print a table with one row per entry in `selection.selected`, in Polish:
+
+| oś | części | plików na część |
+|---|---|---|
+| `{axisId}` | `{parts.length}` | `{parts[].files.length, joined with ', '}` |
+
+Then ask one question through `AskUserQuestion`, with exactly these two options in this order: `Uruchom (Rekomendowane)` — dispatch the announced budget; `Odrzuć — stary budżet` — plan again under the fixed budget. Read the reply:
+
+- **A timeout, a "proceed using your best judgment" hint, or no reply** is not an answer: never pick the recommended option on the user's behalf. Say one line in Polish — `Czekam na Twoją decyzję w sprawie budżetu — pytam ponownie.` — and ask again with the same two options.
+- **A free-text reply that unambiguously chooses one option** (e.g. `uruchom`, `odrzuć`, `stary budżet`) counts as that option.
+- **An explicit cancel** (e.g. `przerwij`, `anuluj`, `nie uruchamiaj`) ends the run: say one line in Polish — `Przegląd przerwany — nie uruchomiono żadnego agenta.` — then dispatch nothing and run no further `crm` command. The run's `plan.json` stays on disk without a ledger or a report, exactly like a rejected run's.
+- **Any other free-text reply** — a question, or a reply that could mean either option — is answered in conversation, then the same question is asked again.
+
+Nothing is dispatched until one of the two options is chosen.
+
+- **`Uruchom (Rekomendowane)`** — continue to Step 3 with this `runId` and this `selection`.
+- **`Odrzuć — stary budżet`** — run `crm plan` again with exactly the flags Step 1 used plus `--budget fixed`. It returns a **new `runId`** under the fixed algorithm (configured slots, rotation, file truncation, one part per entry); use that `runId` and its `selection` for every later `crm` call. Read the new result exactly as in Step 1 — exit codes, `empty`, the budget lines — and print them again. A fixed budget has `needsConfirmation: false`, so there is no second question. The rejected run's `plan.json` stays on disk without a ledger or a report; never pass its `runId` to `crm dispatched` or any later command.
+
+**`--budget fixed` typed by the user.** Pass `--budget fixed` to the Step 1 `crm plan` call when the user typed it in their own invocation of this skill. It needs no `--interactive`: it can only lower spend.
+
+**`--slots`.** `--slots` raises a fixed budget, so it applies to `since` and `full`, and to `working`, `branch` and `pr` only together with `--budget fixed`; without it there, `crm plan` exits 2 with `--slots applies to since and full; working, branch and pr size their own budget`. Pass `--slots <n>` to the `crm plan` call in Step 1 only when the user typed a number in their own invocation of this skill (e.g. `/code-review-master since --slots 8`, or `/code-review-master branch main --budget fixed --slots 8`). Never infer a value, never suggest one, never default one yourself — the budget line in Step 1 already tells the user what the default would review, and raising it is their call alone. When you do pass `--slots`, pass `--interactive` alongside it too — but **only** when the user typed the flag themselves in an interactive session, i.e. someone is at the keyboard to have typed `--slots` in the first place. `crm plan` refuses `--slots` without `--interactive` (exit 2), so a bare `--slots` with no flag never silently no-ops — it fails loudly instead.
+
+In a non-interactive run (nightly, CI, any invocation with no one at the keyboard to answer a prompt), never pass `--slots` or `--interactive` (the Step 4 finders are the one exception to "nothing extra runs unattended": they start in non-interactive `pr`/`branch` runs exactly as in interactive ones, because they are not agents and this restriction does not cover them), regardless of what a config file or environment variable might suggest. `crm plan` enforces the same rule independently — it exits 2 without `--interactive` — so this is belt and suspenders, not the only guard, but the instruction on this side must hold too: an unattended run must not be able to raise its own agent budget. The wrapper scripts (`scripts/review.sh`, `scripts/review.ps1`) never pass `--slots`, `--interactive` or `--budget` at all — that omission, not any TTY detection, is what actually keeps an unattended run from raising its own budget. They export `CRM_UNATTENDED=1` instead, so an unattended `working`, `branch` or `pr` run takes its automatic budget without the gate, held by `budget.max_agents` rather than by a question.
 
 ## Step 3 — wave 0 (brief)
 
@@ -87,7 +121,7 @@ Dispatch **one Haiku agent** with `<skill>/prompts/brief.md`, `{{SUMMARY_INPUT}}
 crm dispatched --run <runId> --wave brief --label brief
 ```
 
-before reading the agent's answer, not after. Do the same for **every** agent in **every** wave below, always before waiting on it. The ledger records what was *spent*, and an agent costs from the moment it starts, not from the moment it answers; logging on return would leave a hung or crashed agent unrecorded, since a return is exactly what it never produced. Be precise about what `crm finish` (Step 10) does and does not catch: it fails the run — exit 2 — when the ledger *exceeds* the announcement or names an axis the plan never selected, and it only *warns* on stderr when the ledger falls short. A short ledger does not stop the run — see Step 3b for what to do about it.
+before reading the agent's answer, not after. Do the same for **every** agent in **every** wave below, always before waiting on it. The ledger records what was *spent*, and an agent costs from the moment it starts, not from the moment it answers; logging on return would leave a hung or crashed agent unrecorded, since a return is exactly what it never produced. Be precise about what `crm finish` (Step 10) does and does not catch: it fails the run — exit 2 — when the ledger *exceeds* the announcement or names a label that is no part label of a selected entry (a one-part entry's part label is its bare `axisId`), and it only *warns* on stderr when the ledger falls short. A short ledger does not stop the run — see Step 3b for what to do about it.
 
 Keep the agent's `summary` field; it becomes `{{SUMMARY}}` in Step 4.
 
@@ -95,13 +129,13 @@ Keep the agent's `summary` field; it becomes `{{SUMMARY}}` in Step 4.
 
 An agent may hang, crash, or return output that cannot be parsed; the dispatch itself may fail before any agent starts. All four cases are handled the same way, and the first rule is the one that matters:
 
-**Never re-dispatch within a run.** The budget was announced before anything started and it does not grow afterwards — that is the whole promise. A retry is a second agent, and a run that quietly buys itself another agent when one fails is exactly the unbounded behaviour this skill exists to prevent. If an axis must be covered, start a new run: it announces its own budget, in front of the user. This is why `crm finish` (Step 10) treats a ledger exceeding the announcement as a defect with no exception — there is no legitimate way to get there.
+**Never re-dispatch within a run.** The budget was announced before anything started and it does not grow afterwards — that is the whole promise. A retry is a second agent, and a run that quietly buys itself another agent when one fails is exactly the unbounded behaviour this skill exists to prevent. If an axis or a part must be covered, start a new run: it announces its own budget, in front of the user. This is why `crm finish` (Step 10) treats a ledger exceeding the announcement as a defect with no exception — there is no legitimate way to get there.
 
-What to record depends on which wave failed:
+A failure is recorded per part, not per axis: every agent in waves 1 and 2 reviews one part, and only that part went unreviewed. What to record depends on which wave failed:
 
 - **The brief agent (wave 0).** Continue with an empty change summary and tell the user in one line, in Polish, that the brief did not return. The brief is not load-bearing: the file-to-axis assignment comes from `crm plan`, not from the brief, so its loss costs the axis agents a summary and a risk ordering, not their inputs. Nothing is marked incomplete, because no axis went unreviewed.
-- **An axis agent (wave 1).** Record that entry's `axisId`, carry it to Step 8 as `--incomplete <ids>`, and continue. The report's coverage block then names it as not reviewed — **an axis that was paid for and produced nothing must never be presented as covered.**
-- **A verification agent (wave 2).** `crm score` gives every finding no agent scored a confidence of `0` and files it under `belowThreshold`, so that axis's findings vanish from the report entirely. Record that `axisId` as incomplete too. This is the quietest of the four failures: the axis loses its findings without losing its heading, so without the marker it reads as a clean axis that nobody actually judged.
+- **An axis agent (wave 1).** Carry the failed agent's part to Step 8 as an entry of `--incomplete <ids>`, written as its part label — the label it was logged under with `crm dispatched`: the bare `axisId` for a one-part entry, `<axisId>#<n>` for one part of a split entry — and continue. Never write the bare `axisId` for one part of a split entry: an axis id marks every part of that axis as not reviewed, including the ones that came back. The report's coverage block then names the part as not reviewed (`code-quality (część 2 z 3, 12 plików)`) — **a part that was paid for and produced nothing must never be presented as covered.**
+- **A verification agent (wave 2).** `crm score` gives every finding no agent scored a confidence of `0` and files it under `belowThreshold`, so that part's findings vanish from the report entirely. Record that part label as incomplete too. This is the quietest of the four failures: the axis loses those findings without losing its heading, so without the marker it reads as a clean axis that nobody actually judged.
 
 ## Step 4 — wave 1 (axis agents)
 
@@ -122,15 +156,23 @@ Read the result. If the output cannot be parsed or the command exits non-zero, t
 
 Start them before wave 1, not after: the worker takes minutes, and starting it first lets it overlap with the agents instead of adding to the wall-clock time.
 
-For **each entry** in `selection.selected`, in a **single message** so all of them run concurrently:
+For **each part** of **each entry** in `selection.selected` — every element of the entry's `parts[]`, `selection.partCount` in all — fill `<skill>/prompts/axis.md` as follows, all parts of all entries in a **single message** so they run concurrently:
 
-- `{{AXIS_ID}}` — the entry's `axisId`.
-- `{{CHECKLIST}}` — the entry's `axes[]` checklists concatenated, each preceded by its own axis id as a heading when the entry groups more than one axis, so a grouped agent still knows which rule belongs to which axis.
+- `{{AXIS_ID}}` — the entry's `axisId`, never the part label. The agent echoes this value into every finding's `axis` field, and triage fingerprints, the report's grouping and `crm parts` all key on the axis id; a part label such as `code-quality#2` there would silently bring back every suppression recorded for that axis.
+- `{{CHECKLIST}}` — the entry's `axes[]` checklists concatenated, each preceded by its own axis id as a heading when the entry groups more than one axis, so a grouped agent still knows which rule belongs to which axis. Every part of an entry gets the same checklist.
 - `{{SUMMARY}}` — the `summary` string from wave 0.
-- `{{FILES}}` — the entry's `files`, one per line as `path (+added/-removed)`. Never paste file contents into the prompt; the agent reads each file itself with its own `Read` tool.
+- `{{FILES}}` — the part's own `files` (not the entry's), one per line as `path (+added/-removed)`. Never paste file contents into the prompt; the agent reads each file itself with its own `Read` tool.
+- `{{PART_NOTE}}` — the empty string when the entry has one part (`of: 1`). When it has more, this paragraph, with `{index}`, `{of}` and `{axisId}` taken from the part and the entry, and the paths of every file in the entry's *other* parts listed one per line:
+
+  ```
+  This is part {index} of {of} of the {axisId} axis: the files above are yours. Other agents review the axis's remaining files:
+  {path of each file in the entry's other parts, one per line}
+  Read any of them when a behaviour that crosses files needs it, but report findings only on lines of your own files.
+  ```
+
 - `{{SEVERITY_DEFAULT}}` — the entry's axis's `severity_default`. For a grouped slot, since one prompt carries more than one axis's checklist, name each axis's default alongside its checklist heading instead of filling a single value (e.g. `security: blocking by default; code-quality: suggestion by default`) — the placeholder exists to tell the agent which default applies to which checklist item, not to average them into one number.
 
-Dispatch **one Sonnet agent per entry** with `<skill>/prompts/axis.md` filled as above. **Its tool set excludes the subagent-dispatch tool**, same reasoning as Step 3. **Log the dispatch before waiting for the result** — `crm dispatched --run <runId> --wave axis --label <axisId>` — for each one, same reasoning as Step 3. If one does not come back usable, follow Step 3b.
+Dispatch **one Sonnet agent per part** with `<skill>/prompts/axis.md` filled as above. **Its tool set excludes the subagent-dispatch tool**, same reasoning as Step 3. **Log the dispatch before waiting for the result** — `crm dispatched --run <runId> --wave axis --label <part label>`, where `<part label>` is the part's `label` field (the bare `axisId` for a one-part entry, `<axisId>#<n>` otherwise) — for each one, same reasoning as Step 3. If one does not come back usable, follow Step 3b.
 
 Collect every agent's JSON array (parse the fenced block if it wrapped one) into a single array and write it to `<repo>/.claude/review/reports/<runId>-raw.json`.
 
@@ -158,9 +200,17 @@ Tell the user, in one line and in Polish, how many findings `rejectedForEvidence
 
 ## Step 6 — wave 2 (verification)
 
-For **each entry** in `selection.selected` — the same entries wave 1 used, not one call per finding — dispatch **one Haiku agent** with `<skill>/prompts/verify.md`, `{{FINDINGS}}` filled with the subset of `assemble`'s returned findings whose `axis` field equals this entry's `axisId` (every finding wave 1 produced already carries that exact string back, since `prompts/axis.md` has the agent echo `{{AXIS_ID}}` into it), carrying their assigned `id`s. An entry whose axis produced no findings still gets its agent, with an empty `{{FINDINGS}}` array — the agent returns `[]` immediately, and the wave stays at exactly `selection.selected.length` agents regardless of what wave 1 found. **One agent per axis, never one per finding**: that per-finding pattern is the specific mistake this skill exists to not repeat.
+First, after `crm assemble` and before any verifier, map the findings to parts:
 
-**Its tool set excludes the subagent-dispatch tool**, same reasoning as Step 3, batched exactly as `prompts/verify.md` expects. **Log the dispatch before waiting for the result** — `crm dispatched --run <runId> --wave verify --label <axisId>` — for each one, same reasoning as Step 3. If one does not come back usable, follow Step 3b.
+```
+crm parts --run <runId>
+```
+
+It returns `{ parts: { "<part label>": ["f-01", ...] }, unassigned: ["f-.."] }`: every finding `crm assemble` kept, assigned by its `axis` and `file` to the part whose files contain that file — a finding on a file outside its entry's parts (possible for the codex finder, or a Sonnet agent citing a neighbour's file) goes to the part holding a file with the longest shared directory prefix, ties to the lower part index, and to part 1 when no part shares any prefix (a finding with no `file` also goes to part 1). Every part label of the plan is a key, with an empty list when no finding fell to it. Never compute this mapping yourself: an assignment that drops a finding leaves it unscored, and an unscored finding vanishes with confidence `0`. When `unassigned` is non-empty — findings whose `axis` matches no selected entry — say one line in Polish naming their ids: `Uwagi bez przypisanej części: {unassigned.join(', ')} — zostają bez oceny weryfikatora.` Do not add an agent for them; they stay unscored.
+
+Then, for **each part** of each entry in `selection.selected` — the same parts wave 1 used, not one call per finding — dispatch **one Haiku agent per part** with `<skill>/prompts/verify.md`, `{{FINDINGS}}` filled with the findings from `assemble`'s returned list whose `id` is in that part's list from `crm parts`, carrying their assigned `id`s. A part with no findings still gets its agent, with an empty `{{FINDINGS}}` array — the agent returns `[]` immediately, and the wave stays at exactly `selection.partCount` agents regardless of what wave 1 found. **One agent per part, never one per finding**: that per-finding pattern is the specific mistake this skill exists to not repeat.
+
+**Its tool set excludes the subagent-dispatch tool**, same reasoning as Step 3, batched exactly as `prompts/verify.md` expects. **Log the dispatch before waiting for the result** — `crm dispatched --run <runId> --wave verify --label <part label>` — for each one, same reasoning as Step 3. If one does not come back usable, follow Step 3b.
 
 Collect every agent's JSON array into one array, write it to `<repo>/.claude/review/reports/<runId>-scores.json`, then run:
 
@@ -190,7 +240,7 @@ For each finding still in `findings.json` after Step 7, write `{title, body}` in
 crm render --run <runId> --prose <repo>/.claude/review/reports/<runId>-prose.json
 ```
 
-Add `--incomplete <ids>` (the axis ids Step 3b recorded, comma-separated) when Step 3b recorded any at all this run; omit the flag entirely otherwise. This writes `raport.md`, with an axis named by `--incomplete` marked in its coverage block as not reviewed instead of silently reading as clean.
+Add `--incomplete <ids>` (the part labels or axis ids Step 3b recorded, comma-separated) when Step 3b recorded any at all this run; omit the flag entirely otherwise. This writes `raport.md`, with everything named by `--incomplete` marked in its coverage block as not reviewed instead of silently reading as clean: a part label of a split entry as that part (`code-quality (część 2 z 3, 12 plików)`), an axis id or a one-part entry's label as the whole axis.
 
 ## Step 9 — artifact
 
@@ -202,7 +252,7 @@ Run:
 crm artifact --run <runId> --out <scratchpad>/review-<runId>.html
 ```
 
-Add `--incomplete <ids>` on exactly the same terms as Step 8 — the axis ids Step 3b recorded, comma-separated, the flag omitted entirely when there are none. `raport.md` and this artifact are two renderings of one run, and they must not disagree about coverage.
+Add `--incomplete <ids>` on exactly the same terms as Step 8 — the part labels or axis ids Step 3b recorded, comma-separated, the flag omitted entirely when there are none. `raport.md` and this artifact are two renderings of one run, and they must not disagree about coverage.
 
 `<scratchpad>` is this session's own scratch/temp directory (named in your system prompt, if one is provided) — never a path inside `<repo>`, since the file is a publishing intermediate, not a review artefact the repository should carry. This reads `findings.json`, `plan.json`, and the `prose.json` Step 8 wrote, and fills `<skill>/templates/artifact.html` with the run's data: coverage and spend restated as page chrome, one card per finding with its severity badge, its codex verdict as a second badge when one exists, the evidence quote in a horizontally-scrolling block, its Polish body, and a link into the code when the repository has a recognized GitHub remote. It also carries axis and severity filters and a live count.
 
@@ -222,7 +272,7 @@ Run:
 crm finish --run <runId>
 ```
 
-This checks the dispatch ledger recorded by every `crm dispatched` call in this run against the budget Step 1 announced, and only then sets the exit code from the gate. If the ledger holds more agents than were announced, or names an axis label the plan never selected, this exits 2 — the run is broken, and that is a defect in how this document was followed, not a review verdict. Report an exit 2 as a defect, not as "the review failed." A ledger shorter than the announced budget does not fail this step — it prints a warning to stderr instead (see Step 3), because Step 3b's `--incomplete` handling is how that case is meant to be resolved, not an error to fix after the fact.
+This checks the dispatch ledger recorded by every `crm dispatched` call in this run against the budget Step 1 announced (after a rejection in Step 2, the fixed budget announced for the new `runId`), and only then sets the exit code from the gate. If the ledger holds more agents than were announced, or names a label that is no part label of a selected entry (the labels Steps 4 and 6 logged: the bare `axisId` for a one-part entry, `<axisId>#<n>` for a part of a split one), this exits 2 — the run is broken, and that is a defect in how this document was followed, not a review verdict. Report an exit 2 as a defect, not as "the review failed." A ledger shorter than the announced budget does not fail this step — it prints a warning to stderr instead (see Step 3), because Step 3b's `--incomplete` handling is how that case is meant to be resolved, not an error to fix after the fact.
 
 On success, show the user (in Polish) the path to `raport.md` and the headline counts (findings by severity, how many codex confirmed — verdict `confirms` only; `own` findings are never counted as confirmed — and the split by source — how many findings Sonnet, codex and Semgrep each kept, as in `sources` of `findings.json`).
 
@@ -293,8 +343,8 @@ On success, show the user (in Polish) the path to `raport.md` and the headline c
 
 - **Never commit.** No mode of this skill runs `git add`, `git commit`, or `git push`; every edit — a fix, a written `config.md`, a `.gitignore` line — is left uncommitted in the working tree for the user to review and commit themselves.
 - Every subagent's tool set excludes the subagent-dispatch tool, and every prompt this skill sends also says outright not to dispatch or spawn further agents.
-- Verification is one agent per axis, never one agent per finding.
-- A non-interactive run never applies a fix and never raises the budget with `--slots`.
+- Verification is one agent per part, never one agent per finding.
+- A non-interactive run never applies a fix and never raises the budget above `max_agents`: it never passes `--slots`, and `crm plan` caps an automatic budget at `budget.max_agents`.
 - A finding without evidence found verbatim in the file is discarded by `crm assemble` before anyone reads it, never reported on the strength of its wording alone.
 - Extra finders (codex as a finder, Semgrep) run only in `pr` and `branch`, are not agents, and their findings pass `crm assemble` and wave 2 like Sonnet's.
 - Nothing reaches GitHub before the user has read the exact text: mode `send` shows the full payload and waits, and it never runs unattended.

@@ -145,6 +145,13 @@ if ($LASTEXITCODE -ne 0) {
     exit 2
 }
 
+# Unattended marker for the session below (see the comment inside the try).
+# Run as `.\review.ps1` from an interactive window, this script shares the
+# caller's process environment, so the previous value is restored in the
+# finally: a later `claude` from that window must still get the confirmation
+# gate.
+$prevUnattended = $env:CRM_UNATTENDED
+$env:CRM_UNATTENDED = '1'
 Push-Location -LiteralPath $Repo
 try {
     # --permission-prompts none: a headless run has no host to answer a
@@ -155,7 +162,8 @@ try {
     # and `crm fixable` both refuse to do either without --interactive
     # anyway (bin/crm.mjs's readSlots and its `fixable` command), but this
     # script not passing the flag in the first place is the actual
-    # enforcement, not a courtesy on top of it.
+    # enforcement, not a courtesy on top of it. CRM_UNATTENDED=1 is what makes
+    # `crm plan` skip its confirmation gate: there is nobody to answer it.
     & $ClaudeBin -p $Prompt `
         --model $Model `
         --output-format text `
@@ -167,6 +175,11 @@ try {
     $claudeExit = $LASTEXITCODE
 } finally {
     Pop-Location
+    if ($null -eq $prevUnattended) {
+        Remove-Item Env:CRM_UNATTENDED -ErrorAction SilentlyContinue
+    } else {
+        $env:CRM_UNATTENDED = $prevUnattended
+    }
 }
 
 if ($claudeExit -ne 0) {
