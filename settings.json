@@ -2,7 +2,7 @@
   "attribution": {
     "commit": ""
   },
-  "model": "fable",
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
@@ -135,6 +135,9 @@
     },
     "claude-opus-5-5": {
       "effortLevel": "xhigh"
+    },
+    "claude-fable-5-2": {
+      "effortLevel": "high"
     }
   },
   "askUserQuestionTimeout": "10m",
