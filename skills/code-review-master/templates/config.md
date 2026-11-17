@@ -1,5 +1,5 @@
 ---
-budget: { slots: 5, max_files_per_axis: 40 }
+budget: { slots: 5, max_files_per_axis: 40, confirm_above: 20, max_agents: 41, max_files_per_part: 12 }
 gate: blocking
 gate_on_disputed: true
 commands: {}

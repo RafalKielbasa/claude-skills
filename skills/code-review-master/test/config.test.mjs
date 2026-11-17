@@ -161,3 +161,29 @@ test('a semgrep image or rule pack shaped like an option is a configuration erro
   }
   assert.deepEqual(validateConfig({ settings: DEFAULT_SETTINGS, axes: axisDoc('semgrep: [p/secrets, r/a-b]').axes }), []);
 });
+
+test('defaults carry the auto-budget keys', () => {
+  assert.deepEqual(DEFAULT_SETTINGS.budget, {
+    slots: 5, max_files_per_axis: 40, confirm_above: 20, max_agents: 41, max_files_per_part: 12,
+  });
+});
+
+test('an axis may override max_files_per_part', () => {
+  const block = (extra) => `---\n---\n\n## A\n\n\`\`\`yaml\nid: a\nwhen: always\nrank: always\n${extra}\`\`\`\n\n- x\n`;
+  assert.equal(parseConfigDoc(block('max_files_per_part: 40\n')).axes[0].max_files_per_part, 40);
+  assert.equal(parseConfigDoc(block('')).axes[0].max_files_per_part, null);
+});
+
+test('bad auto-budget values are refused', () => {
+  const doc = parseConfigDoc(`---\n---\n\n## A\n\n\`\`\`yaml\nid: a\nwhen: always\nrank: always\nmax_files_per_part: 0\n\`\`\`\n\n- x\n`);
+  const axisProblems = validateConfig({ settings: DEFAULT_SETTINGS, axes: doc.axes });
+  assert.equal(axisProblems.length, 1);
+  assert.match(axisProblems[0], /max_files_per_part/);
+
+  const withBudget = (budget) => validateConfig({
+    settings: { ...DEFAULT_SETTINGS, budget: { ...DEFAULT_SETTINGS.budget, ...budget } },
+    axes: [],
+  });
+  assert.match(withBudget({ max_agents: 0 }).join('\n'), /budget\.max_agents/);
+  assert.match(withBudget({ confirm_above: 41, max_agents: 41 }).join('\n'), /confirm_above.*max_agents/);
+});

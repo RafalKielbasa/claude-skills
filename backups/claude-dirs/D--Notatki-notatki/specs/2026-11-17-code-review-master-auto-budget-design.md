@@ -7,7 +7,7 @@ Founding spec:
 below as "the founding spec"). Skill: `~/.claude/skills/code-review-master` (referred to as
 `<skill>`). Builds on the extra-finders change
 ([2026-11-12-code-review-master-extra-finders-design.md](2026-11-12-code-review-master-extra-finders-design.md)),
-whose code is built but not yet reviewed by Rafal.
+whose code is merged to `main` of `~/.claude` as `fa3f9d5`.
 
 ## 1. Intent
 
@@ -40,12 +40,12 @@ no agent is ever re-dispatched within a run. Only the formula changes.
 | Where splitting lives | `parts[]` inside the axis's `selection.selected` entry; `axisId` unchanged (variant A) |
 | D1 Rejection gate | ask only above a threshold, `budget.confirm_above` = **20 agents**; on rejection run the old fixed budget |
 | D2 Unattended runs | auto budget in `pr` / `branch` / `working` also unattended, never above `budget.max_agents` |
-| D3 Split threshold | `budget.max_files_per_part: 12`, overridable per axis; `secrets` and `debug-leftovers` split only above 40 files (`max_files_per_part: 40`) — refinement of the original `split: false`, pending Rafal's confirmation (§12) |
+| D3 Split threshold | `budget.max_files_per_part: 12`, overridable per axis; `secrets` and `debug-leftovers` split only above 40 files (`max_files_per_part: 40`) — refinement of the original `split: false`, confirmed by Rafal after the builder check |
 | D4 Modes and `--slots` | auto in `working`, `branch`, `pr`; `--slots` only in `since` and `full`, refused (exit 2) elsewhere |
 
-Interpretation recorded here, to be confirmed by Rafal at spec review: "D1 A, budżet podnieśmy do
-20" is read as `confirm_above: 20` — runs up to 20 agents start without a question; the default
-`max_agents` ceiling (§5.3) is a separate number.
+"D1 A, budżet podnieśmy do 20" means `confirm_above: 20` (confirmed by Rafal): runs up to 20
+agents start without a question; the default `max_agents: 41` ceiling (§5.3) is a separate
+number.
 
 ## 3. Goals, non-goals, anti-goals
 
@@ -325,11 +325,6 @@ Settled after the builder check, not discussed with Rafal:
 - Under the ceiling a global part-size floor rises; per-axis sizes above the floor stay (§5.3).
 - A rejected plan is never returned by `crm latest`: it selects runs by `*-findings.json`
   (`<skill>/bin/crm.mjs:770-772`), and a rejected plan writes none.
-- The plan is built on the current working tree of `<skill>`, including the extra-finders code
-  that Rafal has not reviewed yet; changes from that review may force rework in tasks touching
-  `crm finish`, `crm codex-find` and `planSemgrepJobs`.
-
-Pending Rafal's confirmation:
-
-- `confirm_above: 20` reading of "budżet podnieśmy do 20" (§2).
-- `secrets` / `debug-leftovers` split at 40 instead of never (§2 D3, §8).
+- The plan is built on `main` of `~/.claude` at or after `fa3f9d5`
+  (`feat(code-review-master): codex as a finder and Semgrep in pr/branch reviews`), which Rafal
+  reviewed and merged on 2026-11-17.

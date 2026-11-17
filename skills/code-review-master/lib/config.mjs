@@ -1,7 +1,9 @@
 import { parseYamlLite } from './yaml-lite.mjs';
 
 export const DEFAULT_SETTINGS = {
-  budget: { slots: 5, max_files_per_axis: 40 },
+  // confirm_above/max_agents bound the auto-sized budget; max_files_per_part is
+  // the default size of one reviewing part (an axis may override it).
+  budget: { slots: 5, max_files_per_axis: 40, confirm_above: 20, max_agents: 41, max_files_per_part: 12 },
   confidence_threshold: { blocking: 85, suggestion: 70, nitpick: 70 },
   gate: 'blocking',
   gate_on_disputed: true,
@@ -50,6 +52,7 @@ function sectionToAxis(heading, body) {
     group: meta.group ?? null,
     severity_default: meta.severity_default ?? 'suggestion',
     max_files: meta.max_files ?? null,
+    max_files_per_part: meta.max_files_per_part ?? null,
     tools: meta.tools ?? [],
     semgrep: meta.semgrep ?? [],
     heading,
@@ -118,6 +121,9 @@ export function validateConfig({ settings, axes }) {
     if (axis.max_files !== null && !(Number.isInteger(axis.max_files) && axis.max_files > 0)) {
       problems.push(`axis "${axis.id}" has max_files ${JSON.stringify(axis.max_files)}; use a positive integer, or omit it to inherit the default`);
     }
+    if (axis.max_files_per_part !== null && !(Number.isInteger(axis.max_files_per_part) && axis.max_files_per_part > 0)) {
+      problems.push(`axis "${axis.id}" has max_files_per_part ${JSON.stringify(axis.max_files_per_part)}; use a positive integer, or omit it to inherit the default`);
+    }
     if (!Array.isArray(axis.semgrep) || !axis.semgrep.every((p) => typeof p === 'string' && p.trim() !== '')) {
       problems.push(`axis "${axis.id}" has a semgrep value that is not a list of non-empty rule-pack strings`);
     } else {
@@ -136,6 +142,16 @@ export function validateConfig({ settings, axes }) {
   }
   if (!(Number.isInteger(settings.budget.max_files_per_axis) && settings.budget.max_files_per_axis > 0)) {
     problems.push('budget.max_files_per_axis must be a positive integer');
+  }
+  for (const key of ['confirm_above', 'max_agents', 'max_files_per_part']) {
+    if (!(Number.isInteger(settings.budget[key]) && settings.budget[key] > 0)) {
+      problems.push(`budget.${key} must be a positive integer`);
+    }
+  }
+  // At or above the ceiling every run would ask for confirmation it cannot get.
+  if (Number.isInteger(settings.budget.confirm_above) && Number.isInteger(settings.budget.max_agents)
+      && settings.budget.confirm_above >= settings.budget.max_agents) {
+    problems.push('budget.confirm_above must be lower than budget.max_agents');
   }
   // A tag-less or :latest image drifts silently between runs (see DEFAULT_SETTINGS).
   const image = settings.semgrep.image;

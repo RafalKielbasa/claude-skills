@@ -193,3 +193,15 @@ test('the extra-finders budget line follows the switches and the axes that will 
   assert.match(step1, /`when` matches at least one file of (its|their) slot/);
   assert.match(step1, /omit the whole line/i);
 });
+
+test('the global template splits secrets and debug-leftovers only above 40 files', async () => {
+  const { parseConfigDoc } = await import('../lib/config.mjs');
+  const text = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'templates', 'global.md'), 'utf8');
+  const doc = parseConfigDoc(text);
+  for (const id of ['secrets', 'debug-leftovers']) {
+    assert.equal(doc.axes.find((axis) => axis.id === id).max_files_per_part, 40, id);
+  }
+  assert.equal(doc.settings.budget.confirm_above, 20);
+  assert.equal(doc.settings.budget.max_agents, 41);
+  assert.equal(doc.settings.budget.max_files_per_part, 12);
+});

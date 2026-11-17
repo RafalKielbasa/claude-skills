@@ -1,4 +1,5 @@
 import { matchGlob, globSpecificity } from './glob.mjs';
+import { buildParts } from './parts.mjs';
 
 function wakes(axis, files) {
   if (axis.when === 'always') return true;
@@ -57,8 +58,10 @@ function rank(axes, files) {
 
 // Order matters and is the whole point: wake, assign, drop empties, only then
 // spend slots. An axis that would have received no file must not consume one.
-export function selectAxes({ axes, files, settings, state, slotsOverride = null }) {
-  const slots = slotsOverride ?? settings.budget.slots;
+export function selectAxes({ axes, files, settings, state, slotsOverride = null, budgetMode = 'fixed', unattended = false }) {
+  const auto = budgetMode === 'auto';
+  // Auto mode has no slot count; its bound is `max_agents` (spec §5.3).
+  const slots = auto ? null : slotsOverride ?? settings.budget.slots;
   const configuredCap = settings.budget.max_files_per_axis;
   // `slice(0, null)` is `slice(0, 0)`, so a misconfigured cap would hand every
   // axis an empty file list and select nothing at all — a silent no-op review.
@@ -102,30 +105,10 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null 
     return units.indexOf(a) - units.indexOf(b);
   });
 
-  const taken = ordered.slice(0, slots);
-  const left = ordered.slice(slots);
-
-  // A grouped slot reviews the union of its members' files, not the first
-  // member's, and it is truncated once — here — against the slot's own cap.
-  const selected = taken.map((unit) => {
-    const memberAxes = unit.members.map((m) => m.axis);
-    const capOf = (axis) => (Number.isInteger(axis.max_files) && axis.max_files > 0 ? axis.max_files : maxFilesDefault);
-    const cap = Math.max(...memberAxes.map(capOf));
-    const byPath = new Map();
-    for (const member of unit.members) for (const file of member.files) byPath.set(file.path, file);
-    const union = rank(memberAxes, [...byPath.values()]);
-    const kept = union.slice(0, cap);
-    const truncatedFrom = union.length > kept.length ? union.length : null;
-    return {
-      axisId: memberAxes.map((axis) => axis.id).join('+'),
-      group: unit.group,
-      axes: memberAxes,
-      // Every kept file carries the slot's truncation count, so a consumer
-      // reading one file's metadata cannot conclude the slot was complete.
-      files: kept.map((file) => ({ ...file, truncatedFrom })),
-      skippedFiles: union.slice(cap).map((file) => file.path).sort(),
-    };
-  });
+  const plan = auto
+    ? planParts(ordered, settings.budget)
+    : planSlots(ordered, slots, maxFilesDefault);
+  const { taken, left, selected } = plan;
 
   const takenIds = taken.flatMap((u) => u.members.map((m) => m.axis.id));
   const leftIds = left.flatMap((u) => u.members.map((m) => m.axis.id));
@@ -140,14 +123,108 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null 
   const known = new Set(axes.map((axis) => axis.id));
   const dormant = (state.axis_cursor ?? []).filter((id) => known.has(id) && !participated.has(id));
 
+  const partCount = selected.reduce((sum, entry) => sum + entry.parts.length, 0);
+  const agents = selected.length === 0 ? 0 : 1 + 2 * partCount;
+  const confirmAbove = settings.budget.confirm_above;
+
   return {
     selected,
     skippedOnTouch,
     emptyAfterAssignment,
     deferred: leftIds,
     slots,
-    agents: selected.length === 0 ? 0 : 1 + 2 * selected.length,
+    agents,
     truncated: selected.some((entry) => entry.skippedFiles.length > 0),
     nextAxisCursor: [...leftIds, ...dormant, ...takenIds],
+    budgetMode: auto ? 'auto' : 'fixed',
+    partCount,
+    confirmAbove,
+    maxAgents: settings.budget.max_agents,
+    partSizeFloor: plan.partSizeFloor,
+    // A fixed budget was already sized by the user; only an auto-sized run
+    // over the threshold asks, and an unattended run has no one to ask.
+    needsConfirmation: auto && agents > confirmAbove && !unattended,
   };
+}
+
+const positiveInteger = (n) => Number.isInteger(n) && n > 0;
+
+// A grouped entry reviews the union of its members' files, not the first
+// member's, ranked once across all of them.
+function unionOf(unit) {
+  const memberAxes = unit.members.map((m) => m.axis);
+  const byPath = new Map();
+  for (const member of unit.members) for (const file of member.files) byPath.set(file.path, file);
+  return {
+    axisId: memberAxes.map((axis) => axis.id).join('+'),
+    group: unit.group,
+    axes: memberAxes,
+    union: rank(memberAxes, [...byPath.values()]),
+  };
+}
+
+// Fixed budget: the first `slots` units, each truncated once — here — against
+// the entry's own cap, each reviewed as a single part.
+function planSlots(ordered, slots, maxFilesDefault) {
+  const taken = ordered.slice(0, slots);
+  const left = ordered.slice(slots);
+  const selected = taken.map((unit) => {
+    const { union, ...entry } = unionOf(unit);
+    const capOf = (axis) => (positiveInteger(axis.max_files) ? axis.max_files : maxFilesDefault);
+    const cap = Math.max(...entry.axes.map(capOf));
+    const kept = union.slice(0, cap);
+    const truncatedFrom = union.length > kept.length ? union.length : null;
+    // Every kept file carries the slot's truncation count, so a consumer
+    // reading one file's metadata cannot conclude the slot was complete.
+    const files = kept.map((file) => ({ ...file, truncatedFrom }));
+    return {
+      ...entry,
+      files,
+      skippedFiles: union.slice(cap).map((file) => file.path).sort(),
+      parts: [{ label: entry.axisId, index: 1, of: 1, files }],
+      partSize: null,
+    };
+  });
+  return { taken, left, selected, partSizeFloor: null };
+}
+
+// Auto budget (spec §5.2–§5.3): every unit, no truncation, files split into
+// parts. Over `max_agents`, parts grow under a rising global floor before any
+// unit is deferred, so coverage is traded for depth only as a last resort.
+function planParts(ordered, budget) {
+  // Fail open on a misconfigured value, as `max_files_per_axis` does: one part
+  // per entry, or no ceiling, rather than a division by null or an empty run.
+  const baseSize = positiveInteger(budget.max_files_per_part) ? budget.max_files_per_part : Infinity;
+  const ceiling = positiveInteger(budget.max_agents) ? budget.max_agents : Infinity;
+
+  // Units beyond what one part each can afford are deferred in `ordered`
+  // order, exactly where fixed mode would cut with `slots = room`. Cutting
+  // before raising the floor keeps the floor sized to the files actually
+  // reviewed; the selection is the same either way, since an overflowing
+  // run leaves every taken entry at one part.
+  const room = Math.floor((ceiling - 1) / 2);
+  const taken = ordered.slice(0, room);
+  const left = ordered.slice(room);
+
+  const plans = taken.map((unit) => {
+    const entry = unionOf(unit);
+    // The largest member size wins, mirroring how `max_files` picks a group's cap.
+    const own = entry.axes.map((axis) => axis.max_files_per_part).filter(positiveInteger);
+    return { ...entry, ownSize: own.length > 0 ? Math.max(...own) : baseSize };
+  });
+  const sizeAt = (p, floor) => Math.max(p.ownSize, floor ?? 0);
+  const partsAt = (p, floor) => Math.max(1, Math.ceil(p.union.length / sizeAt(p, floor)));
+  const countAt = (floor) => plans.reduce((sum, p) => sum + partsAt(p, floor), 0);
+
+  let floor = null;
+  while (1 + 2 * countAt(floor) > ceiling && plans.some((p) => partsAt(p, floor) > 1)) {
+    floor = floor === null ? baseSize + 1 : floor + 1;
+  }
+
+  const selected = plans.map(({ union, ownSize, ...entry }) => {
+    const partSize = sizeAt({ ownSize }, floor);
+    const files = union.map((file) => ({ ...file, truncatedFrom: null }));
+    return { ...entry, files, skippedFiles: [], parts: buildParts(entry.axisId, files, partSize), partSize };
+  });
+  return { taken, left, selected, partSizeFloor: floor };
 }

@@ -219,3 +219,164 @@ test('no configuration of axes and files can exceed the budget', () => {
     }
   }
 });
+
+// --- auto budget: parts and the ceiling ---
+
+const many = (n, prefix = 'f') => Array.from({ length: n }, (_, i) => file(`${prefix}${i}.ts`));
+const seven = () => ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((id) => axis(id, 'always'));
+const allFiles = (entry) => entry.parts.flatMap((p) => p.files.map((f) => f.path)).sort();
+
+test('fixed mode gives each entry one part labelled by its axisId', () => {
+  const out = selectAxes({ axes: seven(), files: [file('x.ts')], settings: settings(), state: state() });
+  assert.equal(out.budgetMode, 'fixed');
+  assert.equal(out.partCount, 5);
+  assert.equal(out.agents, 11);
+  for (const entry of out.selected) {
+    assert.equal(entry.parts.length, 1);
+    assert.equal(entry.parts[0].label, entry.axisId);
+    assert.equal(entry.partSize, null);
+  }
+  assert.equal(out.partSizeFloor, null);
+  assert.equal(out.needsConfirmation, false);
+});
+
+test('auto mode takes every woken unit', () => {
+  const out = selectAxes({ axes: seven(), files: [file('x.ts')], settings: settings(), state: state(), budgetMode: 'auto' });
+  assert.equal(out.budgetMode, 'auto');
+  assert.equal(out.selected.length, 7);
+  assert.deepEqual(out.deferred, []);
+  assert.equal(out.agents, 15);
+  assert.equal(out.slots, null);
+});
+
+test('an auto run under the part size has one part per entry labelled by axisId', () => {
+  const axes = ['a', 'b', 'c'].map((id) => axis(id, 'always'));
+  const out = selectAxes({ axes, files: many(12), settings: settings(), state: state(), budgetMode: 'auto' });
+  assert.equal(out.partCount, 3);
+  assert.deepEqual(out.selected.map((e) => e.parts.map((p) => p.label)), [['a'], ['b'], ['c']]);
+});
+
+test('auto mode does not truncate', () => {
+  const out = selectAxes({
+    axes: [axis('a', 'always', 'rotate', { max_files: 5 })], files: many(30),
+    settings: settings({ budget: { max_files_per_axis: 5 } }), state: state(), budgetMode: 'auto',
+  });
+  assert.equal(out.selected[0].files.length, 30);
+  assert.deepEqual(out.selected[0].skippedFiles, []);
+  assert.equal(out.truncated, false);
+  assert.ok(out.selected[0].files.every((f) => f.truncatedFrom === null));
+});
+
+test('a large axis is split by max_files_per_part', () => {
+  const out = selectAxes({ axes: [axis('a', 'always')], files: many(38), settings: settings(), state: state(), budgetMode: 'auto' });
+  const [entry] = out.selected;
+  assert.equal(entry.parts.length, 4);
+  assert.equal(entry.partSize, 12);
+  assert.equal(out.agents, 9);
+  assert.deepEqual(entry.parts.map((p) => p.label), ['a#1', 'a#2', 'a#3', 'a#4']);
+  assert.deepEqual(allFiles(entry), entry.files.map((f) => f.path).sort(), 'parts partition the entry files');
+});
+
+test('a per-axis max_files_per_part wins, largest member in a group', () => {
+  const single = selectAxes({
+    axes: [axis('secrets', 'always', 'rotate', { max_files_per_part: 40 })], files: many(38),
+    settings: settings(), state: state(), budgetMode: 'auto',
+  });
+  assert.equal(single.selected[0].parts.length, 1);
+  assert.equal(single.selected[0].partSize, 40);
+
+  const grouped = selectAxes({
+    axes: [
+      axis('narrow', 'always', 'rotate', { group: 'g', max_files_per_part: 12 }),
+      axis('wide', 'always', 'rotate', { group: 'g', max_files_per_part: 40 }),
+    ],
+    files: many(38), settings: settings(), state: state(), budgetMode: 'auto',
+  });
+  assert.equal(grouped.selected[0].partSize, 40);
+  assert.equal(grouped.selected[0].parts.length, 1);
+});
+
+test('the ceiling raises a floor before deferring', () => {
+  const axes = ['a', 'b', 'c'].map((id) => axis(id, 'always'));
+  const out = selectAxes({
+    axes, files: many(38), settings: settings({ budget: { max_agents: 13 } }), state: state(), budgetMode: 'auto',
+  });
+  assert.deepEqual(out.deferred, []);
+  assert.equal(out.selected.length, 3);
+  assert.ok(out.partSizeFloor > 12, `floor ${out.partSizeFloor}`);
+  assert.ok(out.agents <= 13, `agents ${out.agents}`);
+  for (const entry of out.selected) {
+    assert.equal(entry.files.length, 38);
+    assert.deepEqual(allFiles(entry), entry.files.map((f) => f.path).sort());
+  }
+});
+
+test('the floor leaves a larger per-axis size alone', () => {
+  const out = selectAxes({
+    axes: [axis('A', ['a/**']), axis('B', ['b/**'], 'rotate', { max_files_per_part: 40 })],
+    files: [...many(38, 'a/'), ...many(80, 'b/')],
+    settings: settings({ budget: { max_agents: 9 } }), state: state(), budgetMode: 'auto',
+  });
+  const b = out.selected.find((e) => e.axisId === 'B');
+  assert.equal(b.partSize, 40);
+  assert.ok(out.partSizeFloor !== null && out.partSizeFloor < 40, `floor ${out.partSizeFloor}`);
+  assert.ok(out.agents <= 9, `agents ${out.agents}`);
+  assert.deepEqual(out.deferred, []);
+});
+
+test('ceiling overflow with one part per entry defers the lowest-ranked units', () => {
+  const axes = [
+    axis('r1', 'always'), axis('r2', 'always'), axis('a1', 'always', 'always'),
+    axis('r3', 'always'), axis('a2', 'always', 'always'), axis('r4', 'always'),
+  ];
+  const out = selectAxes({
+    axes, files: [file('x.ts')], settings: settings({ budget: { max_agents: 7 } }), state: state(), budgetMode: 'auto',
+  });
+  assert.equal(out.selected.length, 3);
+  const ids = out.selected.map((e) => e.axisId);
+  assert.ok(ids.includes('a1') && ids.includes('a2'), `selected ${ids}`);
+  assert.equal(out.deferred.length, 3);
+  assert.equal(out.agents, 7);
+});
+
+test('ceiling overflow follows the rotation cursor exactly like fixed mode', () => {
+  const ids = ['a', 'b', 'c', 'd', 'e', 'f'];
+  const axes = ids.map((id) => axis(id, [`${id}/**`]));
+  const files = ids.map((id) => file(`${id}/1.ts`));
+  const cursor = ['d', 'e', 'f', 'a', 'b', 'c'];
+  const auto = selectAxes({
+    axes, files, settings: settings({ budget: { max_agents: 7 } }), state: state({ axis_cursor: cursor }), budgetMode: 'auto',
+  });
+  const fixed = selectAxes({
+    axes, files, settings: settings({ budget: { slots: 3 } }), state: state({ axis_cursor: cursor }),
+  });
+  assert.deepEqual(auto.selected.map((s) => s.axisId), ['d', 'e', 'f']);
+  assert.deepEqual(auto.selected.map((s) => s.axisId), fixed.selected.map((s) => s.axisId));
+  assert.deepEqual(auto.deferred, fixed.deferred);
+  assert.deepEqual(auto.nextAxisCursor, fixed.nextAxisCursor);
+});
+
+test('needsConfirmation follows confirm_above and unattended', () => {
+  const s = settings({ budget: { confirm_above: 11 } });
+  const base = { axes: seven(), files: [file('x.ts')], settings: s, state: state() };
+  const auto = selectAxes({ ...base, budgetMode: 'auto' });
+  assert.equal(auto.confirmAbove, 11);
+  assert.equal(auto.maxAgents, 41);
+  assert.equal(auto.needsConfirmation, true);
+  assert.equal(selectAxes({ ...base, budgetMode: 'auto', unattended: true }).needsConfirmation, false);
+  assert.equal(selectAxes(base).needsConfirmation, false);
+});
+
+test('no auto configuration of axes and files can exceed max_agents', () => {
+  for (const maxAgents of [3, 7, 13, 41]) {
+    for (let count = 1; count <= 25; count += 4) {
+      const axes = Array.from({ length: count }, (_, i) => axis(`ax${i}`, 'always'));
+      const out = selectAxes({
+        axes, files: many(60), settings: settings({ budget: { max_agents: maxAgents } }), state: state(), budgetMode: 'auto',
+      });
+      assert.ok(out.agents <= maxAgents, `${out.agents} agents with max ${maxAgents} and ${count} axes`);
+      assert.equal(out.agents, 1 + 2 * out.partCount);
+      assert.equal(out.selected.length + out.deferred.length, count);
+    }
+  }
+});

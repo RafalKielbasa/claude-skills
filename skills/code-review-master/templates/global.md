@@ -1,5 +1,5 @@
 ---
-budget: { slots: 5, max_files_per_axis: 40 }
+budget: { slots: 5, max_files_per_axis: 40, confirm_above: 20, max_agents: 41, max_files_per_part: 12 }
 confidence_threshold: { blocking: 85, suggestion: 70, nitpick: 70 }
 gate: blocking
 gate_on_disputed: true
@@ -42,6 +42,7 @@ id: secrets
 when: always
 rank: always
 severity_default: blocking
+max_files_per_part: 40
 semgrep: [p/secrets]
 ```
 
@@ -57,6 +58,7 @@ id: debug-leftovers
 when: always
 rank: rotate
 severity_default: nitpick
+max_files_per_part: 40
 ```
 
 - No `console.log`, `debugger`, or `print` left in production files. Test files
