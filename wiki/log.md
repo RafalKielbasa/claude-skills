@@ -1202,3 +1202,17 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Sygnał:
   - weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (nawrót) → `/evolve-skill code-review-master`;
   - agent-osi-zglasza-uwagi-bez-czytania-plikow (porażka, 3 sesje) → `/evolve-skill code-review-master`.
+
+## 2026-11-18 — sesja df9b60eb-ffa1-4f95-9570-f528900ec065 (id claude.ai niedostępny; saas app: `code-review-master pr 215`, `send` z REQUEST_CHANGES 5961975838, karta #177 → To be fixed)
+- założono: ponowny-przeglad-po-approve-podnosi-uwagi-z-zatwierdzonego-tipa (skill: code-review-master, typ: porażka) — dwie uwagi zakresu Blocking dotyczyły kodu z tipu, który Rafał zatwierdził 13.11; `crm plan` nie zna SHA ostatniego review.
+- założono: figma-z-issue-zaleznosci-lapie-regresje-ktorej-osie-nie-widza (skill: code-review-master, typ: sukces) — węzły z issue zależności (#137) ujawniły kartę w karcie, której nie widziała żadna oś.
+- nawrót: weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog — zaadresowany 2026-11-18, wraca drugi raz tego dnia: uwaga Figmy 70 „bo wizualna”.
+- dopisano dowód: crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr — plan z `main` wykryty dopiero po bramce budżetu.
+- dopisano dowód: agent-osi-zglasza-uwagi-bez-czytania-plikow — `issue-conformance` 5 z 12 plików, uwaga na nieprzeczytanym pliku.
+- dopisano dowód: brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie — rename bez `-M` opisany jako usunięcie linii; rozszerzone rozwiązanie.
+- `index.md` aktualizowany punktowo (cztery liczniki, dwa nowe wpisy); `skill-impact.md`: druga linia „Nawrót” we wpisie 2026-11-18 code-review-master. Repo `saas app` nie ma `.claude/skills/`, więc nie ma wiki repo.
+- Sygnał:
+  - weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (nawrót) → `/evolve-skill code-review-master`;
+  - agent-osi-zglasza-uwagi-bez-czytania-plikow (porażka, 4 sesje) → `/evolve-skill code-review-master`;
+  - crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr (porażka, 3 sesje) → `/evolve-skill code-review-master`;
+  - brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie (porażka, 3 sesje) → `/evolve-skill code-review-master`.

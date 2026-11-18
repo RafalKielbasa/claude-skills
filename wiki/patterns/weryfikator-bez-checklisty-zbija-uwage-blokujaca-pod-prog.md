@@ -37,6 +37,11 @@ ani do artefaktu, więc bez ręcznego odczytu `scores.json` nikt ich nie widzi.
   opis issue i listę kryteriów, choć checklista `issue-conformance` mówi „every requirement in the
   issue's description”. `crm score` odciął uwagę; wróciła z listy `belowThreshold` w Kroku 10,
   Rafał wysłał ją jako Blocking (review 5961351717). Lista spod progu zadziałała jako siatka.
+- 2026-11-18, sesja df9b60eb-ffa1-4f95-9570-f528900ec065 (id claude.ai niedostępny; saas app, PR #215, run `20261118-171748-sq9t`): uwaga Figmy `f-02` (karta w karcie, `leaderboard-message.tsx:14`) dostała 70 z
+  notą „Figma half taken as given … Scored below 90 because the defect is visual, not
+  behavioural”, choć prompt każe przyjąć połowę z Figmy i zakazuje oceniania wagi reguły. Uwagi
+  zakresu `f-01` i `f-03` dostały 80 i 78 z podobnym ważeniem. Wszystkie trzy spadły pod próg 85
+  i wróciły z listy `belowThreshold`; `f-02` poszła jako jedyny Blocking review 5961975838.
 
 ## Rozwiązanie
 W Kroku 6 dołącz do promptu weryfikacji checklistę osi (ten sam `{{CHECKLIST}}` co w fali 1)

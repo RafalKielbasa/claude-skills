@@ -30,6 +30,11 @@ z `headRefOid` PR-a. SKILL.md definiuje `<repo>` jako katalog roboczy i nie wspo
   nie z ostrzeżenia CLI. Obejście jak wyżej: `git worktree add --detach <scratchpad>/pr219/saas app
   782dab7`, kopia `state.json`, drugi `crm plan` z `--repo <worktree>`, po przebiegu kopia
   `state.json` i raportów z powrotem; pierwszy plan (`20261118-163816-6xim`) osierocony.
+- 2026-11-18, sesja df9b60eb-ffa1-4f95-9570-f528900ec065 (id claude.ai niedostępny; saas app, PR #215): `crm plan --mode pr --pr 215` z `main` (run `20261118-171545-l8ti`) dał czterem nowym plikom
+  `"size":0`. Wykryte z pamięci projektu, ale dopiero **po** bramce budżetu: Rafał zatwierdził
+  21 agentów na planie z głównego drzewa. Drugi `crm plan` w worktree `<scratchpad>/pr215/saas app`
+  na `b573633` (run `20261118-171748-sq9t`) dał ten sam wybór osi, więc zgody nie trzeba było
+  powtarzać, ale bramka wiązała się z osieroconym `runId`. Porównanie SHA musi stać przed bramką.
 
 ## Rozwiązanie
 W Kroku 1 trybu `pr`, przed `crm plan`: porównaj `git -C <repo> rev-parse HEAD` z

@@ -34,6 +34,10 @@ w odpowiedzi CLI i nie idzie do `raport.md` ani do artefaktu.
   2–5 wywołań narzędzi i 7–17 s. `unread` wypisałem użytkownikowi ręcznie (Krok 4), raport go nie
   niesie. Obie uwagi o lukach w teście (zapis przez Prismę, brak ZSCORE) dał codex jako szukający,
   nie agenci osi.
+- 2026-11-18, sesja df9b60eb-ffa1-4f95-9570-f528900ec065 (id claude.ai niedostępny; saas app, PR #215, run `20261118-171748-sq9t`, 13 plików): `issue-conformance` przeczytała 5 z 12 plików i zgłosiła `f-03` na
+  `packages/types/src/index.ts`, który ma na liście `unread`. Agenci osi robili 1–3 wywołania
+  narzędzi w 7–18 s. Regresji karty w karcie, widocznej w `leaderboard.tsx:84-86` i
+  `leaderboard-message.tsx:14`, nie zgłosiła żadna z 10 części; znalazła ją sesja przez Figmę.
 
 ## Rozwiązanie
 Hipoteza do decyzji „Reguła głębokości czytania (D3)”: `crm render` i `crm artifact` wypisują

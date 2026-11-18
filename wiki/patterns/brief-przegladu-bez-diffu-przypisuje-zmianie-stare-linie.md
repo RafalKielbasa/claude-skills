@@ -24,9 +24,18 @@ nowe; przy małej zmianie w dużym pliku zgaduje źle.
   „unverified” (to `prefix: process.env.BULLMQ_PREFIX ?? 'bull'`), i opisał wymuszenie
   `MAILERSEND_API_KEY` w `setup-env.ts` jako część zmiany, choć te linie poprzedzają PR. Wykryte
   dopiero przez własny `git diff`; podsumowanie i `risks` poprawione przed dispatchem osi.
+- 2026-11-18, sesja df9b60eb-ffa1-4f95-9570-f528900ec065 (id claude.ai niedostępny; saas app, PR #215, run `20261118-171748-sq9t`): brief opisał przeniesienie `apps/web/src/types/leaderboard.ts` →
+  `packages/types/src/leaderboard.types.ts` jako „two lines removed … the removed lines are not
+  visible”, a podmianę eksportu w barrelu jako „removed line not visible”. Dodatkowa przyczyna:
+  lista plików z `gh` podaje rename pod nową ścieżką z `+0/-2`, a `target.diffCommand` bez `-M`
+  zawężony do tej ścieżki pokazuje nowy plik z 11 liniami, więc ani brief, ani osie nie widzą
+  przeniesienia. Wykryte własnym `git diff -M --stat`; podsumowanie i `risks` poprawione przed falą 1.
 
 ## Rozwiązanie
 Dodać `{{DIFF_NOTE}}` do `prompts/brief.md` (ta sama komenda z `target.diffCommand` co w falach 1
 i 2) z poleceniem: „Opisz, co zmienił diff, nie co jest w pliku; linia spoza diffu nie należy do
 zmiany”. W Kroku 3 SKILL.md: przed dispatchem fali 1 porównaj podsumowanie z `git diff --stat`
 i małymi hunkami; rozjazd popraw w `{{SUMMARY}}` i powiedz o nim użytkownikowi jednym zdaniem.
+
+Po PR #215: `target.diffCommand` z `-M`, a `{{SUMMARY_INPUT}}` podaje rename jako `stara → nowa (R)`,
+żeby przeniesienie nie wyglądało ani na nowy plik, ani na usunięcie linii.
