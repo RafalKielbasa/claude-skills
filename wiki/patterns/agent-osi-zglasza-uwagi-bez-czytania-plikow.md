@@ -38,6 +38,13 @@ w odpowiedzi CLI i nie idzie do `raport.md` ani do artefaktu.
   `packages/types/src/index.ts`, który ma na liście `unread`. Agenci osi robili 1–3 wywołania
   narzędzi w 7–18 s. Regresji karty w karcie, widocznej w `leaderboard.tsx:84-86` i
   `leaderboard-message.tsx:14`, nie zgłosiła żadna z 10 części; znalazła ją sesja przez Figmę.
+- 2026-11-18, sesja d98f9232-24f3-40c4-8594-9bb94f77e795 (id claude.ai niedostępny; saas app, PR #218, run `20261118-180016-2qtu`, 6 plików): `code-quality`
+  przeczytała 1 z 6 plików (`use-course.ts`) i zgłosiła `f-06` na `invalidation.ts` z listy
+  `unread`; pozostałe osie miały po 2–3 nieprzeczytane pliki przy 2–5 wywołaniach narzędzi
+  w 11–20 s. `correctness` podał linię 58 dla `loading: query.isLoading,` (faktycznie 219)
+  i `crm assemble` odrzucił uwagę. Jedynego Blocking (brak testu mutacji hooka wobec kryterium
+  „Testy: każda mutacja unieważnia właściwe klucze”) nie zgłosiła żadna oś ani codex; znalazła
+  go sesja, szukając testów konsumentów (`use-complete-lesson.test.tsx` jako precedens).
 
 ## Rozwiązanie
 Hipoteza do decyzji „Reguła głębokości czytania (D3)”: `crm render` i `crm artifact` wypisują

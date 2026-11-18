@@ -1223,3 +1223,16 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Pominięte jako jednorazowe: `source.md` dla `codex` bez pełnej tabeli z bramki 1 (codex uznał zatwierdzony zakres za dodatek); świadome odstępstwo od linii self-checku o kolejności z 2026-11-18 przy dopisywaniu pozycji do stopki i rejestru zdarzeń (zabezpieczenie testem).
 - `index.md` aktualizowany punktowo (jeden licznik, jeden nowy wpis).
 - Sygnał: brak wzorców do ewolucji z tej sesji.
+
+## 2026-11-18 — sesja d98f9232-24f3-40c4-8594-9bb94f77e795 (id claude.ai niedostępny; saas app: `code-review-master pr 218` + weryfikacja nazwy gałęzi, `send` z REQUEST_CHANGES 5962758619, karta #175 → To be fixed)
+- założono: crm-artifact-tytul-z-surowego-argumentu-repo (skill: code-review-master, typ: porażka) — `crm artifact --repo .` daje „Review .”; tytuł z surowego argumentu w `bin/crm.mjs:676`.
+- dopisano dowód: crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr — pierwszy run na `main` mimo notatki w pamięci; PR bez nowych plików nie daje `size: 0`, wykrył dopiero brief.
+- dopisano dowód: brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie — także w worktree na właściwym tipie brief opisał istniejące klucze jako zmianę.
+- dopisano dowód: agent-osi-zglasza-uwagi-bez-czytania-plikow — `code-quality` 1 z 6 plików, uwaga na nieprzeczytanym pliku; jedyny Blocking znalazła sesja.
+- dopisano dowód: ustalenie-w-review-potwierdzone-sonda — sonda TanStack obaliła K2 przed POST-em, ale po bramce decyzji (sukces połowiczny); rozwiązanie rozszerzone o „sonda przed bramką”.
+- Pominięte jako jednorazowe: weryfikacja nazwy gałęzi wobec `README.md:235` (zrobiona ręcznie, bez wzorca w skillu), odrzucenie f-06 mimo reguły „duplikat = Blocking” (nazwane wpisy rejestru wg kryterium issue).
+- `index.md` aktualizowany punktowo (cztery liczniki, jeden nowy wpis). Repo `saas app` nie ma `.claude/skills/`, więc nie ma wiki repo.
+- Sygnał:
+  - crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr (porażka, 4 sesje) → `/evolve-skill code-review-master`;
+  - brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie (porażka, 4 sesje) → `/evolve-skill code-review-master`;
+  - agent-osi-zglasza-uwagi-bez-czytania-plikow (porażka, 5 sesji) → `/evolve-skill code-review-master`.

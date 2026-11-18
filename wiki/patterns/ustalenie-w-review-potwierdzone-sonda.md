@@ -46,6 +46,13 @@ jednocześnie najtańszym możliwym sprawdzeniem.
   decyzja o operacji na historii (trzeci dowód, trzecia sesja).
 - 2026-09-11, sesja session_01YVYBimtiCfF3SS1QHH4Cvi: recenzent Tasków 4+4b przeliczył hasz sprzed zmiany własnym uruchomieniem, przepuścił eksportowane `usunUwagi` przez 33 kształty wejścia i przez wszystkie 11 plików `scenariusz.md` w `kursy/`. Rozstrzygający argument nie był w diffie: wszystkie 12 prawdziwych znaczników jedynej lekcji używającej tej funkcji siedzi w kształcie, który odrzucona wersja poprawki psuła.
 - 2026-10-16, sesja 1506ab90-7988-4231-ab1a-6beb3e2c2db1: recenzenci kolejki do konta kursu pisali sondy w scratchpadzie (`probe.mjs`…`probe5.mjs`, `stress-worker.mjs`), uruchamiające prawdziwe procesy CLI na tymczasowych katalogach `dane`. Każde Important przyszło z odtworzonym przypadkiem: `fs.renameSync` → `EPERM` przy czytelniku trzymającym `state.json` (240 błędów w pętli), `station-leave` cofnięty po jednym odpytaniu, kaskada „L2: exit 3, L3: exit 3, L4: exit 3”. Te same sondy wróciły jako test odbioru każdej fali poprawek („A gives one exit 3 instead of 3”).
+- 2026-11-18, sesja d98f9232-24f3-40c4-8594-9bb94f77e795 (id claude.ai niedostępny; saas app, PR #218): uwaga K2 („Ponów” bez stanu ładowania, bo w stanie
+  `error` `isLoading` ma być `false`) poszła do bramki decyzji jako kandydat na Blocking
+  z dopiskiem „Zakładam”, a Rafał wybrał „D2 A”. Sonda `retry-probe.mjs` na
+  `@tanstack/query-core` 5.102.8, uruchomiona dopiero przed wysyłką, dała
+  `during retry {"status":"pending",…,"isLoading":true}`, więc uwagę wycofałem przed POST-em.
+  Tę samą fałszywą semantykę przyjęli agent osi `correctness` i weryfikator `f-02`. Sukces
+  połowiczny: sonda uratowała review, ale decyzja użytkownika zapadła na niesprawdzonej przesłance.
 
 ## Rozwiązanie
 Ustalenie o zasobie zewnętrznym (bucket, kolejka, endpoint, uprawnienie) przed
@@ -56,3 +63,7 @@ użytkownika, sonda i jej dosłowny wynik idą w pierwszej odpowiedzi, nie po
 sporze. Sonda musi być odczytem — jeśli sprawdzenie wymagałoby mutacji,
 podaj komendę użytkownikowi zamiast ją uruchamiać. Cytat z dokumentacji zostaje
 w komentarzu jako wskazanie intencji projektu, obok wyniku, nie zamiast niego.
+
+Twierdzenie o semantyce biblioteki albo frameworka, na którym stoi waga uwagi, sondujesz przed
+bramką decyzji, nie dopiero przed wysyłką: użytkownik rozstrzyga wagę uwagi, nie prawdziwość
+jej przesłanki.

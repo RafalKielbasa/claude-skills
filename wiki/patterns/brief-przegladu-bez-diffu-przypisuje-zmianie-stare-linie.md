@@ -30,6 +30,12 @@ nowe; przy małej zmianie w dużym pliku zgaduje źle.
   lista plików z `gh` podaje rename pod nową ścieżką z `+0/-2`, a `target.diffCommand` bez `-M`
   zawężony do tej ścieżki pokazuje nowy plik z 11 liniami, więc ani brief, ani osie nie widzą
   przeniesienia. Wykryte własnym `git diff -M --stat`; podsumowanie i `risks` poprawione przed falą 1.
+- 2026-11-18, sesja d98f9232-24f3-40c4-8594-9bb94f77e795 (id claude.ai niedostępny; saas app, PR #218, run `20261118-180016-2qtu`, worktree na właściwym tipie
+  `9d7c7e2`): brief przypisał PR-owi `invalidateAfterLessonComplete` oraz klucze
+  `courseProgress` i `completedLessons` („keys.ts gains courseProgress and completedLessons”),
+  które istniały na `main`; PR dodał `creatorCourse` i dziewięć invalidatorów kursu twórcy.
+  Opis zawartości pliku zamiast diffu także wtedy, gdy pliki na dysku są właściwe. Podsumowanie
+  i `risks` napisane od nowa z własnego `git diff` przed falą 1.
 
 ## Rozwiązanie
 Dodać `{{DIFF_NOTE}}` do `prompts/brief.md` (ta sama komenda z `target.diffCommand` co w falach 1

@@ -35,6 +35,13 @@ z `headRefOid` PR-a. SKILL.md definiuje `<repo>` jako katalog roboczy i nie wspo
   21 agentów na planie z głównego drzewa. Drugi `crm plan` w worktree `<scratchpad>/pr215/saas app`
   na `b573633` (run `20261118-171748-sq9t`) dał ten sam wybór osi, więc zgody nie trzeba było
   powtarzać, ale bramka wiązała się z osieroconym `runId`. Porównanie SHA musi stać przed bramką.
+- 2026-11-18, sesja d98f9232-24f3-40c4-8594-9bb94f77e795 (id claude.ai niedostępny; saas app, PR #218): `crm plan --mode pr --pr 218` z `main` (run
+  `20261118-175848-qw1p`), a po nim od razu brief i szukający, mimo notatki w pamięci projektu
+  „Obejście checkoutu: `git worktree add --detach`”. PR zmieniał tylko istniejące pliki, więc plan
+  nie miał żadnego `"size":0` (`use-course.ts` 5159 B z `main` zamiast 6017 B z tipa); jedyny
+  sygnał dał brief: „the on-disk files do not match the stated diff”. Koszt: 1 agent briefu
+  i przerwany codex-find (`taskkill /T`); drugi plan w worktree `<scratchpad>/pr218/saas app`
+  (run `20261118-180016-2qtu`).
 
 ## Rozwiązanie
 W Kroku 1 trybu `pr`, przed `crm plan`: porównaj `git -C <repo> rev-parse HEAD` z
@@ -44,3 +51,7 @@ w dzielonym drzewie, patrz review-przez-checkout-zabiera-drzewo-uzytkownika). Do
 sam kończy się kodem 2, gdy `HEAD` ≠ `headRefOid`, zamiast planować na plikach o rozmiarze 0.
 Po przebiegu w worktree powiedz wprost, że `state.json` jest tam zmodyfikowany i nie należy do
 commitów PR-a.
+
+`size: 0` nie jest wystarczającym sygnałem: PR, który tylko zmienia istniejące pliki, planuje się
+na wersjach z `main` o niezerowych rozmiarach (PR #218). Porównanie `HEAD` z `headRefOid` musi być
+twardym warunkiem w `crm plan`, nie heurystyką z podglądu planu.
