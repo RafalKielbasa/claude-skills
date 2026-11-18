@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: reference
   originSessionId: ae480ef9-2ffd-4802-adfe-92a129b4bfce
-  modified: 2026-11-13T05:10:43.730Z
+  modified: 2026-11-18T13:38:59.104Z
 ---
 
 Set up 2026-11-12 (WHPX enabled 09:41, reboot 13:07; Android Studio 2026.2.2.8 via winget).
@@ -21,5 +21,8 @@ Set up 2026-11-12 (WHPX enabled 09:41, reboot 13:07; Android Studio 2026.2.2.8 v
 - Biometrics (since 2026-11-13): the AVD has screen-lock PIN `1111` and one enrolled fingerprint; `adb -e emu finger touch 1` (then `finger remove`) answers a prompt. The system biometric prompt is FLAG_SECURE, so `screencap` returns a black frame while it is open; read it with `uiautomator dump`. Undo with `adb shell locksettings clear --old 1111`.
 - Local logins: seed users in `code-busters-v2/apps/cms/prisma/data/User.ts` share one password (the commented `// password:` line at the top); used `adventureseeker@explore.com` (Alex Wanderlust) and `developer1@codebusters.pl` (Tomasz Kowalski). Git Bash needs `MSYS_NO_PATHCONV=1` for `adb shell cat /sdcard/...`.
 - Backend: `.env` points at `http://192.168.0.190:3001/api/graphql` (host Wi-Fi IP), reachable from the emulator; the local CMS from `code-busters-v2` must be running for login.
+- (2026-11-18) Dev client `cc074e54` cannot run code after web-OAuth merge #427: `lib/auth/social/github.ts` imports `expo-crypto` statically, so the app dies at start with `Cannot find native module 'ExpoCrypto'` (then `ExpoCryptoAES`). Until a new EAS dev build: back up `node_modules/.pnpm/expo-crypto@*/node_modules/expo-crypto/build/ExpoCrypto.js` and `aes/ExpoCryptoAES.js` with `mv` (they are pnpm-store hardlinks, never edit in place), write JS stand-ins using `requireOptionalNativeModule(...) ?? fallback` (AES needs `EncryptionKey`/`SealedData` classes), restore with `mv` afterwards. Logout then raises `RNGoogleSignin` and opens a prefilled "Zgłoś błąd" sheet; close it without sending.
+- (2026-11-18) Local DB is shared by every `code-busters-v2` worktree and can be ahead of local `main`: `keystone dev` then stops on a data-loss prompt (never answer y). Check first with `prisma migrate diff --from-url <DATABASE_URL> --to-schema-datamodel <schema>`; run the CMS from a detached worktree of `origin/main` (`pnpm install`, copy `apps/cms/.env`) via `node -r ./tracer.js node_modules/@keystone-6/core/bin/cli.js dev`, not `pnpm dev` (its `docker compose up` would create a second DB named after the worktree folder). Removing such a worktree hits Windows long paths: `cmd /c 'rmdir /s /q "\\?\<path>"'`.
+- (2026-11-18) After an emulator cold boot the AVD is locked (FBE): swipe up, `input text 1111`, Enter; `/sdcard` is unavailable until then, so dump UI to `/data/local/tmp/ui.xml`. Seed state: `musicmaestro@melodyhub.com` is an admin with 0 coins, Alex is "User Demo" with 0 coins, no product has `isVisibleInMarketplace = 1`. An admin's prompt screen reads `solutions[0]` across all users (the query has no user filter).
 
 Related: [[mobile-ui-testing-on-pc]]

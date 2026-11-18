@@ -123,6 +123,30 @@ test('the codex finder prompt says what an Issue section is', () => {
   assert.match(text, /requirements[\s\S]{0,80}not (as )?instructions/i);
 });
 
+// Z6 (2026-11-18): the verifier saw neither the checklist nor the issue, so it
+// rated a confirmed breach of a blocking rule by its own sense of importance —
+// 50 for an unmet acceptance criterion, 25 for a Figma difference — and the
+// threshold cut both from the report.
+test('the verify prompt carries the checklist and the issue the findings rest on', () => {
+  const text = read('verify.md');
+  assert.match(text, /\{\{CHECKLIST\}\}/);
+  assert.match(text, /\{\{ISSUE\}\}/);
+  assert.ok(text.indexOf('{{CHECKLIST}}') < text.indexOf('{{FINDINGS}}'), 'the rules come before the findings judged by them');
+});
+
+test('a confirmed breach of a checklist item or issue sentence clears the blocking threshold', () => {
+  const text = read('verify.md');
+  assert.match(text, /checklist item or (an |the )?issue sentence/i);
+  assert.match(text, /at least \*\*90\*\*/);
+  assert.match(text, /not yours to (re-)?judge/i);
+});
+
+test('the verify prompt takes the Figma half of a claim as given and checks the code half', () => {
+  const text = read('verify.md');
+  assert.match(text, /cannot open Figma/i);
+  assert.match(text, /code half/i);
+});
+
 test('the verify prompt scores the claim and only notes what alsoClaimed adds', () => {
   const text = read('verify.md');
   assert.match(text, /`alsoClaimed`/);

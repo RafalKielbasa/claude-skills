@@ -426,7 +426,7 @@
     // wrong. Mirrors raport.md's "Nie przejrzano" line.
     var incompleteLine = document.getElementById('incomplete-line');
     if (payload.incomplete && payload.incomplete.length > 0) {
-      incompleteLine.textContent = 'Not reviewed (agent returned nothing): ' + payload.incomplete.join(', ') + '.';
+      incompleteLine.textContent = 'Not reviewed (agent returned nothing, or read no file): ' + payload.incomplete.join(', ') + '.';
       incompleteLine.hidden = false;
     }
 

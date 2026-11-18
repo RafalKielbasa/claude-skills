@@ -330,6 +330,13 @@ test('the issue reaches the plan and the axis that needs it', () => {
   assert.match(step4, /\{\{DIFF_NOTE\}\}[\s\S]{0,300}`target\.diffCommand`/);
 });
 
+// Z6: wave 2 judges a finding against the same rules wave 1 found it by.
+test('wave 2 is given the checklist and the issue of the part it verifies', () => {
+  const step6 = section('## Step 6 — wave 2', '## Step 7 — codex');
+  assert.match(step6, /\{\{CHECKLIST\}\}[\s\S]{0,200}Step 4/);
+  assert.match(step6, /\{\{ISSUE\}\}[\s\S]{0,200}Step 4/);
+});
+
 test('views named by the issue are checked in Figma by the session itself', () => {
   const figma = section('## Step 4b — Figma', '## Step 5 — assemble');
   assert.match(figma, /yourself/i);

@@ -89,7 +89,15 @@ test('an axis whose agent never returned is named as not reviewed', () => {
     selection, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
     incomplete: ['security'],
   });
-  assert.match(md, /\*\*Nie przejrzano\*\* \(agent nie zwrócił wyniku\): security\./);
+  // Both ways a part ends up here are named: no usable reply, and a reply with
+  // no finding and no file read (`crm collect`).
+  assert.match(md, /\*\*Nie przejrzano\*\* \(agent nie zwrócił wyniku albo nie przeczytał żadnego pliku\): security\./);
+});
+
+test('the artifact names both ways a part goes unreviewed, like the report', async () => {
+  const { readFileSync } = await import('node:fs');
+  const page = readFileSync(new URL('../templates/artifact.html', import.meta.url), 'utf8');
+  assert.match(page, /'Not reviewed \(agent returned nothing, or read no file\): '/);
 });
 
 // A report that cries breakage when nothing is broken teaches its reader to

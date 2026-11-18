@@ -142,7 +142,10 @@ function header({ run, selection, codexStatus, incomplete, findings, finders }) 
       + `+ ${verifyText}).`);
   // An axis whose agent hung, crashed, or returned garbage was still paid for
   // — it must never read as covered just because nothing else went wrong.
-  if (incomplete.length > 0) lines.push(`**Nie przejrzano** (agent nie zwrócił wyniku): ${incomplete.join(', ')}.`);
+  // Two ways in: no usable reply, or a reply with no finding and no file read.
+  if (incomplete.length > 0) {
+    lines.push(`**Nie przejrzano** (agent nie zwrócił wyniku albo nie przeczytał żadnego pliku): ${incomplete.join(', ')}.`);
+  }
   // Each status says what actually happened. Telling the reader "niedostępny"
   // when codex was merely switched off reports a breakage that is not there,
   // in a document whose only job is to be trustworthy about what it checked.
