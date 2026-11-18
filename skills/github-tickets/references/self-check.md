@@ -106,6 +106,18 @@ says so. Lines marked with a date came from a finding on that date.
       "Zależności". "Whichever lands second rebases" is not an order: in wave 1
       codex found six such pairs (search query, tenant URL helper, query keys,
       course delete) that the drafts left to chance.
+- [ ] **(2026-11-18)** A claim that something does not exist ("ds has no X",
+      "the list has no author field", "there is no such page") is checked by
+      meaning, not by one name in one place: grep the synonyms (author,
+      instructor, lecturer) and every library the repository keeps (the old
+      `packages/ui/src/components` next to `ds`), and look for the precedent
+      that live code already uses for the missing thing. In DT-197 and DT-198
+      both such claims were false (brand icons via the kept `SocialmediaIcon`
+      in `InstructorPanel`; the course author is `instructor`), and only codex
+      caught them.
+- [ ] **(2026-11-18)** A URL path named in the body matches the route tree,
+      dynamic segments included: `/checkout/<id>`, not `/checkout`, when only
+      `checkout/[id]/page.tsx` exists.
 
 ## Per batch
 

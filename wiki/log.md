@@ -1216,3 +1216,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
   - agent-osi-zglasza-uwagi-bez-czytania-plikow (porażka, 4 sesje) → `/evolve-skill code-review-master`;
   - crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr (porażka, 3 sesje) → `/evolve-skill code-review-master`;
   - brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie (porażka, 3 sesje) → `/evolve-skill code-review-master`.
+
+## 2026-11-18 — sesja ad61063b-44ca-44a1-9bd6-fb37945d43c8 (id claude.ai niedostępny; code-busters-v2: `github-tickets`, uwagi Bartka 17-23 → DT-195…DT-202, devstock-org/devstock-team#1035–#1042)
+- założono: twierdzenie-o-braku-sprawdzone-jedna-nazwa (skill: github-tickets, typ: porażka, zaadresowany 2026-11-18) — DT-197 i DT-198 ogłaszały brak ikon marek i pola autora; oba istniały (`SocialmediaIcon`, `instructor`), złapał `codex`. Dwie linie z 2026-11-18 dopisane do `references/self-check.md` (brak po znaczeniu; adres względem drzewa tras z segmentami dynamicznymi).
+- dopisano dowód: paczka-dt-przez-gh-create-i-ensure — osiem DT przez `gh` + `ensure`, osoba tylko przez `assign` po decyzji z bramki 1.
+- Pominięte jako jednorazowe: `source.md` dla `codex` bez pełnej tabeli z bramki 1 (codex uznał zatwierdzony zakres za dodatek); świadome odstępstwo od linii self-checku o kolejności z 2026-11-18 przy dopisywaniu pozycji do stopki i rejestru zdarzeń (zabezpieczenie testem).
+- `index.md` aktualizowany punktowo (jeden licznik, jeden nowy wpis).
+- Sygnał: brak wzorców do ewolucji z tej sesji.

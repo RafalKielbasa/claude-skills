@@ -28,6 +28,11 @@ którym sesja pracuje. Statusy, rodzic i brak assigneeów zgadzały się z plane
   assignee `RafalKielbasa` (zgodnie z ramą zaakceptowaną przez Rafała), ale sesja przypięta do issue, którego nie
   wykona. Zostawiłem tam ślad o założeniu, więc przypięcie nie jest puste, tylko zbędne. Reguła „`create` dla
   pojedynczego issue z karty »Nowe issue«” nie rozróżnia issue pracy sesji od issue dla kogoś na później.
+- 2026-11-18, sesja ad61063b-44ca-44a1-9bd6-fb37945d43c8 (id claude.ai niedostępny; uwagi Bartka 17-23 do
+  landingu): DT-195…DT-202 (#1035–#1042) przez `gh issue create --label dev --label size/<S>`, potem
+  `ensure --status backlog` (wszystkie `steps: []`, projekt sam dodał karty w Backlogu), osoba tylko na #1035
+  przez `assign` po decyzji Rafała z bramki 1 (D3), zależności natywne `blocked_by` przez `gh api`, przypięcie
+  sesji tylko do #1023 (DT-184). Odczyt po wysyłce zgodny z planem we wszystkich ośmiu.
 
 ## Rozwiązanie
 Paczka nowych DT: numer sam (krok 1 `github-tickets`), `gh issue create --label <domena> --label size/<S>` bez assignee, potem `board-tracker ensure --ref <ref> --status <state> --epic <n>`, a `bind` tylko dla issue, nad którym sesja pracuje. `board-tracker create` zostaw dla pojedynczego issue z karty „Nowe issue”.
