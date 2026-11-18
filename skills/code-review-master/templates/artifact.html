@@ -300,6 +300,8 @@
     <p id="truncated-line" hidden></p>
     <p id="spend-line"></p>
     <p id="incomplete-line" hidden></p>
+    <p id="unread-line" hidden></p>
+    <p id="diff-only-line" hidden></p>
     <p id="codex-line" hidden></p>
     <div id="finder-lines"></div>
     <p id="suppressed-line" hidden></p>
@@ -428,6 +430,24 @@
     if (payload.incomplete && payload.incomplete.length > 0) {
       incompleteLine.textContent = 'Not reviewed (agent returned nothing, or read no file): ' + payload.incomplete.join(', ') + '.';
       incompleteLine.hidden = false;
+    }
+
+    // Mirrors raport.md's coverage lines: an unopened file is not a clean one.
+    var coverage = Array.isArray(payload.coverage) ? payload.coverage : [];
+    var unread = coverage.filter(function (c) { return !c.incomplete && c.unread && c.unread.length > 0; });
+    if (unread.length > 0) {
+      var unreadLine = document.getElementById('unread-line');
+      unreadLine.textContent = 'Not opened by the axis agent: ' + unread.map(function (c) {
+        return c.label + ' - ' + c.unread.length + ' file' + (c.unread.length === 1 ? '' : 's')
+          + ' (' + c.unread.join(', ') + ')';
+      }).join('; ') + '.';
+      unreadLine.hidden = false;
+    }
+    var diffOnly = coverage.filter(function (c) { return c.diffOnly; }).map(function (c) { return c.label; });
+    if (diffOnly.length > 0) {
+      var diffOnlyLine = document.getElementById('diff-only-line');
+      diffOnlyLine.textContent = 'Reviewed from the diff only (findings, no file read): ' + diffOnly.join(', ') + '.';
+      diffOnlyLine.hidden = false;
     }
 
     // Each status says what actually happened — the same distinctions

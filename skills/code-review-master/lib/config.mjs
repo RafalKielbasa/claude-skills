@@ -34,6 +34,9 @@ const SEVERITIES = new Set(['blocking', 'suggestion', 'nitpick']);
 // `issue`: the axis checks the change against the task it implements, so it
 // runs only when the run carries the text of at least one issue.
 const NEEDS = new Set(['issue']);
+// `search`: the checklist is answered by searching the change, not by reading
+// each file, so an unopened file is no gap in that axis's review.
+const READS = new Set(['files', 'search']);
 
 function splitFrontmatter(text) {
   const match = /^---\r?\n([\s\S]*?)\r?\n?---\r?\n?/.exec(text);
@@ -60,6 +63,7 @@ function sectionToAxis(heading, body) {
     semgrep: meta.semgrep ?? [],
     // What the run must carry for this axis to have anything to check.
     needs: meta.needs ?? [],
+    reads: meta.reads ?? 'files',
     heading,
     checklist,
   };
@@ -134,6 +138,9 @@ export function validateConfig({ settings, axes }) {
     const needs = axis.needs ?? [];
     if (!Array.isArray(needs) || !needs.every((n) => NEEDS.has(n))) {
       problems.push(`axis "${axis.id}" has needs ${JSON.stringify(needs)}; the only supported value is [issue]`);
+    }
+    if (!READS.has(axis.reads ?? 'files')) {
+      problems.push(`axis "${axis.id}" has reads ${JSON.stringify(axis.reads)}; expected files or search`);
     }
     if (!Array.isArray(axis.semgrep) || !axis.semgrep.every((p) => typeof p === 'string' && p.trim() !== '')) {
       problems.push(`axis "${axis.id}" has a semgrep value that is not a list of non-empty rule-pack strings`);

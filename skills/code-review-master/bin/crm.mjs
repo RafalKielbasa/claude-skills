@@ -128,6 +128,12 @@ function readFinders(repo, runId) {
   return existsSync(path) ? readJson(path) : null;
 }
 
+// Written by `crm collect`; a run collected before coverage.json existed has none.
+function readCoverage(repo, runId) {
+  const path = reportPath(repo, runId, 'coverage.json');
+  return existsSync(path) ? readJson(path) : null;
+}
+
 // Same contract for caller-supplied paths. A wave agent that failed to write
 // its output is a broken run, not a failed gate, and must not exit 1.
 function readInputFile(path, flag) {
@@ -299,6 +305,8 @@ const COMMANDS = {
     if (unknownLabels.length > 0) fail(`replies name parts the plan did not select: ${unknownLabels.join(', ')}`);
     const raw = reportPath(repo, args.run, 'raw.json');
     writeJson(raw, findings);
+    // `crm render` and `crm artifact` list what each part's agent never opened.
+    writeJson(reportPath(repo, args.run, 'coverage.json'), coverage);
     return { raw, findings: findings.length, incomplete, coverage };
   },
 
@@ -617,6 +625,7 @@ const COMMANDS = {
       codexStatus: data.codexStatus ?? 'skipped', remote: gitRemote(repo),
       incomplete: describeIncomplete(plan.selection.selected, incomplete, 'pl'),
       finders: readFinders(repo, args.run),
+      coverage: readCoverage(repo, args.run),
     });
     const out = reportPath(repo, args.run, 'raport.md');
     mkdirSync(dirname(out), { recursive: true });
@@ -686,6 +695,7 @@ const COMMANDS = {
         incomplete: describeIncomplete(plan.selection.selected, incomplete, 'en'),
         codexStatus: data.codexStatus ?? 'skipped',
         finders: readFinders(repo, args.run),
+        coverage: readCoverage(repo, args.run),
       }));
     mkdirSync(dirname(args.out), { recursive: true });
     writeFileSync(args.out, page, 'utf8');

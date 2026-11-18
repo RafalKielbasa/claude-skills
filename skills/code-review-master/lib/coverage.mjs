@@ -25,6 +25,8 @@ export function collectReplies(selected, replies) {
   const known = new Set();
   for (const entry of selected) {
     const parts = entry.parts ?? [{ label: entry.axisId, index: 1, of: 1, files: entry.files ?? [] }];
+    // A grouped entry counts as search-only only when every member axis is.
+    const searchOnly = (entry.axes ?? []).length > 0 && entry.axes.every((a) => a.reads === 'search');
     for (const part of parts) {
       known.add(part.label);
       const reply = readReply(replies[part.label]);
@@ -34,13 +36,17 @@ export function collectReplies(selected, replies) {
       // No findings and no file read: nothing shows the part was reviewed, and
       // it must not read as clean. A part with findings stands on their
       // evidence, which `assemble` checks against the files.
-      if (reply.findings.length === 0 && read.size === 0) incomplete.push(part.label);
+      const unreviewed = reply.findings.length === 0 && read.size === 0;
+      if (unreviewed) incomplete.push(part.label);
       coverage.push({
         label: part.label,
         read: read.size,
         // A deleted file has no content to open (size 0 in the plan).
-        unread: part.files.filter((f) => f.size > 0 && !read.has(f.path)).map((f) => f.path),
+        unread: searchOnly ? [] : part.files.filter((f) => f.size > 0 && !read.has(f.path)).map((f) => f.path),
         searches: reply.searches.length,
+        // Findings with no file opened came from the diff alone.
+        diffOnly: !searchOnly && reply.findings.length > 0 && read.size === 0,
+        incomplete: unreviewed,
       });
     }
   }

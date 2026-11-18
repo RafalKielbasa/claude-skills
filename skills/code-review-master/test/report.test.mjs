@@ -94,6 +94,31 @@ test('an axis whose agent never returned is named as not reviewed', () => {
   assert.match(md, /\*\*Nie przejrzano\*\* \(agent nie zwrócił wyniku albo nie przeczytał żadnego pliku\): security\./);
 });
 
+// D3: an unopened file must not read as a clean one.
+test('coverage lines name unread files and diff-only parts, skipping incomplete ones', () => {
+  const md = renderReport({
+    run: { id: 'r1', mode: 'pr', base: 'x', head: 'y' },
+    selection, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+    coverage: [
+      { label: 'code-quality', read: 1, unread: ['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts'], searches: 2, diffOnly: false, incomplete: false },
+      { label: 'web-frontend', read: 3, unread: ['k.ts'], searches: 1, diffOnly: false, incomplete: false },
+      { label: 'issue-conformance', read: 0, unread: ['a.ts'], searches: 1, diffOnly: true, incomplete: false },
+      { label: 'debug-leftovers', read: 0, unread: ['a.ts'], searches: 0, diffOnly: false, incomplete: true },
+    ],
+  });
+  assert.match(md, /\*\*Nieprzeczytane przez agenta osi:\*\* code-quality — 5 plików \(a\.ts, b\.ts, c\.ts, d\.ts, e\.ts\); web-frontend — 1 plik \(k\.ts\); issue-conformance — 1 plik \(a\.ts\)\./);
+  assert.match(md, /\*\*Przejrzane tylko diffem\*\* \(uwagi bez przeczytanego pliku\): issue-conformance\./);
+  assert.equal(/debug-leftovers —/.test(md), false, 'an incomplete part is already named as not reviewed');
+});
+
+test('a run without coverage.json says nothing about unread files', () => {
+  const md = renderReport({
+    run: { id: 'r1', mode: 'pr', base: 'x', head: 'y' },
+    selection, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
+  });
+  assert.equal(/Nieprzeczytane|tylko diffem/.test(md), false);
+});
+
 test('the artifact names both ways a part goes unreviewed, like the report', async () => {
   const { readFileSync } = await import('node:fs');
   const page = readFileSync(new URL('../templates/artifact.html', import.meta.url), 'utf8');

@@ -100,7 +100,24 @@ function sourcesLine(findings) {
     + `wskazane przez więcej niż jedno źródło: ${multi}.`;
 }
 
-function header({ run, selection, codexStatus, incomplete, findings, finders }) {
+// A file the axis agent never opened is not a file it found clean. `null`:
+// a run from before `crm collect` wrote coverage.json, nothing to say.
+function coverageLines(coverage) {
+  if (!Array.isArray(coverage)) return [];
+  const lines = [];
+  const unread = coverage.filter((c) => !c.incomplete && (c.unread ?? []).length > 0);
+  if (unread.length > 0) {
+    lines.push(`**Nieprzeczytane przez agenta osi:** ${unread.map((c) => `${c.label} — ${c.unread.length} `
+      + `${plural(c.unread.length, 'plik', 'pliki', 'plików')} (${c.unread.join(', ')})`).join('; ')}.`);
+  }
+  const diffOnly = coverage.filter((c) => c.diffOnly).map((c) => c.label);
+  if (diffOnly.length > 0) {
+    lines.push(`**Przejrzane tylko diffem** (uwagi bez przeczytanego pliku): ${diffOnly.join(', ')}.`);
+  }
+  return lines;
+}
+
+function header({ run, selection, codexStatus, incomplete, findings, finders, coverage }) {
   const chosen = selection.selected.map((s) => s.axisId);
   // `?? []`: plan.json files written before this key existed still render.
   const skippedNoIssue = selection.skippedNoIssue ?? [];
@@ -146,6 +163,7 @@ function header({ run, selection, codexStatus, incomplete, findings, finders }) 
   if (incomplete.length > 0) {
     lines.push(`**Nie przejrzano** (agent nie zwrócił wyniku albo nie przeczytał żadnego pliku): ${incomplete.join(', ')}.`);
   }
+  lines.push(...coverageLines(coverage));
   // Each status says what actually happened. Telling the reader "niedostępny"
   // when codex was merely switched off reports a breakage that is not there,
   // in a document whose only job is to be trustworthy about what it checked.
@@ -196,8 +214,8 @@ function renderFinding(finding, prose, run, remote) {
   ].filter((part) => part !== '').join('\n');
 }
 
-export function renderReport({ run, selection, findings, suppressed, prose, codexStatus, remote, incomplete = [], finders = null }) {
-  const parts = [header({ run, selection, codexStatus, incomplete, findings, finders }), ''];
+export function renderReport({ run, selection, findings, suppressed, prose, codexStatus, remote, incomplete = [], finders = null, coverage = null }) {
+  const parts = [header({ run, selection, codexStatus, incomplete, findings, finders, coverage }), ''];
   const byAxis = new Map();
   for (const finding of findings) {
     if (!byAxis.has(finding.axis)) byAxis.set(finding.axis, []);

@@ -44,6 +44,7 @@ rank: always
 severity_default: blocking
 max_files_per_part: 40
 semgrep: [p/secrets]
+reads: search
 ```
 
 - No credentials, API keys, tokens, or private keys committed to the repository.
@@ -59,6 +60,7 @@ when: always
 rank: rotate
 severity_default: nitpick
 max_files_per_part: 40
+reads: search
 ```
 
 - No `console.log`, `debugger`, or `print` left in production files. Test files

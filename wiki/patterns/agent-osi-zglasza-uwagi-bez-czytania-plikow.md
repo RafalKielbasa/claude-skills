@@ -2,7 +2,7 @@
 
 - **Skill:** code-review-master
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-11-18, code-review-master)
 
 ## Opis
 Agent osi (fala 1) zgłasza uwagi po samym `git diff` albo czyta tylko część plików swojej części,

@@ -109,6 +109,14 @@ test('validateConfig reports a bad rank and a duplicate id', () => {
 const axisDoc = (yamlLines) => parseConfigDoc(`---\n---\n\n## S\n\n\`\`\`yaml\nid: s\n${yamlLines}\n\`\`\`\n\n- x\n`);
 const EMPTY = () => parseConfigDoc('---\n---\n');
 
+test('an axis reads files by default and may declare that it reads by search', () => {
+  assert.equal(axisDoc('rank: always').axes[0].reads, 'files');
+  assert.equal(axisDoc('reads: search').axes[0].reads, 'search');
+  assert.deepEqual(validateConfig({ settings: DEFAULT_SETTINGS, axes: axisDoc('reads: search').axes }), []);
+  const problems = validateConfig({ settings: DEFAULT_SETTINGS, axes: axisDoc('reads: skim').axes });
+  assert.ok(problems.some((p) => /reads "skim"; expected files or search/.test(p)), String(problems));
+});
+
 test('an axis may list semgrep rule packs', () => {
   assert.deepEqual(axisDoc('semgrep: [p/secrets, p/security-audit]').axes[0].semgrep, ['p/secrets', 'p/security-audit']);
   assert.deepEqual(axisDoc('rank: always').axes[0].semgrep, []);

@@ -14,6 +14,14 @@ test('the shipped global template parses and validates', () => {
   assert.deepEqual(validateConfig(mergeConfig(doc, { settings: {}, axes: [] })), []);
 });
 
+test('the global template marks the search axes, so their unopened files are no gap', () => {
+  const byId = Object.fromEntries(parseConfigDoc(read('global.md')).axes.map((a) => [a.id, a]));
+  assert.equal(byId.secrets.reads, 'search');
+  assert.equal(byId['debug-leftovers'].reads, 'search');
+  assert.equal(byId.correctness.reads, 'files');
+  assert.equal(byId['issue-conformance'].reads, 'files');
+});
+
 test('the global template declares the report language and the false-positive list', () => {
   const text = read('global.md');
   assert.match(text, /Polish/);

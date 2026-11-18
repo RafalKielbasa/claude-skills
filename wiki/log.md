@@ -1236,3 +1236,9 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
   - crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr (porażka, 4 sesje) → `/evolve-skill code-review-master`;
   - brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie (porażka, 4 sesje) → `/evolve-skill code-review-master`;
   - agent-osi-zglasza-uwagi-bez-czytania-plikow (porażka, 5 sesji) → `/evolve-skill code-review-master`.
+
+## 2026-11-18 — sesja d98f9232-24f3-40c4-8594-9bb94f77e795 (id claude.ai niedostępny): `/evolve-skill code-review-master`
+- Decyzja: zaakceptowana („ok”) — „Reguła głębokości czytania (D3)”: `<runId>-coverage.json`, linie „Nieprzeczytane przez agenta osi” i „Przejrzane tylko diffem” w `raport.md` i artefakcie, pole osi `reads: search` dla `secrets` i `debug-leftovers`.
+- Wzorzec: agent-osi-zglasza-uwagi-bez-czytania-plikow → zaadresowany (2026-11-18, code-review-master).
+- Zostawione na później: crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr (4), brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie (4), weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (nawrót, 4), crm-artifact-tytul-z-surowego-argumentu-repo (2).
+- `index.md` aktualizowany punktowo (status jednego wzorca); `skill-impact.md`: wpis z pełnym diffem; `PURPOSE.md` skilla: adresowany wzorzec i historia. Bez commita.

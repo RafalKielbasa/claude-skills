@@ -1058,6 +1058,9 @@ test('collect writes the raw findings and names a part with no sign of review', 
   assert.equal(out.raw, join(dir, '.claude', 'review', 'reports', `${plan.runId}-raw.json`));
   assert.deepEqual(JSON.parse(readFileSync(out.raw, 'utf8')), [finding]);
   assert.deepEqual(out.coverage.map((c) => c.label), ['quality#1', 'quality#2']);
+  // `crm render` and `crm artifact` read the same coverage from disk.
+  const written = join(dir, '.claude', 'review', 'reports', `${plan.runId}-coverage.json`);
+  assert.deepEqual(JSON.parse(readFileSync(written, 'utf8')), out.coverage);
 });
 
 test('collect refuses a reply under a label the plan does not know', () => {

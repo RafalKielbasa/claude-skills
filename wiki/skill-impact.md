@@ -1201,3 +1201,458 @@ index e410e56..d1e41d3 100644
  ## Mode `send`
  
 ```
+
+## 2026-11-18 — code-review-master — zaakceptowana (Reguła głębokości czytania, D3)
+
+- **Wzorce:** [agent-osi-zglasza-uwagi-bez-czytania-plikow](patterns/agent-osi-zglasza-uwagi-bez-czytania-plikow.md) (5 dowodów, 5 sesji)
+- **Zmiana:** `crm collect` zapisuje `<runId>-coverage.json`; wpis części ma `read`, `unread`, `searches`, `diffOnly` (uwagi są, przeczytanego pliku brak) i `incomplete`. `crm render` dopisuje w nagłówku `raport.md` linie „**Nieprzeczytane przez agenta osi:** <część> — N plików (…)” i „**Przejrzane tylko diffem** (uwagi bez przeczytanego pliku): …”, pomijając części już nazwane jako nieprzejrzane; `crm artifact` przenosi `coverage` do strony, a szablon pokazuje „Not opened by the axis agent” i „Reviewed from the diff only”. Nowe pole osi `reads` (`files` domyślnie, `search`), walidowane w `lib/config.mjs`; oś `search` (także grupa, w której każda oś jest `search`) nie ma `unread` i nigdy nie jest `diffOnly`. `secrets` i `debug-leftovers` dostały `reads: search` w `templates/global.md` i w `~/.claude/review/global.md`. Krok 4 `SKILL.md` opisuje plik coverage i obie linie, „Rules that do not bend” dostały zdanie o nieprzeczytanych plikach. Testy 398 → 407 (406 pass, 1 skipped).
+- **Powód decyzji:** „ok” Rafała na propozycję `/evolve-skill code-review-master` (wariant A), sesja d98f9232-24f3-40c4-8594-9bb94f77e795 (id claude.ai niedostępny). D3 było odłożone 2026-11-18 „do danych z kolejnych przebiegów”; od tego czasu przebiegi PR #219, #215 i #218 dały uwagi osi na nieprzeczytanych plikach (`app.module.ts`, `packages/types/src/index.ts`, `invalidation.ts`).
+- **Niezrobione:** reguła `incomplete` dla osi `reads: search` bez zmian (część bez uwag i bez przeczytanego pliku nadal jest „Nie przejrzano”, choć agent przeszukiwał), bo diff pokazany przy bramce jej nie obejmował; agentów nic nie zmusza do czytania. Sprawdzone na kopii przebiegu `20261118-180016-2qtu` (linia z 6 częściami); `reads: search` zadziała od pierwszego nowego `crm plan`, bo stary `plan.json` nie niesie pola.
+
+```diff
+diff --git a/skills/code-review-master/SKILL.md b/skills/code-review-master/SKILL.md
+index d1e41d3..73d8714 100644
+--- a/skills/code-review-master/SKILL.md
++++ b/skills/code-review-master/SKILL.md
+@@ -196,7 +196,7 @@ Each agent answers with one JSON object — `findings`, plus `read` (the files i
+ crm collect --run <runId> --replies <repo>/.claude/review/reports/<runId>-replies.json
+ ```
+ 
+-It writes `<repo>/.claude/review/reports/<runId>-raw.json` (every part's findings in one array, the file Step 5 passes to `crm assemble`) and returns `{ raw, findings, incomplete, coverage }`. `incomplete` lists the part labels with no usable reply, or with no finding and no file read: record each for `--incomplete` as Step 3b says, and tell the user in one line, in Polish, which parts they are. `coverage` gives, per part, how many files the agent read, the listed files it did not (`unread`) and how many searches it ran; when a part that is not `incomplete` has `unread` files, say one line in Polish naming the part and the count — the report does not carry it. Exit 2 means a reply sits under a label the plan does not have: fix the key, never the plan.
++It writes `<repo>/.claude/review/reports/<runId>-raw.json` (every part's findings in one array, the file Step 5 passes to `crm assemble`) and `<runId>-coverage.json`, and returns `{ raw, findings, incomplete, coverage }`. `incomplete` lists the part labels with no usable reply, or with no finding and no file read: record each for `--incomplete` as Step 3b says, and tell the user in one line, in Polish, which parts they are. `coverage` gives, per part, how many files the agent read, the listed files it did not (`unread`), how many searches it ran, and `diffOnly: true` for a part that returned findings without reading a single file. `crm render` and `crm artifact` read `<runId>-coverage.json` and list both under the coverage lines (`Nieprzeczytane przez agenta osi`, `Przejrzane tylko diffem`): a file the agent never opened is not a file it found clean, and a finding made from the diff alone is not a reviewed part. A part of an axis whose configuration says `reads: search` — `secrets` and `debug-leftovers`, whose checklists are searches — has no `unread` and is never `diffOnly`. When any part has `unread` files or is `diffOnly`, say one line in Polish naming the parts and the counts. Exit 2 means a reply sits under a label the plan does not have: fix the key, never the plan.
+ 
+ ## Step 4b — Figma (the session's own check)
+ 
+@@ -381,7 +381,7 @@ Whenever `crm finish` exits 0 or 1, also list every entry of `belowThreshold` fr
+ - **Never commit.** No mode of this skill runs `git add`, `git commit`, or `git push`; every edit — a fix, a written `config.md`, a `.gitignore` line — is left uncommitted in the working tree for the user to review and commit themselves.
+ - Every subagent's tool set excludes the subagent-dispatch tool, and every prompt this skill sends also says outright not to dispatch or spawn further agents.
+ - Every agent is dispatched as the general-purpose agent type, never as a search or planning type such as `Explore`, and the filled template is the whole prompt: nothing is added before it or after it.
+-- A wave 1 part with no finding and no file read is reported as not reviewed, never as clean; `crm collect` decides it, not the session.
++- A wave 1 part with no finding and no file read is reported as not reviewed, never as clean, and the files a part's agent did not open are listed in the report as unread; `crm collect` decides both, not the session.
+ - Verification is one agent per part, never one agent per finding.
+ - A non-interactive run never applies a fix and never raises the budget above `max_agents`: it never passes `--slots`, and `crm plan` caps an automatic budget at `budget.max_agents`.
+ - A finding without evidence found verbatim in the file is discarded by `crm assemble` before anyone reads it, never reported on the strength of its wording alone.
+diff --git a/skills/code-review-master/bin/crm.mjs b/skills/code-review-master/bin/crm.mjs
+index 68ebfdf..0d64435 100644
+--- a/skills/code-review-master/bin/crm.mjs
++++ b/skills/code-review-master/bin/crm.mjs
+@@ -128,6 +128,12 @@ function readFinders(repo, runId) {
+   return existsSync(path) ? readJson(path) : null;
+ }
+ 
++// Written by `crm collect`; a run collected before coverage.json existed has none.
++function readCoverage(repo, runId) {
++  const path = reportPath(repo, runId, 'coverage.json');
++  return existsSync(path) ? readJson(path) : null;
++}
++
+ // Same contract for caller-supplied paths. A wave agent that failed to write
+ // its output is a broken run, not a failed gate, and must not exit 1.
+ function readInputFile(path, flag) {
+@@ -299,6 +305,8 @@ const COMMANDS = {
+     if (unknownLabels.length > 0) fail(`replies name parts the plan did not select: ${unknownLabels.join(', ')}`);
+     const raw = reportPath(repo, args.run, 'raw.json');
+     writeJson(raw, findings);
++    // `crm render` and `crm artifact` list what each part's agent never opened.
++    writeJson(reportPath(repo, args.run, 'coverage.json'), coverage);
+     return { raw, findings: findings.length, incomplete, coverage };
+   },
+ 
+@@ -617,6 +625,7 @@ const COMMANDS = {
+       codexStatus: data.codexStatus ?? 'skipped', remote: gitRemote(repo),
+       incomplete: describeIncomplete(plan.selection.selected, incomplete, 'pl'),
+       finders: readFinders(repo, args.run),
++      coverage: readCoverage(repo, args.run),
+     });
+     const out = reportPath(repo, args.run, 'raport.md');
+     mkdirSync(dirname(out), { recursive: true });
+@@ -686,6 +695,7 @@ const COMMANDS = {
+         incomplete: describeIncomplete(plan.selection.selected, incomplete, 'en'),
+         codexStatus: data.codexStatus ?? 'skipped',
+         finders: readFinders(repo, args.run),
++        coverage: readCoverage(repo, args.run),
+       }));
+     mkdirSync(dirname(args.out), { recursive: true });
+     writeFileSync(args.out, page, 'utf8');
+diff --git a/skills/code-review-master/lib/config.mjs b/skills/code-review-master/lib/config.mjs
+index 135a99e..bc86e7f 100644
+--- a/skills/code-review-master/lib/config.mjs
++++ b/skills/code-review-master/lib/config.mjs
+@@ -34,6 +34,9 @@ const SEVERITIES = new Set(['blocking', 'suggestion', 'nitpick']);
+ // `issue`: the axis checks the change against the task it implements, so it
+ // runs only when the run carries the text of at least one issue.
+ const NEEDS = new Set(['issue']);
++// `search`: the checklist is answered by searching the change, not by reading
++// each file, so an unopened file is no gap in that axis's review.
++const READS = new Set(['files', 'search']);
+ 
+ function splitFrontmatter(text) {
+   const match = /^---\r?\n([\s\S]*?)\r?\n?---\r?\n?/.exec(text);
+@@ -60,6 +63,7 @@ function sectionToAxis(heading, body) {
+     semgrep: meta.semgrep ?? [],
+     // What the run must carry for this axis to have anything to check.
+     needs: meta.needs ?? [],
++    reads: meta.reads ?? 'files',
+     heading,
+     checklist,
+   };
+@@ -135,6 +139,9 @@ export function validateConfig({ settings, axes }) {
+     if (!Array.isArray(needs) || !needs.every((n) => NEEDS.has(n))) {
+       problems.push(`axis "${axis.id}" has needs ${JSON.stringify(needs)}; the only supported value is [issue]`);
+     }
++    if (!READS.has(axis.reads ?? 'files')) {
++      problems.push(`axis "${axis.id}" has reads ${JSON.stringify(axis.reads)}; expected files or search`);
++    }
+     if (!Array.isArray(axis.semgrep) || !axis.semgrep.every((p) => typeof p === 'string' && p.trim() !== '')) {
+       problems.push(`axis "${axis.id}" has a semgrep value that is not a list of non-empty rule-pack strings`);
+     } else {
+diff --git a/skills/code-review-master/lib/coverage.mjs b/skills/code-review-master/lib/coverage.mjs
+index f5fb983..ecd9f34 100644
+--- a/skills/code-review-master/lib/coverage.mjs
++++ b/skills/code-review-master/lib/coverage.mjs
+@@ -25,6 +25,8 @@ export function collectReplies(selected, replies) {
+   const known = new Set();
+   for (const entry of selected) {
+     const parts = entry.parts ?? [{ label: entry.axisId, index: 1, of: 1, files: entry.files ?? [] }];
++    // A grouped entry counts as search-only only when every member axis is.
++    const searchOnly = (entry.axes ?? []).length > 0 && entry.axes.every((a) => a.reads === 'search');
+     for (const part of parts) {
+       known.add(part.label);
+       const reply = readReply(replies[part.label]);
+@@ -34,13 +36,17 @@ export function collectReplies(selected, replies) {
+       // No findings and no file read: nothing shows the part was reviewed, and
+       // it must not read as clean. A part with findings stands on their
+       // evidence, which `assemble` checks against the files.
+-      if (reply.findings.length === 0 && read.size === 0) incomplete.push(part.label);
++      const unreviewed = reply.findings.length === 0 && read.size === 0;
++      if (unreviewed) incomplete.push(part.label);
+       coverage.push({
+         label: part.label,
+         read: read.size,
+         // A deleted file has no content to open (size 0 in the plan).
+-        unread: part.files.filter((f) => f.size > 0 && !read.has(f.path)).map((f) => f.path),
++        unread: searchOnly ? [] : part.files.filter((f) => f.size > 0 && !read.has(f.path)).map((f) => f.path),
+         searches: reply.searches.length,
++        // Findings with no file opened came from the diff alone.
++        diffOnly: !searchOnly && reply.findings.length > 0 && read.size === 0,
++        incomplete: unreviewed,
+       });
+     }
+   }
+diff --git a/skills/code-review-master/lib/report.mjs b/skills/code-review-master/lib/report.mjs
+index 6cafb48..d14f528 100644
+--- a/skills/code-review-master/lib/report.mjs
++++ b/skills/code-review-master/lib/report.mjs
+@@ -100,7 +100,24 @@ function sourcesLine(findings) {
+     + `wskazane przez więcej niż jedno źródło: ${multi}.`;
+ }
+ 
+-function header({ run, selection, codexStatus, incomplete, findings, finders }) {
++// A file the axis agent never opened is not a file it found clean. `null`:
++// a run from before `crm collect` wrote coverage.json, nothing to say.
++function coverageLines(coverage) {
++  if (!Array.isArray(coverage)) return [];
++  const lines = [];
++  const unread = coverage.filter((c) => !c.incomplete && (c.unread ?? []).length > 0);
++  if (unread.length > 0) {
++    lines.push(`**Nieprzeczytane przez agenta osi:** ${unread.map((c) => `${c.label} — ${c.unread.length} `
++      + `${plural(c.unread.length, 'plik', 'pliki', 'plików')} (${c.unread.join(', ')})`).join('; ')}.`);
++  }
++  const diffOnly = coverage.filter((c) => c.diffOnly).map((c) => c.label);
++  if (diffOnly.length > 0) {
++    lines.push(`**Przejrzane tylko diffem** (uwagi bez przeczytanego pliku): ${diffOnly.join(', ')}.`);
++  }
++  return lines;
++}
++
++function header({ run, selection, codexStatus, incomplete, findings, finders, coverage }) {
+   const chosen = selection.selected.map((s) => s.axisId);
+   // `?? []`: plan.json files written before this key existed still render.
+   const skippedNoIssue = selection.skippedNoIssue ?? [];
+@@ -146,6 +163,7 @@ function header({ run, selection, codexStatus, incomplete, findings, finders })
+   if (incomplete.length > 0) {
+     lines.push(`**Nie przejrzano** (agent nie zwrócił wyniku albo nie przeczytał żadnego pliku): ${incomplete.join(', ')}.`);
+   }
++  lines.push(...coverageLines(coverage));
+   // Each status says what actually happened. Telling the reader "niedostępny"
+   // when codex was merely switched off reports a breakage that is not there,
+   // in a document whose only job is to be trustworthy about what it checked.
+@@ -196,8 +214,8 @@ function renderFinding(finding, prose, run, remote) {
+   ].filter((part) => part !== '').join('\n');
+ }
+ 
+-export function renderReport({ run, selection, findings, suppressed, prose, codexStatus, remote, incomplete = [], finders = null }) {
+-  const parts = [header({ run, selection, codexStatus, incomplete, findings, finders }), ''];
++export function renderReport({ run, selection, findings, suppressed, prose, codexStatus, remote, incomplete = [], finders = null, coverage = null }) {
++  const parts = [header({ run, selection, codexStatus, incomplete, findings, finders, coverage }), ''];
+   const byAxis = new Map();
+   for (const finding of findings) {
+     if (!byAxis.has(finding.axis)) byAxis.set(finding.axis, []);
+diff --git a/skills/code-review-master/templates/artifact.html b/skills/code-review-master/templates/artifact.html
+index 925f119..f268a63 100644
+--- a/skills/code-review-master/templates/artifact.html
++++ b/skills/code-review-master/templates/artifact.html
+@@ -300,6 +300,8 @@
+     <p id="truncated-line" hidden></p>
+     <p id="spend-line"></p>
+     <p id="incomplete-line" hidden></p>
++    <p id="unread-line" hidden></p>
++    <p id="diff-only-line" hidden></p>
+     <p id="codex-line" hidden></p>
+     <div id="finder-lines"></div>
+     <p id="suppressed-line" hidden></p>
+@@ -430,6 +432,24 @@
+       incompleteLine.hidden = false;
+     }
+ 
++    // Mirrors raport.md's coverage lines: an unopened file is not a clean one.
++    var coverage = Array.isArray(payload.coverage) ? payload.coverage : [];
++    var unread = coverage.filter(function (c) { return !c.incomplete && c.unread && c.unread.length > 0; });
++    if (unread.length > 0) {
++      var unreadLine = document.getElementById('unread-line');
++      unreadLine.textContent = 'Not opened by the axis agent: ' + unread.map(function (c) {
++        return c.label + ' - ' + c.unread.length + ' file' + (c.unread.length === 1 ? '' : 's')
++          + ' (' + c.unread.join(', ') + ')';
++      }).join('; ') + '.';
++      unreadLine.hidden = false;
++    }
++    var diffOnly = coverage.filter(function (c) { return c.diffOnly; }).map(function (c) { return c.label; });
++    if (diffOnly.length > 0) {
++      var diffOnlyLine = document.getElementById('diff-only-line');
++      diffOnlyLine.textContent = 'Reviewed from the diff only (findings, no file read): ' + diffOnly.join(', ') + '.';
++      diffOnlyLine.hidden = false;
++    }
++
+     // Each status says what actually happened — the same distinctions
+     // lib/report.mjs's CODEX_NOTE makes — so the two renderings of one run
+     // cannot disagree about what codex did or did not do.
+diff --git a/skills/code-review-master/templates/global.md b/skills/code-review-master/templates/global.md
+index f440aaa..1d20b1a 100644
+--- a/skills/code-review-master/templates/global.md
++++ b/skills/code-review-master/templates/global.md
+@@ -44,6 +44,7 @@ rank: always
+ severity_default: blocking
+ max_files_per_part: 40
+ semgrep: [p/secrets]
++reads: search
+ ```
+ 
+ - No credentials, API keys, tokens, or private keys committed to the repository.
+@@ -59,6 +60,7 @@ when: always
+ rank: rotate
+ severity_default: nitpick
+ max_files_per_part: 40
++reads: search
+ ```
+ 
+ - No `console.log`, `debugger`, or `print` left in production files. Test files
+diff --git a/skills/code-review-master/test/artifact.test.mjs b/skills/code-review-master/test/artifact.test.mjs
+index 08e4247..5bc2d70 100644
+--- a/skills/code-review-master/test/artifact.test.mjs
++++ b/skills/code-review-master/test/artifact.test.mjs
+@@ -63,6 +63,14 @@ test('the template renders an incomplete-axis note, a codex-status note and a tr
+   assert.match(TEXT, /Held over to the next run/);
+ });
+ 
++// D3: the page carries raport.md's coverage lines, in the page's English.
++test('the template renders the unread-files and diff-only notes', () => {
++  assert.match(TEXT, /id="unread-line"/);
++  assert.match(TEXT, /id="diff-only-line"/);
++  assert.match(TEXT, /'Not opened by the axis agent: '/);
++  assert.match(TEXT, /'Reviewed from the diff only \(findings, no file read\): '/);
++});
++
+ test('embedded JSON cannot close the script block', () => {
+   const payload = embedJson({ evidence: '</script><img src=x onerror=alert(1)>', amp: 'a & b' });
+   assert.equal(payload.includes('</script>'), false);
+@@ -144,6 +152,24 @@ test('crm artifact carries an incomplete axis and a non-ok codex status into the
+   const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(page)[1]);
+   assert.deepEqual(payload.incomplete, ['security', 'conventions']);
+   assert.equal(payload.codexStatus, 'disabled');
++  assert.equal(payload.coverage, null, 'no coverage.json, no coverage in the page');
++});
++
++test('crm artifact carries coverage.json into the payload', () => {
++  const dir = makeRepo({ 'a.ts': 'x\n' });
++  const reports = join(dir, '.claude', 'review', 'reports');
++  mkdirSync(reports, { recursive: true });
++  writeFileSync(join(reports, 'r1-plan.json'), JSON.stringify({
++    mode: 'pr', target: { head: 'a1f2e30' },
++    selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 },
++  }));
++  writeFileSync(join(reports, 'r1-findings.json'), JSON.stringify({ findings: [], suppressed: [] }));
++  const coverage = [{ label: 'code-quality', read: 1, unread: ['b.ts'], searches: 0, diffOnly: false, incomplete: false }];
++  writeFileSync(join(reports, 'r1-coverage.json'), JSON.stringify(coverage));
++  const out = join(dir, 'page.html');
++  execFileSync(process.execPath, [CLI, 'artifact', '--repo', dir, '--run', 'r1', '--out', out], { encoding: 'utf8' });
++  const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(readFileSync(out, 'utf8'))[1]);
++  assert.deepEqual(payload.coverage, coverage);
+ });
+ 
+ test('a repository with no remote yields no link rather than a broken one', () => {
+diff --git a/skills/code-review-master/test/cli.test.mjs b/skills/code-review-master/test/cli.test.mjs
+index 9fa87cc..2c2fa48 100644
+--- a/skills/code-review-master/test/cli.test.mjs
++++ b/skills/code-review-master/test/cli.test.mjs
+@@ -1058,6 +1058,9 @@ test('collect writes the raw findings and names a part with no sign of review',
+   assert.equal(out.raw, join(dir, '.claude', 'review', 'reports', `${plan.runId}-raw.json`));
+   assert.deepEqual(JSON.parse(readFileSync(out.raw, 'utf8')), [finding]);
+   assert.deepEqual(out.coverage.map((c) => c.label), ['quality#1', 'quality#2']);
++  // `crm render` and `crm artifact` read the same coverage from disk.
++  const written = join(dir, '.claude', 'review', 'reports', `${plan.runId}-coverage.json`);
++  assert.deepEqual(JSON.parse(readFileSync(written, 'utf8')), out.coverage);
+ });
+ 
+ test('collect refuses a reply under a label the plan does not know', () => {
+diff --git a/skills/code-review-master/test/config.test.mjs b/skills/code-review-master/test/config.test.mjs
+index 9faf565..03eaf30 100644
+--- a/skills/code-review-master/test/config.test.mjs
++++ b/skills/code-review-master/test/config.test.mjs
+@@ -109,6 +109,14 @@ test('validateConfig reports a bad rank and a duplicate id', () => {
+ const axisDoc = (yamlLines) => parseConfigDoc(`---\n---\n\n## S\n\n\`\`\`yaml\nid: s\n${yamlLines}\n\`\`\`\n\n- x\n`);
+ const EMPTY = () => parseConfigDoc('---\n---\n');
+ 
++test('an axis reads files by default and may declare that it reads by search', () => {
++  assert.equal(axisDoc('rank: always').axes[0].reads, 'files');
++  assert.equal(axisDoc('reads: search').axes[0].reads, 'search');
++  assert.deepEqual(validateConfig({ settings: DEFAULT_SETTINGS, axes: axisDoc('reads: search').axes }), []);
++  const problems = validateConfig({ settings: DEFAULT_SETTINGS, axes: axisDoc('reads: skim').axes });
++  assert.ok(problems.some((p) => /reads "skim"; expected files or search/.test(p)), String(problems));
++});
++
+ test('an axis may list semgrep rule packs', () => {
+   assert.deepEqual(axisDoc('semgrep: [p/secrets, p/security-audit]').axes[0].semgrep, ['p/secrets', 'p/security-audit']);
+   assert.deepEqual(axisDoc('rank: always').axes[0].semgrep, []);
+diff --git a/skills/code-review-master/test/coverage.test.mjs b/skills/code-review-master/test/coverage.test.mjs
+index 97ea7f6..d71b916 100644
+--- a/skills/code-review-master/test/coverage.test.mjs
++++ b/skills/code-review-master/test/coverage.test.mjs
+@@ -74,3 +74,37 @@ test('a reply under a label the plan does not know is reported, not merged', ()
+   assert.deepEqual(out.unknownLabels, ['correctness#3']);
+   assert.deepEqual(out.findings, []);
+ });
++
++// D3: findings made from the diff alone, with no file opened, are flagged.
++test('a part with findings and no file read is diffOnly; one with a file read is not', () => {
++  const out = collectReplies(selected, {
++    'correctness#1': { findings: [finding('a.ts')], read: [], searches: ['git diff'] },
++    'correctness#2': { findings: [finding('c.ts')], read: ['c.ts'], searches: [] },
++    secrets: { findings: [], read: [], searches: [] },
++  });
++  const byLabel = Object.fromEntries(out.coverage.map((c) => [c.label, c]));
++  assert.equal(byLabel['correctness#1'].diffOnly, true);
++  assert.deepEqual(byLabel['correctness#1'].unread, ['a.ts', 'b.ts']);
++  assert.equal(byLabel['correctness#2'].diffOnly, false);
++  assert.equal(byLabel.secrets.incomplete, true, 'the incomplete part is marked, so the report does not list it twice');
++  assert.equal(byLabel['correctness#1'].incomplete, false);
++});
++
++test('an axis that reads by search has no unread files and is never diffOnly', () => {
++  const searchAxis = { id: 'secrets', reads: 'search' };
++  const fileAxis = { id: 'quality', reads: 'files' };
++  const plan = [
++    { axisId: 'secrets', axes: [searchAxis], parts: [{ label: 'secrets', index: 1, of: 1, files: [file('a.ts'), file('b.ts')] }] },
++    // A grouped entry counts as search-only only when every member axis is.
++    { axisId: 'web', axes: [searchAxis, fileAxis], parts: [{ label: 'web', index: 1, of: 1, files: [file('a.ts')] }] },
++  ];
++  const out = collectReplies(plan, {
++    secrets: { findings: [finding('a.ts')], read: [], searches: ['git grep -n token'] },
++    web: { findings: [finding('a.ts')], read: [], searches: [] },
++  });
++  const byLabel = Object.fromEntries(out.coverage.map((c) => [c.label, c]));
++  assert.deepEqual(byLabel.secrets.unread, []);
++  assert.equal(byLabel.secrets.diffOnly, false);
++  assert.deepEqual(byLabel.web.unread, ['a.ts']);
++  assert.equal(byLabel.web.diffOnly, true);
++});
+diff --git a/skills/code-review-master/test/report.test.mjs b/skills/code-review-master/test/report.test.mjs
+index eff6ddd..a41e9ea 100644
+--- a/skills/code-review-master/test/report.test.mjs
++++ b/skills/code-review-master/test/report.test.mjs
+@@ -94,6 +94,31 @@ test('an axis whose agent never returned is named as not reviewed', () => {
+   assert.match(md, /\*\*Nie przejrzano\*\* \(agent nie zwrócił wyniku albo nie przeczytał żadnego pliku\): security\./);
+ });
+ 
++// D3: an unopened file must not read as a clean one.
++test('coverage lines name unread files and diff-only parts, skipping incomplete ones', () => {
++  const md = renderReport({
++    run: { id: 'r1', mode: 'pr', base: 'x', head: 'y' },
++    selection, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
++    coverage: [
++      { label: 'code-quality', read: 1, unread: ['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts'], searches: 2, diffOnly: false, incomplete: false },
++      { label: 'web-frontend', read: 3, unread: ['k.ts'], searches: 1, diffOnly: false, incomplete: false },
++      { label: 'issue-conformance', read: 0, unread: ['a.ts'], searches: 1, diffOnly: true, incomplete: false },
++      { label: 'debug-leftovers', read: 0, unread: ['a.ts'], searches: 0, diffOnly: false, incomplete: true },
++    ],
++  });
++  assert.match(md, /\*\*Nieprzeczytane przez agenta osi:\*\* code-quality — 5 plików \(a\.ts, b\.ts, c\.ts, d\.ts, e\.ts\); web-frontend — 1 plik \(k\.ts\); issue-conformance — 1 plik \(a\.ts\)\./);
++  assert.match(md, /\*\*Przejrzane tylko diffem\*\* \(uwagi bez przeczytanego pliku\): issue-conformance\./);
++  assert.equal(/debug-leftovers —/.test(md), false, 'an incomplete part is already named as not reviewed');
++});
++
++test('a run without coverage.json says nothing about unread files', () => {
++  const md = renderReport({
++    run: { id: 'r1', mode: 'pr', base: 'x', head: 'y' },
++    selection, findings: [], suppressed: [], prose: {}, codexStatus: 'ok', remote: null,
++  });
++  assert.equal(/Nieprzeczytane|tylko diffem/.test(md), false);
++});
++
+ test('the artifact names both ways a part goes unreviewed, like the report', async () => {
+   const { readFileSync } = await import('node:fs');
+   const page = readFileSync(new URL('../templates/artifact.html', import.meta.url), 'utf8');
+diff --git a/skills/code-review-master/test/skill.test.mjs b/skills/code-review-master/test/skill.test.mjs
+index be7d6a2..0e2574c 100644
+--- a/skills/code-review-master/test/skill.test.mjs
++++ b/skills/code-review-master/test/skill.test.mjs
+@@ -318,6 +318,17 @@ test('wave 1 replies go through crm collect, and a part with no sign of review i
+   assert.match(step3b, /no finding and no file[\s\S]{0,300}--incomplete/i);
+ });
+ 
++// D3: unread files and diff-only parts reach the report, search axes excepted.
++test('Step 4 sends coverage to the report and exempts search axes', () => {
++  const step4 = section('## Step 4 — wave 1', '## Step 5 — assemble');
++  assert.match(step4, /<runId>-coverage\.json/);
++  assert.match(step4, /`diffOnly: true`/);
++  assert.match(step4, /`crm render` and `crm artifact` read `<runId>-coverage\.json`/);
++  assert.match(step4, /`reads: search`[\s\S]{0,200}has no `unread` and is never `diffOnly`/);
++  assert.equal(/the report does not carry it/.test(step4), false);
++  assert.match(TEXT.slice(TEXT.indexOf('## Rules that do not bend')), /did not open are listed in the report as unread/);
++});
++
+ // Z2: the issue text comes from `crm plan`; the Figma comparison stays with
+ // the session because a subagent has no Figma tools.
+ test('the issue reaches the plan and the axis that needs it', () => {
+diff --git a/skills/code-review-master/test/templates.test.mjs b/skills/code-review-master/test/templates.test.mjs
+index e730d93..104bb7c 100644
+--- a/skills/code-review-master/test/templates.test.mjs
++++ b/skills/code-review-master/test/templates.test.mjs
+@@ -14,6 +14,14 @@ test('the shipped global template parses and validates', () => {
+   assert.deepEqual(validateConfig(mergeConfig(doc, { settings: {}, axes: [] })), []);
+ });
+ 
++test('the global template marks the search axes, so their unopened files are no gap', () => {
++  const byId = Object.fromEntries(parseConfigDoc(read('global.md')).axes.map((a) => [a.id, a]));
++  assert.equal(byId.secrets.reads, 'search');
++  assert.equal(byId['debug-leftovers'].reads, 'search');
++  assert.equal(byId.correctness.reads, 'files');
++  assert.equal(byId['issue-conformance'].reads, 'files');
++});
++
+ test('the global template declares the report language and the false-positive list', () => {
+   const text = read('global.md');
+   assert.match(text, /Polish/);
+diff --git a/review/global.md b/review/global.md (poza gitem ~/.claude, zmiana ręczna)
+--- a/review/global.md
++++ b/review/global.md
+@@ id: secrets @@
+ semgrep: [p/secrets]
+ max_files_per_part: 40
++reads: search
+ ```
+@@ id: debug-leftovers @@
+ severity_default: nitpick
+ max_files_per_part: 40
++reads: search
+ ```
+```

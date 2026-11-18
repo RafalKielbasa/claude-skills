@@ -318,6 +318,17 @@ test('wave 1 replies go through crm collect, and a part with no sign of review i
   assert.match(step3b, /no finding and no file[\s\S]{0,300}--incomplete/i);
 });
 
+// D3: unread files and diff-only parts reach the report, search axes excepted.
+test('Step 4 sends coverage to the report and exempts search axes', () => {
+  const step4 = section('## Step 4 — wave 1', '## Step 5 — assemble');
+  assert.match(step4, /<runId>-coverage\.json/);
+  assert.match(step4, /`diffOnly: true`/);
+  assert.match(step4, /`crm render` and `crm artifact` read `<runId>-coverage\.json`/);
+  assert.match(step4, /`reads: search`[\s\S]{0,200}has no `unread` and is never `diffOnly`/);
+  assert.equal(/the report does not carry it/.test(step4), false);
+  assert.match(TEXT.slice(TEXT.indexOf('## Rules that do not bend')), /did not open are listed in the report as unread/);
+});
+
 // Z2: the issue text comes from `crm plan`; the Figma comparison stays with
 // the session because a subagent has no Figma tools.
 test('the issue reaches the plan and the axis that needs it', () => {

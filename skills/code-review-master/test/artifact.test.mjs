@@ -63,6 +63,14 @@ test('the template renders an incomplete-axis note, a codex-status note and a tr
   assert.match(TEXT, /Held over to the next run/);
 });
 
+// D3: the page carries raport.md's coverage lines, in the page's English.
+test('the template renders the unread-files and diff-only notes', () => {
+  assert.match(TEXT, /id="unread-line"/);
+  assert.match(TEXT, /id="diff-only-line"/);
+  assert.match(TEXT, /'Not opened by the axis agent: '/);
+  assert.match(TEXT, /'Reviewed from the diff only \(findings, no file read\): '/);
+});
+
 test('embedded JSON cannot close the script block', () => {
   const payload = embedJson({ evidence: '</script><img src=x onerror=alert(1)>', amp: 'a & b' });
   assert.equal(payload.includes('</script>'), false);
@@ -144,6 +152,24 @@ test('crm artifact carries an incomplete axis and a non-ok codex status into the
   const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(page)[1]);
   assert.deepEqual(payload.incomplete, ['security', 'conventions']);
   assert.equal(payload.codexStatus, 'disabled');
+  assert.equal(payload.coverage, null, 'no coverage.json, no coverage in the page');
+});
+
+test('crm artifact carries coverage.json into the payload', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n' });
+  const reports = join(dir, '.claude', 'review', 'reports');
+  mkdirSync(reports, { recursive: true });
+  writeFileSync(join(reports, 'r1-plan.json'), JSON.stringify({
+    mode: 'pr', target: { head: 'a1f2e30' },
+    selection: { selected: [], skippedOnTouch: [], deferred: [], agents: 0 },
+  }));
+  writeFileSync(join(reports, 'r1-findings.json'), JSON.stringify({ findings: [], suppressed: [] }));
+  const coverage = [{ label: 'code-quality', read: 1, unread: ['b.ts'], searches: 0, diffOnly: false, incomplete: false }];
+  writeFileSync(join(reports, 'r1-coverage.json'), JSON.stringify(coverage));
+  const out = join(dir, 'page.html');
+  execFileSync(process.execPath, [CLI, 'artifact', '--repo', dir, '--run', 'r1', '--out', out], { encoding: 'utf8' });
+  const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(readFileSync(out, 'utf8'))[1]);
+  assert.deepEqual(payload.coverage, coverage);
 });
 
 test('a repository with no remote yields no link rather than a broken one', () => {
