@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync, readdirSync, rmSync, renameSync } from 'node:fs';
 import { execFileSync, spawn } from 'node:child_process';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { parseConfigDoc, mergeConfig, validateConfig } from '../lib/config.mjs';
-import { collectTarget, isEmpty } from '../lib/target.mjs';
+import { collectTarget, isEmpty, renderIssues } from '../lib/target.mjs';
+import { collectReplies } from '../lib/coverage.mjs';
 import { selectAxes, budgetModeFor, emptySelection } from '../lib/axes.mjs';
 import { assemble, validateFinding, applyThresholds } from '../lib/findings.mjs';
 import { recordTriage } from '../lib/triage.mjs';
@@ -63,6 +64,18 @@ function readSlots(args, budgetMode) {
   return value;
 }
 
+// `--issue 181,182`: the issues the change implements, for a run that has no
+// pull request to ask (`branch`) or whose pull request does not link them.
+function readIssues(args, mode) {
+  if (args.issue === undefined) return [];
+  if (mode !== 'pr' && mode !== 'branch') fail('--issue applies to pr and branch: only they review a change made for a task');
+  const numbers = args.issue === true ? [] : String(args.issue).split(',').map((part) => part.trim());
+  if (numbers.length === 0 || !numbers.every((part) => /^[1-9]\d*$/.test(part))) {
+    fail('--issue needs issue numbers, for example --issue 181 or --issue 181,182');
+  }
+  return numbers.map(Number);
+}
+
 const reviewDir = (repo) => join(repo, '.claude', 'review');
 const runningPath = (repo) => join(reviewDir(repo), '.running');
 const reportPath = (repo, runId, name) => join(reviewDir(repo), 'reports', `${runId}-${name}`);
@@ -102,7 +115,7 @@ function readJson(path) {
 function readRunFile(repo, runId, name) {
   const path = reportPath(repo, runId, name);
   if (!existsSync(path)) {
-    fail(`run ${runId} has no ${name} — the pipeline order is plan, assemble, score, codex, render, artifact, finish`);
+    fail(`run ${runId} has no ${name} — the pipeline order is plan, collect, assemble, score, codex, render, artifact, finish`);
   }
   return readJson(path);
 }
@@ -234,8 +247,14 @@ const COMMANDS = {
     const target = collectTarget(repo, mode, {
       base: mode === 'since' ? state.last_reviewed_sha : args.base,
       pr: args.pr, path: args.path, cursor: state.file_cursor[mode],
-      exclude: config.settings.exclude,
+      exclude: config.settings.exclude, issues: readIssues(args, mode),
     });
+    // An issue whose text could not be read gives an axis nothing to check.
+    const hasIssue = target.issues.some((issue) => typeof issue.body === 'string' && issue.body.trim() !== '');
+    // Both go into the prompts verbatim (SKILL.md Steps 3, 4 and 6), so the
+    // session never composes a path or an issue section by hand.
+    const repoRoot = resolve(repo);
+    const issueSection = hasIssue ? renderIssues(target.issues) : null;
     // Seconds and a random suffix, because two `plan` calls in the same minute
     // would otherwise share a runId and overwrite each other's plan.json and
     // dispatch ledger — and `finish` would then check one run's ledger against
@@ -243,7 +262,7 @@ const COMMANDS = {
     const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
     const runId = `${stamp.slice(0, 8)}-${stamp.slice(8)}-${Math.random().toString(36).slice(2, 6)}`;
     if (isEmpty(target)) {
-      return { runId, mode, target, empty: true, selection: emptySelection(config.settings, budgetMode) };
+      return { runId, mode, target, empty: true, selection: emptySelection(config.settings, budgetMode), repoRoot, issueSection };
     }
     // Files a truncated earlier run of THIS mode gave up come back at the head
     // of the queue, otherwise the same low-churn files lose every ranking
@@ -260,9 +279,27 @@ const COMMANDS = {
     }
     const selection = selectAxes({
       axes: config.axes, files: target.files, settings: config.settings, state, slotsOverride,
-      budgetMode, unattended: process.env.CRM_UNATTENDED === '1',
+      budgetMode, unattended: process.env.CRM_UNATTENDED === '1', hasIssue,
     });
-    return { runId, mode, target, empty: false, selection, settings: config.settings, axes: config.axes };
+    return { runId, mode, target, empty: false, selection, settings: config.settings, axes: config.axes, repoRoot, issueSection };
+  },
+
+  // Wave 1's replies, keyed by part label, become the flat findings file
+  // `assemble` reads. The same pass names every part whose agent returned no
+  // finding and no file it read: that part was paid for and shows no sign of
+  // review, so it must reach the report as not reviewed (SKILL.md Step 3b).
+  collect(args) {
+    const repo = args.repo ?? process.cwd();
+    const plan = readRunFile(repo, args.run, 'plan.json');
+    const replies = readInputFile(args.replies, '--replies');
+    if (replies === null || typeof replies !== 'object' || Array.isArray(replies)) {
+      fail('--replies must hold one object keyed by part label');
+    }
+    const { findings, incomplete, coverage, unknownLabels } = collectReplies(plan.selection.selected, replies);
+    if (unknownLabels.length > 0) fail(`replies name parts the plan did not select: ${unknownLabels.join(', ')}`);
+    const raw = reportPath(repo, args.run, 'raw.json');
+    writeJson(raw, findings);
+    return { raw, findings: findings.length, incomplete, coverage };
   },
 
   dispatched(args) {
@@ -436,7 +473,7 @@ const COMMANDS = {
       return summary;
     }
     const result = runCodexFind(plan.selection.selected,
-      { cwd: repo, timeoutMs: codex.find_timeout_s * 1000 });
+      { cwd: repo, timeoutMs: codex.find_timeout_s * 1000, issues: plan.target.issues ?? [] });
     const summary = { status: result.status, found: result.findings.length, droppedOffAxis: result.droppedOffAxis };
     if (result.status === 'ok') {
       writeJson(reportPath(repo, args.run, 'codex-raw.json'), result.findings);

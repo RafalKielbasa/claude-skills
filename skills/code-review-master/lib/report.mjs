@@ -102,7 +102,9 @@ function sourcesLine(findings) {
 
 function header({ run, selection, codexStatus, incomplete, findings, finders }) {
   const chosen = selection.selected.map((s) => s.axisId);
-  const total = chosen.length + selection.skippedOnTouch.length + selection.deferred.length;
+  // `?? []`: plan.json files written before this key existed still render.
+  const skippedNoIssue = selection.skippedNoIssue ?? [];
+  const total = chosen.length + selection.skippedOnTouch.length + skippedNoIssue.length + selection.deferred.length;
   const lines = [
     `# Review — ${run.id} (tryb \`${run.mode}\`)`,
     '',
@@ -110,6 +112,9 @@ function header({ run, selection, codexStatus, incomplete, findings, finders }) 
     `Osie w tym przebiegu: ${chosen.join(', ') || '—'} (${chosen.length} z ${total}).`,
   ];
   if (selection.skippedOnTouch.length > 0) lines.push(`Pominięte przez on-touch: ${selection.skippedOnTouch.join(', ')}.`);
+  // Without this line a run that never saw the task reads as one that checked
+  // the change against it and found nothing.
+  if (skippedNoIssue.length > 0) lines.push(`Pominięte — brak powiązanego issue: ${skippedNoIssue.join(', ')}.`);
   if (selection.deferred.length > 0) lines.push(`Czeka w rotacji: ${selection.deferred.join(', ')}.`);
   // `skippedFiles` is computed by lib/axes.mjs's `selectAxes` and stored as
   // `pending_files`, but until now no report ever told the reader about it —

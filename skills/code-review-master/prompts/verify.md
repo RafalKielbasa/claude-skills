@@ -1,6 +1,8 @@
 You are verifying, not reviewing. Judge **all of the findings below** in one
 pass — do not delegate, and do not look for new problems.
 
+The repository root is `{{REPO_ROOT}}`; every `file` below is relative to it.
+
 For each finding, open the file, look at the cited lines, and score how confident
 you are that it is real:
 

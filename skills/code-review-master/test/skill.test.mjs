@@ -258,3 +258,82 @@ test('the global template splits secrets and debug-leftovers only above 40 files
   assert.equal(doc.settings.budget.max_agents, 41);
   assert.equal(doc.settings.budget.max_files_per_part, 12);
 });
+
+// Z1 and Z2 (2026-11-18): the two universal axes whose absence let PR #217
+// through with zero findings. Both live in the global template so every
+// repository gets them without editing its own config.
+test('the global template carries the correctness and issue-conformance axes', async () => {
+  const { parseConfigDoc, mergeConfig, validateConfig } = await import('../lib/config.mjs');
+  const text = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'templates', 'global.md'), 'utf8');
+  const doc = parseConfigDoc(text);
+  assert.deepEqual(validateConfig(mergeConfig(doc, { settings: {}, axes: [], ignoredSections: [] })), []);
+  const correctness = doc.axes.find((axis) => axis.id === 'correctness');
+  assert.equal(correctness.when, 'always');
+  assert.equal(correctness.rank, 'always');
+  assert.equal(correctness.severity_default, 'blocking');
+  assert.deepEqual(correctness.needs, []);
+  assert.match(correctness.checklist, /existing user/i);
+  assert.match(correctness.checklist, /condition/i);
+  assert.match(correctness.checklist, /edge case/i);
+  const conformance = doc.axes.find((axis) => axis.id === 'issue-conformance');
+  assert.deepEqual(conformance.needs, ['issue']);
+  assert.equal(conformance.rank, 'always');
+  assert.equal(conformance.severity_default, 'blocking');
+  assert.match(conformance.checklist, /acceptance criterion/i);
+  assert.match(conformance.checklist, /test/i);
+  assert.match(conformance.checklist, /another task/i);
+  assert.match(conformance.checklist, /Figma/);
+});
+
+// Z5: the PR #217 session picked the `Explore` agent type ("locates code; it
+// doesn't review") and prefixed every prompt with a `git diff` command, so no
+// agent opened a file. The type and the prompt are now fixed by the document.
+test('agents are dispatched as a reviewing agent type with the template as the whole prompt', () => {
+  const step3 = section('## Step 3 — wave 0', '## Step 3b');
+  assert.match(step3, /general-purpose/);
+  assert.match(step3, /never[\s\S]{0,80}`Explore`/i);
+  assert.match(step3, /whole prompt/i);
+  assert.match(step3, /nothing before it and nothing after it/i);
+  assert.match(TEXT.slice(TEXT.indexOf('## Rules that do not bend')), /filled template is the whole prompt/i);
+});
+
+test('every prompt is told the repository root from the plan', () => {
+  assert.match(section('## Step 3 — wave 0', '## Step 3b'), /\{\{REPO_ROOT\}\}[\s\S]{0,200}`repoRoot`/);
+  assert.match(section('## Step 4 — wave 1', '## Step 5 — assemble'), /\{\{REPO_ROOT\}\}/);
+  assert.match(section('## Step 6 — wave 2', '## Step 7 — codex'), /\{\{REPO_ROOT\}\}/);
+});
+
+// Z3: `risks` used to be dropped after the brief returned.
+test('the brief risks reach the axis agents', () => {
+  assert.match(section('## Step 3 — wave 0', '## Step 3b'), /`summary`[\s\S]{0,200}`risks`/);
+  assert.match(section('## Step 4 — wave 1', '## Step 5 — assemble'), /\{\{RISKS\}\}[\s\S]{0,300}`risks`/);
+});
+
+// Z4: `[]` with no sign of work is a part nobody reviewed.
+test('wave 1 replies go through crm collect, and a part with no sign of review is incomplete', () => {
+  const step4 = section('## Step 4 — wave 1', '## Step 5 — assemble');
+  assert.match(step4, /crm collect --run <runId> --replies/);
+  assert.match(step4, /`incomplete`[\s\S]{0,300}Step 3b/);
+  const step3b = section('## Step 3b', '## Step 4 — wave 1');
+  assert.match(step3b, /no finding and no file[\s\S]{0,300}--incomplete/i);
+});
+
+// Z2: the issue text comes from `crm plan`; the Figma comparison stays with
+// the session because a subagent has no Figma tools.
+test('the issue reaches the plan and the axis that needs it', () => {
+  const step1 = section('## Step 1 — plan', '## Step 2 — confirm');
+  assert.match(step1, /--issue <n>/);
+  assert.match(step1, /skippedNoIssue/);
+  assert.match(step1, /closingIssuesReferences/);
+  const step4 = section('## Step 4 — wave 1', '## Step 5 — assemble');
+  assert.match(step4, /\{\{ISSUE\}\}[\s\S]{0,300}`issueSection`/);
+  assert.match(step4, /\{\{DIFF_NOTE\}\}[\s\S]{0,300}`target\.diffCommand`/);
+});
+
+test('views named by the issue are checked in Figma by the session itself', () => {
+  const figma = section('## Step 4b — Figma', '## Step 5 — assemble');
+  assert.match(figma, /yourself/i);
+  assert.match(figma, /no Figma tools/i);
+  assert.match(figma, /wave 2 cannot open Figma/i);
+  assert.match(figma, /one line[\s\S]{0,200}Polish/i);
+});

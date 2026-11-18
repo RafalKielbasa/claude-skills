@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { renderIssues } from './target.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const VERDICTS = new Set(['confirms', 'rejects', 'unsure']);
@@ -82,10 +83,13 @@ export function runCodex(prompt, options) {
 
 // Same wording rule as SKILL.md Step 4: a grouped slot names each axis's default
 // next to its checklist instead of averaging them into one value.
-export function buildCodexFindPrompt(selected) {
+export function buildCodexFindPrompt(selected, issues = []) {
   const template = readFileSync(join(HERE, '..', 'prompts', 'codex-find.md'), 'utf8');
+  const issueText = renderIssues(issues);
   const rendered = selected.map((entry) => {
     const grouped = entry.axes.length > 1;
+    // Only an axis that checks the change against its task is shown the task.
+    const needsIssue = issueText !== '' && entry.axes.some((a) => (a.needs ?? []).includes('issue'));
     const severity = entry.axes.map((a) => `${a.id}: ${a.severity_default} by default`).join('; ');
     const checklist = entry.axes
       .map((a) => (grouped ? `#### ${a.id}\n\n${a.checklist}` : a.checklist))
@@ -95,6 +99,7 @@ export function buildCodexFindPrompt(selected) {
       `### ${entry.axisId}`, '',
       `Severity: ${severity}`, '',
       'Checklist:', '', checklist, '',
+      ...(needsIssue ? ['Issue:', '', issueText, ''] : []),
       'Files:', '', files,
     ].join('\n');
   }).join('\n\n');
@@ -176,8 +181,8 @@ export function parseCodexFindings(stdout, selected) {
   return { findings, droppedOffAxis };
 }
 
-export function runCodexFind(selected, { cwd, timeoutMs, spawn, platform }) {
-  const spawned = spawnCodex(buildCodexFindPrompt(selected), { cwd, timeoutMs, spawn, platform });
+export function runCodexFind(selected, { cwd, timeoutMs, spawn, platform, issues = [] }) {
+  const spawned = spawnCodex(buildCodexFindPrompt(selected, issues), { cwd, timeoutMs, spawn, platform });
   if (spawned.status !== 'ok') {
     return { status: spawned.status, findings: [], droppedOffAxis: 0, raw: spawned.raw };
   }

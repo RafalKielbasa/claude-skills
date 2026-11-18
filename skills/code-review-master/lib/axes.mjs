@@ -59,7 +59,7 @@ function rank(axes, files) {
 
 // Order matters and is the whole point: wake, assign, drop empties, only then
 // spend slots. An axis that would have received no file must not consume one.
-export function selectAxes({ axes, files, settings, state, slotsOverride = null, budgetMode = 'fixed', unattended = false }) {
+export function selectAxes({ axes, files, settings, state, slotsOverride = null, budgetMode = 'fixed', unattended = false, hasIssue = false }) {
   const auto = budgetMode === 'auto';
   // Auto mode has no slot count; its bound is `max_agents` (spec §5.3).
   const slots = auto ? null : slotsOverride ?? settings.budget.slots;
@@ -71,6 +71,7 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null,
   const maxFilesDefault = Number.isInteger(configuredCap) && configuredCap > 0 ? configuredCap : Infinity;
 
   const skippedOnTouch = [];
+  const skippedNoIssue = [];
   const emptyAfterAssignment = [];
   const candidates = [];
 
@@ -79,6 +80,10 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null,
   // member's and would have had room for the file that member dropped.
   for (const axis of axes) {
     if (!wakes(axis, files)) { skippedOnTouch.push(axis.id); continue; }
+    // Checked after `wakes`: an axis no file touches is asleep for that reason,
+    // whatever else it needs. Named separately so the report can say the task
+    // was never checked instead of listing the axis as untouched.
+    if ((axis.needs ?? []).includes('issue') && !hasIssue) { skippedNoIssue.push(axis.id); continue; }
     const mine = filesFor(axis, files);
     if (mine.length === 0) { emptyAfterAssignment.push(axis.id); continue; }
     candidates.push({ axis, files: mine });
@@ -136,6 +141,7 @@ export function selectAxes({ axes, files, settings, state, slotsOverride = null,
   return {
     selected,
     skippedOnTouch,
+    skippedNoIssue,
     emptyAfterAssignment,
     deferred: leftIds,
     slots,
@@ -249,6 +255,7 @@ export function emptySelection(settings, budgetMode) {
   return {
     selected: [],
     skippedOnTouch: [],
+    skippedNoIssue: [],
     emptyAfterAssignment: [],
     deferred: [],
     slots: budgetMode === 'fixed' ? settings.budget.slots : null,

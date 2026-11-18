@@ -56,7 +56,7 @@ test('full mode lists tracked files from the cursor onwards', () => {
 test('pr mode takes both shas from the pull request, not from the checkout', () => {
   const dir = makeRepo({ 'a.ts': 'x\n' });
   const gh = (args) => {
-    assert.deepEqual(args, ['pr', 'view', '42', '--json', 'files,headRefOid,baseRefOid']);
+    assert.deepEqual(args, ['pr', 'view', '42', '--json', 'files,headRefOid,baseRefOid,closingIssuesReferences']);
     return JSON.stringify({
       baseRefOid: 'base111', headRefOid: 'head222',
       files: [{ path: 'a.ts', additions: 3, deletions: 1 }],

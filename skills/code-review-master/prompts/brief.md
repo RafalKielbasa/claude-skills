@@ -1,5 +1,6 @@
 You are preparing a code review. You do not review anything yourself.
 
+The repository root is `{{REPO_ROOT}}`; every path below is relative to it.
 Read the files listed below and return a JSON object:
 
 {"summary": "3-5 sentences on what this change does",

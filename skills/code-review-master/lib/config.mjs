@@ -31,6 +31,9 @@ const IMAGE_REFERENCE = /^[a-z0-9][a-z0-9._/:-]*(:[^:/@]+|@sha256:[0-9a-f]{64})$
 
 const RANKS = new Set(['always', 'rotate']);
 const SEVERITIES = new Set(['blocking', 'suggestion', 'nitpick']);
+// `issue`: the axis checks the change against the task it implements, so it
+// runs only when the run carries the text of at least one issue.
+const NEEDS = new Set(['issue']);
 
 function splitFrontmatter(text) {
   const match = /^---\r?\n([\s\S]*?)\r?\n?---\r?\n?/.exec(text);
@@ -55,6 +58,8 @@ function sectionToAxis(heading, body) {
     max_files_per_part: meta.max_files_per_part ?? null,
     tools: meta.tools ?? [],
     semgrep: meta.semgrep ?? [],
+    // What the run must carry for this axis to have anything to check.
+    needs: meta.needs ?? [],
     heading,
     checklist,
   };
@@ -123,6 +128,12 @@ export function validateConfig({ settings, axes }) {
     }
     if (axis.max_files_per_part !== null && !(Number.isInteger(axis.max_files_per_part) && axis.max_files_per_part > 0)) {
       problems.push(`axis "${axis.id}" has max_files_per_part ${JSON.stringify(axis.max_files_per_part)}; use a positive integer, or omit it to inherit the default`);
+    }
+    // An unknown need could never be met, so the axis would sleep on every run
+    // without anyone being told why.
+    const needs = axis.needs ?? [];
+    if (!Array.isArray(needs) || !needs.every((n) => NEEDS.has(n))) {
+      problems.push(`axis "${axis.id}" has needs ${JSON.stringify(needs)}; the only supported value is [issue]`);
     }
     if (!Array.isArray(axis.semgrep) || !axis.semgrep.every((p) => typeof p === 'string' && p.trim() !== '')) {
       problems.push(`axis "${axis.id}" has a semgrep value that is not a list of non-empty rule-pack strings`);

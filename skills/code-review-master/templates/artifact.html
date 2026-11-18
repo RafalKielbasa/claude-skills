@@ -376,7 +376,9 @@
     var run = payload.run;
     var selection = payload.selection;
     var chosen = selection.selected.map(function (s) { return s.axisId; });
-    var total = chosen.length + selection.skippedOnTouch.length + selection.deferred.length;
+    // `|| []`: a plan.json written before this key existed still renders.
+    var skippedNoIssue = selection.skippedNoIssue || [];
+    var total = chosen.length + selection.skippedOnTouch.length + skippedNoIssue.length + selection.deferred.length;
 
     document.getElementById('run-title').textContent =
       'Code review — run ' + run.id + ' (' + run.mode + ' mode)';
@@ -387,6 +389,9 @@
       + ' (' + chosen.length + ' of ' + total + ').';
     if (selection.skippedOnTouch.length > 0) {
       coverage += ' Skipped on-touch: ' + selection.skippedOnTouch.join(', ') + '.';
+    }
+    if (skippedNoIssue.length > 0) {
+      coverage += ' Skipped, no linked issue: ' + skippedNoIssue.join(', ') + '.';
     }
     if (selection.deferred.length > 0) {
       coverage += ' Queued next: ' + selection.deferred.join(', ') + '.';

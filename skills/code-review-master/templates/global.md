@@ -64,3 +64,57 @@ max_files_per_part: 40
 - No `console.log`, `debugger`, or `print` left in production files. Test files
   and deliberate logging through the project's logger are exempt.
 - No commented-out blocks of code. Deleted code lives in git history.
+
+## Correctness and behaviour regressions
+
+```yaml
+id: correctness
+when: always
+rank: always
+severity_default: blocking
+```
+
+- Compare what each changed file did before the change with what it does now;
+  the diff shows what was removed or replaced. A behaviour an existing user,
+  role or caller relied on, which the change alters or drops without that being
+  its stated purpose, is blocking.
+- Rendering conditions and access branches: whatever is shown, hidden, enabled
+  or disabled depending on who the user is or what state they are in (role,
+  enrolment, ownership, purchase, feature flag, loading, empty, error) is
+  correct for every kind of user who can reach it. An element rendered without
+  a condition where the previous version or sibling code guards it is blocking.
+- A changed function, hook, component or endpoint still satisfies every caller:
+  search for its usages before judging a changed signature, default, return
+  value or thrown error.
+- Edge cases of the changed logic: an empty list, a missing or null value, zero,
+  the first and the last item, the boundary of a range, a request that fails.
+  Report an edge case only when you can name the input and the wrong result it
+  produces.
+
+## Conformance with the issue
+
+```yaml
+id: issue-conformance
+when: always
+rank: always
+severity_default: blocking
+needs: [issue]
+max_files_per_part: 40
+```
+
+- Every acceptance criterion and every requirement in the issue's description
+  is met by the code, whether its checkbox is ticked or not: a tick is the
+  author's claim, not evidence. An unmet element is blocking. A test the issue
+  requires counts the same way: missing, or written so that it cannot fail, it
+  is blocking.
+- Every change belongs to the issue. A changed file, or a changed hunk inside
+  a file the issue does cover, that no requirement of the issue calls for is
+  code from another task and is blocking, however correct it is.
+- A view, screen or component the issue names is compared with its design in
+  Figma by the session that runs this review, not by you: judge behaviour and
+  scope, not visual fidelity.
+- Each finding quotes, in its claim, the sentence of the issue it rests on, and
+  is anchored to a line of a changed file: the line that breaks the requirement,
+  the line where the missing behaviour would have to be, the declaration of the
+  unit that lacks a required test, or the first changed line of the hunk that
+  is out of scope.

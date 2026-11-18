@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync, readFileSync, mkdtempSync, existsSync, mkdirSync, utimesSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -971,4 +971,76 @@ test('render and artifact describe an incomplete part', () => {
   const page = readFileSync(out, 'utf8');
   const payload = JSON.parse(/<script type="application\/json" id="findings">([\s\S]*?)<\/script>/.exec(page)[1]);
   assert.deepEqual(payload.incomplete, ['quality (part 2 of 2, 1 file)']);
+});
+
+const ISSUE_AXIS = ['', '## Issue', '', '```yaml', 'id: issue-conformance', 'when: always', 'rank: always',
+  'needs: [issue]', '```', '', '- Every criterion of the issue is met.', ''].join('\n');
+
+// The prompts name the repository root and the diff command; both come from
+// the plan so the session never composes a path or a git range by hand.
+test('plan names the repository root and the diff command for the agents', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  const out = planOut(dir, '--mode', 'working');
+  assert.equal(out.repoRoot, resolve(dir));
+  assert.match(out.target.diffCommand, /^git -C ".+" diff HEAD --$/);
+  assert.equal(out.issueSection, null);
+});
+
+test('an axis that needs an issue is planned as skipped when the run has none', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG + ISSUE_AXIS });
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  const out = planOut(dir, '--mode', 'working');
+  assert.deepEqual(out.selection.selected.map((s) => s.axisId), ['quality']);
+  assert.deepEqual(out.selection.skippedNoIssue, ['issue-conformance']);
+});
+
+test('--issue is refused outside pr and branch, and without numbers', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG });
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  assert.throws(() => run(['plan', '--repo', dir, '--mode', 'working', '--issue', '5', '--json'], { stdio: 'pipe' }),
+    (err) => err.status === 2 && /--issue applies to pr and branch/.test(String(err.stderr)));
+  git(dir, 'checkout', '-q', '-b', 'feature');
+  commitAll(dir, 'change');
+  for (const bad of [['--issue'], ['--issue', 'abc'], ['--issue', '5,x']]) {
+    assert.throws(() => run(['plan', '--repo', dir, '--mode', 'branch', ...bad, '--json'], { stdio: 'pipe' }),
+      (err) => err.status === 2 && /--issue needs issue numbers/.test(String(err.stderr)), bad.join(' '));
+  }
+});
+
+// This repository has no remote, so gh cannot read the issue (and may not be
+// installed at all): the plan must still be written, with the axis asleep.
+test('an issue that cannot be fetched leaves the plan intact and the issue axis asleep', () => {
+  const dir = makeRepo({ 'a.ts': 'x\n', '.claude/review/config.md': CONFIG + ISSUE_AXIS });
+  git(dir, 'checkout', '-q', '-b', 'feature');
+  writeFiles(dir, { 'a.ts': 'x\ny\n' });
+  commitAll(dir, 'change');
+  const out = planOut(dir, '--mode', 'branch', '--issue', '5');
+  assert.deepEqual(out.target.issues, [{ number: 5, title: null, body: null, url: null }]);
+  assert.deepEqual(out.selection.skippedNoIssue, ['issue-conformance']);
+  assert.equal(out.issueSection, null);
+});
+
+test('collect writes the raw findings and names a part with no sign of review', () => {
+  const { dir, plan } = partsRun(() => []);
+  const finding = { axis: 'quality', file: 'a.ts', lines: [2, 2], severity: 'suggestion', claim: 'c', evidence: 'y' };
+  const replies = join(dir, 'replies.json');
+  writeFileSync(replies, JSON.stringify({
+    'quality#1': { findings: [finding], read: ['a.ts'], searches: [] },
+    'quality#2': { findings: [], read: [], searches: ['git diff'] },
+  }));
+  const out = JSON.parse(run(['collect', '--repo', dir, '--run', plan.runId, '--replies', replies, '--json']));
+  assert.deepEqual(out.incomplete, ['quality#2']);
+  assert.equal(out.findings, 1);
+  assert.equal(out.raw, join(dir, '.claude', 'review', 'reports', `${plan.runId}-raw.json`));
+  assert.deepEqual(JSON.parse(readFileSync(out.raw, 'utf8')), [finding]);
+  assert.deepEqual(out.coverage.map((c) => c.label), ['quality#1', 'quality#2']);
+});
+
+test('collect refuses a reply under a label the plan does not know', () => {
+  const { dir, plan } = partsRun(() => []);
+  const replies = join(dir, 'replies.json');
+  writeFileSync(replies, JSON.stringify({ 'quality#9': { findings: [], read: ['a.ts'], searches: [] } }));
+  assert.throws(() => run(['collect', '--repo', dir, '--run', plan.runId, '--replies', replies, '--json'], { stdio: 'pipe' }),
+    (err) => err.status === 2 && /replies name parts the plan did not select: quality#9/.test(String(err.stderr)));
 });

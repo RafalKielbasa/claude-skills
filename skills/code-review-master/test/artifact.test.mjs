@@ -18,6 +18,14 @@ const pageFinderLines = new Function(`${TEXT.slice(TEXT.indexOf('function remark
   TEXT.indexOf('function renderFinderLines'))}\nreturn finderLines;`)();
 const pageLines = (finders) => pageFinderLines({ run: { mode: 'pr' }, finders, findings: [] });
 
+// The page and raport.md are two renderings of one run: an axis the report
+// names as skipped for want of an issue must not vanish from the page's count.
+test('the coverage line counts and names axes skipped for want of an issue', () => {
+  assert.match(TEXT, /var skippedNoIssue = selection\.skippedNoIssue \|\| \[\];/);
+  assert.match(TEXT, /selection\.skippedOnTouch\.length \+ skippedNoIssue\.length \+ selection\.deferred\.length/);
+  assert.match(TEXT, /' Skipped, no linked issue: ' \+ skippedNoIssue\.join\(', '\)/);
+});
+
 test('the template carries a title and the data placeholder', () => {
   assert.match(TEXT, /<title>[^<]+<\/title>/);
   assert.match(TEXT, /id="findings"/);

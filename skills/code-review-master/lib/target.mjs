@@ -1,7 +1,48 @@
 import { execFileSync } from 'node:child_process';
 import { statSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { matchGlob } from './glob.mjs';
+
+const ISSUE_FIELDS = 'number,title,body,url';
+
+// One issue's text, from the repository `slug` names or, without one, from the
+// repository under review. A failed fetch keeps the issue in the list with a
+// null body: the caller must be able to say "issue 9 could not be read" rather
+// than treat the task as having no requirements.
+function fetchIssue(callGh, number, slug, url = null) {
+  try {
+    const parsed = JSON.parse(callGh(['issue', 'view', String(number),
+      ...(slug ? ['--repo', slug] : []), '--json', ISSUE_FIELDS]));
+    return { number: parsed.number ?? Number(number), title: parsed.title ?? null,
+      body: parsed.body ?? null, url: parsed.url ?? url };
+  } catch {
+    return { number: Number(number), title: null, body: null, url };
+  }
+}
+
+// The text an axis that needs the issue is given: one section per issue.
+export function renderIssues(issues) {
+  return issues.map((issue) => {
+    const heading = `### Issue #${issue.number}${issue.title ? ` — ${issue.title}` : ''}${issue.url ? ` (${issue.url})` : ''}`;
+    const body = typeof issue.body === 'string' && issue.body.trim() !== ''
+      ? issue.body.trim()
+      : '(the text of this issue could not be fetched — report that instead of guessing its requirements)';
+    return `${heading}\n\n${body}`;
+  }).join('\n\n');
+}
+
+// The command that shows what the change did to one file: the caller appends
+// the path. Forward slashes, because the command is run in a POSIX shell and a
+// Windows path's backslashes would be read there as escapes.
+function diffCommandFor(repoDir, mode, base, head) {
+  const prefix = `git -C "${resolve(repoDir).replace(/\\/g, '/')}" diff`;
+  if (mode === 'working') return `${prefix} HEAD --`;
+  if (mode === 'branch' || mode === 'since') return `${prefix} ${base} ${head} --`;
+  // Three dots: the PR's own changes, from its merge base, not everything the
+  // base branch gained since.
+  if (mode === 'pr') return `${prefix} ${base}...${head} --`;
+  return null;
+}
 
 // A file the change deleted has no size on disk; rank it as the cheapest to read.
 function sizeOf(repoDir, path) {
@@ -63,6 +104,11 @@ export function collectTarget(repoDir, mode, opts = {}) {
   let base = null;
   let prHead = null;
   let files = [];
+  // `opts.gh` is injected by the tests so the PR and issue paths are covered
+  // without a live pull request; production passes nothing and the real gh runs.
+  const callGh = opts.gh ?? ((args) => execFileSync('gh', args,
+    { cwd: repoDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }));
+  const issues = [];
 
   if (mode === 'working') {
     files = mergeFiles([
@@ -94,16 +140,20 @@ export function collectTarget(repoDir, mode, opts = {}) {
     }
     files = parseNumstat(git(repoDir, ['diff', '--numstat', `${base}..HEAD`]));
   } else if (mode === 'pr') {
-    // `opts.gh` is injected by the tests so the PR path is covered without a
-    // live pull request; production passes nothing and the real gh runs.
-    const callGh = opts.gh ?? ((args) => execFileSync('gh', args,
-      { cwd: repoDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }));
-    const parsed = JSON.parse(callGh(['pr', 'view', String(opts.pr), '--json', 'files,headRefOid,baseRefOid']));
+    const parsed = JSON.parse(callGh(['pr', 'view', String(opts.pr), '--json',
+      'files,headRefOid,baseRefOid,closingIssuesReferences']));
     // Both SHAs come from the PR, never from the local checkout: a CI runner's
     // HEAD is a merge commit, and blob links built from it point nowhere.
     base = parsed.baseRefOid;
     prHead = parsed.headRefOid;
     files = parsed.files.map((f) => ({ path: f.path, added: f.additions, removed: f.deletions }));
+    // The issue may live in another repository than the pull request, so each
+    // is read from the repository its own reference names.
+    for (const ref of parsed.closingIssuesReferences ?? []) {
+      const owner = ref.repository?.owner?.login;
+      const name = ref.repository?.name;
+      issues.push(fetchIssue(callGh, ref.number, owner && name ? `${owner}/${name}` : null, ref.url ?? null));
+    }
   } else if (mode === 'full') {
     const listed = git(repoDir, ['ls-files', ...(opts.path ? [opts.path] : [])]).split('\n').filter(Boolean);
     const from = opts.cursor ? listed.findIndex((p) => p >= opts.cursor) : 0;
@@ -122,9 +172,18 @@ export function collectTarget(repoDir, mode, opts = {}) {
   // differently, which let this sort's order disagree with the cursor's — an
   // audit whose only purpose is completeness was silently dropping files.
   files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  // Issues the caller named (`--issue`), read from the repository under review.
+  // One already brought in by the pull request is not fetched twice.
+  for (const number of opts.issues ?? []) {
+    if (issues.some((issue) => issue.number === Number(number))) continue;
+    issues.push(fetchIssue(callGh, number, null));
+  }
   // The PR number rides along in plan.json so later stages (the Semgrep
   // changed-line filter) can ask gh for the same diff without re-parsing CLI args.
-  return { mode, base, head: prHead ?? head, pr: mode === 'pr' ? Number(opts.pr) : null, files };
+  return {
+    mode, base, head: prHead ?? head, pr: mode === 'pr' ? Number(opts.pr) : null, files, issues,
+    diffCommand: diffCommandFor(repoDir, mode, base, prHead ?? head),
+  };
 }
 
 export function isEmpty(target) {
