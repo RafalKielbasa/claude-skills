@@ -1192,3 +1192,13 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
   - twierdzenie-o-pliku-bez-odczytu (porażka, ≥ 10 sesji): wzorzec ogólny, kandydat na regułę globalną;
   - windows-path-w-literale-skryptu (porażka, ≥ 20 sesji): wzorzec ogólny, kandydat na regułę globalną;
   - Brak `nawrót`.
+
+## 2026-11-18 — sesja 140fbd7f-77b7-474d-927d-01ab988fa726 (id claude.ai niedostępny; saas app: `code-review-master pr 219`, `send` z REQUEST_CHANGES 5961351717, karta #138 → To be fixed)
+- założono: brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie (skill: code-review-master, typ: porażka) — brief Haiku bez komendy diffu przypisał PR-owi linie sprzed zmiany; drugi taki przypadek po PR #207.
+- nawrót: weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog — zaadresowany 2026-11-18, wraca tego samego dnia: potwierdzone złamanie zdania z opisu issue dostało 80 i spadło pod próg; uratowała je lista spod progu z Kroku 10.
+- dopisano dowód: crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr — plan z `main` dał nowemu plikowi `size: 0`, obejście worktree z pamięci projektu.
+- dopisano dowód: agent-osi-zglasza-uwagi-bez-czytania-plikow — dwie osie przeczytały 2 z 3 plików, jedna zgłosiła uwagę na nieprzeczytanym; luki w teście znalazł codex, nie osie.
+- `index.md` aktualizowany punktowo (trzy liczniki i status, jeden nowy wpis); `skill-impact.md`: linia „Nawrót” we wpisie 2026-11-18 code-review-master.
+- Sygnał:
+  - weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (nawrót) → `/evolve-skill code-review-master`;
+  - agent-osi-zglasza-uwagi-bez-czytania-plikow (porażka, 3 sesje) → `/evolve-skill code-review-master`.

@@ -2,7 +2,7 @@
 
 - **Skill:** code-review-master
 - **Typ:** porażka
-- **Status:** zaadresowany (2026-11-18, code-review-master)
+- **Status:** nawrót (2026-11-18)
 
 ## Opis
 Agent weryfikacji (fala 2) potwierdza, że uwaga jest prawdziwa, ale daje jej pewność 50, bo ocenia
@@ -29,6 +29,14 @@ ani do artefaktu, więc bez ręcznego odczytu `scores.json` nikt ich nie widzi.
   here)”), 25 (różnica z Figmą: „The Figma nodes … were not checked”) i 50; `crm score` odciął
   wszystkie trzy. Po dołączeniu checklisty i issue do fali 2 run `20261118-134455-ev71` na tym
   samym commicie dał tym samym uwagom 92, 90 i 90.
+- 2026-11-18, sesja 140fbd7f-77b7-474d-927d-01ab988fa726 (id claude.ai niedostępny; saas app, PR #219,
+  run `20261118-163858-xd38`, pierwszy prawdziwy przebieg po zmianie): weryfikator miał checklistę,
+  issue i komendę diffu, potwierdził `f-02` (zapisy przez `prisma.enrollment.createMany` zamiast
+  `POST /enroll`, wbrew zdaniu opisu issue #138 „student zapisuje się na kurs”) i dał 80 z notą
+  „Not 90+ because the acceptance-criteria list does not name enrollment explicitly”. Sam rozróżnił
+  opis issue i listę kryteriów, choć checklista `issue-conformance` mówi „every requirement in the
+  issue's description”. `crm score` odciął uwagę; wróciła z listy `belowThreshold` w Kroku 10,
+  Rafał wysłał ją jako Blocking (review 5961351717). Lista spod progu zadziałała jako siatka.
 
 ## Rozwiązanie
 W Kroku 6 dołącz do promptu weryfikacji checklistę osi (ten sam `{{CHECKLIST}}` co w fali 1)
@@ -50,3 +58,8 @@ w `course-section-accordion.tsx:131`); odrzucił je dopiero codex. Nota weryfika
 „not checked, since I have no diff”. Fala 2 dostaje teraz `{{DIFF_NOTE}}` tak jak fala 1,
 a `prompts/verify.md` mówi, że problem starszy niż zmiana dostaje 0 bez względu na regułę,
 na którą się powołuje. Niesprawdzone jeszcze na prawdziwym przebiegu.
+
+Po nawrocie (PR #219) do dopisania w `prompts/verify.md`: „Zdanie z opisu issue jest wymaganiem
+na równi z kryterium akceptacji; nie obniżasz oceny dlatego, że lista kryteriów go nie powtarza”.
+Rozważyć próg deterministyczny: uwaga osi `needs: [issue]` z potwierdzonym dowodem nie spada pod
+próg przez samą notę weryfikatora, tylko trafia do raportu z jego zastrzeżeniem.

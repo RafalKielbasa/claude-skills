@@ -28,6 +28,12 @@ w odpowiedzi CLI i nie idzie do `raport.md` ani do artefaktu.
   `correctness` przeczytał 5 i 3 z 10 plików. Jako nieprzejrzane wyszły tylko `secrets`
   (pierwszy przebieg) i `debug-leftovers` (drugi), obie bez uwag i bez pliku. Rafał odłożył
   „Regułę głębokości czytania (D3)” do danych z kolejnych przebiegów.
+- 2026-11-18, sesja 140fbd7f-77b7-474d-927d-01ab988fa726 (id claude.ai niedostępny; saas app, PR #219,
+  3 pliki): `issue-conformance` i `code-quality` przeczytały po 2 z 3 plików, bez `app.module.ts`;
+  `issue-conformance` zgłosił mimo to uwagę na `app.module.ts:60` (sam grep). Osie pracowały po
+  2–5 wywołań narzędzi i 7–17 s. `unread` wypisałem użytkownikowi ręcznie (Krok 4), raport go nie
+  niesie. Obie uwagi o lukach w teście (zapis przez Prismę, brak ZSCORE) dał codex jako szukający,
+  nie agenci osi.
 
 ## Rozwiązanie
 Hipoteza do decyzji „Reguła głębokości czytania (D3)”: `crm render` i `crm artifact` wypisują

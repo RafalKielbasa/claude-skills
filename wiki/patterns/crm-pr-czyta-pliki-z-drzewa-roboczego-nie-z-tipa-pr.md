@@ -24,6 +24,12 @@ z `headRefOid` PR-a. SKILL.md definiuje `<repo>` jako katalog roboczy i nie wspo
   pierwszy plan (`…-nmwy-plan.json`) został osierocony w `main`. Skutki uboczne: raport i
   zmodyfikowany, śledzony `.claude/review/state.json` wylądowały w worktree gałęzi PR-a, a tryb
   `send` wymaga potem tego samego `--repo`.
+- 2026-11-18, sesja 140fbd7f-77b7-474d-927d-01ab988fa726 (id claude.ai niedostępny; saas app, PR #219):
+  `crm plan --mode pr --pr 219` z `main` dał `apps/api/test/progress-leaderboard.e2e-spec.ts` z
+  `"size":0`, a `app.module.ts` i `setup-env.ts` w wersji z `main`. Wykryte z pamięci projektu,
+  nie z ostrzeżenia CLI. Obejście jak wyżej: `git worktree add --detach <scratchpad>/pr219/saas app
+  782dab7`, kopia `state.json`, drugi `crm plan` z `--repo <worktree>`, po przebiegu kopia
+  `state.json` i raportów z powrotem; pierwszy plan (`20261118-163816-6xim`) osierocony.
 
 ## Rozwiązanie
 W Kroku 1 trybu `pr`, przed `crm plan`: porównaj `git -C <repo> rev-parse HEAD` z
