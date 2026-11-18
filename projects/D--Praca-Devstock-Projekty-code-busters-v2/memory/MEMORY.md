@@ -5,4 +5,5 @@
 - [Trial CTA targets](trial-cta-goes-to-pricing.md) — hero/bar trial CTA → /pricing; OfferPanel CTA → monthly checkout (it has its own „Porównaj plany”)
 - [Python CRLF on Windows](python-crlf-on-windows.md) — text-mode Python writes turn LF files into CRLF; use newline='' and check git ls-files --eol
 - [Worktree removal on Windows](worktree-removal-on-windows.md) — resumed session: ExitWorktree(remove) refuses; keep, `git worktree remove` (dies on long node_modules paths), then `rd /s /q "\\?\…"`, prune, `branch -d`
+- [Review base: origin/main](review-base-origin-main.md) — local `main` lags; `code-review-master branch` needs `--base origin/main` (or `pr <n>`)
 - [Production release ships web and CMS together](production-release-ships-web-and-cms-together.md) — one GitHub release deploys Vercel and Fly at once; CMS-first needs a release targeted at an earlier main commit

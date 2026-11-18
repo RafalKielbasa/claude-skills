@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: reference
   originSessionId: 73e150b5-4819-4e1d-82bc-df3ffdf3c8c3
-  modified: 2026-11-17T19:01:19.381Z
+  modified: 2026-11-18T19:24:04.138Z
 ---
 
 Removing `.claude/worktrees/<name>` after its PR is merged (observed 2026-11-10, DT-83, session 73e150b5):
@@ -15,5 +15,7 @@ Removing `.claude/worktrees/<name>` after its PR is merged (observed 2026-11-10,
 - `cmd /c 'rd /s /q "\\?\D:\…\.claude\worktrees\<name>"'` (PowerShell) deletes the rest; then `git worktree prune` and `git branch -d <branch>`. The warning "merged to refs/remotes/origin/<branch>, but not yet merged to HEAD" is expected when the main checkout sits on another branch.
 
 - 2026-11-17 (DT-176, session e23b7736): same path again (remove refused, keep, `git worktree remove --force` because of a modified `.claude/review/state.json`, then `rd`). `rd` emptied the folder but the empty `dt-176` folder stayed "used by another process" with no node process pointing at it (likely an editor window opened on the worktree). Before removing, copy `<worktree>/.claude/review/reports/*` (git-ignored `code-review-master` runs) to the main checkout's `.claude/review/reports/`. Squash-merged branches need `git branch -D`; first check the local head equals the PR's `headRefOid`.
+
+- 2026-11-18 (PR #1776, session bf5843f1): dev servers started from the worktree by an earlier part of the same session (Keystone `:3001`, `next dev -p 3000`) held its files. The auto-mode classifier denied `Stop-Process` on them ("Destructive or Unwanted Actions"); Rafał ran `! taskkill //F //T //PID <bash wrapper> //PID <next parent>` himself. Then ExitWorktree remove refused (not the owner), keep, `git worktree remove --force` (Filename too long), `rd` — this time the folder vanished completely — prune, `branch -d`.
 
 **How to apply:** before removing, check `git -C <worktree> status --short` is empty and no node process runs from the worktree (`Get-CimInstance Win32_Process` filtered on the path); git-ignored content (SDD ledger, `.env` copies) goes with the folder, so say so in the decision.
