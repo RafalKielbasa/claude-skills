@@ -66,3 +66,8 @@ Format wpisu:
 - Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmieniły się spec, raport sond, plan 1 i indeks `.claude/projects/hub.md` projektu `hub`, poza vaultem używane były globalne skille `superpowers:subagent-driven-development`, `project-index` i zainstalowany `hub`)
 - Wzorce globalne dotknięte w tej sesji: wartosc-do-wpisania-opisana-zamiast-odczytana (założony), zrobione-sprawdzone-w-logach-przed-zaliczeniem (założony), restart-zakladki-huba-bez-pierwszego-promptu (założony), dluga-akceptacja-bez-mapy-postepu (założony), dlugi-lancuch-narzedzi-bez-linii-statusu (dopisany dowód)
 - Sygnał: brak (wzorce repo); globalne — patrz log globalny
+
+## 2026-11-18 — sesja 51ae2c74-bb8c-4589-a22e-43752eafb286 (id claude.ai niedostępny)
+- Bez nowych wzorców (sesja nie dotknęła żadnego skilla z tego repo; w vaultcie zmienił się tylko indeks `.claude/projects/code-review-master.md`, commity `0d50524` i `df63904`; poza vaultem zmieniany był globalny skill `code-review-master`, używane `evolve-skill`, `project-index`, `superpowers:test-driven-development`)
+- Wzorce globalne dotknięte w tej sesji: agent-osi-zglasza-uwagi-bez-czytania-plikow (założony), indeks-wiki-za-duzy-na-przepisanie-w-calosci (założony), test-frazy-w-prozie-pada-na-zawinieciu-linii (założony), repo-claude-commituje-backup-nie-sesja, twierdzenie-o-pliku-bez-odczytu, windows-path-w-literale-skryptu, stan-przegladu-w-sledzonym-pliku-blokuje-scalenie, zielony-suite-z-mockami-nie-widzi-binarki-ani-poswiadczen, zmiana-skilla-poza-evolve-skill-bez-sladu (dopisane dowody); review-does-not-check-pr-against-its-issue i weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (zaadresowane)
+- Sygnał: brak (wzorce repo); globalne — patrz log globalny

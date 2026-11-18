@@ -100,6 +100,13 @@ says so. Lines marked with a date came from a finding on that date.
       silently: in DT-138 the body added a second deployment to the ordering
       and dropped "or delete" from the approved scope, and only codex noticed.
 
+- [ ] **(2026-11-18)** Two tickets that change the same function, query, shared
+      registry (query keys, invalidation, email job types) or the same section of
+      a document declare an order as a dependency, in both the header and
+      "Zależności". "Whichever lands second rebases" is not an order: in wave 1
+      codex found six such pairs (search query, tenant URL helper, query keys,
+      course delete) that the drafts left to chance.
+
 ## Per batch
 
 - [ ] Numbers are consecutive from the reserved start and none collides with an

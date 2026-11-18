@@ -40,6 +40,11 @@ wprowadzoną ręcznie tydzień wcześniej albo odrzuconą poza jego ścieżką.
   `evolve-skill` tylko do odczytu, przeczytała przy tym ten wzorzec i poszła za jego
   „Rozwiązaniem”. Mechanizm dalej jest ręczny: zadziałał dzięki lekturze wiki, nie dzięki regule
   w skillu, który zmieniał treść (`superpowers:writing-skills`).
+- 2026-11-18, sesja 51ae2c74-bb8c-4589-a22e-43752eafb286 (id claude.ai niedostępny; vault): dwie
+  zmiany `code-review-master` na bezpośrednią prośbę (Z1–Z6 z briefu i domknięcie po „Zaopiekujmy
+  rzeczy otwarte”), obie z wpisem `zaakceptowana` i pełnym diffem `SKILL.md` przed raportem. Powód:
+  brief kazał pracować ze skillem `evolve-skill`, a druga zmiana poszła wzorem pierwszej.
+  Mechanizm dalej ręczny.
 
 ## Rozwiązanie
 Każdą zmianę treści skilla dopisz do `skill-impact.md` właściwego wiki jako

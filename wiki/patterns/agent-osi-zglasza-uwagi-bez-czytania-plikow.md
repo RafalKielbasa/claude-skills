@@ -1,0 +1,37 @@
+# agent-osi-zglasza-uwagi-bez-czytania-plikow
+
+- **Skill:** code-review-master
+- **Typ:** porażka
+- **Status:** otwarty
+
+## Opis
+Agent osi (fala 1) zgłasza uwagi po samym `git diff` albo czyta tylko część plików swojej części,
+a `crm collect` uznaje taką część za przejrzaną, bo ma uwagi. Jako nieprzejrzaną oznacza tylko
+część bez uwag i bez żadnego przeczytanego pliku, więc pliki z `coverage.unread` nie trafiają do
+raportu i pusty wynik dla nich czyta się jak czysty kod.
+
+## Przyczyna źródłowa
+`prompts/axis.md` każe czytać każdy plik w całości, ale nic tego nie wymusza. Diff daje agentowi
+dość materiału na uwagę zakresową (hunk spoza issue) albo na pierwszą trafioną regułę, więc agent
+kończy pracę bez lektury kontekstu. `crm collect` liczy listę `read`, ale wynik `unread` zostaje
+w odpowiedzi CLI i nie idzie do `raport.md` ani do artefaktu.
+
+## Dowody
+- 2026-11-18, sesja 0aaba947-0230-4e7a-bac1-4c6ab7da27b3 (id claude.ai niedostępny; saas app, run
+  `20261118-122231-zty1` na PR #217, przed zmianą): każdy agent osi wykonał jedno wywołanie Bash
+  (sam `git diff` albo grep); agent `web-frontend` widział diff akordeonu i zwrócił `[]` przy
+  kłódce bez warunku dostępu w `course-section-accordion.tsx:178` (pamięć projektu `saas app`,
+  `code-review-master-blind-spots`).
+- 2026-11-18, sesja 51ae2c74-bb8c-4589-a22e-43752eafb286 (id claude.ai niedostępny; vault, dwa
+  przebiegi kontrolne PR #217 po wprowadzeniu `read`/`searches` i `crm collect`): w obu oś
+  `issue-conformance` zgłosiła uwagi z `read: []` (w `20261118-134455-ev71` cztery uwagi 90–92);
+  `correctness` przeczytał 5 i 3 z 10 plików. Jako nieprzejrzane wyszły tylko `secrets`
+  (pierwszy przebieg) i `debug-leftovers` (drugi), obie bez uwag i bez pliku. Rafał odłożył
+  „Regułę głębokości czytania (D3)” do danych z kolejnych przebiegów.
+
+## Rozwiązanie
+Hipoteza do decyzji „Reguła głębokości czytania (D3)”: `crm render` i `crm artifact` wypisują
+`coverage.unread` każdej części jako pliki nieprzeczytane przez agenta osi, a część z uwagami,
+ale bez przeczytanego pliku, jest oznaczona „przejrzana tylko diffem”. Osie, którym wystarcza
+wyszukiwanie (`secrets`, `debug-leftovers`), zwalnia z tej reguły pole w configu osi, żeby nie
+dawać fałszywego „Nie przejrzano”.

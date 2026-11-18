@@ -27,6 +27,7 @@ uruchomieniu użytkownikowi, bo ścieżka mutuje jego bazę i bucket.
   Żadnej z tych trzech rzeczy 479 testów nie mogło pokazać, a dopiero ostatnia
   jest właściwą odpowiedzią na pytanie użytkownika „czy ADC wystarczy".
 - 2026-11-05, sesja e70485da-f464-4147-b956-8e00c7c5e2e2 (id claude.ai niedostępny): raport status line wymienił jako niezweryfikowane porównanie z niezależnym liczeniem na 4 repozytoriach (wywołanie odrzucone przez Rafała), wywołanie przez Claude Code widziane tylko w wersji z `tee` oraz sam wiersz w terminalu, mimo kompletu zielonych testów.
+- 2026-11-18, sesja 51ae2c74-bb8c-4589-a22e-43752eafb286 (id claude.ai niedostępny; vault, zmiany `code-review-master`), wariant: zachowanie agentów zamiast zależności runtime. 393 zielone testy przypinały treść promptów i logikę `crm`, a pierwszy przebieg kontrolny na PR #217 (15 agentów) pokazał, że weryfikator bez treści issue daje uwagom `issue-conformance` 50, 25 i 50; drugi — że reguła „co najmniej 90” podnosi uwagi o kodzie sprzed PR-a do 90 i 85. Żadnej z tych rzeczy test treści nie mógł pokazać. Raport z domknięcia otwartych punktów napisał wprost, że trzech kolejnych zmian nie potwierdził jeszcze żaden prawdziwy przebieg.
 
 ## Rozwiązanie
 W sekcji „Weryfikacja" wymień z nazwy każdą zależność runtime, którą testy

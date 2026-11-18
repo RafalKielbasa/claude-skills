@@ -25,6 +25,14 @@ Nagłówek wymaga, żeby ręczny commit przepuścił pliki przez `Test-SecretCon
   mówił o kolejnych zmianach „czekam na Twoje słowo”, choć pierwsze zakończenie sesji spoza huba i
   sond zgarnęłoby je z cudzymi plikami i wypchnęło. Mój raport napisał najpierw „dowolnej sesji”, co
   obalił `sync.log`: od 10:08 do 12:43 same `skip:`, a żadnego commita.
+- 2026-11-18, sesja 51ae2c74-bb8c-4589-a22e-43752eafb286 (id claude.ai niedostępny; vault, zmiany
+  `code-review-master` w `~/.claude`): backup zgarnął i wypchnął zmiany skilla trzy razy w trakcie
+  pracy (`8b43bbe`, `90da2c2`, `20c08c8`), zanim Rafał je przejrzał; raporty podawały hash backupu
+  i zakres diffu, a nie „czekają na review” — dzięki notatce w pamięci projektu zapisanej w tej
+  sesji, nie dzięki tej stronie. Na „Add commit i push na RafalKielbasa/claude-skills” zrobiłem
+  `f03445c` i push bez `Test-SecretContent` (cudzy `skills/github-tickets/references/self-check.md`
+  poprawnie pominięty). Tę stronę przeczytałem dopiero w podsumowaniu; skan po fakcie 8/8 `clean`.
+  Drugi raz ten sam przebieg: ręczny commit bez skanu, wyłapany po pushu.
 
 ## Rozwiązanie
 Przed ręcznym commitem w `~/.claude` zaimportuj `hooks/lib/ClaudeBackup.psm1` i uruchom

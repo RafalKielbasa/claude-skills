@@ -1175,3 +1175,20 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - obserwacja dopisana do strony wzorca o weryfikatorze: reguła „co najmniej 90” bez komendy diffu podniosła dwie uwagi o kodzie sprzed PR-a (`f-05` 90, `f-11` 85 w runie `20261118-134455-ev71`).
 - `index.md`: zgodność statusów z 232 stronami wzorców sprawdzona skryptem (statusy zgodne); dopisany brakujący wpis `diagnoza-api-bez-sprawdzenia-wartosci-ktora-dostal-proces` (strona z 2026-10-22 bez linii w indeksie); dwie linie wzorców `code-review-master` zaktualizowane. Plik nie przepisany w całości (71 tys. tokenów).
 - „Reguła głębokości czytania (D3)” dalej odłożona przez Rafała, bez nowych danych.
+
+## 2026-11-18 — sesja 51ae2c74-bb8c-4589-a22e-43752eafb286, podsumowanie (id claude.ai niedostępny; vault Notatki: Z1–Z6 i domknięcie otwartych punktów w `code-review-master`, dwa przebiegi kontrolne PR #217, commit i push w `~/.claude` na prośbę)
+- założono: agent-osi-zglasza-uwagi-bez-czytania-plikow (skill: code-review-master, porażka) — uwagi po samym `git diff`, `crm collect` uznaje część za przejrzaną; obserwacja odłożonej „Reguły głębokości czytania (D3)”.
+- założono: indeks-wiki-za-duzy-na-przepisanie-w-calosci (skill: podsumuj-sesja-claude i evolve-skill, porażka) — reguła „przepisz w całości” niewykonywana przy 71 tys. tokenów, brakujący wpis przeżył prawie miesiąc.
+- założono: test-frazy-w-prozie-pada-na-zawinieciu-linii (skill: ogólny, porażka; wątpliwy) — trzy testy treści promptów padły na zawinięciu linii.
+- dopisano dowód: repo-claude-commituje-backup-nie-sesja — `f03445c` na jawną prośbę bez `Test-SecretContent`, skan po fakcie 8/8 `clean`; backup trzy razy wypchnął zmiany skilla przed review.
+- dopisano dowód: twierdzenie-o-pliku-bez-odczytu — zdanie o zachowaniu `git diff` dla utworzonego pliku wpisane do promptu bez sondy, fałszywe dla `pr`/`branch`.
+- dopisano dowód: windows-path-w-literale-skryptu — filtr `gh --jq` z `\.` inline, naprawiony plikiem `probe.sh`.
+- dopisano dowód: stan-przegladu-w-sledzonym-pliku-blokuje-scalenie — `state.json` zmieniony w worktree po dwóch przebiegach; `crm finish` nie jest idempotentny.
+- dopisano dowód: zielony-suite-z-mockami-nie-widzi-binarki-ani-poswiadczen (sukces) — przebieg kontrolny pokazał ocenę weryfikatora, której 393 testy treści nie mogły pokazać.
+- dopisano dowód: zmiana-skilla-poza-evolve-skill-bez-sladu — dwie zmiany na prośbę, obie z wpisem i diffem w `skill-impact.md`.
+- `index.md` aktualizowany punktowo (sześć liczników, trzy nowe wpisy), zgodność 235 stron sprawdzona skryptem.
+- Sygnał:
+  - zmiana-skilla-poza-evolve-skill-bez-sladu (porażka, 4 sesje) → `/evolve-skill evolve-skill`;
+  - twierdzenie-o-pliku-bez-odczytu (porażka, ≥ 10 sesji): wzorzec ogólny, kandydat na regułę globalną;
+  - windows-path-w-literale-skryptu (porażka, ≥ 20 sesji): wzorzec ogólny, kandydat na regułę globalną;
+  - Brak `nawrót`.
