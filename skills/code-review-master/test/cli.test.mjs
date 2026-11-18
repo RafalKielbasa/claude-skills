@@ -302,6 +302,29 @@ test('a finding verification never scored is treated as unconfirmed, not as pass
   assert.equal(scored.belowThreshold, 1);
 });
 
+// Step 10 lists what the threshold cut. A bare count hid a confirmed blocking
+// breach scored 50 (PR #1749, 2026-11-12) until someone opened scores.json.
+test('finish lists each finding the threshold cut, with its place and the verifier note', () => {
+  const dir = makeRepo({ 'a.ts': 'const course = findFirst({ where: { id } });\n' });
+  writeFiles(dir, { '.claude/review/config.md': CONFIG, 'a.ts': 'const course = findFirst({ where: { id } });\nchanged\n' });
+  const plan = JSON.parse(run(['plan', '--repo', dir, '--mode', 'working', '--json']));
+  const raw = join(dir, 'raw.json');
+  writeFileSync(raw, JSON.stringify([{
+    axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking',
+    claim: 'query without tenant filter', evidence: 'const course = findFirst({ where: { id } });',
+  }]));
+  run(['assemble', '--repo', dir, '--run', plan.runId, '--raw', raw, '--json']);
+  const scores = join(dir, 'scores.json');
+  writeFileSync(scores, JSON.stringify([{ id: 'f-01', confidence: 50, note: 'real but minor' }]));
+  run(['score', '--repo', dir, '--run', plan.runId, '--scores', scores, '--json']);
+  const finished = JSON.parse(run(['finish', '--repo', dir, '--run', plan.runId, '--json']));
+  assert.equal(finished.exit, 0);
+  assert.deepEqual(finished.belowThreshold, [{
+    id: 'f-01', axis: 'quality', file: 'a.ts', lines: [1, 1], severity: 'blocking',
+    confidence: 50, note: 'real but minor', claim: 'query without tenant filter',
+  }]);
+});
+
 test('a subcommand run out of order exits 2, not 1', () => {
   const dir = makeRepo({ 'a.ts': 'x\n' });
   writeFiles(dir, { '.claude/review/config.md': CONFIG, 'a.ts': 'x\ny\n' });

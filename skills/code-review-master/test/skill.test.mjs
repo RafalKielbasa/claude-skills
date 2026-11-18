@@ -337,6 +337,34 @@ test('wave 2 is given the checklist and the issue of the part it verifies', () =
   assert.match(step6, /\{\{ISSUE\}\}[\s\S]{0,200}Step 4/);
 });
 
+test('wave 2 gets the diff command Step 4 gave, and the note is right about created files', () => {
+  const step6 = section('## Step 6 — wave 2', '## Step 7 — codex');
+  assert.match(step6, /\{\{DIFF_NOTE\}\}[\s\S]{0,200}Step 4/);
+  const step4 = section('## Step 4 — wave 1', '## Step 5 — assemble');
+  assert.doesNotMatch(step4, /prints nothing for a file the change created/);
+  assert.match(step4, /every line of (it|such a file) is new/);
+});
+
+test('Step 10 lists every finding the threshold cut, not only their number', () => {
+  const step10 = section('## Step 10 — finish', '## Mode `init`');
+  assert.match(step10, /`belowThreshold`/);
+  assert.match(step10, /`file:lines`[\s\S]{0,200}`note`/);
+});
+
+// The pattern review-does-not-check-pr-against-its-issue names `recheck` too:
+// `recheck 198` (2026-10-09) confirmed 3/3 remarks while the branch carried
+// another task's changes, found only by reading the issue by hand.
+test('recheck checks the PR against the issues it closes', () => {
+  const recheck = section('## Mode `recheck`', '## Mode `send`');
+  assert.match(recheck, /closingIssuesReferences/);
+  assert.match(recheck, /gh issue view/);
+  assert.match(recheck, /ticked or not/i);
+  assert.match(recheck, /outside the issue's scope|scope does not cover/i);
+  assert.match(recheck, /quotes the issue sentence/i);
+  assert.match(recheck, /element issue \| status \| dowód na tipie/);
+  assert.match(TEXT, /\| `\/code-review-master recheck <n> \[reviewer\]` \|[^\n]*issues? it closes/);
+});
+
 test('views named by the issue are checked in Figma by the session itself', () => {
   const figma = section('## Step 4b — Figma', '## Step 5 — assemble');
   assert.match(figma, /yourself/i);

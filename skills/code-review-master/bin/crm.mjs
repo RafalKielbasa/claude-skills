@@ -416,7 +416,12 @@ const COMMANDS = {
     }
     const { kept, dropped } = applyThresholds(data.findings, config.settings.confidence_threshold);
     data.findings = kept;
-    data.belowThreshold = dropped.map((f) => ({ id: f.id, confidence: f.confidence, claim: f.claim }));
+    // Kept with its place and the verifier's note: Step 10 lists these to the
+    // user, and a bare id with a confidence says nothing about why it fell.
+    data.belowThreshold = dropped.map((f) => ({
+      id: f.id, axis: f.axis, file: f.file, lines: f.lines, severity: f.severity,
+      confidence: f.confidence, note: f.verifyNote, claim: f.claim,
+    }));
     writeJson(path, data);
     return { kept: kept.length, belowThreshold: dropped.length };
   },
@@ -766,7 +771,9 @@ const COMMANDS = {
     // The run reached its end, so the sentinel the wrapper wrote comes down.
     // Anything that leaves it in place is a run that died on the way here.
     try { rmSync(runningPath(repo)); } catch { /* absent when run outside a wrapper */ }
-    process.stdout.write(`${JSON.stringify({ exit: code, findings: data.findings.length })}\n`);
+    process.stdout.write(`${JSON.stringify({
+      exit: code, findings: data.findings.length, belowThreshold: data.belowThreshold ?? [],
+    })}\n`);
     process.exit(code);
   },
 

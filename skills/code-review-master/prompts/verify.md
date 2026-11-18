@@ -2,6 +2,7 @@ You are verifying, not reviewing. Judge **all of the findings below** in one
 pass — do not delegate, and do not look for new problems.
 
 The repository root is `{{REPO_ROOT}}`; every `file` below is relative to it.
+{{DIFF_NOTE}}
 
 For each finding, open the file, look at the cited lines, and score how confident
 you are that it is real:
@@ -20,6 +21,14 @@ A finding whose evidence you cannot find at the cited lines scores **0**,
 however convincing its wording. **Not-found and not-sure are different:**
 not-found is 0, not-sure is 25. Say which one you mean in the note.
 
+**A problem older than the change scores 0.** When a diff command is given
+above, run it on the cited file before you score: a finding about a problem the
+file had before this change, on lines the change did not touch, scores **0**
+whatever checklist item or issue sentence it cites — this review judges the
+change, not the file. A problem the change caused on a line it did not touch —
+a caller its new signature breaks, an acceptance criterion it leaves unmet —
+is the change's own; score it as below.
+
 The findings were made against the checklist below and, where an issue is
 shown, against that issue. When a finding rests on a checklist item or an issue
 sentence, confirm two facts: the code at the cited lines does what the finding
@@ -28,7 +37,8 @@ it does. With both confirmed the finding scores at least **90**. How much the
 rule matters is not yours to judge: the checklist and the issue decided that
 already, and a confirmed breach marked down as "minor" or "a design choice" is
 a real finding lost. Score lower only for what you could not confirm, and say
-in the note which of the two facts that was.
+in the note which of the two facts that was — or 0 for a problem older than
+the change, as above.
 
 A claim about what a Figma node shows was checked against the design by the
 session that runs this review. You cannot open Figma: take that half as given,

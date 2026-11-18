@@ -141,6 +141,18 @@ test('a confirmed breach of a checklist item or issue sentence clears the blocki
   assert.match(text, /not yours to (re-)?judge/i);
 });
 
+// 2026-11-18, run 20261118-134455-ev71: without a diff the verifier could not
+// tell a line the PR touched from an older one, and the "at least 90" rule
+// lifted two findings about code older than the PR to 90 and 85.
+test('the verify prompt gets the diff command and scores a problem older than the change 0', () => {
+  const text = read('verify.md');
+  assert.match(text, /\{\{DIFF_NOTE\}\}/);
+  assert.ok(text.indexOf('{{DIFF_NOTE}}') < text.indexOf('## Findings'));
+  assert.match(text, /older than the change[\s\S]{0,300}\*\*0\*\*/i);
+  assert.match(text, /whatever checklist item or issue sentence it cites/);
+  assert.match(text, /caller[\s\S]{0,120}criterion[\s\S]{0,120}is the change's own/);
+});
+
 test('the verify prompt takes the Figma half of a claim as given and checks the code half', () => {
   const text = read('verify.md');
   assert.match(text, /cannot open Figma/i);

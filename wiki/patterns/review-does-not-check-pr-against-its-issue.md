@@ -2,7 +2,7 @@
 
 - **Skill:** code-review-master
 - **Typ:** porażka
-- **Status:** otwarty
+- **Status:** zaadresowany (2026-11-18, code-review-master)
 
 ## Opis
 The review never compares a PR with the issue it closes. An acceptance criterion the PR leaves unmet, and
@@ -27,6 +27,13 @@ and nothing in the pipeline tests it against the code. Mode `recheck` reads only
   `apps/web`, and `passingScore ?? 70` (`quiz-lesson-editor.tsx:157`) breaking "pominięcie zostawia
   dotychczasową wartość". Both went out as Blocking in review 5491208916. Rafał: "Zawsze niewypełnienie
   elementu issue jest uwagą blokującą".
+- 2026-11-18, sesje 0aaba947-0230-4e7a-bac1-4c6ab7da27b3 (saas app) i 51ae2c74-bb8c-4589-a22e-43752eafb286
+  (vault; id claude.ai niedostępne): `pr 217` (CP-101, issue #181), run `20261118-122231-zty1`, reported 0
+  findings; a manual read found the accordion change outside the four points of #181. After the change
+  (axis `issue-conformance`, issue text from `crm plan`, checklist and issue given to wave 2), run
+  `20261118-134455-ev71` on the same commit reported the out-of-scope accordion hunk (92), the `pluralize`
+  refactor outside the issue (90), the Figma difference in the quiz row (90) and the "Bezpłatny podgląd"
+  condition the issue does not state (90).
 
 ## Rozwiązanie
 In modes `pr` and `recheck`, fetch the issues the PR closes (`gh pr view <n> --json
@@ -35,3 +42,6 @@ axis: every acceptance criterion and every requirement in the description, ticke
 file the issue's scope does not cover. Each unmet element and each foreign change is Blocking and quotes the
 issue sentence it rests on. The rule source is Rafał's two decisions above, recorded in project memory
 (`feedback-unmet-issue-element-blocking`, `feedback-foreign-task-changes-blocking`).
+
+Applied 2026-11-18 for mode `pr` (and `branch` with `--issue`). Mode `recheck` still reads only the
+earlier review's remarks, not the issue.

@@ -1158,3 +1158,13 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - dopisano dowód: potok-z-tail-maskuje-ubity-proces — `vitest | tail -40` w tle z pustym wyjściem przy wiszącym workerze.
 - Wzorce repo tej sesji: brak (skill repo `course-import` nieużyty).
 - Kandydaci do ewolucji (porażka, otwarty, > 2 sesje) wśród dotkniętych: board-tracker-cli-fails-whole-op-on-board-step (5 sesji) i create-task-przypina-issue-zakladane-na-pozniej (3 sesje) → `/evolve-skill board-tracker`; ogólne bez skilla do ewolucji: regex-przez-node-e-traci-ukosniki, windows-path-w-literale-skryptu, straznik-worktree-odrzuca-komende-ktorej-nie-umie-zweryfikowac, dlugi-lancuch-narzedzi-bez-linii-statusu (potok-z-tail-maskuje-ubity-proces ma dowody z 2 sesji, jeszcze poniżej progu). Nowych nawrotów brak.
+
+## 2026-11-18 — sesja 51ae2c74-bb8c-4589-a22e-43752eafb286 (id claude.ai niedostępny; vault Notatki, brief z `saas app`: Z1–Z6 w `code-review-master` po przebiegu PR #217 z zerem uwag)
+- zmiana skilla: code-review-master — zaakceptowana („ok” Rafała po raporcie; Z1–Z5 dyktowane w briefie, Z6 jako decyzja D2 wariant A); wpis z pełnym diffem `SKILL.md` w `skill-impact.md`. Wykonane poza formą `evolve-skill`: pięć zmian dyktowanych naraz plus kod `crm` z testami.
+- zaadresowano: review-does-not-check-pr-against-its-issue — oś `issue-conformance`, treść issue z `crm plan`, checklist i issue w fali 2; tryb `recheck` dalej nie czyta issue.
+- zaadresowano: weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog — `{{CHECKLIST}}` i `{{ISSUE}}` w `prompts/verify.md`, potwierdzone złamanie reguły co najmniej 90; wypisanie uwag spod progu w Kroku 10 niezrobione.
+- dopisano dowód: review-does-not-check-pr-against-its-issue — PR #217 / #181, run `20261118-122231-zty1` z zerem uwag; po zmianie run `20261118-134455-ev71` zgłosił cztery uwagi osi (92, 90, 90, 90).
+- dopisano dowód: weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog — run `20261118-132541-6575`: 50, 25, 50 bez treści issue; po zmianie 92, 90, 90.
+- `index.md` zmieniony w dwóch liniach (statusy i liczby dowodów), nie przepisany w całości.
+- obserwacje bez wzorca (decyzja D3 odłożona przez Rafała): agenci osi dalej czytają mało — w obu przebiegach `issue-conformance` zgłosił uwagi po samym `git diff` (0 plików w `read`), `correctness` przeczytał 5 i 3 z 10 plików; `crm collect` oznacza tylko pustą odpowiedź bez plików (`secrets` w pierwszym, `debug-leftovers` w drugim przebiegu). Weryfikator bez komendy diffu podniósł do 90 i 85 dwie uwagi o kodzie sprzed PR-a (`f-05`, `f-11`), które odrzucił dopiero codex.
+- automatyczny backup `~/.claude` zacommitował i wypchnął zmiany skilla w trakcie pracy (`8b43bbe`, `90da2c2`), zanim Rafał je przejrzał.
