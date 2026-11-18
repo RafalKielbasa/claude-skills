@@ -39,4 +39,14 @@ liczby `belowThreshold`.
 
 Wprowadzone 2026-11-18: `{{CHECKLIST}}` i `{{ISSUE}}` w `prompts/verify.md`, a potwierdzone
 złamanie pozycji checklisty albo zdania issue dostaje co najmniej 90 (75 nie przechodzi progu
-85 dla blocking). Niezrobione: wypisanie uwag spod progu w Kroku 10.
+85 dla blocking). Tego samego dnia, po „Zaopiekujmy rzeczy otwarte” Rafała: Krok 10 wypisuje
+każdą uwagę spod progu (`belowThreshold` z wyniku `crm finish`: id, `file:lines`, waga, pewność,
+nota weryfikatora).
+
+Skutek uboczny reguły „co najmniej 90”, naprawiony tego samego dnia: w runie
+`20261118-134455-ev71` weryfikator bez komendy diffu podniósł do 90 i 85 dwie uwagi o kodzie
+sprzed PR-a (`f-05` `useState` w `lesson-content.tsx:33`, `f-11` brak `aria-current`
+w `course-section-accordion.tsx:131`); odrzucił je dopiero codex. Nota weryfikatora przy `f-02`:
+„not checked, since I have no diff”. Fala 2 dostaje teraz `{{DIFF_NOTE}}` tak jak fala 1,
+a `prompts/verify.md` mówi, że problem starszy niż zmiana dostaje 0 bez względu na regułę,
+na którą się powołuje. Niesprawdzone jeszcze na prawdziwym przebiegu.

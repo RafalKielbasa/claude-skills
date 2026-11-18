@@ -43,5 +43,7 @@ file the issue's scope does not cover. Each unmet element and each foreign chang
 issue sentence it rests on. The rule source is Rafał's two decisions above, recorded in project memory
 (`feedback-unmet-issue-element-blocking`, `feedback-foreign-task-changes-blocking`).
 
-Applied 2026-11-18 for mode `pr` (and `branch` with `--issue`). Mode `recheck` still reads only the
-earlier review's remarks, not the issue.
+Applied 2026-11-18 for mode `pr` (and `branch` with `--issue`). The same day, mode `recheck` got step
+5 "Issue": the issues the PR closes, every criterion and requirement ticked or not, every file outside
+the issue's scope whichever commit brought it, each unmet or foreign element Blocking with the issue
+sentence quoted, in a second table. Not yet used on a real `recheck`.

@@ -1,6 +1,6 @@
 ---
 name: code-review-master-blind-spots
-description: "2026-11-18 PR 217 — automat dał 0 uwag przy realnym Blocking; przyczyny strukturalne skilla + moje błędy orkiestracji (Explore, preambuła z git diff)"
+description: "2026-11-18 PR 217 — automat dał 0 uwag przy realnym Blocking; przyczyny naprawione w skillu tego samego dnia (Z1–Z6 + domknięcie), przy pierwszych przebiegach sprawdzić trzy niepotwierdzone rzeczy"
 metadata:
   node_type: memory
   type: feedback
@@ -20,4 +20,6 @@ Wynik: review 5957188542 CHANGES_REQUESTED (R1 Blocking kłódka, R2 Suggestion 
 
 **Why:** pusty raport wygląda jak czysty kod; Rafał opiera na nim decyzję o merge.
 
-**How to apply:** przy dispatchu osi nie używam `Explore` (opis: „locates code; it doesn't review”) i nie dopisuję preambuły z komendą `git diff` — tylko korzeń repo i „czytaj pliki Read w całości”. W `pr` zawsze robię ręcznie kryteria issue + zakres + Figmę, dopóki skill tego nie obejmuje. Zob. [[feedback-unmet-issue-element-blocking]], [[feedback-foreign-task-changes-blocking]], [[feedback-verify-issue-views-in-figma]].
+**Stan od 2026-11-18 (sesja 51ae2c74 w vaultcie):** skill obejmuje to sam — oś `correctness`, oś `issue-conformance` z treścią issue z `crm plan` (`pr`, `branch --issue`), krok 5 „Issue” w `recheck`, Figma w Kroku 4b robiona przez sesję, typ agenta `general-purpose` i zakaz preambuły w `SKILL.md`, weryfikator z checklistą, issue i komendą diffu, lista uwag spod progu w Kroku 10. Przebieg kontrolny `20261118-134455-ev71` na tym samym commicie zgłosił kłódkę (92) i cztery uwagi zakresu i Figmy (90–92).
+
+**How to apply:** prowadzę przebieg wg `SKILL.md` bez ręcznego dublowania kryteriów issue i zakresu. Przy pierwszych przebiegach `pr` i `recheck` po zmianie sprawdzam jednak trzy rzeczy, których jeszcze nie potwierdził żaden prawdziwy przebieg: czy agent `issue-conformance` przeczytał pliki (pole `read`; w obu kontrolnych zgłosił uwagi po samym `git diff` — „Reguła głębokości czytania (D3)” odłożona przez Rafała), czy weryfikator z komendą diffu daje 0 uwagom o kodzie sprzed PR-a (wcześniej `f-05` 90, `f-11` 85), i czy `recheck` wypisuje drugą tabelę z elementami issue. Zob. [[feedback-unmet-issue-element-blocking]], [[feedback-foreign-task-changes-blocking]], [[feedback-verify-issue-views-in-figma]].

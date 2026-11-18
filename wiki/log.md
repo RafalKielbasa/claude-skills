@@ -1168,3 +1168,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - `index.md` zmieniony w dwóch liniach (statusy i liczby dowodów), nie przepisany w całości.
 - obserwacje bez wzorca (decyzja D3 odłożona przez Rafała): agenci osi dalej czytają mało — w obu przebiegach `issue-conformance` zgłosił uwagi po samym `git diff` (0 plików w `read`), `correctness` przeczytał 5 i 3 z 10 plików; `crm collect` oznacza tylko pustą odpowiedź bez plików (`secrets` w pierwszym, `debug-leftovers` w drugim przebiegu). Weryfikator bez komendy diffu podniósł do 90 i 85 dwie uwagi o kodzie sprzed PR-a (`f-05`, `f-11`), które odrzucił dopiero codex.
 - automatyczny backup `~/.claude` zacommitował i wypchnął zmiany skilla w trakcie pracy (`8b43bbe`, `90da2c2`), zanim Rafał je przejrzał.
+
+## 2026-11-18 — sesja 51ae2c74-bb8c-4589-a22e-43752eafb286, ciąg dalszy (id claude.ai niedostępny; domknięcie otwartych punktów po Z1–Z6 w `code-review-master`)
+- zmiana skilla: code-review-master — zaakceptowana („Zaopiekujmy rzeczy otwarte” Rafała); Krok 10 z listą uwag spod progu, `{{DIFF_NOTE}}` w fali 2 i 0 za problem starszy niż zmiana, krok 5 „Issue” w trybie `recheck`; wpis z pełnym diffem `SKILL.md` w `skill-impact.md`. Zwykła edycja na prośbę, nie propozycja `evolve-skill`.
+- zaadresowano w całości: weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (Krok 10), review-does-not-check-pr-against-its-issue (`recheck`).
+- obserwacja dopisana do strony wzorca o weryfikatorze: reguła „co najmniej 90” bez komendy diffu podniosła dwie uwagi o kodzie sprzed PR-a (`f-05` 90, `f-11` 85 w runie `20261118-134455-ev71`).
+- `index.md`: zgodność statusów z 232 stronami wzorców sprawdzona skryptem (statusy zgodne); dopisany brakujący wpis `diagnoza-api-bez-sprawdzenia-wartosci-ktora-dostal-proces` (strona z 2026-10-22 bez linii w indeksie); dwie linie wzorców `code-review-master` zaktualizowane. Plik nie przepisany w całości (71 tys. tokenów).
+- „Reguła głębokości czytania (D3)” dalej odłożona przez Rafała, bez nowych danych.
