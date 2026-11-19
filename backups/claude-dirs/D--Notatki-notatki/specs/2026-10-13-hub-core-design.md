@@ -540,6 +540,11 @@ checked with a multi-line message containing `<`, `&` and `"` before Plan 2 reli
    - `worktree.bgIsolation` is not set, so the background-session worktree guard stays on as a
      second barrier for `Write`.
 
+   **Amended 2026-11-19:** since Claude Code 2.1.326 the deny `Edit(./**)` also covered the dialog
+   directory that holds the settings file; the deny is now the absolute working directory,
+   `Edit(<posixPath(cwd)>/**)`, and the allow rule uses the `//c/…` form. See
+   [2026-11-19-hub-fork-permissions-design.md](2026-11-19-hub-fork-permissions-design.md).
+
    Tested in `auto` mode (probe S7): the deny rule alone refused a `Write` into the repository; a
    `Write` into the dialog directory succeeded; with `deny` holding only `Edit(./**)`, a
    PowerShell `Set-Content` into the repository was blocked and one into the dialog directory

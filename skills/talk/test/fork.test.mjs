@@ -134,3 +134,20 @@ test('a result with num_turns 0 after the replay is not taken as the answer', as
     await f.close({ deadlineMs: 500 });
   }
 });
+
+test('denials lists each refused call once, as tool and path, or tool and input', async () => {
+  const deny = [{ tool_name: 'Write', tool_use_id: 'u1', tool_input: { file_path: 'C:\\d\\decisions.md', content: 'x' } },
+    { tool_name: 'Bash', tool_use_id: 'u2', tool_input: { command: 'ls' } }];
+  const f = startFork({ ...base, startPrompt: 'start', env: { FAKE_DENY: JSON.stringify(deny) } });
+  await f.ready;
+  await f.ask('drugie');
+  await f.close();
+  assert.deepEqual(f.denials(), ['Write C:\\d\\decisions.md', 'Bash {"command":"ls"}']);
+});
+
+test('a fork without refusals has no denials', async () => {
+  const f = startFork({ ...base, startPrompt: 'start' });
+  await f.ready;
+  await f.close();
+  assert.deepEqual(f.denials(), []);
+});

@@ -232,6 +232,19 @@ test('check accepts an allowed project with a key and an agent, and creates noth
   assert.equal(existsSync(join(dialogRoot, 'projects')), false);
 });
 
+test('check and start refuse a dialog root inside the working directory, in one Polish sentence, creating nothing', () => {
+  const inside = join(allowedRepo, 'talk-dialogs');
+  const env = { ELEVENLABS_API_KEY: 'k', TALK_CONFIG: tmpConfig({ ...startBase, dialogRoot: inside }) };
+  for (const args of [['check', '--cwd', allowedRepo], ['start', '--session', 's', '--cwd', allowedRepo]]) {
+    const r = run(args, env);
+    assert.equal(r.status, 2, r.stdout + r.stderr);
+    assert.match(r.stdout, /^Katalog rozmowy .+ leżałby wewnątrz katalogu roboczego .+\.$/m);
+    assert.ok(r.stdout.includes(join(inside, 'projects', 'allowed', 'dialogs')), r.stdout);
+    assert.equal(r.stdout.trim().split('\n').length, 1);
+    assert.equal(existsSync(inside), false);
+  }
+});
+
 test('a refused check or start starts no bridge, builds no client and makes no network call', async () => {
   const calls = [];
   const deps = {

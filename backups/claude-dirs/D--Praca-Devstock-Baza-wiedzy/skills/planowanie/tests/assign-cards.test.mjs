@@ -62,6 +62,22 @@ test('done takes completed planned and all unplanned', () => {
   assert.equal(out.projects[0].done[0].sprintStart, null)
 })
 
+test('cards of an outside project leave both projects and unassigned', () => {
+  const registry = [
+    project({ key: 'edu-saas', match: ['sas:'], outside: true }),
+    project({ key: 'kodozercy', match: ['subskrypc'] }),
+    project({ key: 'rzesownia', match: ['rzęsowni'], outside: true }),
+  ]
+  const review = { planned: [], unplanned: [entry(20, 'Rzęsownia: noc przepięcia')] }
+  const items = [card(21, 'SAS: Implementacja modelu subskrypcji'), card(22, 'Rzęsownia: backup'), card(23, 'Subskrypcja: checkout')]
+  const out = assignCards(registry, { items }, review)
+  assert.deepEqual(out.projects.map(p => p.key), ['kodozercy'])
+  assert.deepEqual(refsOf(out.projects[0].open), ['23'])
+  assert.deepEqual(out.unassigned.open, [])
+  assert.deepEqual(refsOf(out.outside.open).sort(), ['21', '22'])
+  assert.deepEqual(refsOf(out.outside.done), ['20'])
+})
+
 test('registry without match throws', () => {
   assert.throws(() => assignCards([project(), project({ match: [] })], { items: [] }, noReview), /project 1 lacks match/)
 })

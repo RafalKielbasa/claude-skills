@@ -254,11 +254,16 @@ result. A plain `/talk` typed in the hub is not this procedure: it talks about t
    may pause and rejoin; do not wait for it or poll its output. Tell Rafal that the page opens in
    the browser. The bridge never wakes X, and X never reads the dialog.
 5. When the task completes, read the closing report from its output, between `TALK CLOSING REPORT`
-   and `END OF REPORT` (`dialog:`, `origin:`, `deletion:` and `conversations:` lines, then the
-   dialog's files):
+   and `END OF REPORT` (`dialog:`, `origin:`, `deletion:`, `conversations:` and `denied:` lines, then
+   the dialog's files):
    - show the decisions (`--- decisions.md ---`) and the open questions
      (`--- open-questions.md ---`) as Polish tables, the length of each call (`conversations:`, in
      minutes and seconds) and every deletion problem on the `deletion:` line;
+   - the `denied:` line lists the fork's refused calls, separated by `; `, as `<tool> <path>` or
+     `<tool> <JSON input>` (`none`: there were none). For an `Edit` or `Write` entry on the `denied:`
+     line, tell Rafal that its file was not written and that what the fork meant to write there is
+     only in `transcript.md` of the dialog directory (the `dialog:` line). For a `Read`, `Grep` or
+     `Glob` entry, tell him the fork could not read that path, so its answers did not use it;
    - if the conversation did not begin with `dawaj` and the dialog directory (the `dialog:` line) holds
      a `prompt.md` (its section is not `(not written)`): `HUB compose --path dialog --session <sessionId> --origin voice/<dialog dir name> --body-file "<dialog dir>/prompt.md"`,
      then steps 2–6 of Sending (full draft, "wyślij", approve, prepare, SendMessage, result,

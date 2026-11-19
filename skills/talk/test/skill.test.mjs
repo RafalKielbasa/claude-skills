@@ -64,3 +64,10 @@ test('SKILL.md says a conversation lives through breaks until Rafal ends it or t
   assert.match(skill, /pauseLimitMinutes/);
   assert.match(skill, /end the open conversation on its page first/);
 });
+
+test('SKILL.md separates refused writes from refused reads on the denied line', () => {
+  const skill = skillText().replace(/\s+/g, ' ');
+  assert.match(skill, /`denied:` line[^.]*`<tool> <path>`, or `<tool> <JSON input>`/);
+  assert.match(skill, /For an `Edit` or `Write` entry[^.]*not written[^.]*`transcript\.md`/);
+  assert.match(skill, /For a `Read`, `Grep` or `Glob` entry[^.]*could not read/);
+});

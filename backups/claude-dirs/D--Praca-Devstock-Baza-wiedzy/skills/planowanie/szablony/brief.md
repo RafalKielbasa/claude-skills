@@ -39,7 +39,8 @@ Ideas already rejected or parked at earlier planning meetings:
 1. Read the `kb` paths, then the code, then search the web: at most 6 web searches.
 2. A proposal must not repeat an idea from the rejected or parked list. When an open card already
    covers an idea, propose extending that card and give its ref in `Karta`, not `nowa`.
-3. Propose at most 3 things. Fewer is right when the sources do not support more; a proposal
+3. Propose at most {{MAX}} things. When the project has `areas`, spread them evenly across the
+   areas. Fewer is right when the sources do not support more; a proposal
    without a basis is never given.
 4. The first step of each proposal fits in about two hours of one person's creative work: a
    prototype on existing components, a mock-up, a research note, a spike.
@@ -64,4 +65,4 @@ PROPOZYCJE
 - internet: <liczba wyszukiwań>
 ```
 
-`STAN` has at most 3 lines; `PROPOZYCJE` at most 3 items, numbered from 1.
+`STAN` has at most 3 lines; `PROPOZYCJE` at most {{MAX}} items, numbered from 1.

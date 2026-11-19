@@ -11,11 +11,16 @@ export function readDialogFiles(dialogDir) {
 }
 
 // `origin` (session or hub) tells session X whether the dialog was started from its own /talk or by the hub.
-export function closingReport({ dialogDir, origin, files, deletion, conversations }) {
+// `denied` lists the fork's refused calls (lib/fork.mjs `denials()`), printed on the `denied:` line.
+export function closingReport({ dialogDir, origin, files, deletion, conversations, denied = [] }) {
   const section = ([key, name]) => {
     const body = files[key];
     return `--- ${name} ---\n${body === undefined ? '(not written)\n' : body.endsWith('\n') ? body : `${body}\n`}`;
   };
   const convs = conversations.length ? conversations.map(({ id, seconds }) => `${id} (${seconds === null ? 'unknown' : `${seconds} s`})`).join(', ') : 'none';
-  return `TALK CLOSING REPORT\ndialog: ${dialogDir}\norigin: ${origin}\ndeletion: ${deletion}\nconversations: ${convs}\n${FILES.map(section).join('')}END OF REPORT\n`;
+  // Each entry on one line and without a `;`, which separates the entries (as the fork's stderr tail
+  // on the deletion line, lib/bridge.mjs).
+  const oneEntry = (entry) => String(entry).replaceAll(';', ',').replace(/\s+/g, ' ').trim();
+  const deniedLine = denied.length ? denied.map(oneEntry).join('; ') : 'none';
+  return `TALK CLOSING REPORT\ndialog: ${dialogDir}\norigin: ${origin}\ndeletion: ${deletion}\nconversations: ${convs}\ndenied: ${deniedLine}\n${FILES.map(section).join('')}END OF REPORT\n`;
 }

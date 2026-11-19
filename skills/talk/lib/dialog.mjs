@@ -21,6 +21,6 @@ export function dialogDirFor({ root, projectKey, now }) {
 export function prepareDialog({ cwd, dialogDir }) {
   mkdirSync(dialogDir, { recursive: true });
   const snapshot = takeSnapshot(cwd, join(dialogDir, 'context'));
-  const settingsPath = writeVoiceForkSettings(dialogDir);
+  const settingsPath = writeVoiceForkSettings(dialogDir, cwd);
   return { snapshot, settingsPath };
 }

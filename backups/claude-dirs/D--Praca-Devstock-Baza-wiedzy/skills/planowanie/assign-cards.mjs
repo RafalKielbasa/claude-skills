@@ -29,19 +29,23 @@ function projectOf(registry, title) {
 
 const isDone = e => (e.state === 'done' || e.closed === true) && !UNDONE.has(e.stateReason)
 
+// A project with `outside: true` is not part of the Friday planning (a client runs it, or it is
+// out of scope): its cards go to `outside`, never to `projects` or `unassigned`.
 export function assignCards(registry, candidates, review) {
   validate(registry)
-  const projects = registry.map(p => ({ key: p.key, name: p.name, open: [], done: [] }))
+  const projects = registry.filter(p => !p.outside).map(p => ({ key: p.key, name: p.name, open: [], done: [] }))
   const byKey = new Map(projects.map(p => [p.key, p]))
   const unassigned = { open: [], done: [] }
+  const outside = { open: [], done: [] }
   const place = (source, list) => {
     const project = projectOf(registry, source.title)
-    ;(project ? byKey.get(project.key) : unassigned)[list].push(toCard(source))
+    const target = !project ? unassigned : project.outside ? outside : byKey.get(project.key)
+    target[list].push(toCard(source))
   }
   for (const item of candidates.items ?? []) place(item, 'open')
   for (const e of review.planned ?? []) if (isDone(e)) place(e, 'done')
   for (const e of review.unplanned ?? []) place(e, 'done')
-  return { projects, unassigned }
+  return { projects, unassigned, outside }
 }
 
 function readJson(path) {

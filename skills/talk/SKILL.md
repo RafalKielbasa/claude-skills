@@ -71,6 +71,12 @@ environment), in double quotes. Run the commands with the Bash tool.
    - The `conversations:` line lists every ElevenLabs conversation, one per call, as `<id> (<n> s)`, or
      `<id> (unknown)` when its length could not be read (`none`: no conversation was started). Tell
      Rafal the call length of each, in minutes and seconds, and the total: he pays per minute.
+   - The `denied:` line lists every call the fork's permissions refused, separated by `; `, each as
+     `<tool> <path>`, or `<tool> <JSON input>` for a call without a path (`none`: there were none).
+     For an `Edit` or `Write` entry, tell Rafal that the file was not written and that what the fork
+     meant to write there is only in `transcript.md` of the dialog directory (the `dialog:` line);
+     give that path. For a `Read`, `Grep` or `Glob` entry, tell him the fork could not read that path
+     (a secret file, or a path outside the session's directory), so its answers did not use it.
    - If `--- prompt.md ---` holds a prompt, carry it out under this repository's own rules (commits,
      tickets, gates as the repository's `CLAUDE.md` and Rafal's global rules say). If it shows
      `(not written)`, go on with the decisions from where you were before `/talk`.

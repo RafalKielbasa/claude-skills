@@ -121,7 +121,37 @@ its recommended option.
    GitHub.
 7. Create `sprint.md` from the template if it is missing: `{{OD}}–{{DO}}` = Monday–Sunday as
    `DD.MM–DD.MM`, `**Status:** szkic`, `**Źródła:**` = the loaded reports in the `sprint.md` form
-   of "Naming the reports", comma-separated, or `brak`.
+   of "Naming the reports", comma-separated, or `brak`; when item 8 finds a planning, its
+   `sprint.md` form joins them. Run item 8 before this item.
+8. **Planning.** The newest `planning/<D>-agenda.md` with `<D>` in the 7 days before `<date>` whose
+   metadata reads `planowanie tygodniowe` (`grep -l "planowanie tygodniowe" planning/*-agenda.md`),
+   written by `/planowanie` before the Friday meeting. Its last block `## <n>. Propozycja sprintu
+   …` holds the table `| Karta | Osoba | Projekt | Dlaczego |`; the refs of that table, in table
+   order, are the **planning list**. The note `planning/<D>-notatka.md` (`/spotkanie transkrypt`
+   writes it from the meeting's recording) is **processed** only when it reads `**Status:**
+   finalna` and carries `**Opublikowano:**`, i.e. its gate was executed and its tasks created. A
+   note that is missing, or present but not processed, changes nothing: the list stays the
+   agenda's. A processed note changes the list by these rules and no others. A bare `#n` in the
+   note means `devstock-org/devstock-team#n`, as on the cards:
+   - **Decisions.** A decision about a ref is a `decyzja:` entry under the note's point
+     „Propozycja sprintu” naming it, or a line of `## Decyzje` naming it (those lines carry no
+     prefix; `/spotkanie` copies each `decyzja:` there, and a copy counts once). A decision puts
+     the ref into the sprint, or keeps it out (odpada, odkładamy, nie w tym sprincie).
+   - **Contradiction first.** A ref with decisions both into and out of the sprint keeps its
+     agenda place (or stays absent when the agenda lacks it), and the review card (Step 2) gets
+     the line `⚠ Sprzeczne decyzje z piątku o <ref>`.
+   - Otherwise a decision keeping a ref out removes it, and a decision putting a ref in that the
+     agenda lacks appends it.
+   - A ref written anywhere in a row of the note's `## Action items` table (an `Issue` column, or
+     the `(#n)` that `/spotkanie`'s execution adds to the `Zadanie` cell) and not yet on the list
+     is appended (the meeting created or named it).
+   - Appended refs follow the agenda's refs, in the order they first appear in the note.
+   - A ref mentioned only in an `ustalenie:`, a question, a `⚠` passage or `## Zaparkowane`
+     changes nothing: it keeps its place from the agenda.
+
+   None found → no planning: every rule that names the planning below is skipped and the run is
+   exactly as without this item. Neither file is copied or changed. A planning ref missing from
+   `candidates.json` `items` (closed or gone) is dropped silently, after the note's rules.
 
 What the inputs hold:
 
@@ -168,6 +198,10 @@ The meeting does not know the n8n numbers, so a card and `sprint.md` never name 
 |---|---|---|---|
 | `29` | `Raport tygodniowy (n8n 29): <okres>, issues i PR-y z GitHuba, <N> repo: <nazwy>` | `Raport tygodniowy` | `Raport tygodniowy (n8n 29, <okres>)` |
 | `31` | `Przegląd daili (n8n 31): <okres>, <N> daily, statusy osób i blokery` | `Przegląd daili` | `Przegląd daili (n8n 31, <okres>, <N> daily)` |
+| planning (Step 1 item 8) | `Planowanie (<DD.MM>): propozycja sprintu, kart: <N>, notatka: <przetworzona \| nieprzetworzona>` | `Planowanie <DD.MM>` | `Planowanie (<DD.MM>)` |
+
+`<DD.MM>` is the planning's `<D>`; `<N>` = the final planning list's length;
+`przetworzona` when the note is processed (item 8), `nieprzetworzona` otherwise.
 
 - `<okres>` and `<N>` come from the file's first heading as written: the `29` heading ends with
   `(DD.MM–DD.MM)`; the `31` heading holds `YYYY-MM-DD – YYYY-MM-DD (<N> spotkania)`, shown as
@@ -281,7 +315,11 @@ Claude's proposal:
 
 - **Sources, every run.** The card opens with `Źródła:` and one line per report in the full form
   of "Naming the reports", a missing report included, so the meeting knows what the lines below
-  and the goals card (Step 3) draw from. These lines stay on the card; `sprint.md` names the
+  and the goals card (Step 3) draw from. With a planning (Step 1 item 8), its full-form line
+  follows the reports, then every `⚠ Sprzeczne decyzje z piątku o <ref>` line of item 8. When
+  the note is not processed, one more line after the planning line: „Nagranie z piątku
+  nieprzetworzone (<brak notatki | notatka: szkic | notatka bez publikacji>) — lista to
+  propozycja sprzed spotkania.” No planning → no such lines. These lines stay on the card; `sprint.md` names the
   reports in its `**Źródła:**` header.
 - **Previous sprint exists.** One table `| Cel | Wynik | Zrobione | Niezrobione |`, one row per
   previous goal. A goal's issues = previous `items` with that goal plus its created `newIssues`,
@@ -301,8 +339,8 @@ Claude's proposal:
   any threshold the report's own heading gives (`zrobione: 93 issues, 90 PR`, `zaległe, ≥14 dni
   bez ruchu: 139`, `najdłużej czekające PR-y`), then the count when the report gives one, at most
   3 refs (a stale ref with its days), then `+N`. `31`: blockers, one line per person who has a
-  blocker, `Przegląd daili — blokery: <imię> — <bloker>`. Nothing else from the boards; the one exception is `Praktykanci`, from `done-count.json`. No report loaded and no
-  `interns` → skip the card with one line and go to Step 2c (Step 2b is skipped on a first run).
+  blocker, `Przegląd daili — blokery: <imię> — <bloker>`. Nothing else from the boards; the one exception is `Praktykanci`, from `done-count.json`. No report loaded, no
+  `interns` and no planning → skip the card with one line and go to Step 2c (Step 2b is skipped on a first run).
 - **`Praktykanci`, previous sprint and first run alike.** After the table or the report lines, a
   heading `Praktykanci`, then one line per login in `interns` (`review.json`, on a first run
   `done-count.json`), sorted by login, in the form below, at most 5 lines, then `+N`. No `interns`
@@ -410,7 +448,9 @@ The card, question „Dostępność”:
 - Propose up to three goals, each one sentence naming a concrete outcome this week, with its
   basis in brackets, the source in words: an unfinished previous goal (`(poprzedni cel:
   częściowo)`), stale items (`(Raport tygodniowy: zaległe #790)`), declared plans or blockers
-  (`(Przegląd daili: plany Grzegorza)`). Fewer is fine; a goal without a basis is not proposed.
+  (`(Przegląd daili: plany Grzegorza)`), and, with a planning, a project point the note records
+  as decided (`(Planowanie 20.11: Kodożercy)`). Fewer is fine; a goal without a basis is not
+  proposed.
 - Options: **Przyjmij cele** · **Wpiszę własne** (nothing written; Rafał types them). With no
   basis at all, the preview says „Brak podstaw do propozycji — wpisz cele.” and **Wpiszę
   własne** comes first.
@@ -428,7 +468,9 @@ The card, question „Dostępność”:
 - **Proposed issues**: `candidates.json` `items` whose title or labels name this goal's work
   directly, grouped by person (team-list name of the assignee; `Bez osoby` for unassigned), each
   with its status and, last on the line, its estimate ("Estimating"). Each person group opens with
-  one load line ("Load"), e.g. `Grzegorz 4/2,5 d ⚠`. When unsure whether an issue serves the goal,
+  one load line ("Load"), e.g. `Grzegorz 4/2,5 d ⚠`. With a planning, refs of the planning list
+  that serve the goal come first in their person group, each line ending with
+  `(Planowanie <DD.MM>)` before the estimate. When unsure whether an issue serves the goal,
   leave it out — a short list is right, padding is wrong. An issue chosen for an earlier goal is
   not proposed again, nor a ref with a `cleanup` entry `done`.
 - **Z poprzedniego sprintu**: unfinished `planned` items that serve this goal, except those with
@@ -480,9 +522,15 @@ The card, question „Dostępność”:
   and capacity 0 → `<imię> — brak dostępności i zadań`. Then pre-filled: the member's
   `candidates.json` `items` in state `in_progress` or `ready` (their login among `assignees`) in
   none of `items`, `drop` and `cleanup` of `sprint.json`, In progress first, then Ready, each line ending with
-  its estimate ("Estimating"); carry-overs marked. Adding the items' shares in that order to the
+  its estimate ("Estimating"); carry-overs marked. With a planning, after them: the member's refs
+  of the planning list (their login among `assignees`) in any open state that are in none of
+  `items`, `drop` and `cleanup`, each marked `(Planowanie <DD.MM>)`. Adding the items' shares in that order to the
   member's load, an item after which the load exceeds capacity gets `⚠` at the end of its line.
   Then one optional line from the `31` file: `Plany (Przegląd daili): <plany>`.
+- With a planning, the last person card also carries, after its `Bez karty` lines,
+  `Z planowania, bez osoby: <ref> — <title>` for each planning-list ref with no assignee that no
+  goal took, at most 5, then `+N`. Like `Bez karty` they are information, not item lines; Rafał
+  adds one with `dodaj <ref>` in "Other".
 - Last lines: `Bez karty: <ref> — <title>` from the member's `projectWork` (their login among
   `assignees`), at most 5, then `+N`; a ref that a new issue of this sprint already names in its
   body is left out. They do not count as item lines, never enter the sprint, and on consecutive

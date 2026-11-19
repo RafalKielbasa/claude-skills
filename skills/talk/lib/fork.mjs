@@ -39,6 +39,9 @@ export function startFork({ cwd, sessionId, settingsPath, dialogDir, startPrompt
       resolve(code);
     });
   });
+  // Every call the fork's permissions refused, read from the `permission_denials` of its `result`
+  // lines, once each: the closing report's `denied:` line (2026-11-19 fork permissions spec §5.3).
+  const denied = new Set();
   // stderr is drained, and only its last lines are kept: the cause the report gives for a fork that exited.
   const stderrLines = [];
   createInterface({ input: child.stderr }).on('line', (line) => {
@@ -51,6 +54,9 @@ export function startFork({ cwd, sessionId, settingsPath, dialogDir, startPrompt
       const msg = JSON.parse(line);
       if (msg.type === 'system' && msg.subtype === 'init' && msg.session_id) resolveSessionId(msg.session_id);
       if (msg.type === 'user' && waiters[0] && !waiters[0].echoed && textOf(msg) === waiters[0].text) waiters[0].echoed = true;
+      if (msg.type === 'result' && Array.isArray(msg.permission_denials)) {
+        for (const d of msg.permission_denials) denied.add(`${d?.tool_name} ${d?.tool_input?.file_path ?? JSON.stringify(d?.tool_input ?? {})}`);
+      }
     } catch { /* not JSON */ }
     const turn = collector.push(line);
     if (turn && waiters[0]?.echoed) waiters.shift().resolve(turn);
@@ -90,5 +96,5 @@ export function startFork({ cwd, sessionId, settingsPath, dialogDir, startPrompt
   }
 
   // `exited` resolves with the exit code once the process has closed, whenever that happens.
-  return { ready, sessionId: sessionIdPromise, exited, ask, close, stderrTail: () => stderrLines.join('\n') };
+  return { ready, sessionId: sessionIdPromise, exited, ask, close, stderrTail: () => stderrLines.join('\n'), denials: () => [...denied] };
 }

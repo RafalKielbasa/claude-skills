@@ -240,6 +240,10 @@ A phone would need a different exception; that is a separate decision for later.
   secret-file denylist of hub spec §7 (`.env*`, `*.pem`, `*.key`, `*credentials*`, `*secret*`,
   `auth.json`, `secrets.yaml`). This narrows the decision "Equivalence with the written dialog" of
   2026-10-14: the voice settings are a superset of the written fork's.
+  **Amended 2026-11-19:** since Claude Code 2.1.326 the deny `Edit(./**)` also covered the dialog
+  directory that holds the settings file; the deny is now the absolute working directory,
+  `Edit(<posixPath(cwd)>/**)`, and the closing report gains a `denied:` line. See
+  [2026-11-19-hub-fork-permissions-design.md](2026-11-19-hub-fork-permissions-design.md).
 - **Role:** the written dialog fork's role (hub spec §6.5 step 3; text in the hub skill's
   `forkStartPrompt`) with these voice differences:
   - it talks through a voice agent: every answer is plain spoken Polish, a few sentences at most,

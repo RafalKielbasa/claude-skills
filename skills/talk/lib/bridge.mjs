@@ -381,7 +381,7 @@ export async function startBridge({ sessionId, cwd, dialogDir, agentId, eleven, 
       setTimeout(() => server.closeAllConnections(), 1000).unref();
       let files = {};
       try { files = readDialogFiles(dialogDir); } catch (error) { notes.push(`dialog files not read (${reason(error)})`); }
-      resolveDone(closingReport({ dialogDir, origin, files, deletion: [deletion, ...notes].join('; '), conversations }));
+      resolveDone(closingReport({ dialogDir, origin, files, deletion: [deletion, ...notes].join('; '), conversations, denied: fork.denials() }));
     }
   }
 

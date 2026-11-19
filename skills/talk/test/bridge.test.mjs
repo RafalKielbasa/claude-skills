@@ -1023,3 +1023,14 @@ test('a transcript line and an answer with line breaks each take one line of the
     await finish(b);
   }
 });
+
+test('the closing report carries the paths the fork was refused', async () => {
+  const deny = [{ tool_name: 'Write', tool_use_id: 'u1', tool_input: { file_path: 'C:\\d\\decisions.md' } }];
+  const b = await bridge({ forkEnv: { FAKE_DENY: JSON.stringify(deny) } });
+  try {
+    await call(b.port, 'POST', '/api/end', { body: { conversationId: 'conv_1' } });
+    assert.match(await b.done, /\ndenied: Write C:\\d\\decisions\.md\n/);
+  } finally {
+    await finish(b);
+  }
+});

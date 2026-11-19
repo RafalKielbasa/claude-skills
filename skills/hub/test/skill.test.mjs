@@ -102,3 +102,9 @@ test('SKILL.md keeps a ! command that already ran away from HUB typed', () => {
   assert.ok(flat.includes('A turn that carries the `<bash-input>` and `<bash-stdout>` of a `!` command has already run: do not pass it to HUB typed; reply with one line at most.'));
   assert.ok(flat.includes('The leading-`!` pass-through is for plain text only.'));
 });
+
+test('SKILL.md separates refused writes from refused reads on the talk report denied line', () => {
+  const skill = read('../SKILL.md').replace(/\s+/g, ' ');
+  assert.match(skill, /For an `Edit` or `Write` entry on the `denied:` line[^.]*not written[^.]*`transcript\.md`/);
+  assert.match(skill, /For a `Read`, `Grep` or `Glob` entry[^.]*could not read/);
+});

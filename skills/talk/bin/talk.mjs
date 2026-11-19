@@ -12,7 +12,7 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
-import { loadProjectMap, projectOf } from '../../hub/lib/projects.mjs';
+import { isWithin, loadProjectMap, projectOf } from '../../hub/lib/projects.mjs';
 import { hubRoot } from '../../hub/lib/paths.mjs';
 import { readEvents } from '../../hub/lib/registry.mjs';
 import { deriveSession } from '../../hub/lib/derive.mjs';
@@ -31,6 +31,7 @@ const USAGE = 'Użycie: node bin/talk.mjs check --cwd <katalog> [--session <id>]
 const notAllowed = (key, configPath) => `Projekt ${key} nie jest na liście dozwolonych dla /talk (${configPath}).`;
 const noAgent = (configPath) => `Brak agenta ElevenLabs w ${configPath}: uruchom najpierw node bin/talk.mjs agent setup w katalogu ${SKILL_DIR}.`;
 const noDir = (cwd) => `Katalog ${cwd} nie istnieje.`;
+const dialogInsideCwd = (dialogDir, cwd, configPath) => `Katalog rozmowy ${dialogDir} leżałby wewnątrz katalogu roboczego ${cwd}, do którego fork nie może zapisywać: uruchom /talk z sesji spoza tego katalogu albo przenieś dialogRoot w ${configPath}.`;
 const noTranscript = (sessionId, path) => `Sesja ${sessionId.slice(0, 8)} nie ma pliku transkryptu (${path}), więc nie da się z niej uruchomić rozmowy głosowej.`;
 const alreadyLive = (dir, sessionId) => `Rozmowa głosowa tej sesji już trwa (${dir}): otwórz ją poleceniem node bin/talk.mjs reopen --session ${sessionId}.`;
 const NO_LIVE = 'Ta sesja nie ma otwartej rozmowy głosowej.';
@@ -147,13 +148,18 @@ function sessionCwd(cwd, sessionId, env) {
 }
 
 // The checks of `check` and `start` (spec §5.1, Ruling R8), in this order: project on the allowlist,
-// key, agent, and, whenever a session is named, its transcript (spec §19.2). They only read: a
-// refusal creates nothing, starts no fork and calls no network.
+// a dialog directory outside the working directory (2026-11-19 fork permissions spec §5.1), key,
+// agent, and, whenever a session is named, its transcript (spec §19.2). They only read: a refusal
+// creates nothing, starts no fork and calls no network.
 function admit({ cwd, sessionId, env, configPath }) {
   if (!existsSync(cwd)) return { ok: false, line: noDir(cwd) };
   const config = loadConfig(configPath);
   const { key } = projectOf(cwd, loadProjectMap(hubRoot(env)).projects);
   if (!(config.allow ?? []).includes(key)) return { ok: false, line: notAllowed(key, configPath) };
+  // The fork's settings deny every edit under the working directory (lib/settings.mjs), so a dialog
+  // directory there could never receive decisions.md.
+  const dialogDir = dialogDirFor({ root: config.dialogRoot, projectKey: key, now: new Date() });
+  if (isWithin(dialogDir, cwd)) return { ok: false, line: dialogInsideCwd(dialogDir, cwd, configPath) };
   let apiKey = null;
   if (env.TALK_ELEVEN_STUB !== '1') {
     apiKey = loadKey({ env });

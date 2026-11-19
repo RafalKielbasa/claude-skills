@@ -31,3 +31,18 @@ test('readDialogFiles does not throw when the dialog directory is missing', () =
   const dir = join(mkdtempSync(join(tmpdir(), 'r-')), 'gone');
   assert.deepEqual(readDialogFiles(dir), { decisions: undefined, openQuestions: undefined, prompt: undefined });
 });
+
+test('the report says denied: none without refusals, right after conversations', () => {
+  assert.match(closingReport({ dialogDir: 'C:/d', files: {}, deletion: 'deleted', conversations: [] }),
+    /conversations: none\ndenied: none\n--- decisions\.md ---/);
+});
+
+test('the report lists every refused call on the denied line', () => {
+  const r = closingReport({ dialogDir: 'C:/d', files: {}, deletion: 'deleted', conversations: [], denied: ['Write C:\\d\\decisions.md', 'Write C:\\d\\prompt.md'] });
+  assert.match(r, /\ndenied: Write C:\\d\\decisions\.md; Write C:\\d\\prompt\.md\n/);
+});
+
+test('a denied entry with a semicolon or a line break stays one entry on one line', () => {
+  const r = closingReport({ dialogDir: 'C:/d', files: {}, deletion: 'deleted', conversations: [], denied: ['Grep {"pattern":"a; b\nc"}', 'Write C:\\d\\x.md'] });
+  assert.match(r, /\ndenied: Grep \{"pattern":"a, b c"\}; Write C:\\d\\x\.md\n--- decisions\.md ---/);
+});

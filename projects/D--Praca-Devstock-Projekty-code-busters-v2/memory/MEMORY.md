@@ -10,3 +10,4 @@
 - [/talk decisions live in the transcript](talk-decisions-in-transcript.md) — report shows decisions.md "(not written)": read transcript.md in the dialog dir before re-asking
 - [Harness test fails locally on Windows](harness-test-fails-locally-on-windows.md) — python3 is the Store stub, py is 3.13 (47/62 fail); environmental, report like automation-token
 - [Baza wiedzy daily branch](baza-wiedzy-daily-branch.md) — commits go to rafal-kielbasa/DD-MM-YYYY (PR to main); another session can switch the shared tree mid-session, check the branch before each commit
+- [Prod DB schema drift (Vitess)](prod-db-schema-drift-vitess.md) — prod migrate diff = 158 FK renames + DROP `_vt_` table; never blanket db push on prod; flyctl via WSL

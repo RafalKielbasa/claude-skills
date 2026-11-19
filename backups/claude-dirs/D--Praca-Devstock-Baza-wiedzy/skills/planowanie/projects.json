@@ -1,10 +1,61 @@
 [
   {
+    "key": "edu-saas",
+    "name": "edu-saas",
+    "match": [
+      "sas:",
+      "edu_saas",
+      "edu-saas"
+    ],
+    "outside": true
+  },
+  {
+    "key": "rzesownia",
+    "name": "Rzęsownia",
+    "match": [
+      "rzęsowni",
+      "rzesowni"
+    ],
+    "outside": true
+  },
+  {
+    "key": "fud",
+    "name": "FUD",
+    "match": [
+      "fud",
+      "suwnic",
+      "mqtt"
+    ],
+    "outside": true
+  },
+  {
     "key": "kodozercy",
     "name": "Kodożercy",
-    "areas": ["dydaktyka", "grywalizacja", "społeczność"],
-    "match": ["kodożerc", "kodozerc", "platform", "mobil", "code-busters", "społeczno", "grywaliz", "głosowan", "kalendarz", "forum", "subskrypc", "trial", "quiz", "pojedyn"],
-    "exclude": ["sas:"],
+    "areas": [
+      "dydaktyka",
+      "grywalizacja",
+      "społeczność"
+    ],
+    "proposals": 6,
+    "match": [
+      "kodożerc",
+      "kodozerc",
+      "platform",
+      "mobil",
+      "code-busters",
+      "społeczno",
+      "grywaliz",
+      "głosowan",
+      "kalendarz",
+      "forum",
+      "subskrypc",
+      "trial",
+      "quiz",
+      "pojedyn"
+    ],
+    "exclude": [
+      "sas:"
+    ],
     "kb": [
       "knowledge-base/dev/codebusters-v2/",
       "knowledge-base/dev/codebusters-mobile/",
@@ -13,33 +64,25 @@
       "knowledge-base/product/04-kursy-i-produkty-kodozercy.md",
       "knowledge-base/product/backlog-pomyslow-produktowych.md"
     ],
-    "repos": ["codebusters-v2", "codebusters-mobile"],
-    "web": "Learning platforms with gamification and community (Duolingo, Brilliant, Circle, Frontend Masters): what they shipped recently that a Polish subscription platform for AI and programming courses could adopt."
-  },
-  {
-    "key": "rzesownia",
-    "name": "Rzęsownia",
-    "match": ["rzęsowni", "rzesowni"],
-    "kb": [
-      "knowledge-base/product/02-projekty-klienckie-i-wewnetrzne.md",
-      "knowledge-base/dev/projekty-klienckie/",
-      "knowledge-base/dev/wordpress/"
+    "repos": [
+      "codebusters-v2",
+      "codebusters-mobile"
     ],
-    "repos": ["rzesownia"],
-    "web": "WooCommerce shops selling eyelash-extension and beauty supplies: features that lift repeat orders and B2B sales to salons."
-  },
-  {
-    "key": "fud",
-    "name": "FUD",
-    "match": ["fud", "suwnic", "mqtt"],
-    "kb": ["knowledge-base/product/02-projekty-klienckie-i-wewnetrzne.md"],
-    "repos": ["fud"],
-    "web": "Industrial crane and hoist monitoring with IoT sensors: competitors' dashboards, alerts, predictive maintenance and service-team features."
+    "web": "Learning platforms with gamification and community (Duolingo, Brilliant, Circle, Frontend Masters): what they shipped recently that a Polish subscription platform for AI and programming courses could adopt."
   },
   {
     "key": "tresci",
     "name": "Tworzenie treści dydaktycznych",
-    "match": ["kurs", "lekcj", "agenty-ai", "misja ai", "course-pipeline", "nagrywan", "artykuł", "treści dydakty"],
+    "match": [
+      "kurs",
+      "lekcj",
+      "agenty-ai",
+      "misja ai",
+      "course-pipeline",
+      "nagrywan",
+      "artykuł",
+      "treści dydakty"
+    ],
     "kb": [
       "kursy/",
       "knowledge-base/dev/course-pipeline.md",
@@ -53,9 +96,17 @@
   {
     "key": "mustbemvp",
     "name": "MustBeMVP",
-    "match": ["mustbemvp", "must be mvp", "siatkówk"],
-    "kb": ["knowledge-base/product/02-projekty-klienckie-i-wewnetrzne.md"],
-    "repos": ["mustbemvp"],
+    "match": [
+      "mustbemvp",
+      "must be mvp",
+      "siatkówk"
+    ],
+    "kb": [
+      "knowledge-base/product/02-projekty-klienckie-i-wewnetrzne.md"
+    ],
+    "repos": [
+      "mustbemvp"
+    ],
     "web": "Beach volleyball tournament and league apps in Poland and the EU: what competitors offer to players, organisers and venues."
   }
 ]

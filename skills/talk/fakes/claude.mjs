@@ -30,7 +30,8 @@ rl.on('line', (line) => {
     await new Promise((r) => setTimeout(r, text.includes('slow') ? slow : delay));
     const answer = `echo: ${text}${hasKey() ? ' [key]' : ''}`;
     print({ type: 'assistant', message: { content: [{ type: 'text', text: answer }] } });
-    print({ type: 'result', subtype: 'success', result: answer });
+    // FAKE_DENY: a JSON array the result line carries as its `permission_denials`.
+    print({ type: 'result', subtype: 'success', result: answer, ...(process.env.FAKE_DENY ? { permission_denials: JSON.parse(process.env.FAKE_DENY) } : {}) });
     // FAKE_EXIT_AFTER_FIRST=1: a fork that dies right after its introduction, with a cause on stderr.
     if (process.env.FAKE_EXIT_AFTER_FIRST === '1') process.stderr.write('fake: crashed after the introduction\n', () => process.exit(1));
   });

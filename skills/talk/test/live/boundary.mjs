@@ -86,7 +86,7 @@ function callsOf(turnLines) {
 }
 
 const started = Date.now();
-const settingsPath = writeVoiceForkSettings(dialogDir);
+const settingsPath = writeVoiceForkSettings(dialogDir, REPO);
 const fork = startFork({ cwd: REPO, sessionId: SEED, settingsPath, dialogDir, startPrompt: START, command: ['claude'], rawLog: RAW_LOG });
 const ready = await Promise.race([fork.ready, new Promise((r) => { setTimeout(() => r({ text: '', subtype: 'timeout' }), ASK_TIMEOUT_MS).unref(); })]);
 
