@@ -17,6 +17,12 @@ export function safeName(name) {
   return String(name || 'unknown').replace(/[<>:"/\\|?*\s]+/g, '-');
 }
 
+// `C:\Users\x` or `C:/Users/x` -> `//c/Users/x`: the form a Windows permission rule matches (spaces kept).
+// Both forks' settings (hub dialog, /talk) write their rules with it.
+export function posixPath(winPath) {
+  return String(winPath).replace(/\\/g, '/').replace(/^([A-Za-z]):/, (_, d) => `//${d.toLowerCase()}`);
+}
+
 export const registryDir = (root) => join(root, 'registry');
 export const eventLogPath = (root, sessionId) => join(registryDir(root), `${safeId(sessionId)}.events.jsonl`);
 export const lastDir = (root, sessionId) => join(registryDir(root), `${safeId(sessionId)}.last`);

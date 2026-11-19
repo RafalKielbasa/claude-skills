@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { excludePathspecs } from './denylist.mjs';
+import { posixPath } from './paths.mjs';
 
 export const PROMPT_READY = '⏸ Czeka na decyzję: prompt gotowy do przeglądu';
 
@@ -26,10 +27,14 @@ export function takeSnapshot(cwd, contextDir, { at = new Date().toISOString(), r
   return snapshot;
 }
 
-// "Repository read-only, dialog directory writable" (spec §6.5 step 2, probes S7 and S12).
-export function forkSettings(dialogDir) {
-  const dir = resolve(dialogDir).replace(/\\/g, '/');
-  return { permissions: { allow: [`Edit(//${dir}/**)`], deny: ['Edit(./**)', 'Bash', 'EnterWorktree'] } };
+// "Repository read-only, dialog directory writable" (spec §6.5 step 2, probes S7 and S12). The deny
+// names the working directory by its absolute path: since Claude Code 2.1.326 a relative `./**` in a
+// --settings file also covered the dialog directory that holds the file (2026-11-19 fork permissions spec).
+export function forkSettings(dialogDir, cwd) {
+  return { permissions: {
+    allow: [`Edit(${posixPath(resolve(dialogDir))}/**)`],
+    deny: [`Edit(${posixPath(resolve(cwd))}/**)`, 'Bash', 'EnterWorktree'],
+  } };
 }
 
 // `--settings` before the prompt and the prompt before the variadic `--add-dir` (probe S7).

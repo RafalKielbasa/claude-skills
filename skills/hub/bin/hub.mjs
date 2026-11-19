@@ -490,12 +490,12 @@ Kolejka niedostępna: ${error.message}`);
     if (poll.sessions.some((s) => s.name === name)) fail(`a live session is already named ${name}`, 3);
     const at = new Date().toISOString();
     const dir = join(dialogsDir(root, project.key), `${at.slice(0, 10)}-${slug}`);
-    // The fork's settings deny edits under its cwd (Edit(./**)), so a dialog directory there is unwritable.
+    // The fork's settings deny edits under its cwd by the absolute rule Edit(<cwd>/**), so a dialog directory there is unwritable.
     if (isWithin(dir, cwd)) fail(`the dialog directory would lie inside the session's working directory, where the fork may not write; fork from a session outside the hub data`, 3);
     if (existsSync(dir)) fail(`the dialog directory exists: ${dir}`, 3);
     const snapshot = takeSnapshot(cwd, join(dir, 'context'), { at });
     const settingsPath = join(dir, 'fork-settings.json');
-    writeFileSync(settingsPath, `${JSON.stringify(forkSettings(dir), null, 2)}\n`, 'utf8');
+    writeFileSync(settingsPath, `${JSON.stringify(forkSettings(dir, cwd), null, 2)}\n`, 'utf8');
     const prompt = forkStartPrompt({ projectName: project.name, sourceName: source.name ?? '(no name)', sourceId: source.sessionId, dialogDir: dir, snapshot });
     const promptPath = join(dir, 'start-prompt.md');
     writeFileSync(promptPath, prompt, 'utf8');

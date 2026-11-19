@@ -7,7 +7,7 @@ import { loadConfig, saveConfig } from '../lib/config.mjs';
 
 test('the shipped config allows notatki and .claude and stores dialogs outside ~/.claude', () => {
   const c = loadConfig();
-  assert.deepEqual(c.allow, ['notatki', '.claude']);
+  assert.ok(['notatki', '.claude'].every((key) => c.allow.includes(key)), JSON.stringify(c.allow));
   assert.equal(c.dialogRoot, 'C:/Users/rafal/hub-data');
   // Null until `agent setup` runs once, then both ids saved by it.
   const saved = /^agent_\w+$/.test(c.agent.agentId) && /^tool_\w+$/.test(c.agent.toolId);

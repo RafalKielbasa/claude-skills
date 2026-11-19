@@ -8,6 +8,7 @@ import { tempRoot, ev } from './helpers.mjs';
 import { isDenied } from '../lib/denylist.mjs';
 import { takeSnapshot, forkSettings, forkArgs, forkStartPrompt, fallbackCommand, PROMPT_READY } from '../lib/dialog.mjs';
 import { readHubSessions } from '../lib/hubsessions.mjs';
+import { posixPath } from '../lib/paths.mjs';
 import { resolveSource, cwdForTranscript, withAncestors } from '../lib/resolve.mjs';
 import { deriveSession } from '../lib/derive.mjs';
 
@@ -66,8 +67,10 @@ test('a cwd outside git gives a note instead of a snapshot', () => {
 });
 
 test('fork settings, argument order and start prompt', () => {
-  const settings = forkSettings('C:\\Users\\rafal\\.claude\\hub\\projects\\app\\dialogs\\2026-10-14-wynik');
-  assert.deepEqual(settings, { permissions: { allow: ['Edit(//C:/Users/rafal/.claude/hub/projects/app/dialogs/2026-10-14-wynik/**)'], deny: ['Edit(./**)', 'Bash', 'EnterWorktree'] } });
+  const settings = forkSettings('C:\\Users\\rafal\\.claude\\hub\\projects\\app\\dialogs\\2026-10-14-wynik', 'D:\\Praca\\Devstock\\Baza wiedzy');
+  assert.deepEqual(settings, { permissions: {
+    allow: ['Edit(//c/Users/rafal/.claude/hub/projects/app/dialogs/2026-10-14-wynik/**)'],
+    deny: ['Edit(//d/Praca/Devstock/Baza wiedzy/**)', 'Bash', 'EnterWorktree'] } });
   const args = forkArgs({ sessionId: 'S', name: 'dlg-app-wynik', settingsPath: 'set.json', prompt: 'P', dialogDir: 'D' });
   assert.deepEqual(args, ['--bg', '--resume', 'S', '--fork-session', '--name', 'dlg-app-wynik', '--settings', 'set.json', 'P', '--add-dir', 'D']);
   const prompt = forkStartPrompt({ projectName: 'App', sourceName: 'app-x', sourceId: 'abcdef1234', dialogDir: 'C:\\d', snapshot: { git: true, cwd: 'C:\\app', at: '2026-10-14T12:00:00.000Z' } });
@@ -113,7 +116,8 @@ test('dialog start resolves the source by name, writes the context and settings,
   assert.equal(out.sessionId, 'f0f0f0f0-0000-4000-8000-000000000000');
   assert.match(out.dialogDir, /projects[\\/]app[\\/]dialogs[\\/]\d{4}-\d{2}-\d{2}-wynik$/);
   assert.ok(existsSync(join(out.dialogDir, 'context', 'diff.patch')));
-  assert.deepEqual(JSON.parse(readFileSync(join(out.dialogDir, 'fork-settings.json'), 'utf8')).permissions.deny, ['Edit(./**)', 'Bash', 'EnterWorktree']);
+  assert.deepEqual(JSON.parse(readFileSync(join(out.dialogDir, 'fork-settings.json'), 'utf8')).permissions.deny,
+    [`Edit(${posixPath(repo)}/**)`, 'Bash', 'EnterWorktree']);
 
   const call = JSON.parse(readFileSync(log, 'utf8').trim());
   assert.deepEqual(call.args.slice(0, 8), ['--bg', '--resume', 'src-new-2222', '--fork-session', '--name', 'dlg-app-wynik', '--settings', join(out.dialogDir, 'fork-settings.json')]);
