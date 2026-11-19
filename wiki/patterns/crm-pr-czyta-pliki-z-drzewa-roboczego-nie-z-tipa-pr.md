@@ -43,6 +43,7 @@ z `headRefOid` PR-a. SKILL.md definiuje `<repo>` jako katalog roboczy i nie wspo
   i przerwany codex-find (`taskkill /T`); drugi plan w worktree `<scratchpad>/pr218/saas app`
   (run `20261118-180016-2qtu`).
 - 2026-11-19, sesja 4e906a74-5c70-4d23-b56c-ba04b7047f2d (id claude.ai niedostępny; saas app, PR #216, run `20261119-105530-v3fe`): przebieg od razu w `git worktree add --detach <scratchpad>/pr216/saas app 97c29a6` z kopią `state.json` i `crm --repo <worktree>`; plan, osie, `send` i artefakt („Review saas app” z nazwy katalogu) bez checkoutu. Obejście nadal ręczne, z pamięci projektu — skill go nie robi.
+- 2026-11-19, sesja 9273a288-9ea2-4ef5-8c9a-2ddbe8af2dff (id claude.ai niedostępny; saas app, PR #213, run `20261119-123337-yj2y`): obejście od razu, przed pierwszym `crm plan` — `git fetch origin <headRefName>`, `git worktree add --detach <scratchpad>/pr213/saas app 2f8eed8`, kopia `state.json`; bez osieroconego planu i z bramką budżetu na właściwym `runId`. W `git worktree list` wisi już 8 takich drzew z wcześniejszych sesji (pr211, pr215 ×2, pr216, pr217, pr218, pr219, poprzedni pr213) — skill ich nie sprząta.
 
 ## Rozwiązanie
 W Kroku 1 trybu `pr`, przed `crm plan`: porównaj `git -C <repo> rev-parse HEAD` z

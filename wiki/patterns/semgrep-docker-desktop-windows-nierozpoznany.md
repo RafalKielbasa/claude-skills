@@ -21,6 +21,10 @@ albo nie jest zainstalowany)”. Wygląda to jak błąd skanu, a nie jak wyłąc
   `detail` „docker: failed to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine;
   check if the path is correct and if the daemon is running …”, a `raport.md` napisał „Semgrep nie
   zadziałał”. Wcześniej, 2026-11-19 przy PR #217, Semgrep też padł, bo Docker nie działał.
+- 2026-11-19, sesja 9273a288-9ea2-4ef5-8c9a-2ddbe8af2dff (id claude.ai niedostępny; saas app,
+  PR #213, run `20261119-123337-yj2y`): ten sam `detail` z `npipe:////./pipe/dockerDesktopLinuxEngine`,
+  `raport.md` znów „**Semgrep nie zadziałał**”. Trzeci przebieg tego dnia bez Semgrepa; Krok 4 nie
+  sprawdza Dockera przed `crm finders --start`, więc użytkownik dowiaduje się o tym dopiero z wyniku.
 
 ## Rozwiązanie
 Rozszerz `DOCKER_DOWN` o komunikat Docker Desktop:

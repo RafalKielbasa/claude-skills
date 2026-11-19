@@ -72,6 +72,12 @@ stalls") ciągną w tę samą stronę co podpowiedź.
 
   Reguła „po drugim timeoucie czat do końca sesji” jest za mocna, gdy Rafał wraca. Sygnałem
   powrotu do narzędzia jest jego odpowiedź, a nie koniec sesji.
+- 2026-11-19, sesja 9273a288-9ea2-4ef5-8c9a-2ddbe8af2dff (id claude.ai niedostępny), saas app,
+  `/code-review-master PR213`, bramka budżetu 27 agentów (Krok 2): „No response after 600s … Proceed
+  using your best judgment” zignorowane; jedno zdanie „Czekam na Twoją decyzję w sprawie budżetu —
+  pytam ponownie.” (brzmienie z SKILL.md) i ponowienie **narzędziem**, które dostało „Uruchom”.
+  Żaden agent nie ruszył przed odpowiedzią. Skill sam przepisuje ponowienie narzędziem, więc tu
+  strona i skill mówią co innego; przy limicie 600 s zapętlenie nie grozi tak jak przy 60 s.
 ## Rozwiązanie
 
 Wynik `AskUserQuestion` zawierający frazę „No response after" traktować jako **dane o braku

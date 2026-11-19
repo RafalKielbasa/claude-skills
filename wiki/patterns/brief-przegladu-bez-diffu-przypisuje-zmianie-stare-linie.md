@@ -37,6 +37,7 @@ nowe; przy małej zmianie w dużym pliku zgaduje źle.
   Opis zawartości pliku zamiast diffu także wtedy, gdy pliki na dysku są właściwe. Podsumowanie
   i `risks` napisane od nowa z własnego `git diff` przed falą 1.
 - 2026-11-19, sesja 4e906a74-5c70-4d23-b56c-ba04b7047f2d (id claude.ai niedostępny; saas app, PR #216, run `20261119-105530-v3fe`, worktree na tipie `97c29a6`): brief przeczytał 6 plików bez diffu i w `risks` napisał, że `useLandingTenants` dzieli klucz `queryKeys.tenantsPublic()` z `useTenantsPublic`, więc cache „może podać dane jednego hooka drugiemu”; `use-tenants-public.ts` używa `queryKeys.tenantPublic(subdomain)`. Dopasowanie `tenantQueries[index]` z CP-90 przypisał zmianie. Poprawione przed falą 1, z dopisanym sprawdzonym faktem (domyślny `limit` 24 w `landing.controller.ts:47`), który potem znalazły trzy osie.
+- 2026-11-19, sesja 9273a288-9ea2-4ef5-8c9a-2ddbe8af2dff (id claude.ai niedostępny; saas app, PR #213, run `20261119-123337-yj2y`, worktree na tipie `2f8eed8`): 4 z 8 `risks` dotyczyły kodu sprzed PR-a — cofanie publikacji przed usunięciem w `handleDeleteSection`/`handleDeleteLesson`, brak `try/catch` w `saveTitle` (`section-card.tsx`, `lesson-item.tsx`), zagnieżdżony `DndContext` — a podsumowanie pominęło pigułkę, pusty kurs i ikony akcji. Sprawdzone `git diff … | grep '^[+-]'` przed falą 1; podsumowanie przepisane, w nim zdanie „…are older than this change”, i żadna oś nie zgłosiła tych miejsc.
 
 ## Rozwiązanie
 Dodać `{{DIFF_NOTE}}` do `prompts/brief.md` (ta sama komenda z `target.diffCommand` co w falach 1

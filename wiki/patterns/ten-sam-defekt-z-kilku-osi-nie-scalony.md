@@ -22,6 +22,12 @@ a `crm parts` wysyła je do różnych weryfikatorów.
   f-12/f-13/f-14, pełnoekranowy `SchoolErrorState` jako f-02/f-04/f-05/f-06 (75/35/50/50). Ten sam
   wyścig z profilem w `account.tsx:73` dostał 75 jako `issue-conformance` (f-01) i 45 jako
   `web-frontend` (f-03). Scalanie i odrzucenie f-04 zrobiłem ręcznie w tabeli spod progu.
+- 2026-11-19, sesja 9273a288-9ea2-4ef5-8c9a-2ddbe8af2dff (id claude.ai niedostępny; saas app,
+  PR #213, run `20261119-123337-yj2y`): zgubiony `CircleCheck` w `course-section-accordion.tsx:115`
+  przyszedł z czterech osi jako f-01 (`issue-conformance`, 92), f-02 (`correctness`, 93), f-03
+  (`web-frontend`, 75), f-04 (`code-quality`, 50 → pod progiem, „issue text was not provided”).
+  Weryfikator `code-quality` nie dostaje `{{ISSUE}}`, więc tezy o zakresie nie umie ocenić i zaniża
+  pewność całej uwagi. Trzy uwagi scalone ręcznie w jeden komentarz Blocking przed `send`.
 
 ## Rozwiązanie
 Po `mergeAgreement` dodaj w `crm assemble` krok scalania międzyosiowego: uwagi o tym samym `file`

@@ -1249,3 +1249,15 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - założono: semgrep-docker-desktop-windows-nierozpoznany (skill: code-review-master, typ: porażka).
 - dopisano dowód: brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie, weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (status nawrót bez zmian), agent-osi-zglasza-uwagi-bez-czytania-plikow (dowód skuteczności D3), crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr.
 - `index.md` aktualizowany punktowo. Repo saas app nie ma `.claude/skills/`, więc nie ma wiki repo.
+
+## 2026-11-19 — sesja 9273a288-9ea2-4ef5-8c9a-2ddbe8af2dff (id claude.ai niedostępny): `/code-review-master PR213` w saas app
+- Przebieg `20261119-123337-yj2y` w worktree na `2f8eed8`, 27 agentów w trybie auto (bramka budżetu: timeout 600 s, ponowione, „Uruchom”); 7 uwag po progach, 4 pod progiem; Figma 4 węzły bez nowych uwag; wysłane REQUEST_CHANGES 5975650838 (2 Blocking, 3 Suggestion, 1 Nitpick) po „OK” (A/A/A) i „wysyłaj”, karta #182 Second review → To be fixed.
+- założono: zadanie-wiazane-w-issue-sprawdzane-w-otwartym-pr (skill: code-review-master, typ: porażka).
+- założono: issue-section-bez-komentarzy-zmieniajacych-wymagania (skill: code-review-master, typ: porażka; drugi dowód z pamięci projektu, sesja 13.11 bez id).
+- dopisano dowód: brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie, ponowny-przeglad-po-approve-podnosi-uwagi-z-zatwierdzonego-tipa (rozszerzenie na REQUEST_CHANGES), ten-sam-defekt-z-kilku-osi-nie-scalony, semgrep-docker-desktop-windows-nierozpoznany, crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr, timeout-pytania-podpowiada-kontynuacje.
+- Bez nawrotów: agent-osi-zglasza-uwagi-bez-czytania-plikow (zaadresowany 2026-11-18) zadziałał zgodnie z rozwiązaniem — `issue-conformance` nie otworzyła 17/28 plików, linia „Nieprzeczytane” to pokazała, testy z #182 sprawdzone ręcznie; dowodu nie dopisywałem.
+- `index.md` aktualizowany punktowo (6 liczników, 2 nowe wpisy). Repo saas app nie ma `.claude/skills/`, więc nie ma wiki repo.
+- Sygnał:
+  - brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie (porażka, 6 sesji) → `/evolve-skill code-review-master`;
+  - crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr (porażka, 6 sesji) → `/evolve-skill code-review-master`;
+  - weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (nawrót) → `/evolve-skill code-review-master`.
