@@ -8,3 +8,4 @@
 - [Review base: origin/main](review-base-origin-main.md) — local `main` lags; `code-review-master branch` needs `--base origin/main` (or `pr <n>`)
 - [Production release ships web and CMS together](production-release-ships-web-and-cms-together.md) — one GitHub release deploys Vercel and Fly at once; CMS-first needs a release targeted at an earlier main commit
 - [Harness test fails locally on Windows](harness-test-fails-locally-on-windows.md) — python3 is the Store stub, py is 3.13 (47/62 fail); environmental, report like automation-token
+- [Baza wiedzy daily branch](baza-wiedzy-daily-branch.md) — commits go to rafal-kielbasa/DD-MM-YYYY (PR to main); another session can switch the shared tree mid-session, check the branch before each commit
