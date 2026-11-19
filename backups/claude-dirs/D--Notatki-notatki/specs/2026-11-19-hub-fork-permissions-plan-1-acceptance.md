@@ -16,7 +16,7 @@ Executed 2026-11-19 in session `b352c64f`, native mode (one fresh reviewer at th
 | 2 | Live probe of the voice fork settings in four layouts | Pass: dialog write created, repository write refused with `File is in a directory that is denied by your permission settings.` in `d-plain`, `d-space` (`…/Baza wiedzy`), `d-worktree` (`…/repo-wt/.claude/worktrees/wt-probe`) and `c-dotclaude` (`…/home/.claude/hub`) |
 | 3 | Live probe of the hub fork settings | Pass: the dialog write was not refused by the deny rule (answer: `Claude requested permissions to edit …\.claude\hub\projects\p\dialogs\…`, the `.claude` sensitive-file approval, a spec §3 non-goal); the repository write was refused with the deny message |
 | 4 | A failed probe stops the work; nothing deleted | No probe failed; nothing deleted |
-| 5 | Rafal's real `/talk` with one confirmed decision: `decisions.md` exists and the report says `denied: none` | **Pending** — Rafal's run |
+| 5 | Rafal's real `/talk` with one confirmed decision: `decisions.md` exists and the report says `denied: none` | Pass, 2026-11-19 14:05 (§6) |
 
 Probe: `C:/Users/rafal/.claude/skills/talk/test/live/fork-permissions.mjs`, run 2026-11-19 13:04,
 10 `claude -p --model haiku` calls, 54 s; summary
@@ -96,5 +96,15 @@ Vault: amendments in `2026-10-18-hub-voice-design.md` (§8) and `2026-10-13-hub-
 
 ## 6. Rafal's run (criterion 5)
 
-To be recorded here after the run: dialog directory, whether `decisions.md` holds the confirmed
-decision, the `denied:` line.
+- Dialog `C:/Users/rafal/hub-data/projects/code-busters/dialogs/2026-11-19-1358-talk`, from session
+  `a4902244` (code-busters), Claude Code 2.1.328, 13:58–14:05; the call ended by the agent
+  (`agent/end_call`).
+- `fork-settings.json` carries the new deny `Edit(//d/Praca/Devstock/Projekty/code-busters-v2/**)`.
+- The fork (log `a6dfed65-….jsonl`) wrote `decisions.md` (sections „D2: karta na tablicy dla pracy
+  nad pudełkami kursów”, „D1: akceptacja szkiców pudełek katalogu”, „Zlecenie dla sesji a4902244”)
+  and `prompt.md`; its log holds no refused tool call.
+- Rafal: the decisions reached the session.
+- The `denied:` line itself went to session `a4902244` and was not read here; with no refused call
+  in the fork's log, `denials()` had nothing to collect, so the line was `denied: none` (inferred).
+
+Part `hub-fork-permissions` closed 2026-11-19.
