@@ -1242,3 +1242,10 @@ jawnej zgodzie użytkownika, już poza przebiegiem testowym.
 - Wzorzec: agent-osi-zglasza-uwagi-bez-czytania-plikow → zaadresowany (2026-11-18, code-review-master).
 - Zostawione na później: crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr (4), brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie (4), weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (nawrót, 4), crm-artifact-tytul-z-surowego-argumentu-repo (2).
 - `index.md` aktualizowany punktowo (status jednego wzorca); `skill-impact.md`: wpis z pełnym diffem; `PURPOSE.md` skilla: adresowany wzorzec i historia. Bez commita.
+
+## 2026-11-19 — sesja 4e906a74-5c70-4d23-b56c-ba04b7047f2d (id claude.ai niedostępny): `/code-review-master pr 216` w saas app
+- Przebieg `20261119-105530-v3fe` w worktree, 13 agentów; po progach 1 sugestia, ręcznie podniesiona f-01 (Blocking), wysłane REQUEST_CHANGES 5974158849, karta #172 → To be fixed.
+- założono: ten-sam-defekt-z-kilku-osi-nie-scalony (skill: code-review-master, typ: porażka).
+- założono: semgrep-docker-desktop-windows-nierozpoznany (skill: code-review-master, typ: porażka).
+- dopisano dowód: brief-przegladu-bez-diffu-przypisuje-zmianie-stare-linie, weryfikator-bez-checklisty-zbija-uwage-blokujaca-pod-prog (status nawrót bez zmian), agent-osi-zglasza-uwagi-bez-czytania-plikow (dowód skuteczności D3), crm-pr-czyta-pliki-z-drzewa-roboczego-nie-z-tipa-pr.
+- `index.md` aktualizowany punktowo. Repo saas app nie ma `.claude/skills/`, więc nie ma wiki repo.

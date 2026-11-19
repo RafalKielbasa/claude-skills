@@ -42,6 +42,7 @@ z `headRefOid` PR-a. SKILL.md definiuje `<repo>` jako katalog roboczy i nie wspo
   sygnał dał brief: „the on-disk files do not match the stated diff”. Koszt: 1 agent briefu
   i przerwany codex-find (`taskkill /T`); drugi plan w worktree `<scratchpad>/pr218/saas app`
   (run `20261118-180016-2qtu`).
+- 2026-11-19, sesja 4e906a74-5c70-4d23-b56c-ba04b7047f2d (id claude.ai niedostępny; saas app, PR #216, run `20261119-105530-v3fe`): przebieg od razu w `git worktree add --detach <scratchpad>/pr216/saas app 97c29a6` z kopią `state.json` i `crm --repo <worktree>`; plan, osie, `send` i artefakt („Review saas app” z nazwy katalogu) bez checkoutu. Obejście nadal ręczne, z pamięci projektu — skill go nie robi.
 
 ## Rozwiązanie
 W Kroku 1 trybu `pr`, przed `crm plan`: porównaj `git -C <repo> rev-parse HEAD` z

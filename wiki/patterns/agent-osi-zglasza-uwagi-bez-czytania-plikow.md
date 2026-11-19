@@ -45,6 +45,7 @@ w odpowiedzi CLI i nie idzie do `raport.md` ani do artefaktu.
   i `crm assemble` odrzucił uwagę. Jedynego Blocking (brak testu mutacji hooka wobec kryterium
   „Testy: każda mutacja unieważnia właściwe klucze”) nie zgłosiła żadna oś ani codex; znalazła
   go sesja, szukając testów konsumentów (`use-complete-lesson.test.tsx` jako precedens).
+- 2026-11-19, sesja 4e906a74-5c70-4d23-b56c-ba04b7047f2d (id claude.ai niedostępny; saas app, PR #216, run `20261119-105530-v3fe`, 6 plików): po D3 pięć z sześciu części przeczytało wszystkie swoje pliki, `correctness` pominęła tylko `find-school.test.tsx`, a `raport.md` wypisał to w linii „Nieprzeczytane przez agenta osi”. Agenci dalej płytko (1–5 wywołań; `issue-conformance` jedno `cat -n` sześciu plików). Dowód skuteczności zmiany, nie nawrót.
 
 ## Rozwiązanie
 Hipoteza do decyzji „Reguła głębokości czytania (D3)”: `crm render` i `crm artifact` wypisują

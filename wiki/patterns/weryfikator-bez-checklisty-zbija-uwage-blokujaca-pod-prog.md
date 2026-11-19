@@ -42,6 +42,7 @@ ani do artefaktu, więc bez ręcznego odczytu `scores.json` nikt ich nie widzi.
   behavioural”, choć prompt każe przyjąć połowę z Figmy i zakazuje oceniania wagi reguły. Uwagi
   zakresu `f-01` i `f-03` dostały 80 i 78 z podobnym ważeniem. Wszystkie trzy spadły pod próg 85
   i wróciły z listy `belowThreshold`; `f-02` poszła jako jedyny Blocking review 5961975838.
+- 2026-11-19, sesja 4e906a74-5c70-4d23-b56c-ba04b7047f2d (id claude.ai niedostępny; saas app, PR #216, run `20261119-105530-v3fe`): `issue-conformance` `f-01` (własne szkoły w „Odkryj szkoły” przed załadowaniem profilu, `account.tsx:73`) dostała 75 z notą „Issue sentence … supports it. Real but transient, a race on slow profile loads, hence not 90+” — obie połowy potwierdzone, ocena obniżona za wagę, czego `verify.md` zakazuje. Ten sam defekt z osi `web-frontend` (`f-03`) dostał 45. Wróciła z listy spod progu; Rafał podniósł ją do Blocking (D1 A) i poszła jako jedyny Blocking review 5974158849.
 
 ## Rozwiązanie
 W Kroku 6 dołącz do promptu weryfikacji checklistę osi (ten sam `{{CHECKLIST}}` co w fali 1)
