@@ -2,7 +2,7 @@
   "attribution": {
     "commit": ""
   },
-  "model": "fable",
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
